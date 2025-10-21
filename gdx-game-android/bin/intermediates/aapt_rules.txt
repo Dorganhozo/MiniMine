@@ -1,0 +1,2 @@
+# Referenced at /storage/emulated/0/AideProjects/MiniMine/gdx-game-android/AndroidManifest.xml:10
+-keep class com.minimine.MainActivity { <init>(); }
