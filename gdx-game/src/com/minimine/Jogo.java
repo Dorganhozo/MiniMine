@@ -70,6 +70,8 @@ public class Jogo implements ApplicationListener, InputProcessor {
         chunk = new ModelInstance(chunkModelo);
 
         Gdx.input.setInputProcessor(this);
+		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		Gdx.gl.glCullFace(GL20.GL_BACK);
     }
 
     @Override
