@@ -1,7 +1,0 @@
-{
-   "nome":"cacto1",
-   "blocos": [
-      {"x": 0, "y": 0, "z": 0, "tipo": "CACTO"},
-      {"x": 0, "y": 1, "z": 0, "tipo": "CACTO"}
-   ]
-}
