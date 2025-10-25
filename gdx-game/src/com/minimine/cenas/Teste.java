@@ -18,37 +18,51 @@ import com.minimine.Controles;
 import com.minimine.cenas.blocos.Luz;
 
 public class Teste implements Screen {
-	public Controles ctr;
+	public UI ui;
 	public Mundo mundo;
 
     @Override
 	public void show() {
         mundo = new Mundo();
+		
 		mundo.attChunks(0, 0);
-		mundo.chunksAtivos.get("1,1").addLuz(new Luz(7, 15, 7, new Color(1.0f, 0.0f, 0.0f, 1.0f)));
-		mundo.chunksAtivos.get("0,0").addLuz(mundo.player);
-		ctr = new Controles();
-		Gdx.input.setInputProcessor(ctr);
+		
+		mundo.chunks.get("1,1").addLuz(new Luz(7, 15, 7, new Color(1.0f, 0.0f, 0.0f, 1.0f)));
+		mundo.chunks.get("0,0").addLuz(mundo.player);
+		
+		mundo.attChunks(0, 0);
+		ui = new UI();
+		
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
+		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		Gdx.gl.glCullFace(GL20.GL_BACK);
 	}
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.5f, 0.7f, 1f, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 		
-        mundo.att(delta, ctr.camera);
-		ctr.att(delta);
+		mundo.att(delta, ui.camera);
+		
+		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+		ui.att(delta);
     }
 
     @Override
     public void dispose() {
 		mundo.liberar();
+		ui.liberar();
     }
+	
+	@Override
+	public void resize(int v, int h) {
+		ui.ajustar(v, h);
+	}
 
 	@Override public void hide() {}
 	@Override public void pause() {}
-	@Override public void resize(int v, int h) {
-		ctr.ajustar(v, h);
-	}
 	@Override public void resume() {}
 }

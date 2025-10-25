@@ -8,6 +8,6 @@ public class Jogo extends Game {
 
 	@Override
 	public void create() {
-		setScreen(new TesteUI());
+		setScreen(new Teste());
 	}
 }

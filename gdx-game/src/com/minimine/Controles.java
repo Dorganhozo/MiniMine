@@ -66,7 +66,6 @@ public class Controles implements InputProcessor {
 			velo.x = 0f;
 			velo.z = 0f;
 		}
-
 		Vector3 deltaPos = new Vector3(velo).scl(delta);
 		camera.position.add(deltaPos);
 
@@ -79,7 +78,6 @@ public class Controles implements InputProcessor {
 			noChao = false;
 		}
 		attCamera();
-
 		camera.update();
 	}
 	

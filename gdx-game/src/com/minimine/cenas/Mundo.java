@@ -24,8 +24,8 @@ public class Mundo {
     // mapa de UVs:
     // (atlas ID -> [u_min, v_min, u_max, v_max])
 	public List<String> texturas = new ArrayList<>();
-    public Map<Integer, float[]> atlasUVs = new HashMap<>();
-	public Map<CharSequence, Chunk> chunks = new HashMap<>();
+    public final Map<Integer, float[]> atlasUVs = new HashMap<>();
+	public final Map<CharSequence, Chunk> chunks = new HashMap<>();
 	public Map<CharSequence, Chunk> chunksAtivos = new HashMap<>();
 
 	public static final int TAM_CHUNK = 16, Y_CHUNK = 16, RAIO_CHUNKS = 3;
@@ -102,9 +102,6 @@ public class Mundo {
 			"}";
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
-		if(!shader.isCompiled()) {
-			Gdx.app.log("Mundo", "Shader compile error: " + shader.getLog());
-		}
 	}
 
     public void criarAtlas() {
@@ -183,10 +180,6 @@ public class Mundo {
 	}
 	// chamado render:
 	public void att(float delta, PerspectiveCamera camera) {
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-		Gdx.gl.glCullFace(GL20.GL_BACK);
-
 		if(shader == null) return;
 
 		player.x = (int)camera.position.x;
@@ -221,5 +214,9 @@ public class Mundo {
 		LuzUtil.liberar();
 		texturas.clear();
 		texturas = null;
+		chunks.clear();
+		chunksAtivos.clear();
+		chunksAtivos = null;
+		atlasUVs.clear();
 	}
 }
