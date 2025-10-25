@@ -15,6 +15,7 @@ import com.badlogic.gdx.utils.ShortArray;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.minimine.Controles;
+import com.minimine.cenas.blocos.Luz;
 
 public class Teste implements Screen {
 	public Controles ctr;
@@ -23,7 +24,9 @@ public class Teste implements Screen {
     @Override
 	public void show() {
         mundo = new Mundo();
-        mundo.gerarChunk();
+		mundo.attChunks(0, 0);
+		mundo.chunksAtivos.get("1,1").addLuz(new Luz(7, 15, 7, new Color(1.0f, 0.0f, 0.0f, 1.0f)));
+		mundo.chunksAtivos.get("0,0").addLuz(mundo.player);
 		ctr = new Controles();
 		Gdx.input.setInputProcessor(ctr);
 	}

@@ -17,6 +17,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Matrix4;
 
 public class Mundo {
 	public Texture atlasGeral;
@@ -24,8 +25,10 @@ public class Mundo {
     // (atlas ID -> [u_min, v_min, u_max, v_max])
 	public List<String> texturas = new ArrayList<>();
     public Map<Integer, float[]> atlasUVs = new HashMap<>();
+	public Map<CharSequence, Chunk> chunks = new HashMap<>();
+	public Map<CharSequence, Chunk> chunksAtivos = new HashMap<>();
 
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 16;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 16, RAIO_CHUNKS = 3;
 
 	public final Vector3 solDir = new Vector3(0.4f, 0.8f, 0.2f).nor();
 	public final float luzAmt = 0.25f;
@@ -35,32 +38,32 @@ public class Mundo {
 
 	public Luz player;
 	
-	public Chunk chunk = new Chunk(TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
+	public int maxVerts, maxIndices, maxFaces;
+	public VertexAttribute[] atriburs;
 
 	public Mundo() {
 		player = new Luz(0, 15, 0);
 		
-		texturas.add("grama_topo.png");
-		texturas.add("grama_lado.png");
-		texturas.add("terra.png");
-		texturas.add("pedra.png");
+		texturas.add("blocos/grama_topo.png");
+		texturas.add("blocos/grama_lado.png");
+		texturas.add("blocos/terra.png");
+		texturas.add("blocos/pedra.png");
 		
         criarAtlas();
 
 		LuzUtil.luzPx = new Pixmap(TAM_CHUNK, TAM_CHUNK, Pixmap.Format.RGB888);
 		LuzUtil.luzTextura = new Texture(LuzUtil.luzPx);
 
-		int maxFaces = 16 * 16 * 16 * 6;
-		int maxVerts = maxFaces * 4;
-		int maxIndices = maxFaces * 6;
+		maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6;
+		maxVerts = maxFaces * 4;
+		maxIndices = maxFaces * 6;
 
-		VertexAttribute[] attrs = new VertexAttribute[] {
+		atriburs = new VertexAttribute[] {
 			new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
 			new VertexAttribute(VertexAttributes.Usage.Normal, 3, "a_normal"),
-			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"), // UV da Textura
-			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord1") // UV da Luz
+			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"), // UV da textura
+			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord1") // UV da luz
 		};
-		chunk.mesh = new Mesh(true, maxVerts, maxIndices, attrs);
 
 		String vert =
 			"attribute vec3 a_posicao;\n"+
@@ -97,7 +100,6 @@ public class Mundo {
 			"  vec4 tex = texture2D(u_textura, v_texCoord);\n"+
 			"  gl_FragColor = tex * vec4(clamp(luzFinal, 0.0, 1.0), 1.0);\n"+
 			"}";
-
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
 		if(!shader.isCompiled()) {
@@ -132,9 +134,36 @@ public class Mundo {
 		atlasPx.dispose(); 
 		ChunkUtil.atlasUVs = atlasUVs;
 	}
+
+	public void attChunks(int playerX, int playerZ) {
+		int chunkX = playerX / TAM_CHUNK;
+		int chunkZ = playerZ / TAM_CHUNK;
+
+		Map<CharSequence, Chunk> novosAtivos = new HashMap<>();
+
+		for(int x = chunkX - RAIO_CHUNKS; x <= chunkX + RAIO_CHUNKS; x++) {
+			for(int z = chunkZ - RAIO_CHUNKS; z <= chunkZ + RAIO_CHUNKS; z++) {
+				String chave = x + "," + z;
+				if(chunksAtivos.containsKey(chave)) {
+					novosAtivos.put(chave, chunksAtivos.get(chave));
+				} else {
+					novosAtivos.put(chave, gerarChunk(x, z));
+				}
+			}
+		}
+		for(CharSequence chave : chunksAtivos.keySet()) {
+			if(!novosAtivos.containsKey(chave)) {
+				Chunk c = chunksAtivos.get(chave);
+				c.mesh.dispose(); // libera mesh
+			}
+		}
+		chunksAtivos = novosAtivos;
+	}
 	// GERAÇÃO DE DADOS:
 	// chamado em show:
-	public void gerarChunk() {
+	public Chunk gerarChunk(int... coords) {
+		Chunk chunk = new Chunk();
+		chunk.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
 		for(int x = 0; x < TAM_CHUNK; x++) {
 			for(int z = 0; z < TAM_CHUNK; z++) {
 				chunk.chunk[x][15][z] = 1; 
@@ -143,11 +172,15 @@ public class Mundo {
 			}
 		}
 		ChunkUtil.attMesh(chunk);
-
-		LuzUtil.addLuz(new Luz(7, 15, 7, new Color(1.0f, 0.0f, 0.0f, 1.0f)), chunk.chunk);
-		LuzUtil.addLuz(player, chunk.chunk);
+		
+		Matrix4 m = new Matrix4();
+		float x = coords[0] * TAM_CHUNK, z = coords[1] * TAM_CHUNK;
+		m.setToTranslation(x, 0, z);
+		
+		chunk.mesh.transform(m);
+		chunks.put(coords[0]+","+coords[1], chunk);
+		return chunk;
 	}
-
 	// chamado render:
 	public void att(float delta, PerspectiveCamera camera) {
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
@@ -159,8 +192,8 @@ public class Mundo {
 		player.x = (int)camera.position.x;
 		player.z = (int)camera.position.z;
 		player.y = (int)camera.position.y;
-
-		LuzUtil.att(chunk.chunk);
+		
+		attChunks(player.x, player.z);
 
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", camera.combined);
@@ -174,15 +207,16 @@ public class Mundo {
 		shader.setUniformf("u_solDir", solDir); 
 		shader.setUniformf("u_luzAmt", luzAmt);
 		shader.setUniformf("u_sombraDensi", sombraDensi);
-
-		if(chunk.mesh.getNumIndices() > 0) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
-
+		for(Chunk chunk : chunksAtivos.values()) {	
+			chunk.attLuz();
+			if(chunk.mesh.getNumIndices() > 0) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
+		}
 		shader.end();
 	}
 	// chamado em dispose:
 	public void liberar() {
         atlasGeral.dispose();
-		chunk.mesh.dispose();
+		for(Chunk chunk : chunks.values()) chunk.mesh.dispose();
 		shader.dispose();
 		LuzUtil.liberar();
 		texturas.clear();

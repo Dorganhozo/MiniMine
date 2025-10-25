@@ -59,10 +59,10 @@ class MundoTeste {
 	public ImmediateModeRenderer20 render;
 
 	public MundoTeste() {
-		grama_topo = new Texture(Gdx.files.internal("grama_topo.png"));
-		grama_lado = new Texture(Gdx.files.internal("grama_lado.png"));
-		terra = new Texture(Gdx.files.internal("terra.png"));
-		pedra = new Texture(Gdx.files.internal("pedra.png"));
+		grama_topo = new Texture(Gdx.files.internal("blocos/grama_topo.png"));
+		grama_lado = new Texture(Gdx.files.internal("blocos/grama_lado.png"));
+		terra = new Texture(Gdx.files.internal("blocos/terra.png"));
+		pedra = new Texture(Gdx.files.internal("blocos/pedra.png"));
 
 		render = new ImmediateModeRenderer20(16 * 16 * 16 * 6 * 6, false, true, 1); 
 	}

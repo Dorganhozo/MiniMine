@@ -1,26 +1,11 @@
 package com.minimine;
 
-import com.badlogic.gdx.ApplicationListener;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.MathUtils;
 
 public class Controles implements InputProcessor {
     public PerspectiveCamera camera;
@@ -32,7 +17,7 @@ public class Controles implements InputProcessor {
     public Vector2 ultimaDir = new Vector2();
 
     public Vector3 velo = new Vector3();
-    public float veloM = 8f;      // m/s
+    public float veloM = 9f;      // m/s
     public float sensi = 0.25f;
     public float grav = -30f;      // m/s^2
 

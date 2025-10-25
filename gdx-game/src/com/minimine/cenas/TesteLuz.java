@@ -70,10 +70,10 @@ class MundoLuz {
 	public MundoLuz() {
 		player = new Luz(0, 15, 0);
 		// texturas:
-		grama_topo = new Texture(Gdx.files.internal("grama_topo.png"));
-		grama_lado = new Texture(Gdx.files.internal("grama_lado.png"));
-		terra = new Texture(Gdx.files.internal("terra.png"));
-		pedra = new Texture(Gdx.files.internal("pedra.png"));
+		grama_topo = new Texture(Gdx.files.internal("blocos/grama_topo.png"));
+		grama_lado = new Texture(Gdx.files.internal("blocos/grama_lado.png"));
+		terra = new Texture(Gdx.files.internal("blocos/terra.png"));
+		pedra = new Texture(Gdx.files.internal("blocos/pedra.png"));
 		LuzUtil.luzPx = new Pixmap(TAM_CHUNK, TAM_CHUNK, Pixmap.Format.RGB888);
 		LuzUtil.luzTextura = new Texture(LuzUtil.luzPx);
 
@@ -81,16 +81,16 @@ class MundoLuz {
 		int maxVerts = maxFaces * 4;
 		int maxIndices = maxFaces * 6;
 
-		VertexAttribute[] attrs = new VertexAttribute[] {
+		VertexAttribute[] atribus = new VertexAttribute[] {
 			new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
 			new VertexAttribute(VertexAttributes.Usage.Normal, 3, "a_normal"),
 			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"),
 			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord1")
 		};
-		meshGramaTopo = new Mesh(true, maxVerts, maxIndices, attrs);
-		meshGramaLado = new Mesh(true, maxVerts, maxIndices, attrs);
-		meshTerra = new Mesh(true, maxVerts, maxIndices, attrs);
-		meshPedra = new Mesh(true, maxVerts, maxIndices, attrs);
+		meshGramaTopo = new Mesh(true, maxVerts, maxIndices, atribus);
+		meshGramaLado = new Mesh(true, maxVerts, maxIndices, atribus);
+		meshTerra = new Mesh(true, maxVerts, maxIndices, atribus);
+		meshPedra = new Mesh(true, maxVerts, maxIndices, atribus);
 
 		String vert =
 			"attribute vec3 a_posicao;\n"+

@@ -24,17 +24,17 @@ public class LuzUtil {
 		luzes.add(luz);
 	}
 	
-	public static void att(byte[][][] chunk) {
+	public static void att(byte[][][] chunk, List<Luz> luzes) {
 		luzPx.setColor(0.0f, 0.0f, 0.0f, 1.0f);
 		luzPx.fill();
 		for(Luz luz : luzes) {
-			if(luz.x < 0 || luz.z < 0 || 
-				luz.x >= TAM_CHUNK || luz.z >= TAM_CHUNK) {
-				continue;
-			}
 			LuzUtil.propagarLuz(luz.x + 0.5f, luz.z + 0.5f, luz.cor, luz.raio);
 		}
 		luzTextura.draw(luzPx, 0, 0);
+	}
+	
+	public static void att(byte[][][] chunk) {
+		att(chunk, luzes);
 	}
 	
 	public static void propagarLuz(float X, float Z, Color cor, float raio) {
