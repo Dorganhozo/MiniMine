@@ -26,6 +26,7 @@ import com.minimine.utils.FloatArrayUtil;
 import com.minimine.utils.IntArrayUtil;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
+import com.badlogic.gdx.math.Vector2;
 
 public class Mundo {
 	public Texture atlasGeral;
@@ -35,7 +36,7 @@ public class Mundo {
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 15;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 10;
 
 	public ShaderProgram shader;
 
@@ -83,12 +84,11 @@ public class Mundo {
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
 	}
-	
 	// chamado render:
 	public void att(float delta, PerspectiveCamera camera) {
 		if(shader == null) return;
 
-		attChunks(camera.position.x, camera.position.z);
+		attChunks((int) camera.position.x, (int) camera.position.z);
 
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", camera.combined);
@@ -96,12 +96,21 @@ public class Mundo {
 		atlasGeral.bind(0);
 		shader.setUniformi("u_textura", 0);
 
-		for(final Chunk chunk : chunks.values()) {	
+		for(final Chunk chunk : chunks.values()) {    
+			if(!frustrum(chunk, camera)) continue;
 			if(chunk.att) chunk.att = false;
 			if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
 		}
 		shader.end();
 	}
+	
+	public boolean frustrum(Chunk chunk, PerspectiveCamera camera) {
+		float globalX = chunk.chunkX << 4;
+		float globalZ = chunk.chunkZ << 4;
+		float dis = Vector2.dst(globalX, globalZ, camera.position.x, camera.position.z);
+		return dis < ((RAIO_CHUNKS << 4) * 1.5f);
+	}
+	
 	// chamado em dispose:
 	public void liberar() {
         atlasGeral.dispose();
@@ -141,30 +150,42 @@ public class Mundo {
 	}
 	// GERAÇÃO DE DADOS:
 	public void attChunks(float playerX, float playerZ) {
-		int chunkX = (int) playerX / TAM_CHUNK;
-		int chunkZ = (int) playerZ / TAM_CHUNK;
-		
+		final int chunkX = (int) playerX / TAM_CHUNK;
+		final int chunkZ = (int) playerZ / TAM_CHUNK;
+
 		limparChunks(chunkX, chunkZ);
-		
-		for(int x = chunkX - RAIO_CHUNKS; x <= chunkX + RAIO_CHUNKS; x++) {
-			for(int z = chunkZ - RAIO_CHUNKS; z <= chunkZ + RAIO_CHUNKS; z++) {
-				final ChunkUtil.Chave chave = new ChunkUtil.Chave(x, z);
-				
-				Chunk chunkExistente = chunks.get(chave);
-				if(chunkExistente != null && chunkExistente.mesh != null) {
-					chunks.put(chave, chunkExistente);
-					continue;
-				}
-				if(chunkExistente == null) {
-					chunks.put(chave, new Chunk()); // vazio
-					exec.submit(new Runnable() {
-						@Override
-						public void run() {
-							gerarChunk(chave);
-						}
-					});
-				}
+
+		for(int raios = 0; raios <= RAIO_CHUNKS; raios++) {
+			if(raios == 0) {
+				tentarGerarChunk(chunkX, chunkZ);
+				continue;
 			}
+			final int raio = raios;
+			exec.submit(new Runnable() {
+					@Override
+					public void run() {
+						for(int i = -raio; i <= raio; i++) {
+							tentarGerarChunk(chunkX + i, chunkZ - raio); // Topo
+							tentarGerarChunk(chunkX + i, chunkZ + raio); // Baixo
+							tentarGerarChunk(chunkX - raio, chunkZ + i); // Esquerda  
+							tentarGerarChunk(chunkX + raio, chunkZ + i); // Direita
+						}
+					}
+				});
+		}
+	}
+	
+	public void tentarGerarChunk(int x, int z) {
+		final ChunkUtil.Chave chave = new ChunkUtil.Chave(x, z);
+		Chunk chunkExistente = chunks.get(chave);
+
+		if(chunkExistente != null && chunkExistente.mesh != null) {
+			return;
+		}
+
+		if(chunkExistente == null) {
+			chunks.put(chave, new Chunk());
+			gerarChunk(chave);
 		}
 	}
 

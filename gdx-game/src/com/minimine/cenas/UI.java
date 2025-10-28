@@ -259,12 +259,12 @@ public class UI implements InputProcessor {
 		float usado = total - livre;
 
 		fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
-		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\n"+
+		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa: %d\n"+
 		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\n"+
 		"Chunks ativos: %d\n"+
 		"Logs:\n%s",
 		camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
-		livre, total, usado,
+		livre, total, usado, Gdx.app.getNativeHeap(),
 		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo,
 		mundo.chunks.size(),
 		logs.logs), 50, Gdx.graphics.getHeight() - 100);
