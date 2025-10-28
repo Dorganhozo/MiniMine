@@ -1,0 +1,257 @@
+package com.minimine.cenas;
+
+import com.minimine.utils.ChunkUtil;
+import com.badlogic.gdx.graphics.Texture;
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.minimine.cenas.blocos.Luz;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Matrix4;
+import com.minimine.PerlinNoise3D;
+import com.minimine.PerlinNoise2D;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import com.minimine.utils.FloatArrayUtil;
+import com.minimine.utils.IntArrayUtil;
+
+public class Mundo {
+	public Texture atlasGeral;
+    // mapa de UVs:
+    // (atlas ID -> [u_min, v_min, u_max, v_max])
+	public List<String> texturas = new ArrayList<>();
+    public final Map<Integer, float[]> atlasUVs = new HashMap<>();
+	public final Map<ChunkUtil.Chave, Chunk> chunks = new HashMap<>();
+	public final Map<ChunkUtil.Chave, Chunk> chunksAtivos = new HashMap<>();
+
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 3;
+
+	public final Vector3 solDir = new Vector3(0.4f, 0.8f, 0.2f).nor();
+	public final float luzAmt = 0.25f;
+	public final float sombraDensi = 0.15f;
+
+	public ShaderProgram shader;
+	
+	public final ExecutorService exec = Executors.newFixedThreadPool(4);
+	
+	public int maxVerts, maxIndices, maxFaces;
+	public VertexAttribute[] atriburs =  new VertexAttribute[] {
+		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
+		new VertexAttribute(VertexAttributes.Usage.Normal, 3, "a_normal"),
+		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"), // UV da textura
+		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord1") // UV da luz
+	};;
+
+	public Mundo() {
+		texturas.add("blocos/grama_topo.png");
+		texturas.add("blocos/grama_lado.png");
+		texturas.add("blocos/terra.png");
+		texturas.add("blocos/pedra.png");
+		
+        criarAtlas();
+
+		LuzUtil.luzPx = new Pixmap(TAM_CHUNK, TAM_CHUNK, Pixmap.Format.RGB888);
+		LuzUtil.luzTextura = new Texture(LuzUtil.luzPx);
+		LuzUtil.mundo = this;
+
+		maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6;
+		maxVerts = maxFaces * 4;
+		maxIndices = maxFaces * 6;
+
+		String vert =
+			"attribute vec3 a_posicao;\n"+
+			"attribute vec3 a_normal;\n"+
+			"attribute vec2 a_texCoord0;\n"+
+			"attribute vec2 a_texCoord1;\n"+
+			"uniform mat4 u_projTrans;\n"+
+			"uniform vec3 u_solDir;\n"+
+			"uniform float u_sombraDensi;\n"+
+			"varying vec4 v_cor;\n"+
+			"varying vec2 v_texCoord;\n"+
+			"varying vec2 v_luzTexCoord;\n"+
+			"void main() {\n"+
+			"  float difuso = max(0.0, dot(a_normal, u_solDir)) * u_sombraDensi;\n"+
+			"  v_cor = vec4(difuso, difuso, difuso, 1.0);\n"+ 
+			"  v_texCoord = a_texCoord0;\n"+
+			"  v_luzTexCoord = a_texCoord1;\n"+
+			"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n"+
+			"}";
+
+		String frag =
+			"#ifdef GL_ES\n"+
+			"precision mediump float;\n"+
+			"#endif\n"+
+			"varying vec4 v_cor;\n"+ 
+			"varying vec2 v_texCoord;\n"+
+			"varying vec2 v_luzTexCoord;\n"+
+			"uniform sampler2D u_textura;\n"+
+			"uniform sampler2D u_mapaLuz;\n"+
+			"uniform float u_luzAmt;\n"+
+			"void main() {\n"+
+			"  vec3 blocoLuz = texture2D(u_mapaLuz, v_luzTexCoord).rgb;\n"+
+			"  vec3 luzFinal = vec3(u_luzAmt) + blocoLuz + v_cor.rgb;\n"+
+			"  vec4 tex = texture2D(u_textura, v_texCoord);\n"+
+			"  gl_FragColor = tex * vec4(clamp(luzFinal, 0.0, 1.0), 1.0);\n"+
+			"}";
+		ShaderProgram.pedantic = false;
+		shader = new ShaderProgram(vert, frag);
+	}
+
+    public void criarAtlas() {
+		int texTam = new Pixmap(Gdx.files.internal(texturas.get(0))).getWidth(); 
+		int atlasTam = texTam * 2; 
+
+		Pixmap atlasPx = new Pixmap(atlasTam, atlasTam, Pixmap.Format.RGBA8888);
+
+		for(int i = 0; i < texturas.size(); i++) {
+			int x = (i % 2) * texTam;  // 0, texTam, 0, texTam
+			int y = (i / 2) * texTam;  // 0, 0, texTam, texTam
+			
+			Pixmap px = new Pixmap(Gdx.files.internal(texturas.get(i)));
+
+			atlasPx.drawPixmap(px, x, y);
+
+			float u1 = (float)x / atlasTam;
+			float v1 = (float)y / atlasTam;
+			float u2 = (float)(x + texTam) / atlasTam;
+			float v2 = (float)(y + texTam) / atlasTam;
+
+			atlasUVs.put(i, new float[]{u1, v1, u2, v2});
+			
+			px.dispose();
+		}
+		atlasGeral = new Texture(atlasPx);
+		atlasPx.dispose(); 
+		ChunkUtil.atlasUVs = atlasUVs;
+	}
+	// chamado em render:
+	public void attChunks(float playerX, float playerZ) {
+		int chunkX = (int) playerX / TAM_CHUNK;
+		int chunkZ = (int) playerZ / TAM_CHUNK;
+		
+		chunksAtivos.clear();
+		
+		for(int x = chunkX - RAIO_CHUNKS; x <= chunkX + RAIO_CHUNKS; x++) {
+			for(int z = chunkZ - RAIO_CHUNKS; z <= chunkZ + RAIO_CHUNKS; z++) {
+				final ChunkUtil.Chave chave = new ChunkUtil.Chave(x, z);
+				if(chunks.containsKey(chave)) {
+					chunksAtivos.put(chave, chunks.get(chave));
+					continue;
+				}
+				final int cx = x;
+				final int cz = z;
+				exec.submit(new Runnable() {
+						@Override
+						public void run() {
+							final Chunk chunk = gerarChunk(cx, cz);
+							final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
+							final IntArrayUtil idcGeral = new IntArrayUtil();
+							ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
+							Gdx.app.postRunnable(new Runnable() {
+									@Override
+									public void run() {
+										chunk.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
+										ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
+
+										Matrix4 m = new Matrix4();
+										m.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
+										chunk.mesh.transform(m);
+									}
+								});
+							chunks.put(chave, chunk);
+							chunksAtivos.put(chave, chunk);
+						}
+					});
+			}
+		}
+	}
+	// GERAÇÃO DE DADOS:
+	// chamado em show:
+	public Chunk gerarChunk(int... coord) {
+		Chunk chunk = new Chunk();
+		
+		int chunkX = coord[0];
+		int chunkZ = coord[1];
+
+		for(int x = 0; x < TAM_CHUNK; x++) {
+			for(int z = 0; z < TAM_CHUNK; z++) {
+				float px = chunkX * TAM_CHUNK + x;
+				float pz = chunkZ * TAM_CHUNK + z;
+
+				float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 1.0f, 12345, 4, 0.5f);
+				int altura = 45  + (int)(alturaRuido * 5);
+
+				for(int y = 0; y < Y_CHUNK; y++) {
+					byte bloco = 0; // ar
+
+					if(y < altura) {
+						float cavernaRuido = PerlinNoise3D.ruidoFractal3D(
+							px * 0.05f, y * 0.1f, pz * 0.05f, 67890, 3, 0.6f
+						);
+						if(cavernaRuido > -0.1f) {
+							if(y < altura - 3) {
+								bloco = 3; // Pedra
+							} else if(y < altura - 1) {
+								bloco = 2; // Terra
+							} else {
+								bloco = 1; // Grama
+							}
+						}
+					}
+					chunk.chunk[x][y][z] = bloco;
+				}
+			}
+		}
+		chunk.chunkX = chunkX;
+		chunk.chunkZ = chunkZ;
+		return chunk;
+	}
+	// chamado render:
+	public void att(float delta, PerspectiveCamera camera) {
+		if(shader == null) return;
+		
+		attChunks(camera.position.x, camera.position.z);
+
+		shader.begin();
+		shader.setUniformMatrix("u_projTrans", camera.combined);
+
+		atlasGeral.bind(0);
+		shader.setUniformi("u_textura", 0);
+
+		LuzUtil.luzTextura.bind(1);
+		shader.setUniformi("u_mapaLuz", 1); 
+
+		shader.setUniformf("u_solDir", solDir); 
+		shader.setUniformf("u_luzAmt", luzAmt);
+		shader.setUniformf("u_sombraDensi", sombraDensi);
+		for(final Chunk chunk : chunksAtivos.values()) {	
+			if(chunk.att) {
+				chunk.att = false;
+			}
+			if(chunk.mesh.getNumIndices() > 0) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
+		}
+		shader.end();
+	}
+	// chamado em dispose:
+	public void liberar() {
+        atlasGeral.dispose();
+		for(Chunk chunk : chunks.values()) chunk.mesh.dispose();
+		shader.dispose();
+		LuzUtil.liberar();
+		texturas.clear();
+		chunks.clear();
+		chunksAtivos.clear();
+		atlasUVs.clear();
+		exec.shutdown();
+	}
+}

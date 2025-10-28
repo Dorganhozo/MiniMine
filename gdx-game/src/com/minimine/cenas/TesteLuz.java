@@ -17,6 +17,8 @@ import com.minimine.utils.IntArrayUtil;
 import com.minimine.cenas.blocos.Luz;
 import com.badlogic.gdx.Screen;
 import com.minimine.Controles;
+import java.util.List;
+import java.util.ArrayList;
 
 public class TesteLuz implements Screen {
 	public Controles ctr;
@@ -74,8 +76,8 @@ class MundoLuz {
 		grama_lado = new Texture(Gdx.files.internal("blocos/grama_lado.png"));
 		terra = new Texture(Gdx.files.internal("blocos/terra.png"));
 		pedra = new Texture(Gdx.files.internal("blocos/pedra.png"));
-		LuzUtil.luzPx = new Pixmap(TAM_CHUNK, TAM_CHUNK, Pixmap.Format.RGB888);
-		LuzUtil.luzTextura = new Texture(LuzUtil.luzPx);
+		LuzUtilTeste.luzPx = new Pixmap(TAM_CHUNK, TAM_CHUNK, Pixmap.Format.RGB888);
+		LuzUtilTeste.luzTextura = new Texture(LuzUtilTeste.luzPx);
 
 		int maxFaces = 16 * 16 * 16 * 6;
 		int maxVerts = maxFaces * 4;
@@ -146,8 +148,8 @@ class MundoLuz {
 		}
 		attMesh();
 
-		LuzUtil.addLuz(new Luz(7, 15, 7, new Color(1.0f, 0.0f, 0.0f, 1.0f)), chunk);
-		LuzUtil.addLuz(player, chunk);
+		LuzUtilTeste.addLuz(new Luz(7, 15, 7, new Color(1.0f, 0.0f, 0.0f, 1.0f)), chunk);
+		LuzUtilTeste.addLuz(player, chunk);
 	}
 
 	public boolean ehSolido(int x, int y, int z) {
@@ -166,7 +168,7 @@ class MundoLuz {
 		player.z = (int)camera.position.z;
 		player.y = (int)camera.position.y;
 
-		LuzUtil.att(chunk);
+		LuzUtilTeste.att(chunk);
 
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", camera.combined);
@@ -174,7 +176,7 @@ class MundoLuz {
 		grama_topo.bind(0);
 		shader.setUniformi("u_textura", 0);
 		// mapa de luz
-		LuzUtil.luzTextura.bind(1);
+		LuzUtilTeste.luzTextura.bind(1);
 		shader.setUniformi("u_mapaLuz", 1); 
 		// iluminacao dimanica
 		shader.setUniformf("u_solDir", solDir); 
@@ -202,7 +204,7 @@ class MundoLuz {
 		meshTerra.dispose();
 		meshPedra.dispose();
 		shader.dispose();
-		LuzUtil.liberar();
+		LuzUtilTeste.liberar();
 	}
 	// CALCULOS PESADOS:
 	public void attMesh() {
@@ -332,5 +334,70 @@ class MundoLuz {
 		if(t == grama_lado) return g;
 		if(t == terra) return ter;
 		return p;
+	}
+}
+
+class LuzUtilTeste {
+	public static int TAM_CHUNK = 16;
+	public static Pixmap luzPx;
+	public static Texture luzTextura;
+	public static List<Luz> luzes = new ArrayList<>();
+
+	public static void addLuz(Luz luz, byte[][][] chunk) {
+		luzPx.setColor(0.0f, 0.0f, 0.0f, 1.0f);
+		luzPx.fill();
+
+		propagarLuz(luz.x + 0.5f, luz.z + 0.5f, luz.cor, luz.raio);
+
+		luzTextura.draw(luzPx, 0, 0);
+
+		luzes.add(luz);
+	}
+
+	public static void att(byte[][][] chunk, List<Luz> luzes) {
+		luzPx.setColor(0.0f, 0.0f, 0.0f, 1.0f);
+		luzPx.fill();
+		for(Luz luz : luzes) {
+			propagarLuz(luz.x + 0.5f, luz.z + 0.5f, luz.cor, luz.raio);
+		}
+		luzTextura.draw(luzPx, 0, 0);
+	}
+
+	public static void att(byte[][][] chunk) {
+		att(chunk, luzes);
+	}
+
+	public static void propagarLuz(float X, float Z, Color cor, float raio) {
+		for(int x = 0; x < TAM_CHUNK; x++) {
+			for(int z = 0; z < TAM_CHUNK; z++) {
+				float pixelX = x + 0.5f; 
+				float pixelZ = z + 0.5f;
+
+				float dist2 = (X - pixelX) * (X - pixelX) + (Z - pixelZ) * (Z - pixelZ);
+				float dist = (float) Math.sqrt(dist2);
+
+				if(dist < raio) {
+					float nivel = 1.0f - (dist / raio); 
+
+					float r = cor.r * nivel;
+					float g = cor.g * nivel;
+					float b = cor.b * nivel;
+
+					Color existe = new Color(luzPx.getPixel(x, z));
+
+					float finalR = Math.min(1.0f, existe.r + r);
+					float finalG = Math.min(1.0f, existe.g + g);
+					float finalB = Math.min(1.0f, existe.b + b);
+
+					luzPx.setColor(finalR, finalG, finalB, 1.0f);
+					luzPx.drawPixel(x, z);
+				}
+			}
+		}
+	}
+
+	public static void liberar() {
+		luzPx.dispose();
+		luzTextura.dispose();
 	}
 }
