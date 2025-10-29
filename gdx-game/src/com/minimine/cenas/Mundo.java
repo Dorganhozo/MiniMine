@@ -1,32 +1,30 @@
 package com.minimine.cenas;
 
-import com.minimine.utils.ChunkUtil;
-import com.badlogic.gdx.graphics.Texture;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashMap;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.minimine.cenas.blocos.Luz;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.math.Matrix4;
-import com.minimine.PerlinNoise3D;
-import com.minimine.PerlinNoise2D;
+import com.badlogic.gdx.graphics.Texture;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
+import com.minimine.utils.ChunkUtil;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.Iterator;
 import java.util.concurrent.Executors;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.Gdx;
+import com.minimine.PerlinNoise2D;
+import com.minimine.PerlinNoise3D;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.graphics.Mesh;
 import com.minimine.utils.FloatArrayUtil;
 import com.minimine.utils.IntArrayUtil;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.Iterator;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Pool;
 
 public class Mundo {
 	public Texture atlasGeral;
@@ -36,7 +34,7 @@ public class Mundo {
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 10;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 3;
 
 	public ShaderProgram shader;
 
@@ -46,9 +44,17 @@ public class Mundo {
 	public int maxVerts, maxIndices, maxFaces;
 	public VertexAttribute[] atriburs = new VertexAttribute[] {
 		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
-		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0")
+		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"),
+		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor") // Adicionado
 	};
-
+	
+	public Pool<Mesh> meshReuso = new Pool<Mesh>() {
+		@Override
+		protected Mesh newObject() {
+			return new Mesh(true, maxVerts, maxIndices, atriburs);
+		}
+	};
+	
 	public Mundo() {
 		texturas.add("blocos/grama_topo.png");
 		texturas.add("blocos/grama_lado.png");
@@ -64,10 +70,13 @@ public class Mundo {
 		String vert =
 			"attribute vec3 a_posicao;\n"+
 			"attribute vec2 a_texCoord0;\n"+
+			"attribute vec4 a_cor;\n"+
 			"uniform mat4 u_projTrans;\n"+
 			"varying vec2 v_texCoord;\n"+
+			"varying vec4 v_cor;\n"+
 			"void main() {\n"+
 			"  v_texCoord = a_texCoord0;\n"+
+			"  v_cor = a_cor;\n"+
 			"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n"+
 			"}";
 
@@ -76,9 +85,11 @@ public class Mundo {
 			"precision mediump float;\n"+
 			"#endif\n"+
 			"varying vec2 v_texCoord;\n"+
+			"varying vec4 v_cor;\n"+
 			"uniform sampler2D u_textura;\n"+
 			"void main() {\n"+
-			"  gl_FragColor = texture2D(u_textura, v_texCoord);\n"+
+			"  vec4 texColor = texture2D(u_textura, v_texCoord);\n"+
+			"  gl_FragColor = texColor * v_cor;\n"+
 			"}";
 		
 		ShaderProgram.pedantic = false;
@@ -165,10 +176,10 @@ public class Mundo {
 					@Override
 					public void run() {
 						for(int i = -raio; i <= raio; i++) {
-							tentarGerarChunk(chunkX + i, chunkZ - raio); // Topo
-							tentarGerarChunk(chunkX + i, chunkZ + raio); // Baixo
-							tentarGerarChunk(chunkX - raio, chunkZ + i); // Esquerda  
-							tentarGerarChunk(chunkX + raio, chunkZ + i); // Direita
+							tentarGerarChunk(chunkX + i, chunkZ - raio); // topo
+							tentarGerarChunk(chunkX + i, chunkZ + raio); // baixo
+							tentarGerarChunk(chunkX - raio, chunkZ + i); // esquerda  
+							tentarGerarChunk(chunkX + raio, chunkZ + i); // direita
 						}
 					}
 				});
@@ -182,7 +193,6 @@ public class Mundo {
 		if(chunkExistente != null && chunkExistente.mesh != null) {
 			return;
 		}
-
 		if(chunkExistente == null) {
 			chunks.put(chave, new Chunk());
 			gerarChunk(chave);
@@ -202,7 +212,7 @@ public class Mundo {
 
 			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
 				if(chunk.mesh != null) {
-					chunk.mesh.dispose();
+					meshReuso.free(chunk.mesh);
 				}
 				iterator.remove();
 				chunks.remove(chave);
@@ -238,7 +248,7 @@ public class Mundo {
 							}
 						}
 					}
-					chunk.chunk[lx][y][lz] = bloco;
+					ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 				}
 			}
 		}
@@ -252,7 +262,7 @@ public class Mundo {
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				chunk.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
+				chunk.mesh = meshReuso.obtain();
 				ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
 				Matrix4 m = new Matrix4();
 				m.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
@@ -261,135 +271,3 @@ public class Mundo {
 		});
 	}
 }
-/*
-package com.minimine.cenas;
-
-import com.badlogic.gdx.graphics.Texture;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import java.util.Objects;
-import com.minimine.PerlinNoise2D;
-
-public class Mundo {
-	public static Texture atlasGeral;
-    // mapa de UVs:
-    // (atlas ID -> [u_min, v_min, u_max, v_max])
-	public final List<String> texturas = new ArrayList<>();
-    public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
-	public final Map<Chave, Chunk> chunks = new HashMap<>();
-	public final Map<Chave, Chunk> chunksAtivos = new HashMap<>();
-
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 3;
-	// zero é ar
-	public static final byte B_GRAMA = 1, B_TERRA = 2, B_PEDRA = 3;
-	
-	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
-	
-	public Mundo() {
-		texturas.add("blocos/grama_topo.png");
-		texturas.add("blocos/grama_lado.png");
-		texturas.add("blocos/terra.png");
-		texturas.add("blocos/pedra.png");
-		
-        criarAtlas();
-	}
-
-    public void criarAtlas() {
-		int texTam = new Pixmap(Gdx.files.internal(texturas.get(0))).getWidth(); 
-		int atlasTam = texTam * 2; 
-
-		Pixmap atlasPx = new Pixmap(atlasTam, atlasTam, Pixmap.Format.RGBA8888);
-
-		for(int i = 0; i < texturas.size(); i++) {
-			int x = (i % 2) * texTam;  // 0, texTam, 0, texTam
-			int y = (i / 2) * texTam;  // 0, 0, texTam, texTam
-			
-			Pixmap px = new Pixmap(Gdx.files.internal(texturas.get(i)));
-
-			atlasPx.drawPixmap(px, x, y);
-
-			float u1 = (float)x / atlasTam;
-			float v1 = (float)y / atlasTam;
-			float u2 = (float)(x + texTam) / atlasTam;
-			float v2 = (float)(y + texTam) / atlasTam;
-
-			atlasUVs.put(i, new float[]{u1, v1, u2, v2});
-			
-			px.dispose();
-		}
-		atlasGeral = new Texture(atlasPx);
-		atlasPx.dispose(); 
-	}
-	// GERAÇÃO DE DADOS:
-	public void gerarBlocos(Chunk chunk) {
-		float escala = 0.01f; 
-		int octaves = 4;
-
-		for(int x = 0; x < TAM_CHUNK; x++) {
-			for(int z = 0; z < TAM_CHUNK; z++) {
-				float mundoX = (chunk.chunkX * TAM_CHUNK) + x;
-				float mundoZ = (chunk.chunkZ * TAM_CHUNK) + z;
-
-				float noise = PerlinNoise2D.ruidoFractal2D(mundoX, mundoZ, escala, 12345, octaves, 0.5f);
-
-				int altura = (int)((noise + 1) * 15 + 40);
-
-				for(int y = 0; y <= altura && y < Y_CHUNK; y++) {
-					if(y == altura) {
-						chunk.blocos[x][y][z] = B_GRAMA;
-					} else if(y > altura - 4) {
-						chunk.blocos[x][y][z] = B_TERRA;
-					} else {
-						chunk.blocos[x][y][z] = B_PEDRA;
-					}
-				}
-			}
-		}
-	}
-	// chamado render:
-	public void att(float delta, PerspectiveCamera camera) {
-		
-	}
-	// chamado em dispose:
-	public void liberar() {
-        atlasGeral.dispose();
-		texturas.clear();
-		chunks.clear();
-		chunksAtivos.clear();
-		atlasUVs.clear();
-		exec.shutdown();
-	}
-	
-	public static class Chunk {
-		public byte[][][] blocos = new byte[TAM_CHUNK][Y_CHUNK][TAM_CHUNK];
-		public int chunkX, chunkZ;
-	}
-	
-	public static class Chave {
-		public int x, z;
-		public Chave(int x, int z) {
-			this.x = x;
-			this.z = z;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if(this == o) return true;
-			if(o.getClass() != getClass()) return false;
-			Chave chave = (Chave) o;
-			return  x == chave.x && z == chave.z;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(x, z);
-		}
-	}
-} */

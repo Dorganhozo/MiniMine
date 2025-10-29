@@ -12,136 +12,185 @@ import com.badlogic.gdx.utils.Pool;
 import java.util.Arrays;
 
 public class ChunkUtil {
-	public static class FloatArrayPool extends Pool<float[]> {
-		public final int arrayTam;
-
-		public FloatArrayPool(int arrayTam, int tamInicial, int maxTam) {
-			super(tamInicial, maxTam);
-			this.arrayTam = arrayTam;
-		}
-
-		@Override
-		protected float[] newObject() {
-			return new float[arrayTam];
-		}
-
-		@Override
-		public void reset(float[] array) {
-			Arrays.fill(array, 0);
-		}
-	}
+    public static final float LUZ_SOL = 1.0f;
+    public static final float LUZ_AMBIENTE = 0.25f;
+    public static final float[] FACE_LUZ = {
+        1.0f, // topo - luz max
+        0.4f, // baixo - mais escuro
+        0.7f, // lado +X
+        0.7f, // lado -X  
+        0.8f, // lado +Z
+        0.8f  // lado -Z
+    };
 	
-	public static float[] encher(float... arr) {
-		return new float[]{arr[0], arr[1], arr[2]};
-	}
-	
-	public static void addFace(int x, int y, int z, int faceId, int atlasId, FloatArrayUtil verts, IntArrayUtil idc, Chunk chunk) {
-		float tam = 1f;
-		float X = x * tam;
-		float Y = y * tam;
-		float Z = z * tam;
+    public static float calcularNivelLuz(int x, int y, int z, int faceId, Chunk chunk) {
+        float luzCeu = calcularLuzCeu(x, y, z, chunk);
+        float luzFinal = Math.max(LUZ_AMBIENTE, luzCeu);
 
-		float[][] faceVertices = new float[4][3];
-		float[][] uvPadrao = new float[4][2]; 
+        luzFinal *= FACE_LUZ[faceId];
 
-		switch(faceId) {
-			case 0: // topo
-				faceVertices[0] = encher(X+tam, Y+tam, Z);
-				faceVertices[1] = encher(X, Y+tam, Z);
-				faceVertices[2] = encher(X, Y+tam, Z+tam);
-				faceVertices[3] = encher(X+tam, Y+tam, Z+tam);
-				uvPadrao = new float[][]{{1,1},{0,1},{0,0},{1,0}};
-				break;
-			case 1: // baixo
-				faceVertices[0] = encher(X+tam, Y, Z+tam);
-				faceVertices[1] = encher(X, Y, Z+tam);
-				faceVertices[2] = encher(X, Y, Z);
-				faceVertices[3] = encher(X+tam, Y, Z);
-				uvPadrao = new float[][]{{1,0},{0,0},{0,1},{1,1}};
-				break;
-			case 2: // +X
-				faceVertices[0] = encher(X+tam, Y, Z+tam);
-				faceVertices[1] = encher(X+tam, Y, Z);
-				faceVertices[2] = encher(X+tam, Y+tam, Z);
-				faceVertices[3] = encher(X+tam, Y+tam, Z+tam);
-				uvPadrao = new float[][]{{1,1},{0,1},{0,0},{1,0}};
-				break;
-			case 3: // -X
-				faceVertices[0] = encher(X, Y, Z);
-				faceVertices[1] = encher(X, Y, Z+tam);
-				faceVertices[2] = encher(X, Y+tam, Z+tam);
-				faceVertices[3] = encher(X, Y+tam, Z);
-				uvPadrao = new float[][]{{1,1},{0,1},{0,0},{1,0}};
-				break;
-			case 4: // +Z
-				faceVertices[0] = encher(X, Y+tam, Z+tam);
-				faceVertices[1] = encher(X, Y, Z+tam);
-				faceVertices[2] = encher(X+tam, Y, Z+tam);
-				faceVertices[3] = encher(X+tam, Y+tam, Z+tam);
-				uvPadrao = new float[][]{{0,0},{0,1},{1,1},{1,0}};
-				break;
-			case 5: // -Z
-				faceVertices[0] = encher(X, Y, Z);
-				faceVertices[1] = encher(X, Y+tam, Z);
-				faceVertices[2] = encher(X+tam, Y+tam, Z);
-				faceVertices[3] = encher(X+tam, Y, Z);
-				uvPadrao = new float[][]{{0,1},{0,0},{1,0},{1,1}};
-				break;
-		}
-		float[] atlasCoords = Mundo.atlasUVs.get(atlasId);
-		if(atlasCoords == null) return;
+        return Math.max(0.1f, Math.min(1.0f, luzFinal));
+    }
 
-		float u_min = atlasCoords[0];
-		float v_min = atlasCoords[1];
-		float u_max = atlasCoords[2];
-		float v_max = atlasCoords[3];
+    public static float calcularLuzCeu(int x, int y, int z, Chunk chunk) {
+        // se estiver no topo do mundo, recebe luz máxima
+        if(y >= Mundo.Y_CHUNK - 1)  return LUZ_SOL;
+        // se tem bloco solido em cima:
+        int blocosAcima = 0;
+        for(int cy = y + 1; cy < Mundo.Y_CHUNK; cy++) {
+            if(ehSolido(x, cy, z, chunk)) {
+                blocosAcima++;
+            }
+        }
+        if(blocosAcima == 0) return LUZ_SOL;
+        // luz badeada no num de blocos em cima
+        float atenuacao = 1.0f - (blocosAcima * 0.15f); // 15% de redução por bloco
+        return Math.max(LUZ_AMBIENTE, LUZ_SOL * atenuacao);
+    }
 
-		int vertConta = verts.tam / 5;
+    public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, IntArrayUtil idcGeral) {
+        attLuz(chunk);
 
-		for(int i = 0; i < 4; i++) {
-			float vx = faceVertices[i][0], vy = faceVertices[i][1], vz = faceVertices[i][2];
+        for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
+            for(int y = 0; y < Mundo.Y_CHUNK; y++) {
+                for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
+                    int bloco = obterBloco(x, y, z, chunk);
+                    if(bloco == 0 || bloco == 4) continue;
 
-			float u = u_min + uvPadrao[i][0] * (u_max - u_min);
-			float v = v_min + uvPadrao[i][1] * (v_max - v_min);
+                    int idTopo = 0, idLado = 0, idBaixo = 0;
 
-			verts.add(vx); verts.add(vy); verts.add(vz); 
-			verts.add(u); verts.add(v);
-		}
-		idc.add(vertConta + 0);
-		idc.add(vertConta + 1);
-		idc.add(vertConta + 2);
-		idc.add(vertConta + 2);
-		idc.add(vertConta + 3);
-		idc.add(vertConta + 0);
-	}
-	
-	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, IntArrayUtil idcGeral) {
-		for(int x = 0; x < chunk.TAM_CHUNKX; x++) {
-			for(int y = 0; y < chunk.TAM_CHUNKY; y++) {
-				for(int z = 0; z < chunk.TAM_CHUNKZ; z++) {
-					int bloco = chunk.chunk[x][y][z];
-					if(bloco == 0 || bloco == 4) continue;
-
-					int idTopo = 0, idLado = 0, idBaixo = 0;
-
-					switch(bloco) {
-						case 1: idTopo = 0; idLado = 1; idBaixo = 2; break; 
-						case 2: idTopo = 2; idLado = 2; idBaixo = 2; break; 
-						case 3: idTopo = 3; idLado = 3; idBaixo = 3; break; 
+                    switch(bloco) {
+                        case 1: idTopo = 0; idLado = 1; idBaixo = 2; break; 
+                        case 2: idTopo = 2; idLado = 2; idBaixo = 2; break; 
+                        case 3: idTopo = 3; idLado = 3; idBaixo = 3; break; 
                         default: continue; 
-					}
+                    }
                     // adiciona faces
-					if(y == chunk.TAM_CHUNKY - 1 || !ehSolido(x, y + 1, z, chunk)) addFace(x,y,z,0, idTopo, vertsGeral, idcGeral, chunk);
-					if(y == 0 || !ehSolido(x, y - 1, z, chunk)) addFace(x,y,z,1, idBaixo, vertsGeral, idcGeral, chunk);
-					if(x == chunk.TAM_CHUNKX - 1 || !ehSolido(x + 1, y, z, chunk)) addFace(x,y,z,2, idLado, vertsGeral, idcGeral, chunk);
-					if(x == 0 || !ehSolido(x - 1, y, z, chunk)) addFace(x,y,z,3, idLado, vertsGeral, idcGeral, chunk);
-					if(z == chunk.TAM_CHUNKZ - 1 || !ehSolido(x, y, z + 1, chunk)) addFace(x,y,z,4, idLado, vertsGeral, idcGeral, chunk);
-					if(z == 0 || !ehSolido(x, y, z - 1, chunk)) addFace(x,y,z,5, idLado, vertsGeral, idcGeral, chunk);
-				}
-			}
-		}
-	}
+                    if(y == Mundo.Y_CHUNK - 1 || !ehSolido(x, y + 1, z, chunk)) addFace(x,y,z,0, idTopo, vertsGeral, idcGeral, chunk);
+                    if(y == 0 || !ehSolido(x, y - 1, z, chunk)) addFace(x,y,z,1, idBaixo, vertsGeral, idcGeral, chunk);
+                    if(x == Mundo.TAM_CHUNK - 1 || !ehSolido(x + 1, y, z, chunk)) addFace(x,y,z,2, idLado, vertsGeral, idcGeral, chunk);
+                    if(x == 0 || !ehSolido(x - 1, y, z, chunk)) addFace(x,y,z,3, idLado, vertsGeral, idcGeral, chunk);
+                    if(z == Mundo.TAM_CHUNK - 1 || !ehSolido(x, y, z + 1, chunk)) addFace(x,y,z,4, idLado, vertsGeral, idcGeral, chunk);
+                    if(z == 0 || !ehSolido(x, y, z - 1, chunk)) addFace(x,y,z,5, idLado, vertsGeral, idcGeral, chunk);
+                }
+            }
+        }
+    }
+	
+    public static void attLuz(Chunk chunk) {
+        for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
+            for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
+                boolean bloqueado = false;
+                // do topo para baixo
+                for(int y = Mundo.Y_CHUNK - 1; y >= 0; y--) {
+                    if(!bloqueado) {
+                        // se encontrou um bloco solido, começa a bloquear
+                        if(ehSolido(x, y, z, chunk)) {
+                            bloqueado = true;
+                            // armazena luz reduzida pra esse bloco
+                            defLuz(x, y, z, (byte)10, chunk); // 10/15 de luz
+                        } else {
+                            // ar - luz maxima
+                            defLuz(x, y, z, (byte)15, chunk);
+                        }
+                    } else {
+                        // ja ta bloqueado, luz ambiente min
+                        defLuz(x, y, z, (byte)2, chunk); // 2/15 de luz
+                    }
+                }
+            }
+        }
+    }
+	
+    public static void addFace(int x, int y, int z, int faceId, int atlasId, FloatArrayUtil verts, IntArrayUtil idc, Chunk chunk) {
+        float tam = 1f;
+        float X = x * tam;
+        float Y = y * tam;
+        float Z = z * tam;
 
+        float[][] faceVertices = new float[4][3];
+        float[][] uvPadrao = new float[4][2]; 
+		
+		// nivel de luz pra face:
+        float nivelLuz = calcularNivelLuz(x, y, z, faceId, chunk);
+		int r = (int)(nivelLuz * 255);
+        int g = (int)(nivelLuz * 255);
+        int b = (int)(nivelLuz * 255);
+        int a = 255;
+		int cor = (a << 24) | (b << 16) | (g << 8) | r;
+
+        switch(faceId) {
+            case 0: // topo
+                faceVertices[0] = new float[]{X+tam, Y+tam, Z};
+                faceVertices[1] = new float[]{X, Y+tam, Z};
+                faceVertices[2] = new float[]{X, Y+tam, Z+tam};
+                faceVertices[3] = new float[]{X+tam, Y+tam, Z+tam};
+                uvPadrao = new float[][]{{1,1},{0,1},{0,0},{1,0}};
+                break;
+            case 1: // baixo
+                faceVertices[0] = new float[]{X+tam, Y, Z+tam};
+                faceVertices[1] = new float[]{X, Y, Z+tam};
+                faceVertices[2] = new float[]{X, Y, Z};
+                faceVertices[3] = new float[]{X+tam, Y, Z};
+                uvPadrao = new float[][]{{1,0},{0,0},{0,1},{1,1}};
+                break;
+            case 2: // +X
+                faceVertices[0] = new float[]{X+tam, Y, Z+tam};
+                faceVertices[1] = new float[]{X+tam, Y, Z};
+                faceVertices[2] = new float[]{X+tam, Y+tam, Z};
+                faceVertices[3] = new float[]{X+tam, Y+tam, Z+tam};
+                uvPadrao = new float[][]{{1,1},{0,1},{0,0},{1,0}};
+                break;
+            case 3: // -X
+                faceVertices[0] = new float[]{X, Y, Z};
+                faceVertices[1] = new float[]{X, Y, Z+tam};
+                faceVertices[2] = new float[]{X, Y+tam, Z+tam};
+                faceVertices[3] = new float[]{X, Y+tam, Z};
+                uvPadrao = new float[][]{{1,1},{0,1},{0,0},{1,0}};
+                break;
+            case 4: // +Z
+                faceVertices[0] = new float[]{X, Y+tam, Z+tam};
+                faceVertices[1] = new float[]{X, Y, Z+tam};
+                faceVertices[2] = new float[]{X+tam, Y, Z+tam};
+                faceVertices[3] = new float[]{X+tam, Y+tam, Z+tam};
+                uvPadrao = new float[][]{{0,0},{0,1},{1,1},{1,0}};
+                break;
+            case 5: // -Z
+                faceVertices[0] = new float[]{X, Y, Z};
+                faceVertices[1] = new float[]{X, Y+tam, Z};
+                faceVertices[2] = new float[]{X+tam, Y+tam, Z};
+                faceVertices[3] = new float[]{X+tam, Y, Z};
+                uvPadrao = new float[][]{{0,1},{0,0},{1,0},{1,1}};
+                break;
+        }
+        float[] atlasCoords = Mundo.atlasUVs.get(atlasId);
+        if(atlasCoords == null) return;
+
+        float u_min = atlasCoords[0];
+        float v_min = atlasCoords[1];
+        float u_max = atlasCoords[2];
+        float v_max = atlasCoords[3];
+
+        int vertConta = verts.tam / 6; // 6 floats por vertice
+
+        for(int i = 0; i < 4; i++) {
+            float vx = faceVertices[i][0], vy = faceVertices[i][1], vz = faceVertices[i][2];
+
+            float u = u_min + uvPadrao[i][0] * (u_max - u_min);
+            float v = v_min + uvPadrao[i][1] * (v_max - v_min);
+            // luz:
+            verts.add(vx); verts.add(vy); verts.add(vz); 
+            verts.add(u); verts.add(v);
+            verts.add(Float.intBitsToFloat(cor));
+        }
+        idc.add(vertConta + 0);
+        idc.add(vertConta + 1);
+        idc.add(vertConta + 2);
+        idc.add(vertConta + 2);
+        idc.add(vertConta + 3);
+        idc.add(vertConta + 0);
+    }
+	
 	public static void defMesh(Mesh mesh, FloatArrayUtil verts, IntArrayUtil idc) {
 		if(verts.tam == 0) {
 			mesh.setVertices(new float[0]);
@@ -157,8 +206,44 @@ public class ChunkUtil {
 	}
 	
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
-        if(x < 0 || x >= chunk.TAM_CHUNKX || y < 0 || y >= chunk.TAM_CHUNKY || z < 0 || z >= chunk.TAM_CHUNKZ) return false;
-        return chunk.chunk[x][y][z] != 0;
+        if(x < 0 || x >= Mundo.TAM_CHUNK || y < 0 || y >= Mundo.Y_CHUNK || z < 0 || z >= Mundo.TAM_CHUNK) return false;
+        return obterBloco(x, y, z, chunk) != 0;
+    }
+	
+	public static byte obterLuz(int x, int y, int z, Chunk chunk) {
+        int i = x + (z * 16) + (y * 16 * 16);
+        int byteIdc = i / 4;
+        int bitPos = (i % 4) * 2;
+        return (byte)((chunk.luz[byteIdc] >> bitPos) & 0b11);
+    }
+
+    public static void defLuz(int x, int y, int z, byte valor, Chunk chunk) {
+        int i = x + (z * 16) + (y * 16 * 16);
+        int byteIdc = i / 4;
+        int bitPos = (i % 4) * 2;
+
+        byte mascaraLimpar = (byte) ~(0b11 << bitPos);
+        byte mascaraDef = (byte) ((valor & 0b11) << bitPos);
+
+        chunk.luz[byteIdc] = (byte) ((chunk.luz[byteIdc] & mascaraLimpar) | mascaraDef);
+    }
+	
+	public static byte obterBloco(int x, int y, int z, Chunk chunk) {
+        int i = x + (z * 16) + (y * 16 * 16);
+        int byteIdc = i / 4;
+        int bitPos = (i % 4) * 2;
+        return (byte)((chunk.blocos[byteIdc] >> bitPos) & 0b11);
+    }
+
+    public static void defBloco(int x, int y, int z, byte valor, Chunk chunk) {
+        int i = x + (z * 16) + (y * 16 * 16);
+        int byteIdc = i / 4;
+        int bitPos = (i % 4) * 2;
+
+        byte mascaraLimpar = (byte) ~(0b11 << bitPos);
+        byte mascaraDef= (byte) ((valor & 0b11) << bitPos);
+
+        chunk.blocos[byteIdc] = (byte) ((chunk.blocos[byteIdc] & mascaraLimpar) | mascaraDef);
     }
 	
 	public static class Chave {
