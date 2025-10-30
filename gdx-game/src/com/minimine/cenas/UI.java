@@ -21,11 +21,11 @@ public class UI implements InputProcessor {
     public SpriteBatch sb;
     public BitmapFont fonte;
 
-    public Texture texEsquerda, texDireita, texCima, texBaixo, texMira;
-    public Sprite spriteEsquerda, spriteDireita, spriteFrente, spriteTras, spriteCima, spriteBaixo, spriteMira;
-    public Rectangle rectEsquerda, rectDireita,rectFrente, rectTras, rectCima, rectBaixo;
+    public Texture texEsquerda, texDireita, texCima, texBaixo, texMira, texAcao;
+    public Sprite spriteEsquerda, spriteDireita, spriteFrente, spriteTras, spriteCima, spriteBaixo, spriteMira, spriteAcao;
+    public Rectangle rectEsquerda, rectDireita,rectFrente, rectTras, rectCima, rectBaixo, rectAcao;
 
-    public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false;
+    public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
 	
 	public int pontoEsq = -1;
     public int pontoDir = -1;
@@ -35,7 +35,7 @@ public class UI implements InputProcessor {
 	
 	public float sensi = 0.25f;
 	
-	public final HashMap<Integer, String> toques = new HashMap<>();
+	public final HashMap<Integer, CharSequence> toques = new HashMap<>();
     // camera
     public float yaw = 180f;
     public float tom = -20f;
@@ -78,13 +78,19 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-
+		
 		if(rectEsquerda.contains(telaX, y)) { esquerda = true; spriteEsquerda.setAlpha(0.7f); toques.put(p, "esq"); }
 		else if(rectDireita.contains(telaX, y)) { direita = true; spriteDireita.setAlpha(0.7f); toques.put(p, "dir"); }
 		else if(rectFrente.contains(telaX, y)) { frente = true; spriteFrente.setAlpha(0.7f); toques.put(p, "frente"); }
 		else if(rectTras.contains(telaX, y)) { tras = true; spriteTras.setAlpha(0.7f); toques.put(p, "tras"); }
 		else if(rectCima.contains(telaX, y)) { cima = true; spriteCima.setAlpha(0.7f); toques.put(p, "cima"); }
 		else if(rectBaixo.contains(telaX, y)) { baixo = true; spriteBaixo.setAlpha(0.7f); toques.put(p, "baixo"); }
+		else if(rectAcao.contains(telaX, y)) { 
+			acao = true; 
+			spriteAcao.setAlpha(0.7f); 
+			toques.put(p, "acao");
+			jogador.interagirComBloco();
+		}
 		else if(telaX >= telaV / 2 && pontoDir == -1) { 
 			pontoDir = p; 
 			ultimaDir.set(telaX, y); 
@@ -94,7 +100,7 @@ public class UI implements InputProcessor {
 
 	@Override
 	public boolean touchUp(int telaX, int telaY, int p, int b) {
-		String botao = toques.remove(p);
+		CharSequence botao = toques.remove(p);
 		if(botao != null) {
 			if(botao.equals("esq")) { esquerda = false; spriteEsquerda.setAlpha(1f); }
 			else if(botao.equals("dir")) { direita = false; spriteDireita.setAlpha(1f); }
@@ -102,6 +108,7 @@ public class UI implements InputProcessor {
 			else if(botao.equals("tras")) { tras = false; spriteTras.setAlpha(1f); }
 			else if(botao.equals("cima")) { cima = false; spriteCima.setAlpha(1f); }
 			else if(botao.equals("baixo")) { baixo = false; spriteBaixo.setAlpha(1f); }
+			else if(botao.equals("acao")) { acao = false; spriteAcao.setAlpha(1f); }
 		}
 		if(p == pontoDir) pontoDir = -1;
 		return true;
@@ -121,7 +128,7 @@ public class UI implements InputProcessor {
 			ultimaDir.set(telaX, y);
 		}
 		if(toques.containsKey(p)) {
-			String botaoAntigo = toques.get(p);
+			CharSequence botaoAntigo = toques.get(p);
 
 			if(botaoAntigo != null) {
 				if(botaoAntigo.equals("esq")) { esquerda = false; spriteEsquerda.setAlpha(1f); }
@@ -130,6 +137,7 @@ public class UI implements InputProcessor {
 				else if(botaoAntigo.equals("tras")) { tras = false; spriteTras.setAlpha(1f); }
 				else if(botaoAntigo.equals("cima")) { cima = false; spriteCima.setAlpha(1f); }
 				else if(botaoAntigo.equals("baixo")) { baixo = false; spriteBaixo.setAlpha(1f); }
+				else if(botaoAntigo.equals("acao")) { acao = false; spriteAcao.setAlpha(1f); }
 			}
 			if(rectEsquerda.contains(telaX, y)) { esquerda = true; spriteEsquerda.setAlpha(0.7f); toques.put(p, "esq"); }
 			else if(rectDireita.contains(telaX, y)) { direita = true; spriteDireita.setAlpha(0.7f); toques.put(p, "dir"); }
@@ -137,6 +145,7 @@ public class UI implements InputProcessor {
 			else if(rectTras.contains(telaX, y)) { tras = true; spriteTras.setAlpha(0.7f); toques.put(p, "tras"); }
 			else if(rectCima.contains(telaX, y)) { cima = true; spriteCima.setAlpha(0.7f); toques.put(p, "cima"); }
 			else if(rectBaixo.contains(telaX, y)) { baixo = true; spriteBaixo.setAlpha(0.7f); toques.put(p, "baixo"); }
+			else if(rectAcao.contains(telaX, y)) { acao = true; spriteAcao.setAlpha(0.7f); toques.put(p, "acao"); }
 			else toques.put(p, null);
 		}
 		return true;
@@ -148,6 +157,7 @@ public class UI implements InputProcessor {
 		texCima = new Texture(Gdx.files.internal("ui/botao_f.png"));
         texBaixo = new Texture(Gdx.files.internal("ui/botao_t.png"));
         texMira = new Texture(Gdx.files.internal("ui/mira.png"));
+		texAcao = new Texture(Gdx.files.internal("ui/clique.png"));
 
         spriteEsquerda = new Sprite(texEsquerda);
         spriteDireita = new Sprite(texDireita);
@@ -156,6 +166,7 @@ public class UI implements InputProcessor {
         spriteCima = new Sprite(texCima);
         spriteBaixo = new Sprite(texBaixo);
         spriteMira = new Sprite(texMira);
+		spriteAcao = new Sprite(texAcao);
 
         float botaoTam = 140f;
         spriteEsquerda.setSize(botaoTam, botaoTam);
@@ -164,6 +175,7 @@ public class UI implements InputProcessor {
         spriteTras.setSize(botaoTam, botaoTam);
         spriteCima.setSize(botaoTam, botaoTam);
         spriteBaixo.setSize(botaoTam, botaoTam);
+		spriteAcao.setSize(botaoTam, botaoTam);
         spriteMira.setSize(60f, 60f);
     }
 
@@ -171,8 +183,8 @@ public class UI implements InputProcessor {
 		float botaoTam = 140f;
 		float espaco = 60f;
 
-		float centerX = espaco + botaoTam * 1.5f;
-		float centerY = espaco + botaoTam * 1.5f;
+		final float centerX = espaco + botaoTam * 1.5f;
+		final float centerY = espaco + botaoTam * 1.5f;
 
 		spriteEsquerda.setPosition(centerX - botaoTam - espaco, centerY - botaoTam/2);
 		spriteDireita.setPosition(centerX + espaco, centerY - botaoTam/2);
@@ -180,6 +192,7 @@ public class UI implements InputProcessor {
 		spriteTras.setPosition(centerX - botaoTam/2, centerY - botaoTam - espaco);
 		spriteCima.setPosition(v - botaoTam*1.5f, centerY + espaco);
 		spriteBaixo.setPosition(v - botaoTam*1.5f, centerY - botaoTam - espaco);
+		spriteAcao.setPosition(v - botaoTam*1.5f, centerY*2 + espaco);
 		
 		spriteMira.setPosition(
 			v / 2 - spriteMira.getWidth() / 2, 
@@ -221,6 +234,13 @@ public class UI implements InputProcessor {
 			spriteBaixo.getWidth(), 
 			spriteBaixo.getHeight()
 		);
+		
+		rectAcao = new Rectangle(
+			spriteAcao.getX(), 
+			spriteAcao.getY(), 
+			spriteAcao.getWidth(), 
+			spriteAcao.getHeight()
+		);
 	}
 
 	public void att(float delta, Mundo mundo) {
@@ -239,14 +259,14 @@ public class UI implements InputProcessor {
 		if(this.tras)  jogador.velocidade.sub(new Vector3(frente).scl(velocidade));
 		if(this.esquerda) jogador.velocidade.add(new Vector3(direita).scl(velocidade));
 		if(this.direita) jogador.velocidade.sub(new Vector3(direita).scl(velocidade));
-		if(this.cima && jogador.noChao) {
-            jogador.velocidade.y = 15f; // pulo
-            jogador.noChao = false;
+		if(this.cima) {
+			if(jogador.modo != 2 || jogador.noChao) {
+				jogador.velocidade.y = 15f; // pulo
+				jogador.noChao = false;
+			}
         }
-        if(this.baixo) {
-            jogador.velocidade.y = Math.min(jogador.velocidade.y, -10f);
-        }
-
+        if(this.baixo) jogador.velocidade.y = -10f;
+        
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
 		Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0); 
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0); 
@@ -261,6 +281,7 @@ public class UI implements InputProcessor {
 		spriteCima.draw(sb);  
 		spriteBaixo.draw(sb);  
 		spriteMira.draw(sb);
+		spriteAcao.draw(sb);
 		
 		float livre = rt.freeMemory() >> 20;
 		float total = rt.totalMemory() >> 20;
@@ -268,12 +289,12 @@ public class UI implements InputProcessor {
 
 		fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
 		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa: %d\n"+
-		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\n"+
+		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
 		"Chunks ativos: %d\n"+
 		"Logs:\n%s",
 		camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
 		livre, total, usado, Gdx.app.getNativeHeap(),
-		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo,
+		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
 		mundo.chunks.size(),
 		logs.logs), 50, Gdx.graphics.getHeight() - 100);
 		sb.end();  

@@ -220,9 +220,9 @@ public class ChunkUtil {
         int bitPos = (i % 4) * 2;
 
         byte mascaraLimpar = (byte) ~(0b11 << bitPos);
-        byte mascaraDef = (byte) ((valor & 0b11) << bitPos);
+        byte mascaraDef = (byte)((valor & 0b11) << bitPos);
 
-        chunk.luz[byteIdc] = (byte) ((chunk.luz[byteIdc] & mascaraLimpar) | mascaraDef);
+        chunk.luz[byteIdc] = (byte)((chunk.luz[byteIdc] & mascaraLimpar) | mascaraDef);
     }
 	
 	public static byte obterBloco(int x, int y, int z, Chunk chunk) {
@@ -238,9 +238,9 @@ public class ChunkUtil {
         int bitPos = (i % 4) * 2;
 
         byte mascaraLimpar = (byte) ~(0b11 << bitPos);
-        byte mascaraDef= (byte) ((valor & 0b11) << bitPos);
+        byte mascaraDef= (byte)((valor & 0b11) << bitPos);
 
-        chunk.blocos[byteIdc] = (byte) ((chunk.blocos[byteIdc] & mascaraLimpar) | mascaraDef);
+        chunk.blocos[byteIdc] = (byte)((chunk.blocos[byteIdc] & mascaraLimpar) | mascaraDef);
     }
 	
 	public static class Chave {

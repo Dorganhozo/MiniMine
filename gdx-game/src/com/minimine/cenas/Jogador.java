@@ -8,28 +8,63 @@ import com.minimine.PerlinNoise3D;
 public class Jogador {
 	public byte modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
-	public Vector3 posicao = new Vector3(0, 80, 0);
-	public Vector3 velocidade = new Vector3();
+	public Vector3 posicao = new Vector3(0, 80, 0), velocidade = new Vector3();
 
-	public float largura = 0.6f;
-	public float altura = 1.8f;
-	public float profundidade = 0.6f;
+	public float largura = 0.6f, altura = 1.8f, profundidade = 0.6f;
 	public boolean noChao = true;
 	public BoundingBox hitbox = new BoundingBox();
 	public static final BoundingBox blocoBox = new BoundingBox();
-	public static final Vector3 minVec = new Vector3();
-	public static final Vector3 maxVec = new Vector3();
+	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();
 	
-	public static final float GRAVIDADE = -30f;
-	public static final float VELO_MAX_QUEDA = -50f;
+	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f;
+	
+		public byte blocoSelecionado = 1;
+		public static final float ALCANCE = 6f;
+
+		public void interagirComBloco() {
+			// Direção normalizada da câmera
+			float dirX = camera.direction.x;
+			float dirY = camera.direction.y;
+			float dirZ = camera.direction.z;
+
+			// Posição dos olhos do jogador
+			float olhoX = camera.position.x;
+			float olhoY = camera.position.y;
+			float olhoZ = camera.position.z;
+
+			// Ray casting simples
+			for (float t = 0; t < ALCANCE; t += 0.5f) {
+				int x = PerlinNoise3D.floorRapido(olhoX + dirX * t);
+				int y = PerlinNoise3D.floorRapido(olhoY + dirY * t);
+				int z = PerlinNoise3D.floorRapido(olhoZ + dirZ * t);
+
+				byte bloco = Mundo.obterBlocoMundo(x, y, z);
+
+				if (bloco > 0) { // Achou bloco sólido
+					if (blocoSelecionado == 0) { // Ar - destruir
+						Mundo.defBlocoMundo(x, y, z, (byte)0);
+					} else { // Colocar bloco na face
+						// Posição anterior no ray (face do bloco)
+						int xAnt = PerlinNoise3D.floorRapido(olhoX + dirX * (t - 0.5f));
+						int yAnt = PerlinNoise3D.floorRapido(olhoY + dirY * (t - 0.5f));
+						int zAnt = PerlinNoise3D.floorRapido(olhoZ + dirZ * (t - 0.5f));
+
+						// Verifica se a posição anterior é ar
+						if (Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
+							Mundo.defBlocoMundo(xAnt, yAnt, zAnt, blocoSelecionado);
+						}
+					}
+					return;
+				}
+			}
+		}
 
 	public void attHitbox() {
 		float x = posicao.x;
 		float y = posicao.y;
 		float z = posicao.z;
 
-		hitbox.set(minVec.set(x - largura / 2, y, z - profundidade / 2),
-				   maxVec.set(x + largura / 2, y + altura, z + profundidade / 2));
+		hitbox.set(minVec.set(x - largura / 2, y, z - profundidade / 2), maxVec.set(x + largura / 2, y + altura, z + profundidade / 2));
 	}
 
 	public boolean colideComMundo() {
@@ -47,7 +82,6 @@ public class Jogador {
 
 					if(bloco > 0) {
 						blocoBox.set(minVec.set(x, y, z), maxVec.set(x + 1, y + 1, z + 1));
-
 						if(hitbox.intersects(blocoBox)) return true;
 					}
 				}

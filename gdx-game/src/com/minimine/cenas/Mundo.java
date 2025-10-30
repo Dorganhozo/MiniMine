@@ -34,7 +34,7 @@ public class Mundo {
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 4;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 4, seed = 12345;
 
 	public final ShaderProgram shader;
 
@@ -93,7 +93,7 @@ public class Mundo {
 		if(shader.isCompiled()) {
 			Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
 		}
-		for(int i = 0; i < RAIO_CHUNKS+5; i++) {
+		for(int i = 0; i < RAIO_CHUNKS; i++) {
 			meshReuso.obtain();
 		}
 	}
@@ -118,7 +118,6 @@ public class Mundo {
 
 		for(final Chunk chunk : chunks.values()) {
 			if(!frustrum(chunk, jogador)) continue; 
-			if(chunk.att) continue;
 			if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
 		}
 		shader.end();
@@ -171,12 +170,11 @@ public class Mundo {
 		atlasGeral = new Texture(atlasPx);
 		atlasPx.dispose(); 
 	}
-	
+	// MANIPULAÇÃO DE BLOCOS:
 	public static byte obterBlocoMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) {
 			return 0; // ar(fora dos limites)
 		}
-
 		int chunkX = x >> 4;
 		int chunkZ = z >> 4;
 
@@ -188,6 +186,23 @@ public class Mundo {
 		if(chunk == null) return 0; 
 		
 		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
+	}
+	
+	public static void defBlocoMundo(int x, int y, int z, byte bloco) {
+		if(y < 0 || y >= Y_CHUNK) return; // fora dos limites
+		
+		int chunkX = x >> 4;
+		int chunkZ = z >> 4;
+
+		int localX = x & 15;
+		int localZ = z & 15;
+
+		Chunk chunk = chunks.get(new ChunkUtil.Chave(chunkX, chunkZ));
+
+		if(chunk == null) return; 
+
+		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
+		chunk.att = true;
 	}
 	
 	// GERAÇÃO DE DADOS:
@@ -215,7 +230,30 @@ public class Mundo {
 	
 	public void tentarGerarChunk(int x, int z) {
 		final ChunkUtil.Chave chave = new ChunkUtil.Chave(x, z);
-		Chunk chunkExistente = chunks.get(chave);
+		final Chunk chunkExistente = chunks.get(chave);
+		
+		if(chunkExistente != null && chunkExistente.att) {
+			exec.submit(new Runnable() {
+				@Override
+				public void run() {
+					final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
+					final IntArrayUtil idcGeral = new IntArrayUtil();
+
+					ChunkUtil.attMesh(chunkExistente, vertsGeral, idcGeral);
+
+					Gdx.app.postRunnable(new Runnable() {
+							@Override
+							public void run() {
+								ChunkUtil.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
+								Matrix4 m = new Matrix4();
+								m.setToTranslation(chunkExistente.chunkX * TAM_CHUNK, 0, chunkExistente.chunkZ * TAM_CHUNK);
+								chunkExistente.mesh.transform(m);
+								chunkExistente.att = false;
+							}
+						});
+				}
+			});
+		}
 
 		if(chunkExistente != null && chunkExistente.mesh != null) {
 			return;
@@ -258,7 +296,7 @@ public class Mundo {
 							float px = chave.x * TAM_CHUNK + lx;
 							float pz = chave.z * TAM_CHUNK + lz;
 
-							float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 1.0f, 12345, 4, 0.5f);
+							float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 1.0f, seed, 3, 0.5f);
 							int altura = 45 + (int)(alturaRuido * 5);
 
 							for(int y = 0; y < Y_CHUNK; y++) {
@@ -266,7 +304,7 @@ public class Mundo {
 
 								if(y < altura) {
 									float cavernaRuido = PerlinNoise3D.ruidoFractal3D(
-										px * 0.05f, y * 0.1f, pz * 0.05f, 67890, 3, 0.6f
+										px * 0.05f, y * 0.1f, pz * 0.05f, seed, 2, 0.6f
 									);
 									if(cavernaRuido > -0.1f) {
 										if(y < altura - 3) {
