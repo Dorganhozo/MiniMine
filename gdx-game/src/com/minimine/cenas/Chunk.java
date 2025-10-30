@@ -7,5 +7,5 @@ public class Chunk {
     public byte[] luz = new byte[16*255*16/4];
     public Mesh mesh;
     public int chunkX, chunkZ;
-    public boolean att = true;
+    public boolean att = false;
 }

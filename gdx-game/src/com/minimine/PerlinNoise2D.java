@@ -30,10 +30,10 @@ public class PerlinNoise2D {
     }
 
     public static float ruido(float x, float z, int seed) {
-        int X = ((int)Math.floor(x) + seed) & 255;
-        int Z = ((int)Math.floor(z) + seed) & 255;
-        float xf = x - (int)Math.floor(x);
-        float zf = z - (int)Math.floor(z);
+        int X = (PerlinNoise3D.floorRapido(x) + seed) & 255;
+        int Z = (PerlinNoise3D.floorRapido(z) + seed) & 255;
+        float xf = x - PerlinNoise3D.floorRapido(x);
+        float zf = z - PerlinNoise3D.floorRapido(z);
 
         float u = fade(xf);
         float v = fade(zf);

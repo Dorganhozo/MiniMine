@@ -12,11 +12,11 @@ import com.badlogic.gdx.utils.Pool;
 import java.util.Arrays;
 
 public class ChunkUtil {
-    public static final float LUZ_SOL = 1.0f;
+    public static float LUZ_SOL = 1.0f;
     public static final float LUZ_AMBIENTE = 0.25f;
     public static final float[] FACE_LUZ = {
-        1.0f, // topo - luz max
-        0.4f, // baixo - mais escuro
+        1.0f, // topo, luz max
+        0.4f, // baixo, mais escuro
         0.7f, // lado +X
         0.7f, // lado -X  
         0.8f, // lado +Z
@@ -33,14 +33,12 @@ public class ChunkUtil {
     }
 
     public static float calcularLuzCeu(int x, int y, int z, Chunk chunk) {
-        // se estiver no topo do mundo, recebe luz máxima
+        // se estiver no topo do mundo, recebe luz maxima
         if(y >= Mundo.Y_CHUNK - 1)  return LUZ_SOL;
         // se tem bloco solido em cima:
         int blocosAcima = 0;
         for(int cy = y + 1; cy < Mundo.Y_CHUNK; cy++) {
-            if(ehSolido(x, cy, z, chunk)) {
-                blocosAcima++;
-            }
+            if(ehSolido(x, cy, z, chunk)) blocosAcima++;
         }
         if(blocosAcima == 0) return LUZ_SOL;
         // luz badeada no num de blocos em cima
@@ -90,7 +88,7 @@ public class ChunkUtil {
                             // armazena luz reduzida pra esse bloco
                             defLuz(x, y, z, (byte)10, chunk); // 10/15 de luz
                         } else {
-                            // ar - luz maxima
+                            // ar, luz maxima
                             defLuz(x, y, z, (byte)15, chunk);
                         }
                     } else {
@@ -110,7 +108,6 @@ public class ChunkUtil {
 
         float[][] faceVertices = new float[4][3];
         float[][] uvPadrao = new float[4][2]; 
-		
 		// nivel de luz pra face:
         float nivelLuz = calcularNivelLuz(x, y, z, faceId, chunk);
 		int r = (int)(nivelLuz * 255);
@@ -248,6 +245,7 @@ public class ChunkUtil {
 	
 	public static class Chave {
 		public int x, z;
+		
 		public Chave(int x, int z) {
 			this.x = x;
 			this.z = z;

@@ -30,25 +30,25 @@ public class Mundo {
 	public Texture atlasGeral;
     // mapa de UVs:
     // (atlas ID -> [u_min, v_min, u_max, v_max])
-	public final List<String> texturas = new ArrayList<>();
+	public static final List<String> texturas = new ArrayList<>();
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
-	public final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
+	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 3;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 4;
 
-	public ShaderProgram shader;
+	public final ShaderProgram shader;
 
-	public final ExecutorService exec = Executors.newFixedThreadPool(4);
-	public Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
+	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
+	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
 
-	public int maxVerts, maxIndices, maxFaces;
-	public VertexAttribute[] atriburs = new VertexAttribute[] {
+	public static final int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6, maxVerts = maxFaces * 4, maxIndices = maxFaces * 6;
+	public static final VertexAttribute[] atriburs = new VertexAttribute[] {
 		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
 		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"),
-		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor") // Adicionado
+		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
 	};
 	
-	public Pool<Mesh> meshReuso = new Pool<Mesh>() {
+	public static final Pool<Mesh> meshReuso = new Pool<Mesh>() {
 		@Override
 		protected Mesh newObject() {
 			return new Mesh(true, maxVerts, maxIndices, atriburs);
@@ -63,10 +63,6 @@ public class Mundo {
 
         criarAtlas();
 
-		maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6;
-		maxVerts = maxFaces * 4;
-		maxIndices = maxFaces * 6;
-		
 		String vert =
 			"attribute vec3 a_posicao;\n"+
 			"attribute vec2 a_texCoord0;\n"+
@@ -94,32 +90,48 @@ public class Mundo {
 		
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
+		if(shader.isCompiled()) {
+			Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
+		}
+		for(int i = 0; i < RAIO_CHUNKS+5; i++) {
+			meshReuso.obtain();
+		}
 	}
+	
+	public boolean carregado = false;
+	
 	// chamado render:
-	public void att(float delta, PerspectiveCamera camera) {
+	public void att(float delta, Jogador jogador) {
 		if(shader == null) return;
+		if(!carregado) {
+			if(chunks.size() > 4) carregado = true;
+		}
+		if(carregado) jogador.att(delta);
 
-		attChunks((int) camera.position.x, (int) camera.position.z);
+		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 
 		shader.begin();
-		shader.setUniformMatrix("u_projTrans", camera.combined);
+		shader.setUniformMatrix("u_projTrans", jogador.camera.combined);
 
 		atlasGeral.bind(0);
 		shader.setUniformi("u_textura", 0);
 
-		for(final Chunk chunk : chunks.values()) {    
-			if(!frustrum(chunk, camera)) continue;
-			if(chunk.att) chunk.att = false;
+		for(final Chunk chunk : chunks.values()) {
+			if(!frustrum(chunk, jogador)) continue; 
+			if(chunk.att) continue;
 			if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
 		}
 		shader.end();
 	}
-	
-	public boolean frustrum(Chunk chunk, PerspectiveCamera camera) {
+
+	public boolean frustrum(Chunk chunk, Jogador jogador) {
 		float globalX = chunk.chunkX << 4;
 		float globalZ = chunk.chunkZ << 4;
-		float dis = Vector2.dst(globalX, globalZ, camera.position.x, camera.position.z);
-		return dis < ((RAIO_CHUNKS << 4) * 1.5f);
+		
+		float dis = Vector2.dst(globalX, globalZ, jogador.posicao.x, jogador.posicao.z); 
+
+		if(!(dis < ((RAIO_CHUNKS << 4) * 1.5f))) return false;
+		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
 	}
 	
 	// chamado em dispose:
@@ -159,11 +171,30 @@ public class Mundo {
 		atlasGeral = new Texture(atlasPx);
 		atlasPx.dispose(); 
 	}
-	// GERAÇÃO DE DADOS:
-	public void attChunks(float playerX, float playerZ) {
-		final int chunkX = (int) playerX / TAM_CHUNK;
-		final int chunkZ = (int) playerZ / TAM_CHUNK;
+	
+	public static byte obterBlocoMundo(int x, int y, int z) {
+		if(y < 0 || y >= Y_CHUNK) {
+			return 0; // ar(fora dos limites)
+		}
 
+		int chunkX = x >> 4;
+		int chunkZ = z >> 4;
+
+		int localX = x & 15; // modulo 16(seguro para negativos)
+		int localZ = z & 15;
+
+		Chunk chunk = chunks.get(new ChunkUtil.Chave(chunkX, chunkZ));
+
+		if(chunk == null) return 0; 
+		
+		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
+	}
+	
+	// GERAÇÃO DE DADOS:
+	public void attChunks(int playerX, int playerZ) {
+		final int chunkX = playerX / TAM_CHUNK;
+		final int chunkZ = playerZ / TAM_CHUNK;
+		
 		limparChunks(chunkX, chunkZ);
 
 		for(int raios = 0; raios <= RAIO_CHUNKS; raios++) {
@@ -172,17 +203,13 @@ public class Mundo {
 				continue;
 			}
 			final int raio = raios;
-			exec.submit(new Runnable() {
-					@Override
-					public void run() {
-						for(int i = -raio; i <= raio; i++) {
-							tentarGerarChunk(chunkX + i, chunkZ - raio); // topo
-							tentarGerarChunk(chunkX + i, chunkZ + raio); // baixo
-							tentarGerarChunk(chunkX - raio, chunkZ + i); // esquerda  
-							tentarGerarChunk(chunkX + raio, chunkZ + i); // direita
-						}
-					}
-				});
+
+			for(int i = -raio; i <= raio; i++) {
+				tentarGerarChunk(chunkX + i, chunkZ - raio); // topo
+				tentarGerarChunk(chunkX + i, chunkZ + raio); // baixo
+				tentarGerarChunk(chunkX - raio, chunkZ + i); // esquerda  
+				tentarGerarChunk(chunkX + raio, chunkZ + i); // direita
+			}
 		}
 	}
 	
@@ -221,53 +248,59 @@ public class Mundo {
 	}
 
 	public void gerarChunk(final ChunkUtil.Chave chave) {
-		final Chunk chunk = chunks.get(chave); // pega o vazio
-		// gera os blocos
-		for(int lx = 0; lx < TAM_CHUNK; lx++) {
-			for(int lz = 0; lz < TAM_CHUNK; lz++) {
-				float px = chave.x * TAM_CHUNK + lx;
-				float pz = chave.z * TAM_CHUNK + lz;
+		exec.submit(new Runnable() {
+				@Override
+				public void run() {
+					final Chunk chunk = chunks.get(chave); // pega o vazio
+					// gera os blocos
+					for(int lx = 0; lx < TAM_CHUNK; lx++) {
+						for(int lz = 0; lz < TAM_CHUNK; lz++) {
+							float px = chave.x * TAM_CHUNK + lx;
+							float pz = chave.z * TAM_CHUNK + lz;
 
-				float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 1.0f, 12345, 4, 0.5f);
-				int altura = 45 + (int)(alturaRuido * 5);
+							float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 1.0f, 12345, 4, 0.5f);
+							int altura = 45 + (int)(alturaRuido * 5);
 
-				for(int y = 0; y < Y_CHUNK; y++) {
-					byte bloco = 0; // ar
+							for(int y = 0; y < Y_CHUNK; y++) {
+								byte bloco = 0; // ar
 
-					if(y < altura) {
-						float cavernaRuido = PerlinNoise3D.ruidoFractal3D(
-							px * 0.05f, y * 0.1f, pz * 0.05f, 67890, 3, 0.6f
-						);
-						if(cavernaRuido > -0.1f) {
-							if(y < altura - 3) {
-								bloco = 3; // pedra
-							} else if(y < altura - 1) {
-								bloco = 2; // terra
-							} else {
-								bloco = 1; // grama
+								if(y < altura) {
+									float cavernaRuido = PerlinNoise3D.ruidoFractal3D(
+										px * 0.05f, y * 0.1f, pz * 0.05f, 67890, 3, 0.6f
+									);
+									if(cavernaRuido > -0.1f) {
+										if(y < altura - 3) {
+											bloco = 3; // pedra
+										} else if(y < altura - 1) {
+											bloco = 2; // terra
+										} else {
+											bloco = 1; // grama
+										}
+									}
+								}
+								ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 							}
 						}
 					}
-					ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+					chunk.chunkX = chave.x;
+					chunk.chunkZ = chave.z;
+					// prepara a malha
+					final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
+					final IntArrayUtil idcGeral = new IntArrayUtil();
+
+					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
+
+					Gdx.app.postRunnable(new Runnable() {
+							@Override
+							public void run() {
+								chunk.mesh = meshReuso.obtain();
+								ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
+								Matrix4 m = new Matrix4();
+								m.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
+								chunk.mesh.transform(m);
+							}
+						});
 				}
-			}
-		}
-		chunk.chunkX = chave.x;
-		chunk.chunkZ = chave.z;
-		// prepara a malha
-		final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
-		final IntArrayUtil idcGeral = new IntArrayUtil();
-		ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
-		
-		Gdx.app.postRunnable(new Runnable() {
-			@Override
-			public void run() {
-				chunk.mesh = meshReuso.obtain();
-				ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
-				Matrix4 m = new Matrix4();
-				m.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
-				chunk.mesh.transform(m);
-			}
-		});
+			});
 	}
 }

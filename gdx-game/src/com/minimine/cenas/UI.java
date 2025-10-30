@@ -33,14 +33,9 @@ public class UI implements InputProcessor {
     public Vector2 esqPos = new Vector2();
     public Vector2 ultimaDir = new Vector2();
 	
+	public float sensi = 0.25f;
+	
 	public final HashMap<Integer, String> toques = new HashMap<>();
-
-    public Vector3 velo = new Vector3();
-    public float veloM = 14f;      // m/s
-    public float sensi = 0.25f;
-    public float grav = -30f;      // m/s^2
-
-    public boolean noChao = false;
     // camera
     public float yaw = 180f;
     public float tom = -20f;
@@ -51,18 +46,20 @@ public class UI implements InputProcessor {
 	
 	public Logs logs;
 	
-    public UI() {
+	public Jogador jogador;
+	
+    public UI(Jogador jogador) {
 		telaV = Gdx.graphics.getWidth();
 		telaH = Gdx.graphics.getHeight();
 		
 		logs = new Logs();
 		Gdx.app.setApplicationLogger(logs);
 
-        camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 18f, 10f);
         camera.lookAt(0, 0, 0);
-        camera.near = 1f;
-        camera.far = 300f;
+        camera.near = 0.1f;
+        camera.far = 400f;
         camera.update();
 
         carregarTexturasDPad();
@@ -74,6 +71,8 @@ public class UI implements InputProcessor {
 
         Gdx.input.setInputProcessor(this);
 		rt = Runtime.getRuntime();
+		this.jogador = jogador;
+		this.jogador.camera = camera;
     }
 
 	@Override
@@ -227,17 +226,26 @@ public class UI implements InputProcessor {
 	public void att(float delta, Mundo mundo) {
 		attCamera();
 
-		float velocidade = 10f * delta;  
+		float velocidade = 200f * delta;  
 
 		Vector3 frente = new Vector3(camera.direction.x, 0, camera.direction.z).nor();  
-		Vector3 direita = new Vector3(frente.z, 0, -frente.x).nor();  
+		Vector3 direita = new Vector3(frente.z, 0, -frente.x).nor();
+		
+		jogador.velocidade.x = 0;
+		jogador.velocidade.z = 0;
+		if(jogador.modo != 2) jogador.velocidade.y = 0;
 
-		if(this.frente) camera.position.add(new Vector3(frente).scl(velocidade));
-		if(this.tras) camera.position.sub(new Vector3(frente).scl(velocidade));
-		if(this.esquerda) camera.position.add(new Vector3(direita).scl(velocidade));
-		if(this.direita) camera.position.sub(new Vector3(direita).scl(velocidade));
-		if(this.cima) camera.position.y += velocidade;
-		if(this.baixo) camera.position.y -= velocidade;
+		if(this.frente) jogador.velocidade.add(new Vector3(frente).scl(velocidade));
+		if(this.tras)  jogador.velocidade.sub(new Vector3(frente).scl(velocidade));
+		if(this.esquerda) jogador.velocidade.add(new Vector3(direita).scl(velocidade));
+		if(this.direita) jogador.velocidade.sub(new Vector3(direita).scl(velocidade));
+		if(this.cima && jogador.noChao) {
+            jogador.velocidade.y = 15f; // pulo
+            jogador.noChao = false;
+        }
+        if(this.baixo) {
+            jogador.velocidade.y = Math.min(jogador.velocidade.y, -10f);
+        }
 
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
 		Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0); 
