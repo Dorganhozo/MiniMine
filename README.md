@@ -11,6 +11,12 @@ Iluminação por vértices.
 Interface de botões de movimentação.
 Debug visual.
 Sistema de construção (beta).
+Hotbar.
+
+## modos de jogo:
+0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
+1: criativo. Não sofre com gravidade mas colide com blocos. Seus recursos não acabam
+2: sobrevivencia. Sofre com gravidade e colide com blocos. Seus recursos acabam.
 
 ## blocos:
 Ar, Grama, Terra, Pedra.

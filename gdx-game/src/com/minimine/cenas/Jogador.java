@@ -4,11 +4,13 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.minimine.utils.PerlinNoise3D;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.collision.Ray;
 
 public class Jogador {
-	public byte modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public byte modo = 1; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
-	public Vector3 posicao = new Vector3(0, 80, 0), velocidade = new Vector3();
+	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
 	public float largura = 0.6f, altura = 1.8f, profundidade = 0.6f;
 	public boolean noChao = true;
@@ -23,32 +25,44 @@ public class Jogador {
 	public static final float ALCANCE = 6f;
 	public Inventario inv;
 
-	public void interagirComBloco() {
-		float dirX = camera.direction.x;
-		float dirY = camera.direction.y;
-		float dirZ = camera.direction.z;
+	public void interagirBloco() {
+		Ray raio = camera.getPickRay(
+			Gdx.graphics.getWidth() / 2f,
+			Gdx.graphics.getHeight() / 2f
+		);
 
-		float olhoX = camera.position.x;
-		float olhoY = camera.position.y;
-		float olhoZ = camera.position.z;
+		float olhoX = raio.origin.x;
+		float olhoY = raio.origin.y;
+		float olhoZ = raio.origin.z;
+		float dirX = raio.direction.x;
+		float dirY = raio.direction.y;
+		float dirZ = raio.direction.z;
 
-		for(float t = 0; t < ALCANCE; t += 0.5f) {
+		for(float t = 0; t < ALCANCE; t += 0.25f) { // passo menor = mais preciso
 			int x = PerlinNoise3D.floorRapido(olhoX + dirX * t);
 			int y = PerlinNoise3D.floorRapido(olhoY + dirY * t);
 			int z = PerlinNoise3D.floorRapido(olhoZ + dirZ * t);
 
 			byte bloco = Mundo.obterBlocoMundo(x, y, z);
-
 			if(bloco > 0) {
-				if(blocoSele == 0) { // ar = destruir
+				if(blocoSele == 0) {
+					if(modo == 2) inv.addItem(bloco, 1);
+					if(inv.itens[inv.slotSelecionado] != null) blocoSele = inv.itens[inv.slotSelecionado].tipo;
 					Mundo.defBlocoMundo(x, y, z, (byte)0);
 				} else {
-					int xAnt = PerlinNoise3D.floorRapido(olhoX + dirX * (t - 0.5f));
-					int yAnt = PerlinNoise3D.floorRapido(olhoY + dirY * (t - 0.5f));
-					int zAnt = PerlinNoise3D.floorRapido(olhoZ + dirZ * (t - 0.5f));
+					int xAnt = PerlinNoise3D.floorRapido(olhoX + dirX * (t - 0.25f));
+					int yAnt = PerlinNoise3D.floorRapido(olhoY + dirY * (t - 0.25f));
+					int zAnt = PerlinNoise3D.floorRapido(olhoZ + dirZ * (t - 0.25f));
 
 					if(Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
+						blocoBox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
+						attHitbox();
+						if(blocoBox.intersects(hitbox)) return;
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, blocoSele);
+						
+						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
+						
+						if(inv.itens[inv.slotSelecionado] == null) blocoSele = 0;
 					}
 				}
 				return;
@@ -104,7 +118,7 @@ public class Jogador {
 			posicao.add(velocidade.x * delta, velocidade.y * delta, velocidade.z * delta);
 			attHitbox();
 
-            camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
+            camera.position.set(posicao.x, posicao.y + altura * 0.95f, posicao.z);
             return;
         }
         float dx = velocidade.x * delta;

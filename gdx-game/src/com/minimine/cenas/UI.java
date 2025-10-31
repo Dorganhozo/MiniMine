@@ -19,7 +19,7 @@ public class UI implements InputProcessor {
 	public PerspectiveCamera camera;
 	
     public static SpriteBatch sb;
-    public BitmapFont fonte;
+    public static BitmapFont fonte;
 
     public Texture texEsquerda, texDireita, texCima, texBaixo, texMira, texAcao;
     public Sprite spriteEsquerda, spriteDireita, spriteFrente, spriteTras, spriteCima, spriteBaixo, spriteMira, spriteAcao;
@@ -74,6 +74,7 @@ public class UI implements InputProcessor {
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
+		// this.jogador.inv.aberto = true;
     }
 
 	@Override
@@ -90,7 +91,7 @@ public class UI implements InputProcessor {
 			acao = true; 
 			spriteAcao.setAlpha(0.7f); 
 			toques.put(p, "acao");
-			jogador.interagirComBloco();
+			jogador.interagirBloco();
 		} else if(telaX >= telaV / 2 && pontoDir == -1) { 
 			pontoDir = p; 
 			ultimaDir.set(telaX, y); 
@@ -246,7 +247,7 @@ public class UI implements InputProcessor {
 	public void att(float delta, Mundo mundo) {
 		attCamera();
 
-		float velocidade = 200f * delta;  
+		float velocidade = 5f;  
 
 		Vector3 frente = new Vector3(camera.direction.x, 0, camera.direction.z).nor();  
 		Vector3 direita = new Vector3(frente.z, 0, -frente.x).nor();

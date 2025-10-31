@@ -65,7 +65,7 @@ public class ChunkUtil {
 			for(int y = 0; y < Mundo.Y_CHUNK; y++) {
 				for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
 					int bloco = obterBloco(x, y, z, chunk);
-					if(bloco == 0 || bloco == 4) continue;
+					if(bloco == 0) continue;
 
 					int idTopo = 0, idLado = 0, idBaixo = 0;
 

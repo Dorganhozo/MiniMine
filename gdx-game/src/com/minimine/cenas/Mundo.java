@@ -34,9 +34,11 @@ public class Mundo {
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 15, seed = 12345;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 5, seed = 458384435;
 
 	public final ShaderProgram shader;
+	public boolean neblina = false;
+	public boolean carregado = false;
 
 	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
@@ -107,13 +109,57 @@ public class Mundo {
 		}
 	}
 	
-	public boolean carregado = false;
-	
 	// chamado render:
 	public void att(float delta, Jogador jogador) {
 		if(shader == null) return;
 		if(!carregado) {
-			if(chunks.size() > 4) carregado = true;
+			final Chunk chunk = new Chunk();
+			for(int lx = 0; lx < TAM_CHUNK; lx++) {
+				for(int lz = 0; lz < TAM_CHUNK; lz++) {
+					float px = jogador.posicao.x * TAM_CHUNK + lx;
+					float pz = jogador.posicao.z * TAM_CHUNK + lz;
+
+					float alturaRuido = PerlinNoise2D.ruido(px * 0.1f, pz * 0.1f, seed);
+					int altura = 45 + (int)(alturaRuido * 5);
+
+					if(lx == (int) jogador.posicao.x && lz == jogador.posicao.z) {
+						jogador.posicao.y = altura*2;
+						Gdx.app.log("Mundo", "jogador posicionado á "+altura+" blocos de altura");
+						Gdx.app.log("Mundo", "o ruido de altura é:  "+alturaRuido+"f");
+					}
+
+					for(int y = 0; y < Y_CHUNK; y++) {
+						byte bloco = 0; // ar
+
+						if(y < altura) {
+							float cavernaRuido = PerlinNoise3D.ruidoFractal3D(px * 0.05f, y * 0.1f, pz * 0.05f, seed, 2, 0.6f);
+							if(cavernaRuido > -0.1f) {
+								if(y < altura - 3) {
+									bloco = 3; // pedra
+								} else if(y < altura - 1) {
+									bloco = 2; // terra
+								} else {
+									bloco = 1; // grama
+								}
+							}
+						}
+						ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+					}
+				}
+			}
+			chunk.chunkX = (int) jogador.posicao.x;
+			chunk.chunkZ = (int) jogador.posicao.z;
+			// prepara a malha
+			final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
+			final IntArrayUtil idcGeral = new IntArrayUtil();
+
+			ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
+
+			chunk.mesh = meshReuso.obtain();
+			ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
+			matrizTmp.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
+			chunk.mesh.transform(matrizTmp);
+			carregado = true;
 		}
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 
@@ -279,6 +325,8 @@ public class Mundo {
 							@Override
 							public void run() {
 								ChunkUtil.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
+								matrizTmp.setToTranslation(chunkExistente.chunkX * TAM_CHUNK, 0, chunkExistente.chunkZ * TAM_CHUNK);
+								chunkExistente.mesh.transform(matrizTmp);
 								chunkExistente.att = false;
 							}
 						});
@@ -327,7 +375,7 @@ public class Mundo {
 							float px = chave.x * TAM_CHUNK + lx;
 							float pz = chave.z * TAM_CHUNK + lz;
 
-							float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 1.0f, seed, 3, 0.5f);
+							float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 2.0f, seed, 3, 0.5f);
 							int altura = 45 + (int)(alturaRuido * 5);
 
 							for(int y = 0; y < Y_CHUNK; y++) {
@@ -335,8 +383,7 @@ public class Mundo {
 
 								if(y < altura) {
 									float cavernaRuido = PerlinNoise3D.ruidoFractal3D(
-										px * 0.05f, y * 0.1f, pz * 0.05f, seed, 2, 0.6f
-									);
+										px * 0.05f, y * 0.1f, pz * 0.05f, seed, 2, 0.6f);
 									if(cavernaRuido > -0.1f) {
 										if(y < altura - 3) {
 											bloco = 3; // pedra

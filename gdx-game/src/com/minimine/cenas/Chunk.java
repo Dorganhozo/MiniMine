@@ -3,6 +3,7 @@ package com.minimine.cenas;
 import com.badlogic.gdx.graphics.Mesh;
 
 public class Chunk {
+	// largura * altura * largura / tipos de blocos por byte
     public byte[] blocos = new byte[16*255*16/4]; // 16×256×16 / 4 = 16384
     public byte[] luz = new byte[16*255*16/4];
     public Mesh mesh;
