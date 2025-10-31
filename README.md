@@ -10,12 +10,13 @@ Gravidade.
 Iluminação por vértices.
 Interface de botões de movimentação.
 Debug visual.
-Sistema de construção (beta)
+Sistema de construção (beta).
 
 ## blocos:
 Ar, Grama, Terra, Pedra.
 
 ## otimizações:
+Geração em Thread separada com ExecutorService.
 Reuso de objetos Mesh.
 Reuso de objetos ChunkUtil.Chave.
 Reuso de 1 objeto Matrix4 para todas as chunks.
