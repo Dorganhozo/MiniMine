@@ -18,8 +18,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.Gdx;
-import com.minimine.PerlinNoise2D;
-import com.minimine.PerlinNoise3D;
+import com.minimine.utils.PerlinNoise2D;
+import com.minimine.utils.PerlinNoise3D;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.graphics.Mesh;
 import com.minimine.utils.FloatArrayUtil;
@@ -34,7 +34,7 @@ public class Mundo {
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 4, seed = 12345;
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 15, seed = 12345;
 
 	public final ShaderProgram shader;
 
@@ -44,7 +44,7 @@ public class Mundo {
 	public static final int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6, maxVerts = maxFaces * 4, maxIndices = maxFaces * 6;
 	public static final VertexAttribute[] atriburs = new VertexAttribute[] {
 		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
-		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0"),
+		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
 		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
 	};
 	
@@ -54,6 +54,15 @@ public class Mundo {
 			return new Mesh(true, maxVerts, maxIndices, atriburs);
 		}
 	};
+	
+	public static final Pool<ChunkUtil.Chave> chaveReuso = new Pool<ChunkUtil.Chave>() {
+		@Override
+		protected ChunkUtil.Chave newObject() {
+			return new ChunkUtil.Chave(0, 0);
+		}
+	};
+	
+	public Matrix4 matrizTmp = new Matrix4();
 	
 	public Mundo() {
 		texturas.add("blocos/grama_topo.png");
@@ -65,13 +74,13 @@ public class Mundo {
 
 		String vert =
 			"attribute vec3 a_posicao;\n"+
-			"attribute vec2 a_texCoord0;\n"+
+			"attribute vec2 a_texCoord;\n"+
 			"attribute vec4 a_cor;\n"+
 			"uniform mat4 u_projTrans;\n"+
 			"varying vec2 v_texCoord;\n"+
 			"varying vec4 v_cor;\n"+
 			"void main() {\n"+
-			"  v_texCoord = a_texCoord0;\n"+
+			"  v_texCoord = a_texCoord;\n"+
 			"  v_cor = a_cor;\n"+
 			"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n"+
 			"}";
@@ -106,13 +115,11 @@ public class Mundo {
 		if(!carregado) {
 			if(chunks.size() > 4) carregado = true;
 		}
-		if(carregado) jogador.att(delta);
-
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", jogador.camera.combined);
-
+		
 		atlasGeral.bind(0);
 		shader.setUniformi("u_textura", 0);
 
@@ -122,14 +129,14 @@ public class Mundo {
 		}
 		shader.end();
 	}
-
+	
 	public boolean frustrum(Chunk chunk, Jogador jogador) {
 		float globalX = chunk.chunkX << 4;
 		float globalZ = chunk.chunkZ << 4;
-		
+
 		float dis = Vector2.dst(globalX, globalZ, jogador.posicao.x, jogador.posicao.z); 
 
-		if(!(dis < ((RAIO_CHUNKS << 4) * 1.5f))) return false;
+		if(!(dis < ((RAIO_CHUNKS << 4)))) return false;
 		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
 	}
 	
@@ -170,39 +177,66 @@ public class Mundo {
 		atlasGeral = new Texture(atlasPx);
 		atlasPx.dispose(); 
 	}
+	
 	// MANIPULAÇÃO DE BLOCOS:
 	public static byte obterBlocoMundo(int x, int y, int z) {
-		if(y < 0 || y >= Y_CHUNK) {
-			return 0; // ar(fora dos limites)
-		}
-		int chunkX = x >> 4;
-		int chunkZ = z >> 4;
+		if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
 
-		int localX = x & 15; // modulo 16(seguro para negativos)
-		int localZ = z & 15;
+		int chunkX = Math.floorDiv(x, TAM_CHUNK);
+		int chunkZ = Math.floorDiv(z, TAM_CHUNK);
 
-		Chunk chunk = chunks.get(new ChunkUtil.Chave(chunkX, chunkZ));
-
-		if(chunk == null) return 0; 
+		int localX = Math.floorMod(x, TAM_CHUNK);
+		int localZ = Math.floorMod(z, TAM_CHUNK);
 		
+		ChunkUtil.Chave chave = chaveReuso.obtain();
+		chave.x = chunkX; chave.z = chunkZ;
+		Chunk chunk = chunks.get(chave);
+		chaveReuso.free(chave);
+		if(chunk == null) return 0; 
+
 		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
 	}
 	
 	public static void defBlocoMundo(int x, int y, int z, byte bloco) {
 		if(y < 0 || y >= Y_CHUNK) return; // fora dos limites
-		
+
 		int chunkX = x >> 4;
 		int chunkZ = z >> 4;
 
 		int localX = x & 15;
 		int localZ = z & 15;
-
-		Chunk chunk = chunks.get(new ChunkUtil.Chave(chunkX, chunkZ));
-
-		if(chunk == null) return; 
+		
+		ChunkUtil.Chave chave = chaveReuso.obtain();
+		chave.x = chunkX; chave.z = chunkZ;
+		Chunk chunk = chunks.get(chave);
+		if(chunk == null) return;
 
 		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
+		if(bloco == 2) ChunkUtil.defLuz(localX, y, localZ, (byte) 5, chunk);
+
 		chunk.att = true;
+		// chunks perto pra atualização se o bloco for na borda
+		if(localX == 0) {
+			chave.x = chunkX - 1; chave.z = chunkZ;
+			Chunk chunkAdj = chunks.get(chave);
+			if(chunkAdj != null) chunkAdj.att = true;
+		}
+		if(localX == TAM_CHUNK - 1) {
+			chave.x = chunkX + 1; chave.z = chunkZ;
+			Chunk chunkAdj = chunks.get(chave);
+			if(chunkAdj != null) chunkAdj.att = true;
+		}
+		if(localZ == 0) {
+			chave.x = chunkX; chave.z = chunkZ - 1;
+			Chunk chunkAdj = chunks.get(chave);
+			if(chunkAdj != null) chunkAdj.att = true;
+		}
+		if(localZ == TAM_CHUNK - 1) {
+			chave.x = chunkX; chave.z = chunkZ + 1;
+			Chunk chunkAdj = chunks.get(chave);
+			if(chunkAdj != null) chunkAdj.att = true;
+		}
+		chaveReuso.free(chave);
 	}
 	
 	// GERAÇÃO DE DADOS:
@@ -245,9 +279,6 @@ public class Mundo {
 							@Override
 							public void run() {
 								ChunkUtil.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
-								Matrix4 m = new Matrix4();
-								m.setToTranslation(chunkExistente.chunkX * TAM_CHUNK, 0, chunkExistente.chunkZ * TAM_CHUNK);
-								chunkExistente.mesh.transform(m);
 								chunkExistente.att = false;
 							}
 						});
@@ -333,9 +364,8 @@ public class Mundo {
 							public void run() {
 								chunk.mesh = meshReuso.obtain();
 								ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
-								Matrix4 m = new Matrix4();
-								m.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
-								chunk.mesh.transform(m);
+								matrizTmp.setToTranslation(chunk.chunkX * TAM_CHUNK, 0, chunk.chunkZ * TAM_CHUNK);
+								chunk.mesh.transform(matrizTmp);
 							}
 						});
 				}

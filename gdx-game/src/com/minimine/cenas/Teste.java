@@ -28,6 +28,7 @@ public class Teste implements Screen {
 		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 		
 		mundo.att(delta, jogador);
+		if(mundo.carregado) jogador.att(delta);
 		
 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 		ui.att(delta, mundo);

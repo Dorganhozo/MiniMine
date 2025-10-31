@@ -1,4 +1,4 @@
-package com.minimine;
+package com.minimine.utils;
 
 public class PerlinNoise2D {
     public static final int[] p = new int[512];

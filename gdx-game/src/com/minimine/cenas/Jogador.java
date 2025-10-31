@@ -3,10 +3,10 @@ package com.minimine.cenas;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.minimine.PerlinNoise3D;
+import com.minimine.utils.PerlinNoise3D;
 
 public class Jogador {
-	public byte modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public byte modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
 	public Vector3 posicao = new Vector3(0, 80, 0), velocidade = new Vector3();
 
@@ -18,46 +18,43 @@ public class Jogador {
 	
 	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f;
 	
-		public byte blocoSelecionado = 1;
-		public static final float ALCANCE = 6f;
+	public byte blocoSele = 1;
+	public CharSequence item = "Grama";
+	public static final float ALCANCE = 6f;
+	public Inventario inv;
 
-		public void interagirComBloco() {
-			// Direção normalizada da câmera
-			float dirX = camera.direction.x;
-			float dirY = camera.direction.y;
-			float dirZ = camera.direction.z;
+	public void interagirComBloco() {
+		float dirX = camera.direction.x;
+		float dirY = camera.direction.y;
+		float dirZ = camera.direction.z;
 
-			// Posição dos olhos do jogador
-			float olhoX = camera.position.x;
-			float olhoY = camera.position.y;
-			float olhoZ = camera.position.z;
+		float olhoX = camera.position.x;
+		float olhoY = camera.position.y;
+		float olhoZ = camera.position.z;
 
-			// Ray casting simples
-			for (float t = 0; t < ALCANCE; t += 0.5f) {
-				int x = PerlinNoise3D.floorRapido(olhoX + dirX * t);
-				int y = PerlinNoise3D.floorRapido(olhoY + dirY * t);
-				int z = PerlinNoise3D.floorRapido(olhoZ + dirZ * t);
+		for(float t = 0; t < ALCANCE; t += 0.5f) {
+			int x = PerlinNoise3D.floorRapido(olhoX + dirX * t);
+			int y = PerlinNoise3D.floorRapido(olhoY + dirY * t);
+			int z = PerlinNoise3D.floorRapido(olhoZ + dirZ * t);
 
-				byte bloco = Mundo.obterBlocoMundo(x, y, z);
+			byte bloco = Mundo.obterBlocoMundo(x, y, z);
 
-				if (bloco > 0) { // Achou bloco sólido
-					if (blocoSelecionado == 0) { // Ar - destruir
-						Mundo.defBlocoMundo(x, y, z, (byte)0);
-					} else { // Colocar bloco na face
-						// Posição anterior no ray (face do bloco)
-						int xAnt = PerlinNoise3D.floorRapido(olhoX + dirX * (t - 0.5f));
-						int yAnt = PerlinNoise3D.floorRapido(olhoY + dirY * (t - 0.5f));
-						int zAnt = PerlinNoise3D.floorRapido(olhoZ + dirZ * (t - 0.5f));
+			if(bloco > 0) {
+				if(blocoSele == 0) { // ar = destruir
+					Mundo.defBlocoMundo(x, y, z, (byte)0);
+				} else {
+					int xAnt = PerlinNoise3D.floorRapido(olhoX + dirX * (t - 0.5f));
+					int yAnt = PerlinNoise3D.floorRapido(olhoY + dirY * (t - 0.5f));
+					int zAnt = PerlinNoise3D.floorRapido(olhoZ + dirZ * (t - 0.5f));
 
-						// Verifica se a posição anterior é ar
-						if (Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
-							Mundo.defBlocoMundo(xAnt, yAnt, zAnt, blocoSelecionado);
-						}
+					if(Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
+						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, blocoSele);
 					}
-					return;
 				}
+				return;
 			}
 		}
+	}
 
 	public void attHitbox() {
 		float x = posicao.x;
@@ -91,6 +88,10 @@ public class Jogador {
 	}
 	
 	public void att(float delta) {
+		if(blocoSele == 0) item = "Ar";
+		else if(blocoSele == 1) item = "Grama";
+		else if(blocoSele == 2) item = "Terra";
+		else if(blocoSele == 3) item = "Pedra";
 		// gravidade no sobrevivencia
 		if(modo == 2 && !noChao) { 
             this.velocidade.y += GRAVIDADE * delta;

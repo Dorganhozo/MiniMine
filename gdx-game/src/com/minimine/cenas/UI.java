@@ -18,7 +18,7 @@ import com.badlogic.gdx.ApplicationLogger;
 public class UI implements InputProcessor {
 	public PerspectiveCamera camera;
 	
-    public SpriteBatch sb;
+    public static SpriteBatch sb;
     public BitmapFont fonte;
 
     public Texture texEsquerda, texDireita, texCima, texBaixo, texMira, texAcao;
@@ -73,6 +73,7 @@ public class UI implements InputProcessor {
 		rt = Runtime.getRuntime();
 		this.jogador = jogador;
 		this.jogador.camera = camera;
+		this.jogador.inv = new Inventario();
     }
 
 	@Override
@@ -90,11 +91,11 @@ public class UI implements InputProcessor {
 			spriteAcao.setAlpha(0.7f); 
 			toques.put(p, "acao");
 			jogador.interagirComBloco();
-		}
-		else if(telaX >= telaV / 2 && pontoDir == -1) { 
+		} else if(telaX >= telaV / 2 && pontoDir == -1) { 
 			pontoDir = p; 
 			ultimaDir.set(telaX, y); 
 		}
+		jogador.inv.toque(telaX, y, p, b, jogador);
 		return true;
 	}
 
@@ -176,7 +177,7 @@ public class UI implements InputProcessor {
         spriteCima.setSize(botaoTam, botaoTam);
         spriteBaixo.setSize(botaoTam, botaoTam);
 		spriteAcao.setSize(botaoTam, botaoTam);
-        spriteMira.setSize(60f, 60f);
+        spriteMira.setSize(50f, 50f);
     }
 
 	public void configurarAreasDPad(int v, int h) {
@@ -234,7 +235,6 @@ public class UI implements InputProcessor {
 			spriteBaixo.getWidth(), 
 			spriteBaixo.getHeight()
 		);
-		
 		rectAcao = new Rectangle(
 			spriteAcao.getX(), 
 			spriteAcao.getY(), 
@@ -283,18 +283,20 @@ public class UI implements InputProcessor {
 		spriteMira.draw(sb);
 		spriteAcao.draw(sb);
 		
+		this.jogador.inv.att();
+		
 		float livre = rt.freeMemory() >> 20;
 		float total = rt.totalMemory() >> 20;
 		float usado = total - livre;
 
 		fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
 		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa: %d\n"+
-		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
+		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\nItem: %s\n"+
 		"Chunks ativos: %d\n"+
 		"Logs:\n%s",
 		camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
 		livre, total, usado, Gdx.app.getNativeHeap(),
-		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
+		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao, this.jogador.item,
 		mundo.chunks.size(),
 		logs.logs), 50, Gdx.graphics.getHeight() - 100);
 		sb.end();  
@@ -316,7 +318,8 @@ public class UI implements InputProcessor {
         camera.viewportWidth = v;
         camera.viewportHeight = h;
         camera.update();
-
+		
+		jogador.inv.ajustar(v, h);
         configurarAreasDPad(v, h);
 
         sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);

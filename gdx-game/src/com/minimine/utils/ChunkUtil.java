@@ -47,39 +47,75 @@ public class ChunkUtil {
     }
 
     public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, IntArrayUtil idcGeral) {
-        attLuz(chunk);
+		attLuz(chunk);
+		
+		Chave chave = Mundo.chaveReuso.obtain();
+		chave.x = chunk.chunkX + 1; chave.z = chunk.chunkZ;
+		Chunk chunkXP = Mundo.chunks.get(chave);
+		chave.x = chunk.chunkX - 1; chave.z = chunk.chunkZ;
+		Chunk chunkXN = Mundo.chunks.get(chave);
+		chave.x = chunk.chunkX; chave.z = chunk.chunkZ + 1;
+		Chunk chunkZP = Mundo.chunks.get(chave);
+		chave.x = chunk.chunkX; chave.z = chunk.chunkZ - 1;
+		Chunk chunkZN = Mundo.chunks.get(chave);
+		
+		Mundo.chaveReuso.free(chave);
 
-        for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
-            for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-                for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
-                    int bloco = obterBloco(x, y, z, chunk);
-                    if(bloco == 0 || bloco == 4) continue;
+		for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
+			for(int y = 0; y < Mundo.Y_CHUNK; y++) {
+				for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
+					int bloco = obterBloco(x, y, z, chunk);
+					if(bloco == 0 || bloco == 4) continue;
 
-                    int idTopo = 0, idLado = 0, idBaixo = 0;
+					int idTopo = 0, idLado = 0, idBaixo = 0;
 
-                    switch(bloco) {
-                        case 1: idTopo = 0; idLado = 1; idBaixo = 2; break; 
-                        case 2: idTopo = 2; idLado = 2; idBaixo = 2; break; 
-                        case 3: idTopo = 3; idLado = 3; idBaixo = 3; break; 
-                        default: continue; 
-                    }
-                    // adiciona faces
-                    if(y == Mundo.Y_CHUNK - 1 || !ehSolido(x, y + 1, z, chunk)) addFace(x,y,z,0, idTopo, vertsGeral, idcGeral, chunk);
-                    if(y == 0 || !ehSolido(x, y - 1, z, chunk)) addFace(x,y,z,1, idBaixo, vertsGeral, idcGeral, chunk);
-                    if(x == Mundo.TAM_CHUNK - 1 || !ehSolido(x + 1, y, z, chunk)) addFace(x,y,z,2, idLado, vertsGeral, idcGeral, chunk);
-                    if(x == 0 || !ehSolido(x - 1, y, z, chunk)) addFace(x,y,z,3, idLado, vertsGeral, idcGeral, chunk);
-                    if(z == Mundo.TAM_CHUNK - 1 || !ehSolido(x, y, z + 1, chunk)) addFace(x,y,z,4, idLado, vertsGeral, idcGeral, chunk);
-                    if(z == 0 || !ehSolido(x, y, z - 1, chunk)) addFace(x,y,z,5, idLado, vertsGeral, idcGeral, chunk);
-                }
-            }
-        }
-    }
+					switch(bloco) {
+						case 1: idTopo = 0; idLado = 1; idBaixo = 2; break; 
+						case 2: idTopo = 2; idLado = 2; idBaixo = 2; break; 
+						case 3: idTopo = 3; idLado = 3; idBaixo = 3; break; 
+						default: continue; 
+					}
+					// culling que consideram chunks ao redor
+					if(y == Mundo.Y_CHUNK - 1 || !ehSolidoComChunk(x, y + 1, z, chunk, null)) 
+						addFace(x,y,z,0, idTopo, vertsGeral, idcGeral, chunk);
+
+					if(y == 0 || !ehSolidoComChunk(x, y - 1, z, chunk, null)) 
+						addFace(x,y,z,1, idBaixo, vertsGeral, idcGeral, chunk);
+
+					if(x == Mundo.TAM_CHUNK - 1) {
+						if(chunkXP == null || !ehSolidoComChunk(0, y, z, chunkXP, null))
+							addFace(x,y,z,2, idLado, vertsGeral, idcGeral, chunk);
+					} else if(!ehSolidoComChunk(x + 1, y, z, chunk, null)) {
+						addFace(x,y,z,2, idLado, vertsGeral, idcGeral, chunk);
+					}
+					if(x == 0) {
+						if(chunkXN == null || !ehSolidoComChunk(Mundo.TAM_CHUNK - 1, y, z, chunkXN, null))
+							addFace(x,y,z,3, idLado, vertsGeral, idcGeral, chunk);
+					} else if(!ehSolidoComChunk(x - 1, y, z, chunk, null)) {
+						addFace(x,y,z,3, idLado, vertsGeral, idcGeral, chunk);
+					}
+					if(z == Mundo.TAM_CHUNK - 1) {
+						if(chunkZP == null || !ehSolidoComChunk(x, y, 0, chunkZP, null))
+							addFace(x,y,z,4, idLado, vertsGeral, idcGeral, chunk);
+					} else if(!ehSolidoComChunk(x, y, z + 1, chunk, null)) {
+						addFace(x,y,z,4, idLado, vertsGeral, idcGeral, chunk);
+					}
+					if(z == 0) {
+						if(chunkZN == null || !ehSolidoComChunk(x, y, Mundo.TAM_CHUNK - 1, chunkZN, null))
+							addFace(x,y,z,5, idLado, vertsGeral, idcGeral, chunk);
+					} else if(!ehSolidoComChunk(x, y, z - 1, chunk, null)) {
+						addFace(x,y,z,5, idLado, vertsGeral, idcGeral, chunk);
+					}
+				}
+			}
+		}
+	}
 	
     public static void attLuz(Chunk chunk) {
         for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
             for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
                 boolean bloqueado = false;
-                // do topo para baixo
+                // do topo pra baixo
                 for(int y = Mundo.Y_CHUNK - 1; y >= 0; y--) {
                     if(!bloqueado) {
                         // se encontrou um bloco solido, começa a bloquear
@@ -203,9 +239,22 @@ public class ChunkUtil {
 	}
 	
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
-        if(x < 0 || x >= Mundo.TAM_CHUNK || y < 0 || y >= Mundo.Y_CHUNK || z < 0 || z >= Mundo.TAM_CHUNK) return false;
-        return obterBloco(x, y, z, chunk) != 0;
-    }
+		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
+			return obterBloco(x, y, z, chunk) != 0;
+		}
+		// se ta fora dos limites, verifica no mundo
+		int worldX = chunk.chunkX * Mundo.TAM_CHUNK + x;
+		int worldZ = chunk.chunkZ * Mundo.TAM_CHUNK + z;
+
+		return Mundo.obterBlocoMundo(worldX, y, worldZ) != 0;
+	}
+	
+	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
+		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
+			return obterBloco(x, y, z, chunk) != 0;
+		}
+		return false;
+	}
 	
 	public static byte obterLuz(int x, int y, int z, Chunk chunk) {
         int i = x + (z * 16) + (y * 16 * 16);

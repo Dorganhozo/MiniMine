@@ -13,13 +13,15 @@ Debug visual.
 Sistema de construção (beta)
 
 ## blocos:
-Grama, Terra, Pedra.
+Ar, Grama, Terra, Pedra.
 
 ## otimizações:
 Reuso de objetos Mesh.
-Face culling.
+Reuso de objetos ChunkUtil.Chave.
+Reuso de 1 objeto Matrix4 para todas as chunks.
+Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
-Compactação de dados (byte[] blocos = new byte[16 * 255 * 16 / 4]).
+Compactação de dados (byte[] blocos = new byte[16 * 255 * 16 / 4]), suporta até 4 blocos por byte.
 
 ## compatibilidade:
 Android 4 até Android 14.
