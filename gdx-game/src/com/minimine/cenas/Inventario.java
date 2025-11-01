@@ -4,8 +4,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
+import com.minimine.utils.Texturas;
 
-public class Inventario {
+public class Inventario implements UI.Evento {
     public int quantSlots = 25;
     public int slotsV = 5, slotsH = 5;
     public int tamSlot = 64+16;
@@ -25,25 +26,25 @@ public class Inventario {
 
     public Inventario() {
         carregarTexturas();
-        inicializarItens();
-        ajustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        iniciarItens();
+        aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     public void carregarTexturas() {
         texSlot = new Texture(Gdx.files.internal("ui/slot.png"));
     }
 
-    public void inicializarItens() {
+    public void iniciarItens() {
         itens = new Item[quantSlots];
 
         // itens iniciais:
-        itens[0] = new Item((byte)1, "Grama", new Texture(Gdx.files.internal("blocos/grama_lado.png")), 1);
-        itens[1] = new Item((byte)2, "Terra", new Texture(Gdx.files.internal("blocos/terra.png")), 10);
-        itens[2] = new Item((byte)3, "Pedra", new Texture(Gdx.files.internal("blocos/pedra.png")), 5);
-        itens[3] = new Item((byte)1, "Grama", new Texture(Gdx.files.internal("blocos/grama_lado.png")), 3);
+        itens[0] = new Item((byte)1, "Grama", Texturas.texs.get("grama_lado"), 1);
+        itens[1] = new Item((byte)2, "Terra", Texturas.texs.get("terra"), 10);
+        itens[2] = new Item((byte)3, "Pedra", Texturas.texs.get("pedra"), 5);
+		itens[3] = new Item((byte)4, "Agua", Texturas.texs.get("agua"), 10);
     }
-
-    public void ajustar(int v, int h) {
+	@Override
+    public void aoAjustar(int v, int h) {
         invX = v / 2 - (slotsH * tamSlot) / 2;
         invY = h / 2 - (slotsV * tamSlot) / 2;
 
@@ -78,13 +79,13 @@ public class Inventario {
             rectsHotbar[x] = rect;
         }
     }
-
-    public void toque(int telaX, int telaY, int p, int b, Jogador jogador) {
+	@Override
+    public void aoTocar(int telaX, int telaY, int p) {
         if(aberto) {
             // no inventario:
             for(int i = 0; i < rects.length; i++) {
                 if(rects[i].contains(telaX, telaY)) {
-                    selecionarSlot(i, jogador);
+                    selecionarSlot(i, UI.jogador);
                     return;
                 }
             }
@@ -92,7 +93,7 @@ public class Inventario {
             // na hotbar:
             for(int i = 0; i < rectsHotbar.length; i++) {
                 if(rectsHotbar[i].contains(telaX, telaY)) {
-                    selecionarSlot(i, jogador);
+                    selecionarSlot(i, UI.jogador);
                     return;
                 }
             }
@@ -131,13 +132,25 @@ public class Inventario {
 
 				if(tipo == 1) {
 					nome = "Grama";
-					textura = new Texture(Gdx.files.internal("blocos/grama_lado.png"));
+					textura = Texturas.texs.get("grama_lado");
 				} else if(tipo == 2) {
 					nome = "Terra";
-					textura = new Texture(Gdx.files.internal("blocos/terra.png"));
+					textura = Texturas.texs.get("terra");
 				} else if(tipo == 3) {
 					nome = "Pedra";
-					textura = new Texture(Gdx.files.internal("blocos/pedra.png"));
+					textura = Texturas.texs.get("pedra");
+				} else if(tipo == 4) {
+					nome = "Agua";
+					textura = Texturas.texs.get("agua");
+				} else if(tipo == 5) {
+					nome = "Areia";
+					textura = Texturas.texs.get("areia");
+				} else if(tipo == 6) {
+					nome = "Tronco";
+					textura = Texturas.texs.get("tronco_lado");
+				} else if(tipo == 7) {
+					nome = "Folha";
+					textura = Texturas.texs.get("folha");
 				}
 				itens[i] = new Item(tipo, nome, textura, quantidade);
 				return;

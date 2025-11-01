@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.minimine.utils.FloatArrayUtil;
 import com.minimine.utils.IntArrayUtil;
 import com.badlogic.gdx.utils.Pool;
+import com.minimine.utils.EstruturaUtil;
 
 public class Mundo {
 	public Texture atlasGeral;
@@ -33,6 +34,7 @@ public class Mundo {
 	public static final List<String> texturas = new ArrayList<>();
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
+	public static List<Evento> eventos = new ArrayList<>();
 	
 	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 5, seed = 458384435;
 
@@ -49,14 +51,12 @@ public class Mundo {
 		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
 		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
 	};
-	
 	public static final Pool<Mesh> meshReuso = new Pool<Mesh>() {
 		@Override
 		protected Mesh newObject() {
 			return new Mesh(true, maxVerts, maxIndices, atriburs);
 		}
 	};
-	
 	public static final Pool<ChunkUtil.Chave> chaveReuso = new Pool<ChunkUtil.Chave>() {
 		@Override
 		protected ChunkUtil.Chave newObject() {
@@ -71,7 +71,12 @@ public class Mundo {
 		texturas.add("blocos/grama_lado.png");
 		texturas.add("blocos/terra.png");
 		texturas.add("blocos/pedra.png");
-
+		texturas.add("blocos/agua_fixa.png");
+		texturas.add("blocos/areia.png");
+		texturas.add("blocos/tronco_topo.png");
+		texturas.add("blocos/tronco_lado.png");
+		texturas.add("blocos/folha.png");
+		
         criarAtlas();
 
 		String vert =
@@ -95,22 +100,56 @@ public class Mundo {
 			"varying vec4 v_cor;\n"+
 			"uniform sampler2D u_textura;\n"+
 			"void main() {\n"+
-			"  vec4 texColor = texture2D(u_textura, v_texCoord);\n"+
-			"  gl_FragColor = texColor * v_cor;\n"+
+			"  vec4 texCor = texture2D(u_textura, v_texCoord);\n"+
+			"if(texCor.a < 0.5) discard;\n"+
+			"  gl_FragColor = texCor * v_cor;\n"+
 			"}";
 		
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
-		if(shader.isCompiled()) {
+		if(!shader.isCompiled()) {
 			Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
 		}
 		for(int i = 0; i < RAIO_CHUNKS; i++) {
 			meshReuso.obtain();
 		}
+		for(Evento e : eventos) {
+			e.aoIniciar();
+		}
+	}
+	
+	public void criarAtlas() {
+		int texTam = new Pixmap(Gdx.files.internal(texturas.get(0))).getWidth();
+		int colunas = (int)Math.ceil(Math.sqrt(texturas.size()));
+		int linhas = (int)Math.ceil((float)texturas.size() / colunas);
+		int atlasTam = texTam * colunas;
+
+		Pixmap atlasPx = new Pixmap(atlasTam, texTam * linhas, Pixmap.Format.RGBA8888);
+
+		for(int i = 0; i < texturas.size(); i++) {
+			int x = (i % colunas) * texTam;
+			int y = (i / colunas) * texTam;
+
+			Pixmap px = new Pixmap(Gdx.files.internal(texturas.get(i)));
+			atlasPx.drawPixmap(px, x, y);
+
+			float u1 = (float)x / atlasTam;
+			float v1 = (float)y / (texTam * linhas);
+			float u2 = (float)(x + texTam) / atlasTam;
+			float v2 = (float)(y + texTam) / (texTam * linhas);
+
+			atlasUVs.put(i, new float[]{u1, v1, u2, v2});
+			px.dispose();
+		}
+		atlasGeral = new Texture(atlasPx);
+		atlasPx.dispose();
 	}
 	
 	// chamado render:
 	public void att(float delta, Jogador jogador) {
+		for(Evento e : eventos) {
+			e.porFrame(delta);
+		}
 		if(shader == null) return;
 		if(!carregado) {
 			final Chunk chunk = new Chunk();
@@ -127,7 +166,6 @@ public class Mundo {
 						Gdx.app.log("Mundo", "jogador posicionado á "+altura+" blocos de altura");
 						Gdx.app.log("Mundo", "o ruido de altura é:  "+alturaRuido+"f");
 					}
-
 					for(int y = 0; y < Y_CHUNK; y++) {
 						byte bloco = 0; // ar
 
@@ -142,6 +180,7 @@ public class Mundo {
 									bloco = 1; // grama
 								}
 							}
+							if(bloco==0) bloco = 4;
 						}
 						ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 					}
@@ -188,6 +227,9 @@ public class Mundo {
 	
 	// chamado em dispose:
 	public void liberar() {
+		for(Evento e : eventos) {
+			e.aoFim();
+		}
         atlasGeral.dispose();
 		for(Chunk chunk : chunks.values()) chunk.mesh.dispose();
 		shader.dispose();
@@ -195,33 +237,6 @@ public class Mundo {
 		chunks.clear();
 		atlasUVs.clear();
 		exec.shutdown();
-	}
-
-    public void criarAtlas() {
-		int texTam = new Pixmap(Gdx.files.internal(texturas.get(0))).getWidth(); 
-		int atlasTam = texTam * 2; 
-
-		Pixmap atlasPx = new Pixmap(atlasTam, atlasTam, Pixmap.Format.RGBA8888);
-
-		for(int i = 0; i < texturas.size(); i++) {
-			int x = (i % 2) * texTam;  // 0, texTam, 0, texTam
-			int y = (i / 2) * texTam;  // 0, 0, texTam, texTam
-
-			Pixmap px = new Pixmap(Gdx.files.internal(texturas.get(i)));
-
-			atlasPx.drawPixmap(px, x, y);
-
-			float u1 = (float)x / atlasTam;
-			float v1 = (float)y / atlasTam;
-			float u2 = (float)(x + texTam) / atlasTam;
-			float v2 = (float)(y + texTam) / atlasTam;
-
-			atlasUVs.put(i, new float[]{u1, v1, u2, v2});
-
-			px.dispose();
-		}
-		atlasGeral = new Texture(atlasPx);
-		atlasPx.dispose(); 
 	}
 	
 	// MANIPULAÇÃO DE BLOCOS:
@@ -235,6 +250,7 @@ public class Mundo {
 		int localZ = Math.floorMod(z, TAM_CHUNK);
 		
 		ChunkUtil.Chave chave = chaveReuso.obtain();
+		if(chave == null) chave = new ChunkUtil.Chave(0, 0);
 		chave.x = chunkX; chave.z = chunkZ;
 		Chunk chunk = chunks.get(chave);
 		chaveReuso.free(chave);
@@ -253,6 +269,7 @@ public class Mundo {
 		int localZ = z & 15;
 		
 		ChunkUtil.Chave chave = chaveReuso.obtain();
+		if(chave == null) chave = new ChunkUtil.Chave(0, 0);
 		chave.x = chunkX; chave.z = chunkZ;
 		Chunk chunk = chunks.get(chave);
 		if(chunk == null) return;
@@ -333,7 +350,6 @@ public class Mundo {
 				}
 			});
 		}
-
 		if(chunkExistente != null && chunkExistente.mesh != null) {
 			return;
 		}
@@ -368,42 +384,52 @@ public class Mundo {
 		exec.submit(new Runnable() {
 				@Override
 				public void run() {
-					final Chunk chunk = chunks.get(chave); // pega o vazio
-					// gera os blocos
+					final Chunk chunk = chunks.get(chave);
+
 					for(int lx = 0; lx < TAM_CHUNK; lx++) {
 						for(int lz = 0; lz < TAM_CHUNK; lz++) {
 							float px = chave.x * TAM_CHUNK + lx;
 							float pz = chave.z * TAM_CHUNK + lz;
+							byte bloco = 0;
+							// ruido continental: define onde ha oceanos e terra
+							float continente = PerlinNoise2D.ruidoFractal2D(px * 0.0003f, pz * 0.0003f, 1.0f, seed, 5, 0.5f);
+							// ruido de detalhe local
+							float detalhe = PerlinNoise2D.ruidoFractal2D(px * 0.015f, pz * 0.015f, 2.0f, seed + 99, 3, 0.5f);
+							// ruido de escala intermediaria para morros
+							float relevo = PerlinNoise2D.ruidoFractal2D(px * 0.003f, pz * 0.003f, 1.0f, seed + 300, 4, 0.55f);
+							// continente controla a intensidade do relevo: regiões "oceanicas" ficam planas
+							float base = continente;
+							if(base < -0.15f) base = -0.15f; // evita profundidades exageradas
+							float intensi = (base + 0.3f) * 1.6f;
+							if(intensi < 0f) intensi = 0f;
+							// elevação final misturando tudo
+							float alturaNormalizada = (relevo * intensi) + (detalhe * 0.2f);
+							// curva exponencial para picos altos e vales suaves
+							if(alturaNormalizada > 0) alturaNormalizada = (float)Math.pow(alturaNormalizada, 1.8f);
+							else alturaNormalizada = -((float)Math.pow(-alturaNormalizada, 0.8f));
 
-							float alturaRuido = PerlinNoise2D.ruidoFractal2D(px * 0.01f, pz * 0.01f, 2.0f, seed, 3, 0.5f);
-							int altura = 45 + (int)(alturaRuido * 5);
-
-							for(int y = 0; y < Y_CHUNK; y++) {
-								byte bloco = 0; // ar
-
-								if(y < altura) {
-									float cavernaRuido = PerlinNoise3D.ruidoFractal3D(
-										px * 0.05f, y * 0.1f, pz * 0.05f, seed, 2, 0.6f);
-									if(cavernaRuido > -0.1f) {
-										if(y < altura - 3) {
-											bloco = 3; // pedra
-										} else if(y < altura - 1) {
-											bloco = 2; // terra
-										} else {
-											bloco = 1; // grama
-										}
-									}
-								}
+							int altura = (int)(50 + alturaNormalizada * 180f);
+							if(altura < 5) altura = 5;
+							if(altura > Y_CHUNK - 2) altura = Y_CHUNK - 2;
+							
+							for(int y = 0; y < altura; y++) {
+								if(y < altura - 8) bloco = 3;       // pedra
+								else if(y < altura - 1) bloco = 2;  // terra
+								else if(y == altura - 1) bloco = 1; // grama
+								else bloco = 0;
 								ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 							}
+							if(Math.random() < 0.05) EstruturaUtil.gerarArvore(lx, altura, lz, chunk);
 						}
 					}
 					chunk.chunkX = chave.x;
 					chunk.chunkZ = chave.z;
-					// prepara a malha
-					final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
+					
+					for(Evento e : eventos) {
+						e.aoGerarChunk(chave.x, chave.z, "padrao");
+					}
+					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
 					final IntArrayUtil idcGeral = new IntArrayUtil();
-
 					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
 
 					Gdx.app.postRunnable(new Runnable() {
@@ -417,5 +443,16 @@ public class Mundo {
 						});
 				}
 			});
+	}
+	
+	public static interface Evento {
+		public void aoCarregar();
+		public void aoGerarChunk(int x, int z, String bioma);
+		public void aoSair();
+		public void aoGerarEntidade(String id);
+		
+		public void aoIniciar();
+		public void porFrame(float delta);
+		public void aoFim();
 	}
 }

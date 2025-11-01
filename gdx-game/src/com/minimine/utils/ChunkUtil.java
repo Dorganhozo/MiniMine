@@ -59,8 +59,6 @@ public class ChunkUtil {
 		chave.x = chunk.chunkX; chave.z = chunk.chunkZ - 1;
 		Chunk chunkZN = Mundo.chunks.get(chave);
 		
-		Mundo.chaveReuso.free(chave);
-
 		for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
 			for(int y = 0; y < Mundo.Y_CHUNK; y++) {
 				for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
@@ -70,9 +68,13 @@ public class ChunkUtil {
 					int idTopo = 0, idLado = 0, idBaixo = 0;
 
 					switch(bloco) {
-						case 1: idTopo = 0; idLado = 1; idBaixo = 2; break; 
-						case 2: idTopo = 2; idLado = 2; idBaixo = 2; break; 
-						case 3: idTopo = 3; idLado = 3; idBaixo = 3; break; 
+						case 1: idTopo = 0; idLado = 1; idBaixo = 2; break; // grama
+						case 2: idTopo = 2; idLado = 2; idBaixo = 2; break;  // terra
+						case 3: idTopo = 3; idLado = 3; idBaixo = 3; break; //pedra
+						case 4: idTopo = 4; idLado = 4; idBaixo = 4; break; // agua
+						case 5: idTopo = 5; idLado = 5; idBaixo = 5; break; // areia
+						case 6: idTopo = 6; idLado = 7; idBaixo = 6; break; // tronco
+						case 7: idTopo = 8; idLado = 8; idBaixo = 8; break; // folha
 						default: continue; 
 					}
 					// culling que consideram chunks ao redor
@@ -109,6 +111,7 @@ public class ChunkUtil {
 				}
 			}
 		}
+		Mundo.chaveReuso.free(chave);
 	}
 	
     public static void attLuz(Chunk chunk) {
@@ -240,18 +243,22 @@ public class ChunkUtil {
 	
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			return obterBloco(x, y, z, chunk) != 0;
+			byte b = obterBloco(x, y, z, chunk);
+			return  b != 0 && b != 7;
 		}
 		// se ta fora dos limites, verifica no mundo
-		int worldX = chunk.chunkX * Mundo.TAM_CHUNK + x;
-		int worldZ = chunk.chunkZ * Mundo.TAM_CHUNK + z;
+		int mundoX = chunk.chunkX * Mundo.TAM_CHUNK + x;
+		int mundoZ = chunk.chunkZ * Mundo.TAM_CHUNK + z;
+		
+		byte b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
 
-		return Mundo.obterBlocoMundo(worldX, y, worldZ) != 0;
+		return b != 0 && b != 7;
 	}
 	
 	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			return obterBloco(x, y, z, chunk) != 0;
+			byte b = obterBloco(x, y, z, chunk);
+			return b != 0 && b != 7;
 		}
 		return false;
 	}
@@ -276,20 +283,18 @@ public class ChunkUtil {
 	
 	public static byte obterBloco(int x, int y, int z, Chunk chunk) {
         int i = x + (z * 16) + (y * 16 * 16);
-        int byteIdc = i / 4;
-        int bitPos = (i % 4) * 2;
-        return (byte)((chunk.blocos[byteIdc] >> bitPos) & 0b11);
+		int byteIdc = i / 2;
+		int bitPos = (i % 2) * 4;
+        return (byte)((chunk.blocos[byteIdc] >> bitPos) & 0b1111);
     }
 
     public static void defBloco(int x, int y, int z, byte valor, Chunk chunk) {
-        int i = x + (z * 16) + (y * 16 * 16);
-        int byteIdc = i / 4;
-        int bitPos = (i % 4) * 2;
+		int i = x + (z * 16) + (y * 16 * 16);
+		int byteIdc = i / 2;
+		int bitPos = (i % 2) * 4;
 
-        byte mascaraLimpar = (byte) ~(0b11 << bitPos);
-        byte mascaraDef= (byte)((valor & 0b11) << bitPos);
-
-        chunk.blocos[byteIdc] = (byte)((chunk.blocos[byteIdc] & mascaraLimpar) | mascaraDef);
+		byte mascara = (byte) ~(0b1111 << bitPos);
+		chunk.blocos[byteIdc] = (byte)((chunk.blocos[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
     }
 	
 	public static class Chave {

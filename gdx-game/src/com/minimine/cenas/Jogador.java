@@ -8,7 +8,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.collision.Ray;
 
 public class Jogador {
-	public byte modo = 1; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public byte modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
@@ -18,19 +18,17 @@ public class Jogador {
 	public static final BoundingBox blocoBox = new BoundingBox();
 	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();
 	
-	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f;
+	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 10f, pulo = 15f;
 	
-	public byte blocoSele = 1;
-	public CharSequence item = "Grama";
+	public byte blocoSele = 0;
+	public CharSequence item = "Ar";
 	public static final float ALCANCE = 6f;
 	public Inventario inv;
 
 	public void interagirBloco() {
 		Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
-			Gdx.graphics.getHeight() / 2f
-		);
-
+			Gdx.graphics.getHeight() / 2f);
 		float olhoX = raio.origin.x;
 		float olhoY = raio.origin.y;
 		float olhoZ = raio.origin.z;
@@ -93,6 +91,7 @@ public class Jogador {
 
 					if(bloco > 0) {
 						blocoBox.set(minVec.set(x, y, z), maxVec.set(x + 1, y + 1, z + 1));
+						if(bloco == 4) return false;
 						if(hitbox.intersects(blocoBox)) return true;
 					}
 				}
@@ -106,6 +105,10 @@ public class Jogador {
 		else if(blocoSele == 1) item = "Grama";
 		else if(blocoSele == 2) item = "Terra";
 		else if(blocoSele == 3) item = "Pedra";
+		else if(blocoSele == 4) item = "Agua";
+		else if(blocoSele == 4) item = "Areia";
+		else if(blocoSele == 4) item = "Tronco";
+		else if(blocoSele == 4) item = "Folha";
 		// gravidade no sobrevivencia
 		if(modo == 2 && !noChao) { 
             this.velocidade.y += GRAVIDADE * delta;
@@ -151,5 +154,24 @@ public class Jogador {
             velocidade.y = 0;
         }
         camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
+		
+		if(camera.position.y < -100f) {
+			camera.position.y = 80f;
+		}
     }
+	
+	public static interface Evento {
+		public void aoAndar();
+		public void aoVoar();
+		public void aoInteragir();
+		public void aoMorrer();
+		public void aoColidir(byte bloco);
+		public void aoLevarDano(int dano, String motivo);
+		public void blocoAbaixo(byte bloco, int acao);
+		public void slotAtual(Inventario.Item slot, int indice);
+		
+		public void aoIniciar();
+		public void porFrame(float delta);
+		public void aoFim();
+	}
 }

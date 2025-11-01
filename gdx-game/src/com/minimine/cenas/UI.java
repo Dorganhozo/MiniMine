@@ -14,27 +14,29 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.InputProcessor;
 import java.util.HashMap;
 import com.badlogic.gdx.ApplicationLogger;
+import java.util.List;
+import java.util.ArrayList;
+import com.minimine.utils.Texturas;
+import com.minimine.ui.Botao;
+import android.os.Debug;
 
 public class UI implements InputProcessor {
 	public PerspectiveCamera camera;
-	
+	public static List<Evento> eventos = new ArrayList<>();
+	public static List<Botao> botoes = new ArrayList<>();
     public static SpriteBatch sb;
     public static BitmapFont fonte;
-
-    public Texture texEsquerda, texDireita, texCima, texBaixo, texMira, texAcao;
-    public Sprite spriteEsquerda, spriteDireita, spriteFrente, spriteTras, spriteCima, spriteBaixo, spriteMira, spriteAcao;
-    public Rectangle rectEsquerda, rectDireita,rectFrente, rectTras, rectCima, rectBaixo, rectAcao;
-
+    
     public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
-	
+	public Sprite spriteMira;
 	public int pontoEsq = -1;
     public int pontoDir = -1;
     public Vector2 esqCentro = new Vector2();
     public Vector2 esqPos = new Vector2();
     public Vector2 ultimaDir = new Vector2();
-	
+
 	public float sensi = 0.25f;
-	
+
 	public final HashMap<Integer, CharSequence> toques = new HashMap<>();
     // camera
     public float yaw = 180f;
@@ -43,15 +45,15 @@ public class UI implements InputProcessor {
     public int telaV;
     public int telaH;
 	public Runtime rt;
-	
+
 	public Logs logs;
-	
-	public Jogador jogador;
-	
+
+	public static Jogador jogador;
+
     public UI(Jogador jogador) {
 		telaV = Gdx.graphics.getWidth();
 		telaH = Gdx.graphics.getHeight();
-		
+
 		logs = new Logs();
 		Gdx.app.setApplicationLogger(logs);
 
@@ -62,8 +64,8 @@ public class UI implements InputProcessor {
         camera.far = 400f;
         camera.update();
 
-        carregarTexturasDPad();
-		
+        configurarAreasDPad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
 		sb = new SpriteBatch(); 
 
 		fonte = new BitmapFont();
@@ -74,43 +76,47 @@ public class UI implements InputProcessor {
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
+		for(Evento e : eventos) {
+			e.aoIniciar();
+		}
 		// this.jogador.inv.aberto = true;
     }
 
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		
-		if(rectEsquerda.contains(telaX, y)) { esquerda = true; spriteEsquerda.setAlpha(0.7f); toques.put(p, "esq"); }
-		else if(rectDireita.contains(telaX, y)) { direita = true; spriteDireita.setAlpha(0.7f); toques.put(p, "dir"); }
-		else if(rectFrente.contains(telaX, y)) { frente = true; spriteFrente.setAlpha(0.7f); toques.put(p, "frente"); }
-		else if(rectTras.contains(telaX, y)) { tras = true; spriteTras.setAlpha(0.7f); toques.put(p, "tras"); }
-		else if(rectCima.contains(telaX, y)) { cima = true; spriteCima.setAlpha(0.7f); toques.put(p, "cima"); }
-		else if(rectBaixo.contains(telaX, y)) { baixo = true; spriteBaixo.setAlpha(0.7f); toques.put(p, "baixo"); }
-		else if(rectAcao.contains(telaX, y)) { 
-			acao = true; 
-			spriteAcao.setAlpha(0.7f); 
-			toques.put(p, "acao");
-			jogador.interagirBloco();
-		} else if(telaX >= telaV / 2 && pontoDir == -1) { 
+		for(Evento e : eventos) {
+			e.aoTocar(telaX, y, p);
+		}
+		for(Botao e : botoes) {
+			if(e.hitbox.contains(telaX, y)) {
+				e.aoTocar(telaX, y, p);
+				toques.put(p, e.nome);
+				break;
+			}
+		}
+		if(telaX >= telaV / 2 && pontoDir == -1) { 
 			pontoDir = p; 
 			ultimaDir.set(telaX, y); 
 		}
-		jogador.inv.toque(telaX, y, p, b, jogador);
+		jogador.inv.aoTocar(telaX, y, p);
 		return true;
 	}
 
 	@Override
 	public boolean touchUp(int telaX, int telaY, int p, int b) {
+		int y = Gdx.graphics.getHeight() - telaY;
+		for(Evento e : eventos) {
+			e.aoSoltar(telaX, y, p);
+		}
 		CharSequence botao = toques.remove(p);
 		if(botao != null) {
-			if(botao.equals("esq")) { esquerda = false; spriteEsquerda.setAlpha(1f); }
-			else if(botao.equals("dir")) { direita = false; spriteDireita.setAlpha(1f); }
-			else if(botao.equals("frente")) { frente = false; spriteFrente.setAlpha(1f); }
-			else if(botao.equals("tras")) { tras = false; spriteTras.setAlpha(1f); }
-			else if(botao.equals("cima")) { cima = false; spriteCima.setAlpha(1f); }
-			else if(botao.equals("baixo")) { baixo = false; spriteBaixo.setAlpha(1f); }
-			else if(botao.equals("acao")) { acao = false; spriteAcao.setAlpha(1f); }
+			for(Botao e : botoes) {
+				if(botao.equals(e.nome)) {
+					e.aoSoltar(telaX, y, p);
+					break;
+				}
+			}
 		}
 		if(p == pontoDir) pontoDir = -1;
 		return true;
@@ -119,7 +125,9 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchDragged(int telaX, int telaY, int p) {
 		int y = Gdx.graphics.getHeight() - telaY;
-
+		for(Evento e : eventos) {
+			e.aoArrastar(telaX, y, p);
+		}
 		if(p == pontoDir) {
 			float dx = telaX - ultimaDir.x;
 			float dy = y - ultimaDir.y;
@@ -131,172 +139,225 @@ public class UI implements InputProcessor {
 		}
 		if(toques.containsKey(p)) {
 			CharSequence botaoAntigo = toques.get(p);
-
-			if(botaoAntigo != null) {
-				if(botaoAntigo.equals("esq")) { esquerda = false; spriteEsquerda.setAlpha(1f); }
-				else if(botaoAntigo.equals("dir")) { direita = false; spriteDireita.setAlpha(1f); }
-				else if(botaoAntigo.equals("frente")) { frente = false; spriteFrente.setAlpha(1f); }
-				else if(botaoAntigo.equals("tras")) { tras = false; spriteTras.setAlpha(1f); }
-				else if(botaoAntigo.equals("cima")) { cima = false; spriteCima.setAlpha(1f); }
-				else if(botaoAntigo.equals("baixo")) { baixo = false; spriteBaixo.setAlpha(1f); }
-				else if(botaoAntigo.equals("acao")) { acao = false; spriteAcao.setAlpha(1f); }
+			// verifica se ainda ta sobre algum botão
+			boolean sobreBotao = false;
+			for(Botao e : botoes) {
+				if(e.hitbox.contains(telaX, y)) {
+					sobreBotao = true;
+					// se mudou pra um botão diferente
+					if(!e.nome.equals(botaoAntigo)) {
+						// solta o botão antigo
+						if(botaoAntigo != null) {
+							for(Botao b : botoes) {
+								if(b.nome.equals(botaoAntigo)) {
+									b.aoSoltar(telaX, y, p);
+									break;
+								}
+							}
+						}
+						// pressiona o novo botão
+						e.aoTocar(telaX, y, p);
+						toques.put(p, e.nome);
+					}
+					break;
+				}
 			}
-			if(rectEsquerda.contains(telaX, y)) { esquerda = true; spriteEsquerda.setAlpha(0.7f); toques.put(p, "esq"); }
-			else if(rectDireita.contains(telaX, y)) { direita = true; spriteDireita.setAlpha(0.7f); toques.put(p, "dir"); }
-			else if(rectFrente.contains(telaX, y)) { frente = true; spriteFrente.setAlpha(0.7f); toques.put(p, "frente"); }
-			else if(rectTras.contains(telaX, y)) { tras = true; spriteTras.setAlpha(0.7f); toques.put(p, "tras"); }
-			else if(rectCima.contains(telaX, y)) { cima = true; spriteCima.setAlpha(0.7f); toques.put(p, "cima"); }
-			else if(rectBaixo.contains(telaX, y)) { baixo = true; spriteBaixo.setAlpha(0.7f); toques.put(p, "baixo"); }
-			else if(rectAcao.contains(telaX, y)) { acao = true; spriteAcao.setAlpha(0.7f); toques.put(p, "acao"); }
-			else toques.put(p, null);
+			// se não ta sobre nenhum botão, solta o botão atual
+			if(!sobreBotao && botaoAntigo != null) {
+				for(Botao e : botoes) {
+					if(e.nome.equals(botaoAntigo)) {
+						e.aoSoltar(telaX, y, p);
+						break;
+					}
+				}
+				toques.put(p, null);
+			}
 		}
 		return true;
 	}
 
-    public void carregarTexturasDPad() {
-        texEsquerda = new Texture(Gdx.files.internal("ui/botao_e.png"));
-        texDireita = new Texture(Gdx.files.internal("ui/botao_d.png"));
-		texCima = new Texture(Gdx.files.internal("ui/botao_f.png"));
-        texBaixo = new Texture(Gdx.files.internal("ui/botao_t.png"));
-        texMira = new Texture(Gdx.files.internal("ui/mira.png"));
-		texAcao = new Texture(Gdx.files.internal("ui/clique.png"));
-
-        spriteEsquerda = new Sprite(texEsquerda);
-        spriteDireita = new Sprite(texDireita);
-		spriteFrente = new Sprite(texCima);
-        spriteTras = new Sprite(texBaixo);
-        spriteCima = new Sprite(texCima);
-        spriteBaixo = new Sprite(texBaixo);
-        spriteMira = new Sprite(texMira);
-		spriteAcao = new Sprite(texAcao);
-
-        float botaoTam = 140f;
-        spriteEsquerda.setSize(botaoTam, botaoTam);
-        spriteDireita.setSize(botaoTam, botaoTam);
-		spriteFrente.setSize(botaoTam, botaoTam);
-        spriteTras.setSize(botaoTam, botaoTam);
-        spriteCima.setSize(botaoTam, botaoTam);
-        spriteBaixo.setSize(botaoTam, botaoTam);
-		spriteAcao.setSize(botaoTam, botaoTam);
-        spriteMira.setSize(50f, 50f);
-    }
-
 	public void configurarAreasDPad(int v, int h) {
+		botoes.clear();
+		spriteMira = new Sprite(Texturas.texs.get("mira"));
+		spriteMira.setSize(50f, 50f);
 		float botaoTam = 140f;
 		float espaco = 60f;
 
-		final float centerX = espaco + botaoTam * 1.5f;
-		final float centerY = espaco + botaoTam * 1.5f;
+		final float centroX = espaco + botaoTam * 1.5f;
+		final float centroY = espaco + botaoTam * 1.5f;
 
-		spriteEsquerda.setPosition(centerX - botaoTam - espaco, centerY - botaoTam/2);
-		spriteDireita.setPosition(centerX + espaco, centerY - botaoTam/2);
-		spriteFrente.setPosition(centerX - botaoTam/2, centerY + espaco);
-		spriteTras.setPosition(centerX - botaoTam/2, centerY - botaoTam - espaco);
-		spriteCima.setPosition(v - botaoTam*1.5f, centerY + espaco);
-		spriteBaixo.setPosition(v - botaoTam*1.5f, centerY - botaoTam - espaco);
-		spriteAcao.setPosition(v - botaoTam*1.5f, centerY*2 + espaco);
-		
+		botoes.add(new Botao(Texturas.texs.get("botao_d"),
+		centroX + espaco,
+		centroY - botaoTam/2, botaoTam, botaoTam, "direita") {
+			@Override
+			public void aoTocar(int t, int t2, int p) {
+				direita = true;
+			}
+			@Override
+			public void aoSoltar(int t, int t2, int p) {
+				direita = false;
+			}
+			@Override
+			public void aoArrastar(int t, int t2, int p) {
+				direita = true;
+			}
+		});
+		botoes.add(new Botao(Texturas.texs.get("botao_e"),
+		centroX - botaoTam -  espaco,
+		centroY - botaoTam/2, botaoTam, botaoTam, "esquerda") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					esquerda = true;
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {
+					esquerda = false;
+				}
+				@Override
+				public void aoArrastar(int t, int t2, int p) {
+					esquerda = true;
+				}
+			});
+		botoes.add(new Botao(Texturas.texs.get("botao_f"),
+		centroX - botaoTam/2,
+		centroY + espaco, botaoTam, botaoTam, "frente") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					frente = true;
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {
+					frente = false;
+				}
+				@Override
+				public void aoArrastar(int t, int t2, int p) {
+					frente = true;
+				}
+			});
+		botoes.add(new Botao(Texturas.texs.get("botao_t"),
+		centroX - botaoTam/2,
+		centroY - botaoTam - espaco,
+		botaoTam, botaoTam, "tras") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					tras = true;
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {
+					tras = false;
+				}
+				@Override
+				public void aoArrastar(int t, int t2, int p) {
+					tras = true;
+				}
+			});
+		botoes.add(new Botao(Texturas.texs.get("botao_f"),
+		v - botaoTam*1.5f, 
+		centroY + espaco, botaoTam, botaoTam, "cima") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					cima = true;
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {
+					cima = false;
+				}
+				@Override
+				public void aoArrastar(int t, int t2, int p) {
+					cima = true;
+				}
+			});
+		botoes.add(new Botao(Texturas.texs.get("botao_t"),
+		v - botaoTam*1.5f,
+		centroY - botaoTam - espaco,
+		botaoTam, botaoTam, "baixo") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					baixo = true;
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {
+					baixo = false;
+				}
+				@Override
+				public void aoArrastar(int t, int t2, int p) {
+					baixo = true;
+				}
+			});
+		botoes.add(new Botao(Texturas.texs.get("clique"),
+		v - botaoTam*1.5f,
+		centroY*2 + espaco,
+		botaoTam, botaoTam, "acao") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					acao = true; 
+					this.sprite.setAlpha(0.7f); 
+					toques.put(p, "acao");
+					jogador.interagirBloco();
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {
+					acao = false;
+				}
+			});
 		spriteMira.setPosition(
 			v / 2 - spriteMira.getWidth() / 2, 
 			h / 2 - spriteMira.getHeight() / 2 
-		);
-		rectEsquerda = new Rectangle(
-			spriteEsquerda.getX(), 
-			spriteEsquerda.getY(), 
-			spriteEsquerda.getWidth(), 
-			spriteEsquerda.getHeight()
-		);
-		rectDireita = new Rectangle(
-			spriteDireita.getX(), 
-			spriteDireita.getY(), 
-			spriteDireita.getWidth(), 
-			spriteDireita.getHeight()
-		);
-		rectFrente = new Rectangle(
-			spriteFrente.getX(), 
-			spriteFrente.getY(), 
-			spriteFrente.getWidth(), 
-			spriteFrente.getHeight()
-		);
-		rectTras = new Rectangle(
-			spriteTras.getX(), 
-			spriteTras.getY(), 
-			spriteTras.getWidth(), 
-			spriteTras.getHeight()
-		);
-		rectCima = new Rectangle(
-			spriteCima.getX(), 
-			spriteCima.getY(), 
-			spriteCima.getWidth(), 
-			spriteCima.getHeight()
-		);
-		rectBaixo = new Rectangle(
-			spriteBaixo.getX(), 
-			spriteBaixo.getY(), 
-			spriteBaixo.getWidth(), 
-			spriteBaixo.getHeight()
-		);
-		rectAcao = new Rectangle(
-			spriteAcao.getX(), 
-			spriteAcao.getY(), 
-			spriteAcao.getWidth(), 
-			spriteAcao.getHeight()
 		);
 	}
 
 	public void att(float delta, Mundo mundo) {
 		attCamera();
 
-		float velocidade = 5f;  
-
 		Vector3 frente = new Vector3(camera.direction.x, 0, camera.direction.z).nor();  
 		Vector3 direita = new Vector3(frente.z, 0, -frente.x).nor();
-		
+
 		jogador.velocidade.x = 0;
 		jogador.velocidade.z = 0;
 		if(jogador.modo != 2) jogador.velocidade.y = 0;
 
-		if(this.frente) jogador.velocidade.add(new Vector3(frente).scl(velocidade));
-		if(this.tras)  jogador.velocidade.sub(new Vector3(frente).scl(velocidade));
-		if(this.esquerda) jogador.velocidade.add(new Vector3(direita).scl(velocidade));
-		if(this.direita) jogador.velocidade.sub(new Vector3(direita).scl(velocidade));
+		if(this.frente) jogador.velocidade.add(new Vector3(frente).scl(jogador.velo));
+		if(this.tras)  jogador.velocidade.sub(new Vector3(frente).scl(jogador.velo));
+		if(this.esquerda) jogador.velocidade.add(new Vector3(direita).scl(jogador.velo));
+		if(this.direita) jogador.velocidade.sub(new Vector3(direita).scl(jogador.velo));
 		if(this.cima) {
 			if(jogador.modo != 2 || jogador.noChao) {
-				jogador.velocidade.y = 15f; // pulo
+				jogador.velocidade.y = jogador.pulo; // pulo
 				jogador.noChao = false;
 			}
         }
         if(this.baixo) jogador.velocidade.y = -10f;
-        
+
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
 		Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0); 
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0); 
 
 		camera.update();
-		sb.begin();  
+		sb.begin();
 		
-		spriteEsquerda.draw(sb);  
-		spriteDireita.draw(sb);  
-		spriteFrente.draw(sb);  
-		spriteTras.draw(sb);  
-		spriteCima.draw(sb);  
-		spriteBaixo.draw(sb);  
 		spriteMira.draw(sb);
-		spriteAcao.draw(sb);
 		
+		for(Evento e : eventos) {
+			e.porFrame(delta, sb);
+		}
+		for(Botao e : botoes) {
+			e.porFrame(delta, sb);
+		}
+
 		this.jogador.inv.att();
-		
+
 		float livre = rt.freeMemory() >> 20;
 		float total = rt.totalMemory() >> 20;
-		float usado = total - livre;
+		float nativaLivre = Debug.getNativeHeapFreeSize() >> 20;
+		float nativaTotal = Debug.getNativeHeapSize() >> 20;
 
 		fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
-		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa: %d\n"+
+		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
 		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\nItem: %s\n"+
 		"Chunks ativos: %d\n"+
 		"Logs:\n%s",
 		camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
-		livre, total, usado, Gdx.app.getNativeHeap(),
+		livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
 		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao, this.jogador.item,
 		mundo.chunks.size(),
 		logs.logs), 50, Gdx.graphics.getHeight() - 100);
@@ -316,26 +377,30 @@ public class UI implements InputProcessor {
 	}
 
     public void ajustar(int v, int h) {
+		for(Evento e : eventos) {
+			e.aoAjustar(v, h);
+		}
         camera.viewportWidth = v;
         camera.viewportHeight = h;
         camera.update();
-		
-		jogador.inv.ajustar(v, h);
+
+		jogador.inv.aoAjustar(v, h);
         configurarAreasDPad(v, h);
 
         sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);
     }
 
     public void liberar() {
+		for(Evento e : eventos) {
+			e.aoFim();
+		}
+		for(Botao e : botoes) {
+			e.aoFim();
+		}
         sb.dispose();
         fonte.dispose();
-        texEsquerda.dispose();
-        texDireita.dispose();
-        texCima.dispose();
-        texBaixo.dispose();
-        texMira.dispose();
     }
-	
+
 	public static class Logs implements ApplicationLogger {
 		public String logs = "";
 
@@ -375,4 +440,14 @@ public class UI implements InputProcessor {
 	@Override public boolean keyUp(int p){return false;}
 	@Override public boolean mouseMoved(int p, int p1){return false;}
 	@Override public boolean scrolled(float p, float p1){return false;}
+
+	public static interface Evento {
+		default public void aoTocar(int telaX, int telaY, int ponto) {}
+		default public void aoSoltar(int telaX, int telaY, int ponto) {}
+		default public void aoArrastar(int telaX, int telaY, int ponto) {}
+		default public void aoIniciar() {}
+		default public void porFrame(float delta, SpriteBatch sb) {}
+		default public void aoFim() {}
+		default public void aoAjustar(int vertical, int horizontal) {}
+	}
 }
