@@ -1,4 +1,0 @@
-/storage/emulated/0/AideProjects/MiniMine/gdx-game-android/bin/intermediates/jardex/82a7a228d628ec8095321ba7511d0397/gdx-box2d-1.11.0.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-game-android/bin/intermediates/jardex/db95d1059038c8f287a373c8c3c7f93a/gdx-1.11.0.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-game-android/bin/intermediates/jardex/63d441ca307d296c384cd84a4d5e0da5/gdx-jnigen-loader-2.3.1.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-game-android/bin/intermediates/jardex/2d1b2f6f7c2867ebabed88d367fbb8cc/gdx-backend-android-1.11.0.jar.dex.zip
