@@ -2,7 +2,6 @@ package com.minimine.utils;
 
 import com.minimine.cenas.Chunk;
 import com.minimine.cenas.Mundo;
-import com.minimine.Mat;
 
 public class EstruturaUtil {
 	public static void gerarArvore(int x, int y, int z, Chunk chunk) {

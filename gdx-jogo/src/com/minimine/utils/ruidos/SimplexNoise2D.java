@@ -1,6 +1,6 @@
 package com.minimine.utils.ruidos;
 
-import com.minimine.Mat;
+import com.minimine.utils.Mat;
 
 public class SimplexNoise2D {
     public static final float F2 = (float)(0.5 * (Math.sqrt(3.0) - 1.0));

@@ -28,7 +28,7 @@ import com.minimine.utils.ruidos.PerlinNoise2D;
 import com.minimine.utils.ruidos.PerlinNoise3D;
 import com.minimine.utils.ruidos.SimplexNoise2D;
 import com.minimine.utils.BiomasUtil;
-import com.minimine.Mat;
+import com.minimine.utils.Mat;
 
 public class Mundo {
 	public static String nome = "novo mundo";
@@ -48,6 +48,7 @@ public class Mundo {
 	public final ShaderProgram shader;
 	public boolean neblina = false;
 	public static boolean carregado = false;
+	public static boolean dia = true;
 
 	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
@@ -72,7 +73,7 @@ public class Mundo {
 	};
 
 	public Matrix4 matrizTmp = new Matrix4();
-
+	
 	public Mundo() {
 		seed = Mat.floor((float)Math.random()*1000000);
 		s2D = new SimplexNoise2D(seed);
@@ -88,7 +89,7 @@ public class Mundo {
 		texturas.add("blocos/folha.png");
 
         criarAtlas();
-
+	
 		String vert =
 			"attribute vec3 a_posicao;\n"+
 			"attribute vec2 a_texCoord;\n"+
@@ -127,7 +128,7 @@ public class Mundo {
 			e.aoIniciar();
 		}
 	}
-
+		
 	public void criarAtlas() {
 		int texTam = new Pixmap(Gdx.files.internal(texturas.get(0))).getWidth();
 		int colunas = (int)Math.ceil(Math.sqrt(texturas.size()));
@@ -154,8 +155,7 @@ public class Mundo {
 		atlasGeral = new Texture(atlasPx);
 		atlasPx.dispose();
 	}
-
-	// chamado render:
+	// chamado em render:
 	public void att(float delta, Jogador jogador) {
 		for(Evento e : eventos) {
 			e.porFrame(delta);
@@ -173,8 +173,23 @@ public class Mundo {
 		shader.setUniformi("u_textura", 0);
 
 		for(final Chunk chunk : chunks.values()) {
-			if(!frustrum(chunk, jogador)) continue; 
-			if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
+			if(frustrum(chunk, jogador)) {
+				if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
+				chunk.att = true;
+			}
+		}
+		if(dia) {
+			if(ChunkUtil.LUZ_SOL < 1f) {
+				ChunkUtil.LUZ_SOL += 0.01f;
+			} else {
+				dia = false;
+			}
+		} else {
+			if(ChunkUtil.LUZ_SOL > 0f) {
+				ChunkUtil.LUZ_SOL -= 0.01f;
+			} else {
+				dia = true;
+			}
 		}
 		shader.end();
 	}
@@ -202,6 +217,7 @@ public class Mundo {
 		atlasUVs.clear();
 		exec.shutdown();
 	}
+	
 	// MANIPULAÇÃO DE BLOCOS:
 	public static byte obterBlocoMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
@@ -265,7 +281,6 @@ public class Mundo {
 		chunksMod.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
 		chaveReuso.free(chave);
 	}
-
 	// GERAÇÃO DE DADOS:
 	public void attChunks(int playerX, int playerZ) {
 		final int chunkX = playerX / TAM_CHUNK;

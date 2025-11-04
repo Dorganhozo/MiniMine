@@ -15,7 +15,7 @@ import com.minimine.utils.blocos.BlocoModelo;
 
 public class ChunkUtil {
     public static float LUZ_SOL = 1.0f;
-    public static final float LUZ_AMBIENTE = 0.25f;
+    public static float LUZ_AMBIENTE = 0.25f;
     public static final float[] FACE_LUZ = {
         1.0f, // topo, luz max
         0.4f, // baixo, mais escuro
@@ -124,21 +124,21 @@ public class ChunkUtil {
 	}
 	// metodos especificos pra cada face que lidam com chunks adjacentes
 	public static boolean deveRenderFaceTopo(int x, int y, int z, Chunk chunk, BlocoTipo blocoAtual) {
-		if(y >= Mundo.Y_CHUNK) return true; // Fora do topo - sempre renderiza
+		if(y >= Mundo.Y_CHUNK) return true;
 		BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
 		return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 	}
 
 	public static boolean deveRenderFaceBaixo(int x, int y, int z, Chunk chunk, BlocoTipo blocoAtual) {
-		if(y < 0) return true; // Fora do fundo - sempre renderiza
+		if(y < 0) return true; // fora do fundo - sempre renderiza
 		BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
 		return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 	}
 
 	public static boolean deveRenderFaceXPositivo(int x, int y, int z, Chunk chunk, Chunk chunkXP, BlocoTipo blocoAtual) {
 		if(x >= Mundo.TAM_CHUNK) {
-			// Está na borda direita, verificar chunk adjacente
-			if(chunkXP == null) return true; // Chunk não carregado - renderiza por segurança
+			// ta na borda direita, verificar chunk adjacente
+			if(chunkXP == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(0, y, z, chunkXP, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
@@ -149,8 +149,8 @@ public class ChunkUtil {
 
 	public static boolean deveRenderFaceXNegativo(int x, int y, int z, Chunk chunk, Chunk chunkXN, BlocoTipo blocoAtual) {
 		if(x < 0) {
-			// Está na borda esquerda, verificar chunk adjacente
-			if(chunkXN == null) return true; // Chunk não carregado - renderiza por segurança
+			// ta na borda esquerda, verificar chunk adjacente
+			if(chunkXN == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(Mundo.TAM_CHUNK - 1, y, z, chunkXN, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
@@ -161,8 +161,8 @@ public class ChunkUtil {
 
 	public static boolean deveRenderFaceZPositivo(int x, int y, int z, Chunk chunk, Chunk chunkZP, BlocoTipo blocoAtual) {
 		if(z >= Mundo.TAM_CHUNK) {
-			// Está na borda frontal, verificar chunk adjacente
-			if (chunkZP == null) return true; // Chunk não carregado - renderiza por segurança
+			// tana borda frontal, verificar chunk adjacente
+			if (chunkZP == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(x, y, 0, chunkZP, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
@@ -171,10 +171,10 @@ public class ChunkUtil {
 		}
 	}
 
-	private static boolean deveRenderFaceZNegativo(int x, int y, int z, Chunk chunk, Chunk chunkZN, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceZNegativo(int x, int y, int z, Chunk chunk, Chunk chunkZN, BlocoTipo blocoAtual) {
 		if(z < 0) {
-			// Está na borda traseira, verificar chunk adjacente
-			if(chunkZN == null) return true; // Chunk não carregado - renderiza por segurança
+			// ta na borda traseira, verificar chunk adjacente
+			if(chunkZN == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(x, y, Mundo.TAM_CHUNK - 1, chunkZN, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
@@ -271,20 +271,18 @@ public class ChunkUtil {
 	
 	public static byte obterLuz(int x, int y, int z, Chunk chunk) {
         int i = x + (z * 16) + (y * 16 * 16);
-        int byteIdc = i / 4;
-        int bitPos = (i % 4) * 2;
-        return (byte)((chunk.luz[byteIdc] >> bitPos) & 0b11);
+		int byteIdc = i / 2;
+		int bitPos = (i % 2) * 4;
+        return (byte)((chunk.luz[byteIdc] >> bitPos) & 0b1111);
     }
 
     public static void defLuz(int x, int y, int z, byte valor, Chunk chunk) {
-        int i = x + (z * 16) + (y * 16 * 16);
-        int byteIdc = i / 4;
-        int bitPos = (i % 4) * 2;
+		int i = x + (z * 16) + (y * 16 * 16);
+		int byteIdc = i / 2;
+		int bitPos = (i % 2) * 4;
 
-        byte mascaraLimpar = (byte) ~(0b11 << bitPos);
-        byte mascaraDef = (byte)((valor & 0b11) << bitPos);
-
-        chunk.luz[byteIdc] = (byte)((chunk.luz[byteIdc] & mascaraLimpar) | mascaraDef);
+		byte mascara = (byte) ~(0b1111 << bitPos);
+		chunk.luz[byteIdc] = (byte)((chunk.blocos[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
     }
 	
 	public static byte obterBloco(int x, int y, int z, Chunk chunk) {

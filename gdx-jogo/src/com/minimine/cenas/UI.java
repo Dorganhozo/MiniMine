@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import com.minimine.utils.Texturas;
 import com.minimine.ui.Botao;
 import android.os.Debug;
-import com.minimine.Jogo;
+import com.minimine.Inicio;
+import com.minimine.utils.ChunkUtil;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -292,7 +293,7 @@ public class UI implements InputProcessor {
 				@Override
 				public void aoTocar(int t, int t2, int p) {
 					acao = true; 
-					this.sprite.setAlpha(0.7f); 
+					// this.sprite.setAlpha(0.7f); 
 					toques.put(p, "acao");
 					jogador.interagirBloco();
 				}
@@ -356,13 +357,13 @@ public class UI implements InputProcessor {
 			"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
 			"Jogador:\nModo: %s\nSlot: %d\nItem: %s\n\n"+
 			"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
-			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\n"+
+			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\n"+
 			"Logs:\n%s",
 			camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
 			livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
 			(this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
 			this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
-			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed,
+			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, ChunkUtil.LUZ_SOL,
 			logs.logs), 50, Gdx.graphics.getHeight() - 100);
 		}
 		sb.end();  

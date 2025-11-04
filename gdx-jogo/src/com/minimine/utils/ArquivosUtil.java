@@ -2,7 +2,7 @@ package com.minimine.utils;
 
 import com.minimine.cenas.Mundo;
 import java.io.File;
-import com.minimine.Jogo;
+import com.minimine.Inicio;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileInputStream;
@@ -22,7 +22,7 @@ import java.io.FileWriter;
 public class ArquivosUtil {
 	public static void svMundo(Mundo mundo) {
 		try {
-			File pasta = new File(Jogo.externo+"/MiniMine");
+			File pasta = new File(Inicio.externo+"/MiniMine");
 			if(!pasta.exists()) pasta.mkdirs();
 
 			File arquivo = new File(pasta, mundo.nome+".mini");
@@ -36,7 +36,7 @@ public class ArquivosUtil {
 
 	public static void crMundo(Mundo mundo) {
 		try {
-			File arquivo = new File(Jogo.externo + "/MiniMine/"+mundo.nome+".mini");
+			File arquivo = new File(Inicio.externo + "/MiniMine/"+mundo.nome+".mini");
 			if(!arquivo.exists()) {
 				Mundo.carregado = true;
 				return;

@@ -1,6 +1,0 @@
-# Referenced at /storage/emulated/0/AideProjects/MiniMine/gdx-android/AndroidManifest.xml:12
--keep class com.minimine.Crash { <init>(); }
-# Referenced at /storage/emulated/0/AideProjects/MiniMine/gdx-android/AndroidManifest.xml:19
--keep class com.minimine.Crash$CrashActivity { <init>(); }
-# Referenced at /storage/emulated/0/AideProjects/MiniMine/gdx-android/AndroidManifest.xml:13
--keep class com.minimine.MainActivity { <init>(); }

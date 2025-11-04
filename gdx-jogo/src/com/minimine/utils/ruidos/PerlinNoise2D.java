@@ -1,5 +1,6 @@
 package com.minimine.utils.ruidos;
-import com.minimine.Mat;  
+
+import com.minimine.utils.Mat;  
 
 public class PerlinNoise2D {  
     public static final int[] p = new int[512];  

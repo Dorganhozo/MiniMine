@@ -1,6 +1,0 @@
-/storage/emulated/0/AideProjects/MiniMine/gdx-android/bin/intermediates/jardex/19d4b4eb1df963125dc50c2336f76653/gdx-1.11.0.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-android/bin/intermediates/jardex/350bae08525e5bdf37ba30f45e124db4/gltf-2.2.1.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-android/bin/intermediates/jardex/ab14c049cbd493203d6d21acea66a228/luaj-jse-3.0.1.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-android/bin/intermediates/jardex/ebba285d34a2ce1da5504c2689878cca/gdx-backend-android-1.11.0.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-android/bin/intermediates/jardex/59739a17802d01fdc2701fbfe376d7bc/gdx-jnigen-loader-2.3.1.jar.dex.zip
-/storage/emulated/0/AideProjects/MiniMine/gdx-android/bin/intermediates/jardex/5008629015b2c443d9bf56624c2ef29d/gdx-box2d-1.11.0.jar.dex.zip

@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.minimine.utils.ruidos.PerlinNoise3D;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.collision.Ray;
-import com.minimine.Mat;
+import com.minimine.utils.Mat;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.model.Node;
