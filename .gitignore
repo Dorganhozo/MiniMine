@@ -1,1 +1,12 @@
-/build
+# pastas de build do android
+/gdx-android/bin/
+/gdx-android/build/
+
+# Pastas de build do jogo
+/gdx-jogo/bin/
+/gdx-jogo/build/
+
+# outras pastas de build
+/build/
+/bin/
+/output/
