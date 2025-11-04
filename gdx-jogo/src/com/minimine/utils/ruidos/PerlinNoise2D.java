@@ -1,4 +1,5 @@
-package com.minimine.utils.ruidos;  
+package com.minimine.utils.ruidos;
+import com.minimine.Mat;  
 
 public class PerlinNoise2D {  
     public static final int[] p = new int[512];  
@@ -30,10 +31,10 @@ public class PerlinNoise2D {
     }  
 
     public static float ruido(float x, float z, int seed) {  
-        int X = (PerlinNoise3D.floorRapido(x) + seed) & 255;  
-        int Z = (PerlinNoise3D.floorRapido(z) + seed) & 255;  
-        float xf = x - PerlinNoise3D.floorRapido(x);  
-        float zf = z - PerlinNoise3D.floorRapido(z);  
+        int X = (Mat.floor(x) + seed) & 255;  
+        int Z = (Mat.floor(z) + seed) & 255;  
+        float xf = x - Mat.floor(x);  
+        float zf = z - Mat.floor(z);  
 
         float u = fade(xf);  
         float v = fade(zf);  
@@ -46,17 +47,13 @@ public class PerlinNoise2D {
         float gradAB = grad(p[A + 1], xf, zf - 1);  
         float gradBB = grad(p[B + 1], xf - 1, zf - 1);  
 
-        float lerpX1 = lerp(u, gradAA, gradBA);  
-        float lerpX2 = lerp(u, gradAB, gradBB);  
-        return lerp(v, lerpX1, lerpX2);  
+        float lerpX1 = Mat.lerp(u, gradAA, gradBA);  
+        float lerpX2 = Mat.lerp(u, gradAB, gradBB);  
+        return Mat.lerp(v, lerpX1, lerpX2);  
     }  
 
     public static float fade(float t) {  
         return t * t * t * (t * (t * 6 - 15) + 10);  
-    }  
-
-    public static float lerp(float t, float a, float b) {  
-        return a + t * (b - a);  
     }  
 
     public static float grad(int hash, float x, float y) {  

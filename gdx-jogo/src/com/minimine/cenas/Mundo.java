@@ -28,22 +28,26 @@ import com.minimine.utils.ruidos.PerlinNoise2D;
 import com.minimine.utils.ruidos.PerlinNoise3D;
 import com.minimine.utils.ruidos.SimplexNoise2D;
 import com.minimine.utils.BiomasUtil;
+import com.minimine.Mat;
 
 public class Mundo {
+	public static String nome = "novo mundo";
 	public Texture atlasGeral;
     // mapa de UVs:
     // (atlas ID -> [u_min, v_min, u_max, v_max])
 	public static final List<String> texturas = new ArrayList<>();
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
+	public static final Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
 	public static List<Evento> eventos = new ArrayList<>();
 
-	public static final int TAM_CHUNK = 16, Y_CHUNK = 255, RAIO_CHUNKS = 15, seed = 458384435;
-	// public PerlinNoise2D perlin2D = new PerlinNoise2D(seed);
-
+	public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
+	public static int seed = 1, RAIO_CHUNKS = 10;
+	public static SimplexNoise2D s2D;
+	
 	public final ShaderProgram shader;
 	public boolean neblina = false;
-	public boolean carregado = false;
+	public static boolean carregado = false;
 
 	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
@@ -70,6 +74,9 @@ public class Mundo {
 	public Matrix4 matrizTmp = new Matrix4();
 
 	public Mundo() {
+		seed = Mat.floor((float)Math.random()*1000000);
+		s2D = new SimplexNoise2D(seed);
+		
 		texturas.add("blocos/grama_topo.png");
 		texturas.add("blocos/grama_lado.png");
 		texturas.add("blocos/terra.png");
@@ -195,7 +202,6 @@ public class Mundo {
 		atlasUVs.clear();
 		exec.shutdown();
 	}
-
 	// MANIPULAÇÃO DE BLOCOS:
 	public static byte obterBlocoMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
@@ -256,6 +262,7 @@ public class Mundo {
 			Chunk chunkAdj = chunks.get(chave);
 			if(chunkAdj != null) chunkAdj.att = true;
 		}
+		chunksMod.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
 		chaveReuso.free(chave);
 	}
 
@@ -311,8 +318,15 @@ public class Mundo {
 			return;
 		}
 		if(chunkExistente == null) {
-			chunks.put(chave, new Chunk());
-			gerarChunk(chave);
+			Chunk chunkMod = chunks.get(chave);
+			if(chunkMod != null) {
+				chunks.put(chave, chunkMod);
+				gerarChunk(chave);
+				return;
+			} else {
+				chunks.put(chave, new Chunk());
+				gerarChunk(chave);
+			}
 		}
 	}
 
@@ -346,13 +360,15 @@ public class Mundo {
 					chunk.z = chave.z;
 					for(int lx = 0; lx < TAM_CHUNK; lx++) {
 						for(int lz = 0; lz < TAM_CHUNK; lz++) {
-							for(BiomasUtil.Bioma b : BiomasUtil.biomas) {
-								b.gerarColuna(lx, lz, chunk);
+							float rb = Mat.abs(s2D.ruidoFractal(chave.x, chave.z, 0.02f, 2, 0.1f));
+							if(rb > 0.6f) {
+								BiomasUtil.biomas.get(1).gerarColuna(lx, lz, chunk);
+							} else if(rb > 0.2f){
+								BiomasUtil.biomas.get(2).gerarColuna(lx, lz, chunk);
+							} else {
+								BiomasUtil.biomas.get(0).gerarColuna(lx, lz, chunk);
 							}
 						}
-					}
-					for(Evento e : eventos) {
-						e.aoGerarChunk(chave.x, chave.z, "padrao");
 					}
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
 					final IntArrayUtil idcGeral = new IntArrayUtil();

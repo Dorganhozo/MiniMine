@@ -22,7 +22,7 @@ import android.os.Debug;
 import com.minimine.Jogo;
 
 public class UI implements InputProcessor {
-	public PerspectiveCamera camera;
+	public static PerspectiveCamera camera;
 	public static List<Evento> eventos = new ArrayList<>();
 	public static List<Botao> botoes = new ArrayList<>();
     public static SpriteBatch sb;
@@ -40,8 +40,7 @@ public class UI implements InputProcessor {
 
 	public final HashMap<Integer, CharSequence> toques = new HashMap<>();
     // camera
-    public float yaw = 180f;
-    public float tom = -20f;
+    public static float yaw = 180f, tom = -20f;
 
     public int telaV;
     public int telaH;
@@ -50,6 +49,7 @@ public class UI implements InputProcessor {
 	public Logs logs;
 
 	public static Jogador jogador;
+	public static boolean debug = false;
 	
     public UI(Jogador jogador) {
 		telaV = Gdx.graphics.getWidth();
@@ -346,22 +346,25 @@ public class UI implements InputProcessor {
 		}
 
 		this.jogador.inv.att();
-
-		float livre = rt.freeMemory() >> 20;
-		float total = rt.totalMemory() >> 20;
-		float nativaLivre = Debug.getNativeHeapFreeSize() >> 20;
-		float nativaTotal = Debug.getNativeHeapSize() >> 20;
-
-		fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
-		"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
-		"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\nItem: %s\n"+
-		"Chunks ativos: %d\nSeed: %d\n"+
-		"Logs:\n%s",
-		camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
-		livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
-		this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao, this.jogador.item,
-		mundo.chunks.size(), mundo.seed,
-		logs.logs), 50, Gdx.graphics.getHeight() - 100);
+		if(debug) {
+			float livre = rt.freeMemory() >> 20;
+			float total = rt.totalMemory() >> 20;
+			float nativaLivre = Debug.getNativeHeapFreeSize() >> 20;
+			float nativaTotal = Debug.getNativeHeapSize() >> 20;
+			
+			fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
+			"Memória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
+			"Jogador:\nModo: %s\nSlot: %d\nItem: %s\n\n"+
+			"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
+			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\n"+
+			"Logs:\n%s",
+			camera.position.x, camera.position.y, camera.position.z, (int) Gdx.graphics.getFramesPerSecond(),
+			livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
+			(this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
+			this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
+			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed,
+			logs.logs), 50, Gdx.graphics.getHeight() - 100);
+		}
 		sb.end();  
 	}
 

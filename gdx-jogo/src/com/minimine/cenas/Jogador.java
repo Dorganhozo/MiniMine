@@ -6,9 +6,25 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.minimine.utils.ruidos.PerlinNoise3D;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.collision.Ray;
+import com.minimine.Mat;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
+import com.badlogic.gdx.utils.JsonReader;
+import com.minimine.utils.Texturas;
+import net.mgsx.gltf.loaders.gltf.GLTFLoader;
+import net.mgsx.gltf.scene3d.scene.SceneAsset;
 
 public class Jogador {
-	public byte modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public ModelInstance modelo;
+	public byte modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
@@ -18,12 +34,28 @@ public class Jogador {
 	public static final BoundingBox blocoBox = new BoundingBox();
 	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();
 	
-	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 10f, pulo = 15f;
+	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
 	
 	public byte blocoSele = 0;
 	public CharSequence item = "Ar";
 	public static final float ALCANCE = 6f;
 	public Inventario inv;
+	
+	public void criarModelo3D() {
+		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelo.gltf"));
+		this.modelo = new ModelInstance(asset.scene.model);
+	}
+	
+	public Jogador() {
+		if(modo != 2) {
+			// itens iniciais:
+			inv.itens[0] = new Inventario.Item((byte)1, "Grama", Texturas.texs.get("grama_lado"), 1);
+			inv.itens[1] = new Inventario.Item((byte)2, "Terra", Texturas.texs.get("terra"), 1);
+			inv.itens[2] = new Inventario.Item((byte)3, "Pedra", Texturas.texs.get("pedra"), 1);
+			inv.itens[3] = new Inventario.Item((byte)4, "Agua", Texturas.texs.get("agua"), 1);
+		}
+		criarModelo3D();
+	}
 
 	public void interagirBloco() {
 		Ray raio = camera.getPickRay(
@@ -37,9 +69,9 @@ public class Jogador {
 		float dirZ = raio.direction.z;
 
 		for(float t = 0; t < ALCANCE; t += 0.25f) { // passo menor = mais preciso
-			int x = PerlinNoise3D.floorRapido(olhoX + dirX * t);
-			int y = PerlinNoise3D.floorRapido(olhoY + dirY * t);
-			int z = PerlinNoise3D.floorRapido(olhoZ + dirZ * t);
+			int x = Mat.floor(olhoX + dirX * t);
+			int y = Mat.floor(olhoY + dirY * t);
+			int z = Mat.floor(olhoZ + dirZ * t);
 
 			byte bloco = Mundo.obterBlocoMundo(x, y, z);
 			if(bloco > 0) {
@@ -48,9 +80,9 @@ public class Jogador {
 					if(inv.itens[inv.slotSelecionado] != null) blocoSele = inv.itens[inv.slotSelecionado].tipo;
 					Mundo.defBlocoMundo(x, y, z, (byte)0);
 				} else {
-					int xAnt = PerlinNoise3D.floorRapido(olhoX + dirX * (t - 0.25f));
-					int yAnt = PerlinNoise3D.floorRapido(olhoY + dirY * (t - 0.25f));
-					int zAnt = PerlinNoise3D.floorRapido(olhoZ + dirZ * (t - 0.25f));
+					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
+					int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));
+					int zAnt = Mat.floor(olhoZ + dirZ * (t - 0.25f));
 
 					if(Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
 						blocoBox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
@@ -77,12 +109,12 @@ public class Jogador {
 	}
 
 	public boolean colideComMundo() {
-		int minX = PerlinNoise3D.floorRapido(hitbox.min.x);
-		int maxX = PerlinNoise3D.floorRapido(hitbox.max.x);
-		int minY = PerlinNoise3D.floorRapido(hitbox.min.y);
-		int maxY = PerlinNoise3D.floorRapido(hitbox.max.y);
-		int minZ = PerlinNoise3D.floorRapido(hitbox.min.z);
-		int maxZ = PerlinNoise3D.floorRapido(hitbox.max.z);
+		int minX = Mat.floor(hitbox.min.x);
+		int maxX = Mat.floor(hitbox.max.x);
+		int minY = Mat.floor(hitbox.min.y);
+		int maxY = Mat.floor(hitbox.max.y);
+		int minZ = Mat.floor(hitbox.min.z);
+		int maxZ = Mat.floor(hitbox.max.z);
 
 		for(int x = minX; x <= maxX; x++) {
 			for(int y = minY; y <= maxY; y++) {

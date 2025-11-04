@@ -1,44 +1,52 @@
 package com.minimine.utils.ruidos;
 
+import com.minimine.Mat;
+
 public class SimplexNoise3D {
     public static final float F3 = 1.0f / 3.0f;
     public static final float G3 = 1.0f / 6.0f;
 
+    // gradientes(vetores de direção)
     public static final int[][] GRAD3 = {
         {1,1,0}, {-1,1,0}, {1,-1,0}, {-1,-1,0},
         {1,0,1}, {-1,0,1}, {1,0,-1}, {-1,0,-1},
         {0,1,1}, {0,-1,1}, {0,1,-1}, {0,-1,-1}
     };
+    // permutação:
+    public final int[] p;
 
-    public static int[] p = new int[512];
-    
-    static {
-        final int[] perm = {
-            151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-            190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,
-            125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,
-            105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,
-            135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,
-            85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,
-            101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,
-            242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,
-            84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
-        };
-        for(int i = 0; i < 256; i++) {
-            p[i] = perm[i];
-            p[i + 256] = perm[i];
+    public SimplexNoise3D(int seed) {
+        int[] perm = new int[256];
+        for(int i = 0; i < 256; i++) perm[i] = i;
+        // logica de embaralhamento(fisher-yates + xorshift32)
+        int estado = seed;
+        if(estado == 0) estado = 0x9E3779B9;
+
+        for(int i = 255; i > 0; i--) {
+            // xorshift32 passo
+            int z = estado;
+            z ^= (z << 13);
+            z ^= (z >>> 17);
+            z ^= (z << 5);
+            estado = z;
+            long urnd = z & 0xFFFFFFFFL;
+            int j = (int) (urnd % (i + 1)); // em [0, i]
+
+            int tmp = perm[i];
+            perm[i] = perm[j];
+            perm[j] = tmp;
+        }
+        this.p = new int[512];
+        for(int i = 0; i < 512; i++) {
+            this.p[i] = perm[i & 255];
         }
     }
 
-    public static float ruido(float xin, float yin, float zin, int seed) {
-        xin += seed * 0.1f;
-        yin += seed * 0.1f;
-        zin += seed * 0.1f;
-
+    public float ruido(float xin, float yin, float zin) {
         float s = (xin + yin + zin) * F3;
-        int i = PerlinNoise3D.floorRapido(xin + s);
-        int j = PerlinNoise3D.floorRapido(yin + s);
-        int k = PerlinNoise3D.floorRapido(zin + s);
+        int i = Mat.floor(xin + s);
+        int j = Mat.floor(yin + s);
+        int k = Mat.floor(zin + s);
 
         float t = (i + j + k) * G3;
         float X0 = i - t;
@@ -60,7 +68,6 @@ public class SimplexNoise3D {
             else if(x0 < z0) { i1 = 0; j1 = 1; k1 = 0; i2 = 0; j2 = 1; k2 = 1; }
             else { i1 = 0; j1 = 1; k1 = 0; i2 = 1; j2 = 1; k2 = 0; }
         }
-
         float x1 = x0 - i1 + G3;
         float y1 = y0 - j1 + G3;
         float z1 = z0 - k1 + G3;
@@ -82,45 +89,44 @@ public class SimplexNoise3D {
         else {
             t0 *= t0;
             int gi0 = p[ii + p[jj + p[kk]]] % 12;
-            n0 = t0 * t0 * dot(GRAD3[gi0], x0, y0, z0);
+            n0 = t0 * t0 * Mat.dot(GRAD3[gi0], x0, y0, z0);
         }
         float t1 = 0.6f - x1*x1 - y1*y1 - z1*z1;
         if(t1 < 0) n1 = 0.0f;
         else {
             t1 *= t1;
             int gi1 = p[ii + i1 + p[jj + j1 + p[kk + k1]]] % 12;
-            n1 = t1 * t1 * dot(GRAD3[gi1], x1, y1, z1);
+            n1 = t1 * t1 * Mat.dot(GRAD3[gi1], x1, y1, z1);
         }
         float t2 = 0.6f - x2*x2 - y2*y2 - z2*z2;
         if(t2 < 0) n2 = 0.0f;
         else {
             t2 *= t2;
             int gi2 = p[ii + i2 + p[jj + j2 + p[kk + k2]]] % 12;
-            n2 = t2 * t2 * dot(GRAD3[gi2], x2, y2, z2);
+            n2 = t2 * t2 * Mat.dot(GRAD3[gi2], x2, y2, z2);
         }
         float t3 = 0.6f - x3*x3 - y3*y3 - z3*z3;
         if(t3 < 0) n3 = 0.0f;
         else {
             t3 *= t3;
             int gi3 = p[ii + 1 + p[jj + 1 + p[kk + 1]]] % 12;
-            n3 = t3 * t3 * dot(GRAD3[gi3], x3, y3, z3);
+            n3 = t3 * t3 * Mat.dot(GRAD3[gi3], x3, y3, z3);
         }
         return 32.0f * (n0 + n1 + n2 + n3);
     }
 
-    public static float dot(int[] g, float x, float y, float z) {
-        return g[0]*x + g[1]*y + g[2]*z;
-    }
-	
-	public static float ruidoFractal(float x, float y, float z, int seed, int octaves, float persis) {
+    // calcula o ruido fractal(FBM) 3D
+	public float ruidoFractal(float x, float y, float z, int octaves, float persis) {
         float total = 0f;
         float amplitude = 1f;
         float maxValor = 0f;
         float lx = x;
         float ly = y;
         float lz = z;
+
         for(int i = 0; i < octaves; i++) {
-            total += ruido(lx, ly, lz, seed + i) * amplitude;
+            total += ruido(lx, ly, lz) * amplitude;
+
             maxValor += amplitude;
             amplitude *= persis;
             lx *= 2f;

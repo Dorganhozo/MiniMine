@@ -1,35 +1,38 @@
 package com.minimine.utils;
 
 import com.minimine.cenas.Chunk;
+import com.minimine.cenas.Mundo;
+import com.minimine.Mat;
 
 public class EstruturaUtil {
 	public static void gerarArvore(int x, int y, int z, Chunk chunk) {
-		// tronco:
-		ChunkUtil.defBloco(x, y, z, (byte)6, chunk);
-		ChunkUtil.defBloco(x, y+1, z, (byte)6, chunk);
-		ChunkUtil.defBloco(x, y+2, z, (byte)6, chunk);
-		ChunkUtil.defBloco(x, y+3, z, (byte)6, chunk);
-		ChunkUtil.defBloco(x, y+4, z, (byte)6, chunk);
-		// folhas:
-		ChunkUtil.defBloco(x+1, y+4, z, (byte)7, chunk);
-		ChunkUtil.defBloco(x+1, y+4, z+1, (byte)7, chunk);
-		ChunkUtil.defBloco(x-1, y+4, z, (byte)7, chunk);
-		ChunkUtil.defBloco(x-1, y+4, z-1, (byte)7, chunk);
-		ChunkUtil.defBloco(x, y, z+4+1, (byte)7, chunk);
-		ChunkUtil.defBloco(x, y+4, z-1, (byte)7, chunk);
-		// folhas de lado:
-		ChunkUtil.defBloco(x+2, y+4, z, (byte)7, chunk);
-		ChunkUtil.defBloco(x+2, y+4, z+2, (byte)7, chunk);
-		ChunkUtil.defBloco(x-2, y+4, z, (byte)7, chunk);
-		ChunkUtil.defBloco(x-2, y+4, z-2, (byte)7, chunk);
-		ChunkUtil.defBloco(x, y+4, z+2, (byte)7, chunk);
-		ChunkUtil.defBloco(x, y+4, z-2, (byte)7, chunk);
-		// folhas de cima
-		ChunkUtil.defBloco(x+1, y+5, z, (byte)7, chunk);
-		ChunkUtil.defBloco(x+1, y+5, z+1, (byte)7, chunk);
-		ChunkUtil.defBloco(x-1, y+5, z, (byte)7, chunk);
-		ChunkUtil.defBloco(x-1, y+5, z-1, (byte)7, chunk);
-		ChunkUtil.defBloco(x, y+5, z+1, (byte)7, chunk);
-		ChunkUtil.defBloco(x, y+5, z-1, (byte)7, chunk);
+		// tronco
+		for(int i = 0; i < 5; i++) {
+			if(dentroLimite(x, y + i, z)) {
+				ChunkUtil.defBloco(x, y + i, z, (byte)6, chunk);
+			}
+		}
+		// copa(duas camadas e topo)
+		for(int dy = 4; dy <= 6; dy++) {
+			int raio = dy == 4 ? 2 : (dy == 5 ? 1 : 0);
+			for(int dx = -raio; dx <= raio; dx++) {
+				for(int dz = -raio; dz <= raio; dz++) {
+					if(Mat.abs(dx) + Mat.abs(dz) <= raio + 1) {
+						int xx = x + dx;
+						int yy = y + dy;
+						int zz = z + dz;
+						if(dentroLimite(xx, yy, zz)) {
+							ChunkUtil.defBloco(xx, yy, zz, (byte)7, chunk);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	public static boolean dentroLimite(int x, int y, int z) {
+		return x >= 0 && x < Mundo.TAM_CHUNK &&
+			z >= 0 && z < Mundo.TAM_CHUNK &&
+			y >= 0 && y < Mundo.Y_CHUNK;
 	}
 }

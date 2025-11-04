@@ -1,5 +1,7 @@
 package com.minimine.utils.ruidos;
 
+import com.minimine.Mat;
+
 public final class PerlinNoise3D {
     public static final int[] P = new int[512];
     
@@ -32,20 +34,15 @@ public final class PerlinNoise3D {
         }
     }
 
-    public static int floorRapido(float x) {
-        int xi = (int) x;
-        return x < xi ? xi - 1 : xi;
-    }
-
     public static float ruido(float x, float y, float z, int seed) {
         final int[] p = P; // local ref
-        int X = (floorRapido(x) + seed) & 255;
-        int Y = (floorRapido(y) + seed) & 255;
-        int Z = (floorRapido(z) + seed) & 255;
+        int X = (Mat.floor(x) + seed) & 255;
+        int Y = (Mat.floor(y) + seed) & 255;
+        int Z = (Mat.floor(z) + seed) & 255;
 
-        float xf = x - floorRapido(x);
-        float yf = y - floorRapido(y);
-        float zf = z - floorRapido(z);
+        float xf = x - Mat.floor(x);
+        float yf = y - Mat.floor(y);
+        float zf = z - Mat.floor(z);
 
         float u = fade(xf);
         float v = fade(yf);

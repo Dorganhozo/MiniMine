@@ -15,7 +15,7 @@ public class Inventario implements UI.Evento {
     public Rectangle[] rects;
     public int invX, invY;
 
-    public Item[] itens;
+    public Item[] itens = new Item[quantSlots];
     public int slotSelecionado = 0;
     public boolean aberto = false;
     // hotbar
@@ -26,23 +26,13 @@ public class Inventario implements UI.Evento {
 
     public Inventario() {
         carregarTexturas();
-        iniciarItens();
         aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     public void carregarTexturas() {
         texSlot = new Texture(Gdx.files.internal("ui/slot.png"));
     }
-
-    public void iniciarItens() {
-        itens = new Item[quantSlots];
-
-        // itens iniciais:
-        itens[0] = new Item((byte)1, "Grama", Texturas.texs.get("grama_lado"), 1);
-        itens[1] = new Item((byte)2, "Terra", Texturas.texs.get("terra"), 10);
-        itens[2] = new Item((byte)3, "Pedra", Texturas.texs.get("pedra"), 5);
-		itens[3] = new Item((byte)4, "Agua", Texturas.texs.get("agua"), 10);
-    }
+    
 	@Override
     public void aoAjustar(int v, int h) {
         invX = v / 2 - (slotsH * tamSlot) / 2;

@@ -8,10 +8,15 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import com.minimine.cenas.Teste;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.LuaFunction;
+import java.io.File;
+import java.io.IOException;
+import com.minimine.utils.ArquivosUtil;
 
 public class LuaAPI {
 	public static Globals globais;
 	public static Teste tela;
+	public static String att;
+	public static boolean pronto = true;
 	
 	public static void iniciar(Teste principal) {
 		tela = principal;
@@ -29,16 +34,21 @@ public class LuaAPI {
 					return LuaValue.NIL;
 				}
 			});
-		
+		File dir = new File(Jogo.externo+"/MiniMine/mods/");
+		if(!dir.exists()) {
+			dir.mkdirs();
+			ArquivosUtil.criar(dir.getAbsolutePath()+"/arquivos.mini");
+		}
 		String[] str = Gdx.files.absolute(Jogo.externo+"/MiniMine/mods/arquivos.mini").readString().split("\n");
 		for(int i = 0; i < str.length; i++) {
+			if(str == null || str[i].equals("")) continue;
 			globais.loadfile(Jogo.externo+"/MiniMine/mods/"+str[i]).call();
 		}
-		/*
-		try {
-			
-		} catch(Exception e) {
-			Gdx.app.log("LuaAPI", "[ERRO]: String: "+str[0]+", "+e);
-		} */
+		att = Jogo.externo+"/MiniMine/mods/att.lua";
+		if(!(new File(att).exists())) pronto = false;
+	}
+	
+	public static void att(float delta) {
+		if(pronto) globais.loadfile(att).call();
 	}
 }
