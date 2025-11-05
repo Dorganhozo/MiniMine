@@ -29,8 +29,20 @@ public class Jogo implements Screen {
 		net = new Net(Net.SERVIDOR_MODO);
 		
 		ArquivosUtil.crMundo(mundo);
+		
+		Mundo.texturas.add("blocos/grama_topo.png");
+		Mundo.texturas.add("blocos/grama_lado.png");
+		Mundo.texturas.add("blocos/terra.png");
+		Mundo.texturas.add("blocos/pedra.png");
+		Mundo.texturas.add("blocos/agua_fixa.png");
+		Mundo.texturas.add("blocos/areia.png");
+		Mundo.texturas.add("blocos/tronco_topo.png");
+		Mundo.texturas.add("blocos/tronco_lado.png");
+		Mundo.texturas.add("blocos/folha.png");
+		
 		LuaAPI.iniciar(this);
 		
+		mundo.iniciar();
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 		Gdx.gl.glCullFace(GL20.GL_BACK);
@@ -38,14 +50,14 @@ public class Jogo implements Screen {
 		
 		mb = new ModelBatch();
 		ambiente = new Environment();
-		jgs.add(jogador);
+		
 		pronto = true;
 	}
 
     @Override
     public void render(float delta) {
-		float luz = ChunkUtil.LUZ_SOL;
-		if(luz < 0f) luz = 0f;
+		float luz = Mundo.SistemaLuzGlobal.luz;
+		if(luz < 0.1f) luz = 0f;
 		if(luz > 1f) luz = 1f;
 
 		float r = 0.5f * luz;
@@ -58,12 +70,11 @@ public class Jogo implements Screen {
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 		
 		if(pronto) mundo.att(delta, jogador);
+		
 		for(Jogador jo : jgs) {
-			if(jogador.modelo != null) {
-				jo.criarModelo3D();
-			}
 			mb.begin(ui.camera);
-
+			if(jo.modelo == null) jo.criarModelo3D();
+			
 			jo.modelo.transform.setToTranslation(
 				jo.camera.position.x + jo.camera.direction.x * 0.5f + 0.3f,
 				jo.camera.position.y + jo.camera.direction.y * 0.5f + 1.2f, 
@@ -75,6 +86,7 @@ public class Jogo implements Screen {
 			mb.render(jo.modelo, ambiente);
 			mb.end();
 		}
+		
 		if(mundo.carregado) jogador.att(delta);
 		if(pronto) LuaAPI.att(delta);
 		
@@ -98,6 +110,7 @@ public class Jogo implements Screen {
 	@Override public void hide() {}
 	@Override
 	public void pause() {
+		LuaAPI.iniciar(this);
 		mundo.carregado = false;
 		ArquivosUtil.svMundo(mundo);
 	}

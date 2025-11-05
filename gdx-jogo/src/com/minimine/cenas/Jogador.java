@@ -54,7 +54,6 @@ public class Jogador {
 			inv.itens[2] = new Inventario.Item((byte)3, "Pedra", Texturas.texs.get("pedra"), 1);
 			inv.itens[3] = new Inventario.Item((byte)4, "Agua", Texturas.texs.get("agua"), 1);
 		}
-		criarModelo3D();
 	}
 
 	public void interagirBloco() {

@@ -11,6 +11,8 @@ import org.luaj.vm2.LuaFunction;
 import java.io.File;
 import java.io.IOException;
 import com.minimine.utils.ArquivosUtil;
+import com.minimine.utils.BiomasUtil;
+import com.minimine.utils.ChunkUtil;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -26,6 +28,9 @@ public class LuaAPI {
 		globais.set("mundo", CoerceJavaToLua.coerce(tela.mundo));
 		globais.set("jogador", CoerceJavaToLua.coerce(tela.ui.jogador));
 		globais.set("ui", CoerceJavaToLua.coerce(tela.ui));
+		globais.set("util", CoerceJavaToLua.coerce(new Util()));
+		globais.set("biomas", CoerceJavaToLua.coerce(new BiomasUtil()));
+		globais.set("chunkutil", CoerceJavaToLua.coerce(new ChunkUtil()));
 		
 		globais.set("log", new LuaFunction() {
 				@Override

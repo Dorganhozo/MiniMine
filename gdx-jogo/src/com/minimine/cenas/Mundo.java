@@ -45,7 +45,7 @@ public class Mundo {
 	public static int seed = 1, RAIO_CHUNKS = 10;
 	public static SimplexNoise2D s2D;
 	
-	public final ShaderProgram shader;
+	public static ShaderProgram shader;
 	public boolean neblina = false;
 	public static boolean carregado = false;
 	public static boolean dia = true;
@@ -73,60 +73,78 @@ public class Mundo {
 	};
 
 	public Matrix4 matrizTmp = new Matrix4();
+	public SistemaLuzGlobal global = new SistemaLuzGlobal();
 	
-	public Mundo() {
+	public static class SistemaLuzGlobal {
+		public static float tempo = 0.0f;
+		public static float luz = 1.0f;
+		public static long ultimaAtt = 0;
+
+		public static void att() {
+			// att a cqda 2 segundos
+			if(System.currentTimeMillis() - ultimaAtt < 2000) return;
+			ultimaAtt = System.currentTimeMillis();
+
+			tempo += 0.0167f; // 1 dia = 1 minuto
+			if(tempo > 1.0f) tempo = 0.0f;
+
+			float ciclo = (float)Math.sin(tempo * Math.PI * 2);
+			luz = (ciclo + 1.0f) * 0.4f + 0.2f;
+		}
+
+		public static void aplicarShader(ShaderProgram shader) {
+			shader.setUniformf("u_luzGlobal", luz);
+			shader.setUniformf("u_tempoDia", tempo);
+		}
+	}
+	
+	public void iniciar() {
 		seed = Mat.floor((float)Math.random()*1000000);
 		s2D = new SimplexNoise2D(seed);
-		
-		texturas.add("blocos/grama_topo.png");
-		texturas.add("blocos/grama_lado.png");
-		texturas.add("blocos/terra.png");
-		texturas.add("blocos/pedra.png");
-		texturas.add("blocos/agua_fixa.png");
-		texturas.add("blocos/areia.png");
-		texturas.add("blocos/tronco_topo.png");
-		texturas.add("blocos/tronco_lado.png");
-		texturas.add("blocos/folha.png");
 
         criarAtlas();
 	
-		String vert =
-			"attribute vec3 a_posicao;\n"+
-			"attribute vec2 a_texCoord;\n"+
-			"attribute vec4 a_cor;\n"+
-			"uniform mat4 u_projTrans;\n"+
-			"varying vec2 v_texCoord;\n"+
-			"varying vec4 v_cor;\n"+
-			"void main() {\n"+
-			"  v_texCoord = a_texCoord;\n"+
-			"  v_cor = a_cor;\n"+
-			"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n"+
+		String vert = 
+			"attribute vec3 a_posicao;\n" +
+			"attribute vec2 a_texCoord;\n" + 
+			"attribute vec4 a_cor;\n" +
+			"uniform mat4 u_projTrans;\n" +
+			"uniform float u_luzGlobal;\n" +
+			"uniform float u_tempoDia;\n" +
+			"varying vec2 v_texCoord;\n" +
+			"varying vec4 v_cor;\n" +
+			"void main() {\n" +
+			"  v_texCoord = a_texCoord;\n" +
+			"  \n" +
+			"  float intensidade = u_luzGlobal;\n" +
+			"  \n" +
+			"  if(u_luzGlobal < 0.3) {\n" +
+			"    intensidade *= 0.7;\n" +
+			"  }\n" +
+			"  \n" +
+			"  vec4 corAjustada = a_cor * intensidade;\n" +
+			"  v_cor = corAjustada;\n" +
+			"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n" +
 			"}";
 
 		String frag =
-			"#ifdef GL_ES\n"+
-			"precision mediump float;\n"+
-			"#endif\n"+
-			"varying vec2 v_texCoord;\n"+
-			"varying vec4 v_cor;\n"+
-			"uniform sampler2D u_textura;\n"+
-			"void main() {\n"+
-			"  vec4 texCor = texture2D(u_textura, v_texCoord);\n"+
-			"if(texCor.a < 0.5) discard;\n"+
-			"  gl_FragColor = texCor * v_cor;\n"+
+			"#ifdef GL_ES\n" +
+			"precision mediump float;\n" +
+			"#endif\n" +
+			"varying vec2 v_texCoord;\n" +
+			"varying vec4 v_cor;\n" +
+			"uniform sampler2D u_textura;\n" +
+			"void main() {\n" +
+			"  vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
+			"  \n" +
+			"  if(texCor.a < 0.1) discard;\n" +
+			"  gl_FragColor = texCor * v_cor;\n" +
 			"}";
-
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
-		if(!shader.isCompiled()) {
-			Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
-		}
-		for(int i = 0; i < RAIO_CHUNKS; i++) {
-			meshReuso.obtain();
-		}
-		for(Evento e : eventos) {
-			e.aoIniciar();
-		}
+		if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
+		for(int i = 0; i < RAIO_CHUNKS; i++) meshReuso.obtain();	
+		for(Evento e : eventos) e.aoIniciar();
 	}
 		
 	public void criarAtlas() {
@@ -165,9 +183,13 @@ public class Mundo {
 			if(chunks.size() > 4) carregado = true;
 		}
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
+		
+		SistemaLuzGlobal.att();
 
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", jogador.camera.combined);
+		
+		SistemaLuzGlobal.aplicarShader(shader);
 
 		atlasGeral.bind(0);
 		shader.setUniformi("u_textura", 0);
@@ -175,20 +197,6 @@ public class Mundo {
 		for(final Chunk chunk : chunks.values()) {
 			if(frustrum(chunk, jogador)) {
 				if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
-				chunk.att = true;
-			}
-		}
-		if(dia) {
-			if(ChunkUtil.LUZ_SOL < 1f) {
-				ChunkUtil.LUZ_SOL += 0.01f;
-			} else {
-				dia = false;
-			}
-		} else {
-			if(ChunkUtil.LUZ_SOL > 0f) {
-				ChunkUtil.LUZ_SOL -= 0.01f;
-			} else {
-				dia = true;
 			}
 		}
 		shader.end();
@@ -203,12 +211,10 @@ public class Mundo {
 		if(!(dis < ((RAIO_CHUNKS << 4)))) return false;
 		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
 	}
-
 	// chamado em dispose:
 	public void liberar() {
-		for(Evento e : eventos) {
-			e.aoFim();
-		}
+		for(Evento e : eventos) e.aoFim();
+		
         atlasGeral.dispose();
 		for(Chunk chunk : chunks.values()) chunk.mesh.dispose();
 		shader.dispose();
@@ -217,16 +223,12 @@ public class Mundo {
 		atlasUVs.clear();
 		exec.shutdown();
 	}
-	
 	// MANIPULAÇÃO DE BLOCOS:
 	public static byte obterBlocoMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
 
-		int chunkX = Math.floorDiv(x, TAM_CHUNK);
-		int chunkZ = Math.floorDiv(z, TAM_CHUNK);
-
-		int localX = Math.floorMod(x, TAM_CHUNK);
-		int localZ = Math.floorMod(z, TAM_CHUNK);
+		final int chunkX = Math.floorDiv(x, TAM_CHUNK);
+		final int chunkZ = Math.floorDiv(z, TAM_CHUNK);
 
 		ChunkUtil.Chave chave = chaveReuso.obtain();
 		if(chave == null) chave = new ChunkUtil.Chave(0, 0);
@@ -235,17 +237,14 @@ public class Mundo {
 		chaveReuso.free(chave);
 		if(chunk == null) return 0; 
 
-		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
+		return ChunkUtil.obterBloco(chunkX, y, chunkZ, chunk);
 	}
 
 	public static void defBlocoMundo(int x, int y, int z, byte bloco) {
 		if(y < 0 || y >= Y_CHUNK) return; // fora dos limites
 
-		int chunkX = x >> 4;
-		int chunkZ = z >> 4;
-
-		int localX = x & 15;
-		int localZ = z & 15;
+		final int chunkX = x >> 4;
+		final int chunkZ = z >> 4;
 
 		ChunkUtil.Chave chave = chaveReuso.obtain();
 		if(chave == null) chave = new ChunkUtil.Chave(0, 0);
@@ -253,27 +252,27 @@ public class Mundo {
 		Chunk chunk = chunks.get(chave);
 		if(chunk == null) return;
 
-		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-		if(bloco == 2) ChunkUtil.defLuz(localX, y, localZ, (byte) 5, chunk);
+		ChunkUtil.defBloco(chunkX, y, chunkZ, bloco, chunk);
+		if(bloco == 2) ChunkUtil.defLuz(chunkX, y, chunkZ, (byte) 5, chunk);
 
 		chunk.att = true;
 		// chunks perto pra atualização se o bloco for na borda
-		if(localX == 0) {
+		if(chunkX == 0) {
 			chave.x = chunkX - 1; chave.z = chunkZ;
 			Chunk chunkAdj = chunks.get(chave);
 			if(chunkAdj != null) chunkAdj.att = true;
 		}
-		if(localX == TAM_CHUNK - 1) {
+		if(chunkX == TAM_CHUNK - 1) {
 			chave.x = chunkX + 1; chave.z = chunkZ;
 			Chunk chunkAdj = chunks.get(chave);
 			if(chunkAdj != null) chunkAdj.att = true;
 		}
-		if(localZ == 0) {
+		if(chunkZ == 0) {
 			chave.x = chunkX; chave.z = chunkZ - 1;
 			Chunk chunkAdj = chunks.get(chave);
 			if(chunkAdj != null) chunkAdj.att = true;
 		}
-		if(localZ == TAM_CHUNK - 1) {
+		if(chunkZ == TAM_CHUNK - 1) {
 			chave.x = chunkX; chave.z = chunkZ + 1;
 			Chunk chunkAdj = chunks.get(chave);
 			if(chunkAdj != null) chunkAdj.att = true;
@@ -373,18 +372,50 @@ public class Mundo {
 					final Chunk chunk = chunks.get(chave);
 					chunk.x = chave.x;
 					chunk.z = chave.z;
-					for(int lx = 0; lx < TAM_CHUNK; lx++) {
-						for(int lz = 0; lz < TAM_CHUNK; lz++) {
-							float rb = Mat.abs(s2D.ruidoFractal(chave.x, chave.z, 0.02f, 2, 0.1f));
-							if(rb > 0.6f) {
-								BiomasUtil.biomas.get(1).gerarColuna(lx, lz, chunk);
-							} else if(rb > 0.2f){
-								BiomasUtil.biomas.get(2).gerarColuna(lx, lz, chunk);
-							} else {
-								BiomasUtil.biomas.get(0).gerarColuna(lx, lz, chunk);
+
+					for (int lx = 0; lx < TAM_CHUNK; lx++) {
+						for (int lz = 0; lz < TAM_CHUNK; lz++) {
+
+							float v = (Mundo.s2D.ruidoFractal(
+								(chave.x * TAM_CHUNK + lx) * 0.0005f,
+								(chave.z * TAM_CHUNK + lz) * 0.0005f,
+								1.0f, 4, 0.5f) + 1f) * 0.5f;
+/*
+							float temp = (Mundo.s2D.ruidoFractal(
+								(chave.x * TAM_CHUNK + lx) * 0.001f,
+								(chave.z * TAM_CHUNK + lz) * 0.001f,
+								1.0f, 3, 0.5f) + 1f) * 0.5f;
+
+							float umid = (Mundo.s2D.ruidoFractal(
+								(chave.x * TAM_CHUNK + lx) * 0.002f,
+								(chave.z * TAM_CHUNK + lz) * 0.002f,
+								1.0f, 3, 0.5f) + 1f) * 0.5f;
+*/
+							float somaPesos = 0f;
+							for(int i = 0; i < BiomasUtil.biomas.size(); i++) {
+								somaPesos += 1f - BiomasUtil.biomas.get(i).raridade[0];
+							}
+							float acumulado = 0f;
+							BiomasUtil.Bioma escolhido = null;
+							for(int i = 0; i < BiomasUtil.biomas.size(); i++) {
+								BiomasUtil.Bioma b = BiomasUtil.biomas.get(i);
+								float peso = (1f - b.raridade[0]) / somaPesos;
+								acumulado += peso;
+								if(v <= acumulado) {
+									escolhido = b;
+									break;
+								}
+							}
+							if(escolhido == null) {
+								escolhido = BiomasUtil.biomas.get(BiomasUtil.biomas.size() - 1);
+							}
+
+							if(escolhido != null) {
+								escolhido.gerarColuna(lx, lz, chunk);
 							}
 						}
 					}
+
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
 					final IntArrayUtil idcGeral = new IntArrayUtil();
 					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);

@@ -6,6 +6,9 @@ import com.minimine.cenas.Mundo;
 import com.minimine.cenas.Chunk;
 import com.minimine.utils.ruidos.PerlinNoise2D;
 import com.minimine.utils.ruidos.SimplexNoise2D;
+import org.luaj.vm2.LuaFunction;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 
 public class BiomasUtil {
 	public static List<Bioma> biomas = new ArrayList<>();
@@ -23,6 +26,7 @@ public class BiomasUtil {
 				nome[0] = "floresta";
 				status[0] = 0.5f;
 				status[1] = 0.7f;
+				raridade[0] = 0.5f;
 			}
 			@Override
 			public void gerarColuna(int lx, int lz, Chunk chunk) {
@@ -66,6 +70,7 @@ public class BiomasUtil {
 					nome[0] = "sei la";
 					status[0] = 0.3f;
 					status[1] = 0.4f;
+					raridade[0] = 0.3f;
 				}
 				@Override
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
@@ -109,6 +114,7 @@ public class BiomasUtil {
 					nome[0] = "deserto bugado";
 					status[0] = 0.3f;
 					status[1] = 0.4f;
+					raridade[0] = 0.2f;
 				}
 				@Override
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
@@ -149,10 +155,49 @@ public class BiomasUtil {
 			});
 	}
 	
-	public static interface Bioma {
+	public static void addBioma(final LuaFunction inicio, final LuaFunction gerarColuna) {
+		biomas.add(new Bioma() {
+				@Override
+				public void aoIniciar() {
+					inicio.call();
+				}
+				@Override
+				public void gerarColuna(int localX, int localZ, Chunk chunk) {
+					LuaValue luaX = LuaValue.valueOf(localX);
+					LuaValue luaZ = LuaValue.valueOf(localZ);
+					LuaValue luaChunk = CoerceJavaToLua.coerce(chunk);
+
+					gerarColuna.call(luaX, luaZ, luaChunk);
+				}
+			});
+	}
+	
+	public static void defBioma(final LuaFunction inicio, final LuaFunction gerarColuna, int indice) {
+		biomas.set(indice, new Bioma() {
+				@Override
+				public void aoIniciar() {
+					LuaValue luaNome = CoerceJavaToLua.coerce(nome);
+					LuaValue luaStatus = CoerceJavaToLua.coerce(status);
+					LuaValue luaRaridade = CoerceJavaToLua.coerce(nome);
+					inicio.call(luaNome, luaStatus, luaRaridade);
+				}
+				@Override
+				public void gerarColuna(int localX, int localZ, Chunk chunk) {
+					LuaValue luaX = LuaValue.valueOf(localX);
+					LuaValue luaZ = LuaValue.valueOf(localZ);
+					LuaValue luaChunk = CoerceJavaToLua.coerce(chunk);
+
+					gerarColuna.call(luaX, luaZ, luaChunk);
+				}
+			});
+	}
+	
+	public static class Bioma {
+		public float[] raridade = new float[1];
 		public CharSequence[] nome = new CharSequence[1];
 		public float[] status = new float[2]; // 0 = temperatura, 1 = umidade
-		public void aoIniciar();
-		public void gerarColuna(int localX, int localZ, Chunk chunks);
+		
+		public void aoIniciar() {}
+		public void gerarColuna(int localX, int localZ, Chunk chunks) {}
 	}
 }
