@@ -13,6 +13,8 @@ import java.io.IOException;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.utils.BiomasUtil;
 import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.Texturas;
+import com.minimine.utils.NuvensUtil;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -31,6 +33,8 @@ public class LuaAPI {
 		globais.set("util", CoerceJavaToLua.coerce(new Util()));
 		globais.set("biomas", CoerceJavaToLua.coerce(new BiomasUtil()));
 		globais.set("chunkutil", CoerceJavaToLua.coerce(new ChunkUtil()));
+		globais.set("texutil", CoerceJavaToLua.coerce(new Texturas()));
+		globais.set("nuvens", CoerceJavaToLua.coerce(new NuvensUtil()));
 		
 		globais.set("log", new LuaFunction() {
 				@Override

@@ -1,4 +1,6 @@
 package com.minimine.utils.blocos;
+import com.minimine.utils.ChunkUtil;
+import com.minimine.cenas.Bloco;
 
 public class BlocoTipo {
     public final int idTopo;
@@ -16,6 +18,13 @@ public class BlocoTipo {
     }
 
     public static BlocoTipo criar(int tipo) {
+		for(Bloco b : ChunkUtil.blocos) {
+			if(b.tipo == tipo) {
+				return new BlocoTipo(b.topo, b.lados, b.baixo,  b.transparente, b.solido);
+			}
+		}
+		return null;
+		/*
         switch(tipo) {
             case 1: return new BlocoTipo(0, 1, 2, false, true);  // grama
             case 2: return new BlocoTipo(2, 2, 2, false, true);  // terra
@@ -25,7 +34,7 @@ public class BlocoTipo {
             case 6: return new BlocoTipo(6, 7, 6, false, true);  // tronco
             case 7: return new BlocoTipo(8, 8, 8, true, false);  // folha(transparente)
             default: return null;
-        }
+        } */
     }
 
     public int textureId(int faceId) {

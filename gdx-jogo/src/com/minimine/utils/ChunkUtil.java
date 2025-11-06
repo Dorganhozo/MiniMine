@@ -12,6 +12,9 @@ import com.badlogic.gdx.utils.Pool;
 import java.util.Arrays;
 import com.minimine.utils.blocos.BlocoTipo;
 import com.minimine.utils.blocos.BlocoModelo;
+import java.util.List;
+import com.minimine.cenas.Bloco;
+import java.util.ArrayList;
 
 public class ChunkUtil {
     public static float LUZ_SOL = 1.0f;
@@ -24,6 +27,7 @@ public class ChunkUtil {
         0.8f, // lado +Z
         0.8f  // lado -Z
     };
+	public static List<Bloco> blocos = new ArrayList<>();
 	
     public static float calcularNivelLuz(int x, int y, int z, int faceId, Chunk chunk) {
         float luzCeu = calcularLuzCeu(x, y, z, chunk);
@@ -186,7 +190,7 @@ public class ChunkUtil {
 	public static BlocoTipo obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
 		// se as coordenadas estão dentro do chunk atual
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			byte blocoId = obterBloco(x, y, z, chunk);
+			int blocoId = obterBloco(x, y, z, chunk);
 			return blocoId == 0 ? null : BlocoTipo.criar(blocoId);
 		}
 		// se ta fora dos limites e temos um chunk adjacente especifico
@@ -201,7 +205,7 @@ public class ChunkUtil {
 			if(z < 0) adjZ = Mundo.TAM_CHUNK - 1;
 			else if(z >= Mundo.TAM_CHUNK) adjZ = 0;
 
-			byte blocoId = obterBloco(adjX, y, adjZ, chunkAdj);
+			int blocoId = obterBloco(adjX, y, adjZ, chunkAdj);
 			return blocoId == 0 ? null : BlocoTipo.criar(blocoId);
 		}
 		// fora dos limites e sem chunk adjacente = considerar como ar
@@ -249,21 +253,21 @@ public class ChunkUtil {
 	
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			byte b = obterBloco(x, y, z, chunk);
+			int b = obterBloco(x, y, z, chunk);
 			return  b != 0 && b != 7;
 		}
 		// se ta fora dos limites, verifica no mundo
 		int mundoX = chunk.x * Mundo.TAM_CHUNK + x;
 		int mundoZ = chunk.z * Mundo.TAM_CHUNK + z;
 		
-		byte b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
+		int b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
 
 		return b != 0 && b != 7;
 	}
 	
 	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			byte b = obterBloco(x, y, z, chunk);
+			int b = obterBloco(x, y, z, chunk);
 			return b != 0 && b != 7;
 		}
 		return false;
@@ -280,35 +284,73 @@ public class ChunkUtil {
 		int i = x + (z * 16) + (y * 16 * 16);
 		int byteIdc = i / 2;
 		int bitPos = (i % 2) * 4;
-
 		byte mascara = (byte) ~(0b1111 << bitPos);
-		chunk.luz[byteIdc] = (byte)((chunk.blocos[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
+		chunk.luz[byteIdc] = (byte)((chunk.luz[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
     }
 	
-	public static byte obterBloco(int x, int y, int z, Chunk chunk) {
-        int i = x + (z * 16) + (y * 16 * 16);
-		int byteIdc = i / 2;
-		int bitPos = (i % 2) * 4;
-        return (byte)((chunk.blocos[byteIdc] >> bitPos) & 0b1111);
-    }
+	public static int bitsPraMaxId(int maxId) {
+		int val = 1;
+		int bits = 0;
+		while(val <= maxId && bits < 8) { val <<= 1; bits++; }
+		if(bits == 0) bits = 1;
+		return Math.min(bits, 8);
+	}
+	
+	public static int obterBloco(int x, int y, int z, Chunk chunk) {
+		int bits = chunk.bitsPorBloco;
+		int blocosPorInt = chunk.blocosPorInt;
+		int i = x + (z * Mundo.TAM_CHUNK) + (y * Mundo.TAM_CHUNK * Mundo.TAM_CHUNK);
+		int idc = i / blocosPorInt;
+		int pos = i % blocosPorInt;
+		int bitPos = pos * bits;
+		int mascara = (1 << bits) - 1;
+		return (chunk.blocos[idc] >>> bitPos) & mascara;
+	}
 
-    public static void defBloco(int x, int y, int z, byte valor, Chunk chunk) {
-		int i = x + (z * 16) + (y * 16 * 16);
-		int byteIdc = i / 2;
-		int bitPos = (i % 2) * 4;
+	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
+		if(bloco > chunk.maxIds) {
+			ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(bloco), chunk);
+		}
+		int bits = chunk.bitsPorBloco;
+		int blocosPorInt = chunk.blocosPorInt;
+		int i = x + (z * Mundo.TAM_CHUNK) + (y * Mundo.TAM_CHUNK * Mundo.TAM_CHUNK);
+		int idc = i / blocosPorInt;
+		int pos = i % blocosPorInt;
+		int bitPos = pos * bits;
+		int mascara = ((1 << bits) - 1) << bitPos;
+		chunk.blocos[idc] = (chunk.blocos[idc] & ~mascara) | ((bloco & ((1 << bits) - 1)) << bitPos);
+	}
+	
+	public static void compactar(int bitsPorBloco, Chunk chunk) {
+		if(bitsPorBloco < 1) bitsPorBloco = 1; // proteção contra divisão por zero
 
-		byte mascara = (byte) ~(0b1111 << bitPos);
-		chunk.blocos[byteIdc] = (byte)((chunk.blocos[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
-    }
+		int bitsAntigo = chunk.bitsPorBloco;
+		int blocosPorIntAntigo = chunk.blocosPorInt;
+		int[] antigos = chunk.blocos;
+
+		chunk.maxIds = (1 << bitsPorBloco) - 1;
+		chunk.bitsPorBloco = bitsPorBloco;
+		chunk.blocosPorInt = 32 / chunk.bitsPorBloco;
+
+		int totalBlocos = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
+		int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+		int[] novos = new int[tamNovo];
+
+		if(antigos != null && blocosPorIntAntigo > 0 && bitsAntigo > 0) {
+			for(int i = 0; i < totalBlocos; i++) {
+				int idAntigo = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
+					& ((1 << bitsAntigo) - 1);
+				int idNovoIdc = i / chunk.blocosPorInt;
+				int idNovoBit = (i % chunk.blocosPorInt) * chunk.bitsPorBloco;
+				novos[idNovoIdc] |= (idAntigo & ((1 << chunk.bitsPorBloco) - 1)) << idNovoBit;
+			}
+		}
+		chunk.blocos = novos;
+	}
 	
 	public static class Chave {
 		public int x, z;
-		
-		public Chave(int x, int z) {
-			this.x = x;
-			this.z = z;
-		}
-
+		public Chave(int x, int z) {this.x = x; this.z = z;}
 		@Override
 		public boolean equals(Object o) {
 			if(this == o) return true;
@@ -316,10 +358,6 @@ public class ChunkUtil {
 			Chave chave = (Chave) o;
 			return  x == chave.x && z == chave.z;
 		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(x, z);
-		}
+		@Override public int hashCode() {return Objects.hash(x, z);}
 	}
 }

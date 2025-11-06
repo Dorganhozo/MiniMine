@@ -11,6 +11,9 @@ import com.minimine.mods.LuaAPI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.NuvensUtil;
+import com.minimine.utils.DiaNoiteUtil;
+import com.minimine.utils.Texturas;
 
 public class Jogo implements Screen {
 	public UI ui;
@@ -21,6 +24,7 @@ public class Jogo implements Screen {
 	public Environment ambiente;
 	public ModelBatch mb;
 	public List<Jogador> jgs = new ArrayList<>();
+	public static NuvensUtil nuvens = new NuvensUtil();
 
     @Override
 	public void show() {
@@ -40,6 +44,14 @@ public class Jogo implements Screen {
 		Mundo.texturas.add("blocos/tronco_lado.png");
 		Mundo.texturas.add("blocos/folha.png");
 		
+		ChunkUtil.blocos.add(new Bloco("grama", (byte)1, 0, 1, 2));
+		ChunkUtil.blocos.add(new Bloco("terra", (byte)2, 2));
+		ChunkUtil.blocos.add(new Bloco("pedra", (byte)3, 3));
+		ChunkUtil.blocos.add(new Bloco("agua", (byte)4, 4, false));
+		ChunkUtil.blocos.add(new Bloco("areia", (byte)5, 5));
+		ChunkUtil.blocos.add(new Bloco("tronco", (byte)6, 6, 7));
+		ChunkUtil.blocos.add(new Bloco("folhas", (byte)7, 8, true, false));
+		
 		LuaAPI.iniciar(this);
 		
 		mundo.iniciar();
@@ -56,7 +68,7 @@ public class Jogo implements Screen {
 
     @Override
     public void render(float delta) {
-		float luz = Mundo.SistemaLuzGlobal.luz;
+		float luz = DiaNoiteUtil.luz;
 		if(luz < 0.1f) luz = 0f;
 		if(luz > 1f) luz = 1f;
 

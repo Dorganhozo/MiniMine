@@ -8,6 +8,8 @@ import com.minimine.cenas.Jogo;
 import com.minimine.Inicio;
 import com.minimine.utils.Texturas;
 import com.badlogic.gdx.graphics.Texture;
+import com.minimine.cenas.Bloco;
+import com.minimine.utils.ChunkUtil;
 
 public class Util {
 	public static ModelInstance obterModeloGLTF(String caminho) {
@@ -15,7 +17,27 @@ public class Util {
 		return new ModelInstance(asset.scene.model);
 	}
 	
-	public static void carregarTextura(String nome, String caminho) {
-		Texturas.texs.put(nome, new Texture(Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho)));
+	public static Texture carregarTextura(String nome, String caminho) {
+		Texture tex = new Texture(Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho));
+		Texturas.texs.put(nome, tex);
+		return tex;
+	}
+	
+	public static Bloco addBloco(CharSequence nome, byte tipo, int topoId) {
+		Bloco b = new Bloco(nome, tipo, topoId);
+		ChunkUtil.blocos.add(b);
+		return b;
+	}
+	
+	public static Bloco addBloco(CharSequence nome, byte tipo, int topoId, boolean transp) {
+		Bloco b = new Bloco(nome, tipo, topoId, transp);
+		ChunkUtil.blocos.add(b);
+		return b;
+	}
+	
+	public static Bloco addBloco(CharSequence nome, byte tipo, int topoId, boolean transp, boolean solido) {
+		Bloco b = new Bloco(nome, tipo, topoId, transp, solido);
+		ChunkUtil.blocos.add(b);
+		return b;
 	}
 }

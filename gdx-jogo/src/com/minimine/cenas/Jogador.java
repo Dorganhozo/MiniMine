@@ -36,7 +36,7 @@ public class Jogador {
 	
 	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
 	
-	public byte blocoSele = 0;
+	public int blocoSele = 0;
 	public CharSequence item = "Ar";
 	public static final float ALCANCE = 6f;
 	public Inventario inv;
@@ -72,7 +72,7 @@ public class Jogador {
 			int y = Mat.floor(olhoY + dirY * t);
 			int z = Mat.floor(olhoZ + dirZ * t);
 
-			byte bloco = Mundo.obterBlocoMundo(x, y, z);
+			int bloco = Mundo.obterBlocoMundo(x, y, z);
 			if(bloco > 0) {
 				if(blocoSele == 0) {
 					if(modo == 2) inv.addItem(bloco, 1);
@@ -118,7 +118,7 @@ public class Jogador {
 		for(int x = minX; x <= maxX; x++) {
 			for(int y = minY; y <= maxY; y++) {
 				for(int z = minZ; z <= maxZ; z++) {
-					byte bloco = Mundo.obterBlocoMundo(x, y, z);
+					int bloco = Mundo.obterBlocoMundo(x, y, z);
 
 					if(bloco > 0) {
 						blocoBox.set(minVec.set(x, y, z), maxVec.set(x + 1, y + 1, z + 1));

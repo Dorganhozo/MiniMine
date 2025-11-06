@@ -29,13 +29,15 @@ import com.minimine.utils.ruidos.PerlinNoise3D;
 import com.minimine.utils.ruidos.SimplexNoise2D;
 import com.minimine.utils.BiomasUtil;
 import com.minimine.utils.Mat;
+import com.minimine.utils.NuvensUtil;
+import com.minimine.utils.DiaNoiteUtil;
 
 public class Mundo {
 	public static String nome = "novo mundo";
 	public Texture atlasGeral;
     // mapa de UVs:
     // (atlas ID -> [u_min, v_min, u_max, v_max])
-	public static final List<String> texturas = new ArrayList<>();
+	public static final List<Object> texturas = new ArrayList<>();
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
@@ -71,32 +73,47 @@ public class Mundo {
 			return new ChunkUtil.Chave(0, 0);
 		}
 	};
+	
+	public static boolean nuvens = true;
+	
+	public static String vert = 
+	"attribute vec3 a_posicao;\n" +
+	"attribute vec2 a_texCoord;\n" + 
+	"attribute vec4 a_cor;\n" +
+	"uniform mat4 u_projTrans;\n" +
+	"uniform float u_luzGlobal;\n" +
+	"uniform float u_tempoDia;\n" +
+	"varying vec2 v_texCoord;\n" +
+	"varying vec4 v_cor;\n" +
+	"void main() {\n" +
+	"  v_texCoord = a_texCoord;\n" +
+	"  \n" +
+	"  float intensidade = u_luzGlobal;\n" +
+	"  \n" +
+	"  if(u_luzGlobal < 0.3) {\n" +
+	"    intensidade *= 0.7;\n" +
+	"  }\n" +
+	"  \n" +
+	"  vec4 corAjustada = a_cor * intensidade;\n" +
+	"  v_cor = corAjustada;\n" +
+	"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n" +
+	"}";
+
+	public static String frag =
+	"#ifdef GL_ES\n" +
+	"precision mediump float;\n" +
+	"#endif\n" +
+	"varying vec2 v_texCoord;\n" +
+	"varying vec4 v_cor;\n" +
+	"uniform sampler2D u_textura;\n" +
+	"void main() {\n" +
+	"  vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
+	"  \n" +
+	"  if(texCor.a < 0.1) discard;\n" +
+	"  gl_FragColor = texCor * v_cor;\n" +
+	"}";
 
 	public Matrix4 matrizTmp = new Matrix4();
-	public SistemaLuzGlobal global = new SistemaLuzGlobal();
-	
-	public static class SistemaLuzGlobal {
-		public static float tempo = 0.0f;
-		public static float luz = 1.0f;
-		public static long ultimaAtt = 0;
-
-		public static void att() {
-			// att a cqda 2 segundos
-			if(System.currentTimeMillis() - ultimaAtt < 2000) return;
-			ultimaAtt = System.currentTimeMillis();
-
-			tempo += 0.0167f; // 1 dia = 1 minuto
-			if(tempo > 1.0f) tempo = 0.0f;
-
-			float ciclo = (float)Math.sin(tempo * Math.PI * 2);
-			luz = (ciclo + 1.0f) * 0.4f + 0.2f;
-		}
-
-		public static void aplicarShader(ShaderProgram shader) {
-			shader.setUniformf("u_luzGlobal", luz);
-			shader.setUniformf("u_tempoDia", tempo);
-		}
-	}
 	
 	public void iniciar() {
 		seed = Mat.floor((float)Math.random()*1000000);
@@ -104,51 +121,24 @@ public class Mundo {
 
         criarAtlas();
 	
-		String vert = 
-			"attribute vec3 a_posicao;\n" +
-			"attribute vec2 a_texCoord;\n" + 
-			"attribute vec4 a_cor;\n" +
-			"uniform mat4 u_projTrans;\n" +
-			"uniform float u_luzGlobal;\n" +
-			"uniform float u_tempoDia;\n" +
-			"varying vec2 v_texCoord;\n" +
-			"varying vec4 v_cor;\n" +
-			"void main() {\n" +
-			"  v_texCoord = a_texCoord;\n" +
-			"  \n" +
-			"  float intensidade = u_luzGlobal;\n" +
-			"  \n" +
-			"  if(u_luzGlobal < 0.3) {\n" +
-			"    intensidade *= 0.7;\n" +
-			"  }\n" +
-			"  \n" +
-			"  vec4 corAjustada = a_cor * intensidade;\n" +
-			"  v_cor = corAjustada;\n" +
-			"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n" +
-			"}";
-
-		String frag =
-			"#ifdef GL_ES\n" +
-			"precision mediump float;\n" +
-			"#endif\n" +
-			"varying vec2 v_texCoord;\n" +
-			"varying vec4 v_cor;\n" +
-			"uniform sampler2D u_textura;\n" +
-			"void main() {\n" +
-			"  vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
-			"  \n" +
-			"  if(texCor.a < 0.1) discard;\n" +
-			"  gl_FragColor = texCor * v_cor;\n" +
-			"}";
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
 		if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
 		for(int i = 0; i < RAIO_CHUNKS; i++) meshReuso.obtain();	
 		for(Evento e : eventos) e.aoIniciar();
+		
+		NuvensUtil.iniciar();
 	}
 		
 	public void criarAtlas() {
-		int texTam = new Pixmap(Gdx.files.internal(texturas.get(0))).getWidth();
+		Pixmap t1 = null;
+		if(texturas.get(0) instanceof String) {
+			t1 = new Pixmap(Gdx.files.internal((String) texturas.get(0)));
+		} else if(texturas.get(0) instanceof Texture) {
+			Texture t = (Texture) texturas.get(0);
+			t1 = t.getTextureData().consumePixmap();
+		}
+		int texTam = t1.getWidth();
 		int colunas = (int)Math.ceil(Math.sqrt(texturas.size()));
 		int linhas = (int)Math.ceil((float)texturas.size() / colunas);
 		int atlasTam = texTam * colunas;
@@ -159,7 +149,13 @@ public class Mundo {
 			int x = (i % colunas) * texTam;
 			int y = (i / colunas) * texTam;
 
-			Pixmap px = new Pixmap(Gdx.files.internal(texturas.get(i)));
+			Pixmap px = null;
+			if(texturas.get(i) instanceof String) {
+				px = new Pixmap(Gdx.files.internal((String) texturas.get(i)));
+			} else if(texturas.get(i) instanceof Texture) {
+				Texture t = (Texture) texturas.get(i);
+				px = t.getTextureData().consumePixmap();
+			}
 			atlasPx.drawPixmap(px, x, y);
 
 			float u1 = (float)x / atlasTam;
@@ -184,12 +180,14 @@ public class Mundo {
 		}
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 		
-		SistemaLuzGlobal.att();
-
+		DiaNoiteUtil.att();
+		
+		if(nuvens) NuvensUtil.atualizar(delta, jogador.posicao);
+		
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", jogador.camera.combined);
 		
-		SistemaLuzGlobal.aplicarShader(shader);
+		DiaNoiteUtil.aplicarShader(shader);
 
 		atlasGeral.bind(0);
 		shader.setUniformi("u_textura", 0);
@@ -198,7 +196,8 @@ public class Mundo {
 			if(frustrum(chunk, jogador)) {
 				if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
 			}
-		}
+		}	
+		if(nuvens) NuvensUtil.render(jogador.camera.combined);
 		shader.end();
 	}
 
@@ -222,9 +221,10 @@ public class Mundo {
 		chunks.clear();
 		atlasUVs.clear();
 		exec.shutdown();
+		NuvensUtil.liberar();
 	}
 	// MANIPULAÇÃO DE BLOCOS:
-	public static byte obterBlocoMundo(int x, int y, int z) {
+	public static int obterBlocoMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
 
 		final int chunkX = Math.floorDiv(x, TAM_CHUNK);
@@ -240,7 +240,7 @@ public class Mundo {
 		return ChunkUtil.obterBloco(chunkX, y, chunkZ, chunk);
 	}
 
-	public static void defBlocoMundo(int x, int y, int z, byte bloco) {
+	public static void defBlocoMundo(int x, int y, int z, int bloco) {
 		if(y < 0 || y >= Y_CHUNK) return; // fora dos limites
 
 		final int chunkX = x >> 4;

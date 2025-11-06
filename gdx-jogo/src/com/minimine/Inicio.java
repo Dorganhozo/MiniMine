@@ -1,20 +1,38 @@
 package com.minimine;
 
 import com.badlogic.gdx.Game;
-import com.minimine.cenas.Jogo;
-import com.minimine.cenas.TesteUI;
-import com.minimine.utils.Texturas;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
+import com.minimine.cenas.Menu;
+import com.minimine.utils.Texturas;
+import com.badlogic.gdx.Gdx;
 
 public class Inicio extends Game {
 	public static String externo;
-	
+	public static boolean telaNova = false;
+	public static Screen telaAtual;
+
 	public Inicio(String externo) {
-		this.externo = externo;
+		Inicio.externo = externo;
 	}
+
 	@Override
 	public void create() {
-		setScreen(new Jogo());
+		defTela(Cenas.menu);
+	}
+
+	public static void defTela(Screen tela) {
+		telaAtual = tela;
+		telaNova = true;
+	}
+
+	@Override
+	public void render() {
+		if(telaNova) {
+			setScreen(telaAtual);
+			telaNova = false;
+		}
+		if(telaAtual != null) telaAtual.render(Gdx.graphics.getDeltaTime());
 	}
 
 	@Override

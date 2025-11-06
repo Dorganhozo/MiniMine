@@ -13,11 +13,15 @@ refeito com LibGDX.
 8. Sistema de construção (beta).
 9. Hotbar.
 10. Mods por Lua no armazenamento externo.
+11. Sistema de ciclo noturno e diário.
+12. Nuvens (beta)
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
 1: criativo. Não sofre com gravidade mas colide com blocos. Seus recursos não acabam
 2: sobrevivencia. Sofre com gravidade e colide com blocos. Seus recursos acabam.
+
+você pode descobrir mais sobre a API Lua em doc.txt.
 
 ## blocos:
 1. Ar.
@@ -36,7 +40,7 @@ Reuso de objetos ChunkUtil.Chave.
 Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
-Compactação de dados (byte[] blocos = new byte[16 * 255 * 16 / 2]), suporta até 8 blocos por byte.
+Compactação de dados, memória dinamica conforme a necessidade.
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.
@@ -48,7 +52,7 @@ Compactação de dados (byte[] blocos = new byte[16 * 255 * 16 / 2]), suporta at
 Android 4 até Android 14.
 
 ## desempenho:
-FPS de 36 a 56 padrão testado com até 121 chunks.
+FPS de 26 a 33 padrão testado com até 441 chunks (raio de 10 chunks).
 
 ## mods:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -59,3 +63,12 @@ e para adicionar mais de um arquivo individual, adicione o caminho relativo a pa
 
 ## dispositivo usado para testes:
 Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.
+
+## dica para mod
+ao criar biomas personalizados, no inicio da geração utilize:
+
+```Lua
+chunkutil.compactar(chunkutil.bitsPraMaxId(bloco), chunk);
+```
+
+substitua "bloco" pelo maior ID de bloco (bloco mais novo) que sua geração utiliza, assim sua chunk será gerada sem recalculo de memória dinamica.

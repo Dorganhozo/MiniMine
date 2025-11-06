@@ -69,7 +69,7 @@ public class ArquivosUtil {
 			for(int x = 0; x < cx; x++) {
 				for(int y = 0; y < cy; y++) {
 					for(int z = 0; z < cz; z++) {
-						byte b = ChunkUtil.obterBloco(x, y, z, chunk);
+						int b = ChunkUtil.obterBloco(x, y, z, chunk);
 						if(b != 0) totalNaoAr++;
 					}
 				}
@@ -79,7 +79,7 @@ public class ArquivosUtil {
 			for(int x = 0; x < cx; x++) {
 				for(int y = 0; y < cy; y++) {
 					for(int z = 0; z < cz; z++) {
-						byte b = ChunkUtil.obterBloco(x, y, z, chunk);
+						int b = ChunkUtil.obterBloco(x, y, z, chunk);
 						if(b != 0) {
 							dos.writeInt(x);
 							dos.writeInt(y);

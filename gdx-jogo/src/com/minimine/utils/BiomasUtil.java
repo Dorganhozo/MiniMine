@@ -67,7 +67,7 @@ public class BiomasUtil {
 		biomas.add(new Bioma() {
 				@Override
 				public void aoIniciar() {
-					nome[0] = "sei la";
+					nome[0] = "padrao";
 					status[0] = 0.3f;
 					status[1] = 0.4f;
 					raridade[0] = 0.3f;
@@ -111,7 +111,7 @@ public class BiomasUtil {
 		biomas.add(new Bioma() {
 				@Override
 				public void aoIniciar() {
-					nome[0] = "deserto bugado";
+					nome[0] = "deserto";
 					status[0] = 0.3f;
 					status[1] = 0.4f;
 					raridade[0] = 0.2f;
@@ -163,11 +163,7 @@ public class BiomasUtil {
 				}
 				@Override
 				public void gerarColuna(int localX, int localZ, Chunk chunk) {
-					LuaValue luaX = LuaValue.valueOf(localX);
-					LuaValue luaZ = LuaValue.valueOf(localZ);
-					LuaValue luaChunk = CoerceJavaToLua.coerce(chunk);
-
-					gerarColuna.call(luaX, luaZ, luaChunk);
+					gerarColuna.call(LuaValue.valueOf(localX), LuaValue.valueOf(localZ), CoerceJavaToLua.coerce(chunk));
 				}
 			});
 	}
@@ -176,18 +172,11 @@ public class BiomasUtil {
 		biomas.set(indice, new Bioma() {
 				@Override
 				public void aoIniciar() {
-					LuaValue luaNome = CoerceJavaToLua.coerce(nome);
-					LuaValue luaStatus = CoerceJavaToLua.coerce(status);
-					LuaValue luaRaridade = CoerceJavaToLua.coerce(nome);
-					inicio.call(luaNome, luaStatus, luaRaridade);
+					inicio.call(CoerceJavaToLua.coerce(nome), CoerceJavaToLua.coerce(status), CoerceJavaToLua.coerce(raridade));
 				}
 				@Override
 				public void gerarColuna(int localX, int localZ, Chunk chunk) {
-					LuaValue luaX = LuaValue.valueOf(localX);
-					LuaValue luaZ = LuaValue.valueOf(localZ);
-					LuaValue luaChunk = CoerceJavaToLua.coerce(chunk);
-
-					gerarColuna.call(luaX, luaZ, luaChunk);
+					gerarColuna.call(LuaValue.valueOf(localX), LuaValue.valueOf(localZ), CoerceJavaToLua.coerce(chunk));
 				}
 			});
 	}

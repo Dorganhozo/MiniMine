@@ -25,20 +25,15 @@ public class Inventario implements UI.Evento {
     public int hotbarY = 20;
 
     public Inventario() {
-        carregarTexturas();
-        aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    }
-
-    public void carregarTexturas() {
         texSlot = new Texture(Gdx.files.internal("ui/slot.png"));
+        aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
     
 	@Override
     public void aoAjustar(int v, int h) {
         invX = v / 2 - (slotsH * tamSlot) / 2;
         invY = h / 2 - (slotsV * tamSlot) / 2;
-
-        // slots do inventário completo:
+        // slots do inventario completo:
         sprites = new Sprite[quantSlots];
         rects = new Rectangle[quantSlots];
 
@@ -101,7 +96,7 @@ public class Inventario implements UI.Evento {
         }
     }
 
-    public void addItem(byte tipo, int quantidade) {
+    public void addItem(int tipo, int quantidade) {
 		// se o slot tem o mesmo item:
 		if(itens[slotSelecionado] != null && itens[slotSelecionado].tipo == tipo) {
 			itens[slotSelecionado].quantidade += quantidade;
@@ -204,12 +199,12 @@ public class Inventario implements UI.Evento {
         }
     }
     public static class Item {
-        public byte tipo;
+        public int tipo;
         public String nome;
         public Texture textura;
         public int quantidade;
 
-        public Item(byte tipo, String nome, Texture textura, int quantidade) {
+        public Item(int tipo, String nome, Texture textura, int quantidade) {
             this.tipo = tipo;
             this.nome = nome;
             this.textura = textura;

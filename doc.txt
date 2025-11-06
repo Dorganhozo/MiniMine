@@ -1,0 +1,165 @@
+variaveis manipulaveis e metodos:
+
+jogador:
+
+jogador.posicao.x
+jogador.posicao.y
+jogador.posicao.z
+jogador.velo -- velocidade de movimento do jogador
+jogador.pulo -- forca do pulo
+jogador.GRAVIDADE
+jogador.modelo
+jogador.VELO_MAX_QUEDA -- velocidade maxima que o jogador atinge em queda
+jogador.blocoSele -- o tipo do bloco em id que o jogador tem selecionado
+jogador.modo -- 0 = espectador, 1 = criativo, 2 = sobeevivencia
+jogador.ALCANCE -- alcance de destruicao e criacao de blocos
+jogador.noChao -- booleano
+jogador:criarModelo3D() -- carrega o modelo padrão do jogador
+
+jogador.inv:
+
+jogador.inv.quantSlots -- quantidade de slots para itens
+jogador.inv.tamSlot -- tamanho padrão dos slots
+jogador.inv.hotbarSlots
+jogador.inv.slotSelecionado -- indice do slot atual
+jogador.inv.aberto -- abre ou fecha inventario
+jogador.inv:rmItem(slotId, quantidade) -- remove o item de um slot pela quantidade
+jogador.inv:addItem(tipoId, quantidade) -- adiciona um item pelo tipo e quantidade
+
+mundo:
+
+mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
+mundo.seed
+mundo.Y_CHUNK -- tamanho vertical das chuhks
+mundo.TAM_CHUNK -- tamanho horizontal das chunks
+mundo:defBlocoMundo(x, y, z, tipoDoBloco) -- define um bloco nas coordenadas globais
+mundo:obterBlocoMundo(x, y, z) -- obtem o tipo do bloco nas coordenadas globais
+
+mundo.chunks:
+
+mundo.chunks:size() -- obtem a quantidade de objetos chunk a serem renderizados
+mundo.chunks:get(chave) -- retorna um objeto chunk e senão existir, retorna nil
+
+mundo.chunksMod:
+
+mundo.chunksMod:size() -- obtem a quantidade de chunks modificadas pelo mundo
+mundo.chunksMod:get(chave) -- mesma coisa so que com chunks alteradas
+
+mundo.chaveReuso:
+
+mundo.chaveReuso:obtain() -- retorna um objeto chave que pode ser usado como como "local chave = mundo.chaveReuso:obtain() chave.x = x chave.z = z
+mundo.chaveReuso:free(chave) -- para não explodir a memoria, libere a chave apos o uso
+
+mundo.s2D:
+
+mundo.s2D.ruido(x, y) -- devolve um ruido 2D comum simplex
+mundo.s2D.ruidoFractal(x, y, escala, octaves, persistencia) -- devolve um ruido fractal 2D simplex
+
+chunkutil:
+
+chunkutil:defBloco(localX, localY, localZ, tipoId, chunk) -- define um bloco de coords locais
+chunkutil:obterBloco(localX, localY, localZ, chunk)
+chunkutil:defLuz(localX, localY, localZ, nivel, chunk) -- define uma luz na chunk com um nivel luminosidade
+chunkutil:defLuz(localX, localY, localZ, chunk) -- retorna o nivel de luz na chunk
+
+ui:
+
+ui.fps -- taxa de quadros atuais
+ui.botoesTam -- tamanho padrao dos botoes
+
+-- controles do jogador
+ui.direita
+ui.esquerda
+ui.tras
+ui.frente
+ui.cima
+ui.baixo
+
+ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar) -- adiciona um botão e retorna seu objeto
+ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar, func_aoSoltar) -- variacao
+ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar, func_aoSoltar, func_aoAjustarATela(v, h)) -- variacao
+ui:rmBotao(nomeId) -- remove um botão da lista
+ui:subsBotao(nomeId, botaoObjeto) -- substitui um botão por outro objeto Botao
+ui:defTextoTam(escalaX, escalaY) -- define a escala do texto total
+ui:obterTextoTam() -- retorna um array de 2 elementos com X e Y da escala de texto
+ui:addTexto(texto, x, y) -- define e retorna um objeto Texto
+ui:subsTexto(nomeId, textoObj) -- substitui um texto pelo objeto
+ui:rmTexto(nomeId) -- remove um texto
+
+ui.botoes:
+
+ui.botoes:get(nomeBotao) -- retorna o objeto nomeBotao
+ui.botoes:get(nomeBotao):defTextura(texturaId) -- define uma textura
+
+biomas:
+
+biomas:addBioma(function(nome, status, raridade)
+-- definição de dados
+nome[0] = "bioma comum"
+status[0] = 0.1 -- temperatura
+status[1] = 0.5 -- umidade
+raridade[0] = 0.5
+end, function(localX, localZ, chunk)
+-- geracao de coluna
+local bloco = 1 -- grama
+chunkutil:defBloco(localX, 0, localZ, bloco, chunk) -- define um bloco na chunk
+end)
+biomas:subsBioma(func_inicio, func_geracao, indice) -- substitui um bioma pelo indice
+
+util:
+
+util:carregarTextura(nomeId, caminho) -- carrega uma textura e guarda ela com um ID, além de retornar o objeto Texture
+util:obterModeloGLTF(caminho) -- retorna um ModelInstance da LibGDX de um arquivo .gltf
+
+mapeamento de IDs:
+
+blocos:
+
+1 = grama
+2 = terra
+3 = pedra
+4 = agua
+5 = areia
+6 = tronco de madeira
+7 = bloco de folhas
+
+texturas internas:
+
+blocos:
+
+"grama_topo"
+"grama_lado"
+"terra"
+"pedra"
+"agua"
+"areia"
+"tronco_topo"
+"tronco_lado"
+"folha"
+
+interface:
+
+"botao_f"
+"botao_t"
+"botao_d"
+"botao_e"
+"mira"
+"clique"
+"slot"
+"botao_opcao"
+
+nomes de botões:
+
+"direita"
+"esquerda"
+"cima"
+"baixo"
+"frente"
+"tras"
+"acao"
+
+indices de biomas padrão:
+
+0 = "floresta"
+1 = "padrao"
+2 = "deserto"

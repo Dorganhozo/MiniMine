@@ -20,11 +20,16 @@ import com.minimine.utils.Texturas;
 import com.minimine.ui.Botao;
 import android.os.Debug;
 import org.luaj.vm2.LuaFunction;
+import java.util.Map;
+import com.minimine.ui.Texto;
+import org.luaj.vm2.LuaValue;
+import com.minimine.utils.DiaNoiteUtil;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
 	public static List<Evento> eventos = new ArrayList<>();
-	public static List<Botao> botoes = new ArrayList<>();
+	public static Map<CharSequence, Botao> botoes = new HashMap<>();
+	public static Map<CharSequence, Texto> textos = new HashMap<>();
     public static SpriteBatch sb;
     public static BitmapFont fonte;
     
@@ -84,7 +89,6 @@ public class UI implements InputProcessor {
 		for(Evento e : eventos) {
 			e.aoIniciar();
 		}
-		// this.jogador.inv.aberto = true;
 		abrirChat();
     }
 	
@@ -93,19 +97,18 @@ public class UI implements InputProcessor {
 	private List<String> mensagens = new ArrayList<String>();
 
 	public void abrirChat() {
-		if (chatAberto) return;
+		if(chatAberto) return;
 		chatAberto = true;
 
 		Gdx.input.getTextInput(new com.badlogic.gdx.Input.TextInputListener() {
 				public void input(String texto) {
-					if (texto != null && texto.length() > 0) {
+					if(texto != null && texto.length() > 0) {
 						ultimaMensagem = texto;
 						mensagens.add("> " + texto);
 						Gdx.app.log("CHAT", texto);
 					}
 					chatAberto = false;
 				}
-
 				public void canceled() {
 					chatAberto = false;
 				}
@@ -118,7 +121,7 @@ public class UI implements InputProcessor {
 		for(Evento e : eventos) {
 			e.aoTocar(telaX, y, p);
 		}
-		for(Botao e : botoes) {
+		for(Botao e : botoes.values()) {
 			if(e.hitbox.contains(telaX, y)) {
 				e.aoTocar(telaX, y, p);
 				toques.put(p, e.nome);
@@ -141,7 +144,7 @@ public class UI implements InputProcessor {
 		}
 		CharSequence botao = toques.remove(p);
 		if(botao != null) {
-			for(Botao e : botoes) {
+			for(Botao e : botoes.values()) {
 				if(botao.equals(e.nome)) {
 					e.aoSoltar(telaX, y, p);
 					break;
@@ -171,14 +174,14 @@ public class UI implements InputProcessor {
 			CharSequence botaoAntigo = toques.get(p);
 			// verifica se ainda ta sobre algum botão
 			boolean sobreBotao = false;
-			for(Botao e : botoes) {
+			for(Botao e : botoes.values()) {
 				if(e.hitbox.contains(telaX, y)) {
 					sobreBotao = true;
 					// se mudou pra um botão diferente
 					if(!e.nome.equals(botaoAntigo)) {
 						// solta o botão antigo
 						if(botaoAntigo != null) {
-							for(Botao b : botoes) {
+							for(Botao b : botoes.values()) {
 								if(b.nome.equals(botaoAntigo)) {
 									b.aoSoltar(telaX, y, p);
 									break;
@@ -194,7 +197,7 @@ public class UI implements InputProcessor {
 			}
 			// se não ta sobre nenhum botão, solta o botão atual
 			if(!sobreBotao && botaoAntigo != null) {
-				for(Botao e : botoes) {
+				for(Botao e : botoes.values()) {
 					if(e.nome.equals(botaoAntigo)) {
 						e.aoSoltar(telaX, y, p);
 						break;
@@ -209,19 +212,6 @@ public class UI implements InputProcessor {
 	public void configDpad() {
 		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	}
-	
-	public void addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2) {
-		botoes.add(new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
-				@Override
-				public void aoTocar(int telaX, int telaY, int p) {
-					func.call();
-				}
-				@Override
-				public void aoSoltar(int telaX, int telaY, int p) {
-					func2.call();
-				}
-			});
-	}
 
 	public void criarBotoesPadrao() {
 		if(!botoes.isEmpty()) return;
@@ -229,31 +219,31 @@ public class UI implements InputProcessor {
 		spriteMira = new Sprite(Texturas.texs.get("mira"));
 		spriteMira.setSize(50f, 50f);
 
-		botoes.add(new Botao(Texturas.texs.get("botao_d"), 0, 0, botaoTam, botaoTam, "direita") {
+		botoes.put("direita", new Botao(Texturas.texs.get("botao_d"), 0, 0, botaoTam, botaoTam, "direita") {
 				public void aoTocar(int t, int t2, int p){ direita = true; }
 				public void aoSoltar(int t, int t2, int p){ direita = false; }
 			});
-		botoes.add(new Botao(Texturas.texs.get("botao_e"), 0, 0, botaoTam, botaoTam, "esquerda") {
+		botoes.put("esquerda", new Botao(Texturas.texs.get("botao_e"), 0, 0, botaoTam, botaoTam, "esquerda") {
 				public void aoTocar(int t, int t2, int p){ esquerda = true; }
 				public void aoSoltar(int t, int t2, int p){ esquerda = false; }
 			});
-		botoes.add(new Botao(Texturas.texs.get("botao_f"), 0, 0, botaoTam, botaoTam, "frente") {
+		botoes.put("frente", new Botao(Texturas.texs.get("botao_f"), 0, 0, botaoTam, botaoTam, "frente") {
 				public void aoTocar(int t, int t2, int p){ frente = true; }
 				public void aoSoltar(int t, int t2, int p){ frente = false; }
 			});
-		botoes.add(new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "tras") {
+		botoes.put("tras", new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "tras") {
 				public void aoTocar(int t, int t2, int p){ tras = true; }
 				public void aoSoltar(int t, int t2, int p){ tras = false; }
 			});
-		botoes.add(new Botao(Texturas.texs.get("botao_f"), 0, 0, botaoTam, botaoTam, "cima") {
+		botoes.put("cima", new Botao(Texturas.texs.get("botao_f"), 0, 0, botaoTam, botaoTam, "cima") {
 				public void aoTocar(int t, int t2, int p){ cima = true; }
 				public void aoSoltar(int t, int t2, int p){ cima = false; }
 			});
-		botoes.add(new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "baixo") {
+		botoes.put("baixo", new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "baixo") {
 				public void aoTocar(int t, int t2, int p){ baixo = true; }
 				public void aoSoltar(int t, int t2, int p){ baixo = false; }
 			});
-		botoes.add(new Botao(Texturas.texs.get("clique"), 0, 0, botaoTam, botaoTam, "acao") {
+		botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, botaoTam, botaoTam, "acao") {
 				public void aoTocar(int t, int t2, int p){
 					acao = true;
 					toques.put(p, "acao");
@@ -269,7 +259,7 @@ public class UI implements InputProcessor {
 		final float centroX = espaco + botaoTam * 1.5f;
 		final float centroY = espaco + botaoTam * 1.5f;
 
-		for(Botao b : botoes) {
+		for(Botao b : botoes.values()) {
 			if(b.nome.equals("direita"))
 				b.sprite.setPosition(centroX + espaco, centroY - botaoTam/2);
 			else if(b.nome.equals("esquerda"))
@@ -323,12 +313,14 @@ public class UI implements InputProcessor {
 		spriteMira.draw(sb);
 		
 		for(Evento e : eventos) {
-			e.porFrame(delta, sb);
+			e.porFrame(delta, sb, fonte);
 		}
-		for(Botao e : botoes) {
-			e.porFrame(delta, sb);
+		for(Botao e : botoes.values()) {
+			e.porFrame(delta, sb, fonte);
 		}
-
+		for(Texto e : textos.values()) {
+			e.porFrame(delta, sb, fonte);
+		}
 		this.jogador.inv.att();
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
@@ -348,7 +340,7 @@ public class UI implements InputProcessor {
 			Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
 			(this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
 			this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
-			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, Mundo.SistemaLuzGlobal.tempo,
+			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo,
 			logs.logs), 50, Gdx.graphics.getHeight() - 100);
 		}
 		sb.end();  
@@ -367,8 +359,11 @@ public class UI implements InputProcessor {
 	}
 
     public void ajustar(int v, int h) {
-		for(Evento e : eventos) {
-			e.aoAjustar(v, h);
+		for(int i = 0; i < eventos.size(); i++) {
+			if(eventos.get(i) != null) eventos.get(i).aoAjustar(v, h);
+		}
+		for(int i = 0; i < botoes.size(); i++) {
+			if(botoes.get(i) != null) botoes.get(i).aoAjustar(v, h);
 		}
         camera.viewportWidth = v;
         camera.viewportHeight = h;
@@ -384,7 +379,7 @@ public class UI implements InputProcessor {
 		for(Evento e : eventos) {
 			e.aoFim();
 		}
-		for(Botao e : botoes) {
+		for(Botao e : botoes.values()) {
 			e.aoFim();
 		}
         sb.dispose();
@@ -428,6 +423,83 @@ public class UI implements InputProcessor {
 			logs += string + ": " + string1 + throwable.getMessage() + "\n";
 		}
 	}
+	
+	public Texto addTexto(String nome, String texto, int x, int y) {
+		textos.put(nome, new Texto(texto, x, y) {
+				@Override
+				public void aoAjustar(int v, int h) {}
+		});
+		return textos.get(nome);
+	}
+	
+	public void subsTexto(String nome, Texto textoObj) {
+		textos.replace(nome, textoObj);
+	}
+	
+	public void rmTexto(String nome) {
+		textos.remove(nome);
+	}
+	
+	public void defTextoTam(int escalaX, int escalaY) {
+		fonte.getData().setScale(escalaX, escalaY);
+	}
+	
+	public float[] obterTextoTam(int escalaX, int escalaY) {
+		BitmapFont.BitmapFontData f = fonte.getData();
+		return new float[]{f.scaleX, f.scaleY};
+	}
+	
+	public void rmBotao(String nome) {
+		botoes.remove(nome);
+	}
+	
+	public void subsBotao(String nome, Botao botaoObj) {
+		botoes.replace(nome, botaoObj);
+	}
+	
+	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func) {
+		botoes.put(nome, new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
+				@Override
+				public void aoTocar(int telaX, int telaY, int p) {
+					func.call();
+				}
+				@Override
+				public void aoSoltar(int telaX, int telaY, int p) {}
+			});
+		return botoes.get(nome);
+	}
+	
+	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2) {
+		botoes.put(nome, new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
+				@Override
+				public void aoTocar(int telaX, int telaY, int p) {
+					func.call();
+				}
+				@Override
+				public void aoSoltar(int telaX, int telaY, int p) {
+					func2.call();
+				}
+			});
+		return botoes.get(nome);
+	}
+	
+	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2, final LuaFunction func3) {
+		botoes.put(nome, new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
+				@Override
+				public void aoTocar(int telaX, int telaY, int p) {
+					func.call();
+				}
+				@Override
+				public void aoSoltar(int telaX, int telaY, int p) {
+					func2.call();
+				}
+				@Override
+				public void aoAjustar(int v, int h) {
+					func3.call(LuaValue.valueOf(v), LuaValue.valueOf(h));
+				}
+			});
+		return botoes.get(nome);
+	}
 
 	@Override public boolean keyDown(int p){return false;}
 	@Override public boolean keyTyped(char p){return false;}
@@ -440,7 +512,7 @@ public class UI implements InputProcessor {
 		default public void aoSoltar(int telaX, int telaY, int ponto) {}
 		default public void aoArrastar(int telaX, int telaY, int ponto) {}
 		default public void aoIniciar() {}
-		default public void porFrame(float delta, SpriteBatch sb) {}
+		default public void porFrame(float delta, SpriteBatch sb, BitmapFont fonte) {}
 		default public void aoFim() {}
 		default public void aoAjustar(int vertical, int horizontal) {}
 	}

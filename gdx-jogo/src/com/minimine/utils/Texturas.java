@@ -26,5 +26,6 @@ public class Texturas {
 		Texturas.texs.put("mira", new Texture(Gdx.files.internal("ui/mira.png")));
 		Texturas.texs.put("clique", new Texture(Gdx.files.internal("ui/clique.png")));
 		Texturas.texs.put("slot", new Texture(Gdx.files.internal("ui/slot.png")));
+		Texturas.texs.put("botao_opcao", new Texture(Gdx.files.internal("ui/botao_opcao.png")));
 	}
 }
