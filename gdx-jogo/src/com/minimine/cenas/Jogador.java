@@ -24,7 +24,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset;
 
 public class Jogador {
 	public ModelInstance modelo;
-	public byte modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public int modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
@@ -41,21 +41,23 @@ public class Jogador {
 	public static final float ALCANCE = 6f;
 	public Inventario inv;
 	
+	public float yaw = 180f, tom = -20f;
+	
 	public void criarModelo3D() {
 		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelo.gltf"));
 		this.modelo = new ModelInstance(asset.scene.model);
 	}
-	
+	/*
 	public Jogador() {
 		if(modo != 2) {
 			// itens iniciais:
-			inv.itens[0] = new Inventario.Item((byte)1, "Grama", Texturas.texs.get("grama_lado"), 1);
-			inv.itens[1] = new Inventario.Item((byte)2, "Terra", Texturas.texs.get("terra"), 1);
-			inv.itens[2] = new Inventario.Item((byte)3, "Pedra", Texturas.texs.get("pedra"), 1);
-			inv.itens[3] = new Inventario.Item((byte)4, "Agua", Texturas.texs.get("agua"), 1);
+			inv.itens[0] = new Inventario.Item(1, "Grama", Texturas.texs.get("grama_lado"), 1);
+			inv.itens[1] = new Inventario.Item(2, "Terra", Texturas.texs.get("terra"), 1);
+			inv.itens[2] = new Inventario.Item(3, "Pedra", Texturas.texs.get("pedra"), 1);
+			inv.itens[3] = new Inventario.Item(4, "Agua", Texturas.texs.get("agua"), 1);
 		}
 	}
-
+	*/
 	public void interagirBloco() {
 		Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
@@ -77,7 +79,7 @@ public class Jogador {
 				if(blocoSele == 0) {
 					if(modo == 2) inv.addItem(bloco, 1);
 					if(inv.itens[inv.slotSelecionado] != null) blocoSele = inv.itens[inv.slotSelecionado].tipo;
-					Mundo.defBlocoMundo(x, y, z, (byte)0);
+					Mundo.defBlocoMundo(x, y, z, 0);
 				} else {
 					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
 					int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));

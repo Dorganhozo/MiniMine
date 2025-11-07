@@ -10,11 +10,11 @@ refeito com LibGDX.
 5. Iluminação por vértices.
 6. Interface de botões de movimentação.
 7. Debug visual.
-8. Sistema de construção (beta).
+8. Sistema de construção.
 9. Hotbar.
 10. Mods por Lua no armazenamento externo.
 11. Sistema de ciclo noturno e diário.
-12. Nuvens (beta)
+12. Nuvens.
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam

@@ -25,6 +25,7 @@ jogador.inv.slotSelecionado -- indice do slot atual
 jogador.inv.aberto -- abre ou fecha inventario
 jogador.inv:rmItem(slotId, quantidade) -- remove o item de um slot pela quantidade
 jogador.inv:addItem(tipoId, quantidade) -- adiciona um item pelo tipo e quantidade
+jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
 
 mundo:
 
@@ -83,6 +84,7 @@ ui:subsBotao(nomeId, botaoObjeto) -- substitui um botão por outro objeto Botao
 ui:defTextoTam(escalaX, escalaY) -- define a escala do texto total
 ui:obterTextoTam() -- retorna um array de 2 elementos com X e Y da escala de texto
 ui:addTexto(texto, x, y) -- define e retorna um objeto Texto
+ui:addTexto(texto, x, y, func_aoAjustarATela(v, h)) -- variacao
 ui:subsTexto(nomeId, textoObj) -- substitui um texto pelo objeto
 ui:rmTexto(nomeId) -- remove um texto
 
@@ -110,6 +112,7 @@ util:
 
 util:carregarTextura(nomeId, caminho) -- carrega uma textura e guarda ela com um ID, além de retornar o objeto Texture
 util:obterModeloGLTF(caminho) -- retorna um ModelInstance da LibGDX de um arquivo .gltf
+util:carregarFonte(caminho, tamanhoInteiro) -- retorna a fonte bitmap, ui.fonte = util:carregarFonte(...) para alterar a fonte
 
 mapeamento de IDs:
 

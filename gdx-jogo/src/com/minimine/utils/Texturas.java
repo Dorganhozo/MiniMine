@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.HashMap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.Gdx;
+import com.minimine.cenas.Mundo;
 
 public class Texturas {
 	public static Map<CharSequence, Texture> texs = new HashMap<>();
@@ -27,5 +28,15 @@ public class Texturas {
 		Texturas.texs.put("clique", new Texture(Gdx.files.internal("ui/clique.png")));
 		Texturas.texs.put("slot", new Texture(Gdx.files.internal("ui/slot.png")));
 		Texturas.texs.put("botao_opcao", new Texture(Gdx.files.internal("ui/botao_opcao.png")));
+		
+		Mundo.texturas.add(Texturas.texs.get("grama_topo"));
+		Mundo.texturas.add(Texturas.texs.get("grama_lado"));
+		Mundo.texturas.add(Texturas.texs.get("terra"));
+		Mundo.texturas.add(Texturas.texs.get("pedra"));
+		Mundo.texturas.add(Texturas.texs.get("agua"));
+		Mundo.texturas.add(Texturas.texs.get("areia"));
+		Mundo.texturas.add(Texturas.texs.get("tronco_topo"));
+		Mundo.texturas.add(Texturas.texs.get("tronco_lado"));
+		Mundo.texturas.add(Texturas.texs.get("folha"));
 	}
 }

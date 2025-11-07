@@ -31,6 +31,8 @@ import com.minimine.utils.BiomasUtil;
 import com.minimine.utils.Mat;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
+import com.minimine.utils.Texturas;
+import com.minimine.utils.CorposCelestes;
 
 public class Mundo {
 	public static String nome = "novo mundo";
@@ -41,16 +43,13 @@ public class Mundo {
     public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
-	public static List<Evento> eventos = new ArrayList<>();
 
 	public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
-	public static int seed = 1, RAIO_CHUNKS = 10;
+	public static int seed = 0, RAIO_CHUNKS = 10;
 	public static SimplexNoise2D s2D;
 	
 	public static ShaderProgram shader;
-	public boolean neblina = false;
-	public static boolean carregado = false;
-	public static boolean dia = true;
+	public static boolean neblina = false, carregado = false, ciclo = true, nuvens = true;
 
 	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
@@ -73,8 +72,6 @@ public class Mundo {
 			return new ChunkUtil.Chave(0, 0);
 		}
 	};
-	
-	public static boolean nuvens = true;
 	
 	public static String vert = 
 	"attribute vec3 a_posicao;\n" +
@@ -113,10 +110,30 @@ public class Mundo {
 	"  gl_FragColor = texCor * v_cor;\n" +
 	"}";
 
-	public Matrix4 matrizTmp = new Matrix4();
+	public static Matrix4 matrizTmp = new Matrix4();
+	
+	static {
+		texturas.add(Texturas.texs.get("grama_topo"));
+		texturas.add(Texturas.texs.get("grama_lado"));
+		texturas.add(Texturas.texs.get("terra"));
+		texturas.add(Texturas.texs.get("pedra"));
+		texturas.add(Texturas.texs.get("agua"));
+		texturas.add(Texturas.texs.get("areia"));
+		texturas.add(Texturas.texs.get("tronco_topo"));
+		texturas.add(Texturas.texs.get("tronco_lado"));
+		texturas.add(Texturas.texs.get("folha"));
+
+		ChunkUtil.blocos.add(new Bloco("grama", 1, 0, 1, 2));
+		ChunkUtil.blocos.add(new Bloco("terra", 2, 2));
+		ChunkUtil.blocos.add(new Bloco("pedra", 3, 3));
+		ChunkUtil.blocos.add(new Bloco("agua", 4, 4, false));
+		ChunkUtil.blocos.add(new Bloco("areia", 5, 5));
+		ChunkUtil.blocos.add(new Bloco("tronco", 6, 6, 7));
+		ChunkUtil.blocos.add(new Bloco("folhas", 7, 8, true, false));
+	}
 	
 	public void iniciar() {
-		seed = Mat.floor((float)Math.random()*1000000);
+		seed = seed == 0 ? Mat.floor((float)Math.random()*1000000) : seed;
 		s2D = new SimplexNoise2D(seed);
 
         criarAtlas();
@@ -125,25 +142,27 @@ public class Mundo {
 		shader = new ShaderProgram(vert, frag);
 		if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
 		for(int i = 0; i < RAIO_CHUNKS; i++) meshReuso.obtain();	
-		for(Evento e : eventos) e.aoIniciar();
 		
 		NuvensUtil.iniciar();
+		CorposCelestes.iniciar();
 	}
 		
 	public void criarAtlas() {
-		Pixmap t1 = null;
+		Pixmap primeiroPx = null;
 		if(texturas.get(0) instanceof String) {
-			t1 = new Pixmap(Gdx.files.internal((String) texturas.get(0)));
+			primeiroPx = new Pixmap(Gdx.files.internal((String) texturas.get(0)));
 		} else if(texturas.get(0) instanceof Texture) {
 			Texture t = (Texture) texturas.get(0);
-			t1 = t.getTextureData().consumePixmap();
+			t.getTextureData().prepare();
+			primeiroPx = t.getTextureData().consumePixmap();
 		}
-		int texTam = t1.getWidth();
+		int texTam = primeiroPx.getWidth();
 		int colunas = (int)Math.ceil(Math.sqrt(texturas.size()));
 		int linhas = (int)Math.ceil((float)texturas.size() / colunas);
-		int atlasTam = texTam * colunas;
+		int atlasLarg = texTam * colunas;
+		int atlasAlt = texTam * linhas;
 
-		Pixmap atlasPx = new Pixmap(atlasTam, texTam * linhas, Pixmap.Format.RGBA8888);
+		Pixmap atlasPx = new Pixmap(atlasLarg, atlasAlt, Pixmap.Format.RGBA8888);
 
 		for(int i = 0; i < texturas.size(); i++) {
 			int x = (i % colunas) * texTam;
@@ -154,40 +173,43 @@ public class Mundo {
 				px = new Pixmap(Gdx.files.internal((String) texturas.get(i)));
 			} else if(texturas.get(i) instanceof Texture) {
 				Texture t = (Texture) texturas.get(i);
-				px = t.getTextureData().consumePixmap();
+				t.getTextureData().prepare();
+				Pixmap tmp = t.getTextureData().consumePixmap();
+				px = new Pixmap(tmp.getWidth(), tmp.getHeight(), tmp.getFormat());
+				px.drawPixmap(tmp, 0, 0);
+				tmp.dispose();
 			}
+
 			atlasPx.drawPixmap(px, x, y);
 
-			float u1 = (float)x / atlasTam;
-			float v1 = (float)y / (texTam * linhas);
-			float u2 = (float)(x + texTam) / atlasTam;
-			float v2 = (float)(y + texTam) / (texTam * linhas);
-
+			float u1 = (float)x / atlasLarg;
+			float v1 = (float)y / atlasAlt;
+			float u2 = (float)(x + texTam) / atlasLarg;
+			float v2 = (float)(y + texTam) / atlasAlt;
 			atlasUVs.put(i, new float[]{u1, v1, u2, v2});
 			px.dispose();
 		}
+
 		atlasGeral = new Texture(atlasPx);
 		atlasPx.dispose();
+		primeiroPx.dispose();
 	}
 	// chamado em render:
 	public void att(float delta, Jogador jogador) {
-		for(Evento e : eventos) {
-			e.porFrame(delta);
-		}
 		if(shader == null) return;
 		if(!carregado) {
 			if(chunks.size() > 4) carregado = true;
 		}
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 		
-		DiaNoiteUtil.att();
+		if(ciclo) DiaNoiteUtil.att();
 		
-		if(nuvens) NuvensUtil.atualizar(delta, jogador.posicao);
+		if(nuvens) NuvensUtil.att(delta, jogador.posicao);
 		
 		shader.begin();
 		shader.setUniformMatrix("u_projTrans", jogador.camera.combined);
 		
-		DiaNoiteUtil.aplicarShader(shader);
+		if(ciclo) DiaNoiteUtil.aplicarShader(shader);
 
 		atlasGeral.bind(0);
 		shader.setUniformi("u_textura", 0);
@@ -197,8 +219,9 @@ public class Mundo {
 				if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
 			}
 		}	
-		if(nuvens) NuvensUtil.render(jogador.camera.combined);
 		shader.end();
+		if(nuvens) NuvensUtil.att(jogador.camera.combined);
+		if(ciclo) CorposCelestes.att(jogador.camera.combined);
 	}
 
 	public boolean frustrum(Chunk chunk, Jogador jogador) {
@@ -212,8 +235,6 @@ public class Mundo {
 	}
 	// chamado em dispose:
 	public void liberar() {
-		for(Evento e : eventos) e.aoFim();
-		
         atlasGeral.dispose();
 		for(Chunk chunk : chunks.values()) chunk.mesh.dispose();
 		shader.dispose();
@@ -222,6 +243,7 @@ public class Mundo {
 		atlasUVs.clear();
 		exec.shutdown();
 		NuvensUtil.liberar();
+		CorposCelestes.liberar();
 	}
 	// MANIPULAÇÃO DE BLOCOS:
 	public static int obterBlocoMundo(int x, int y, int z) {
@@ -236,8 +258,11 @@ public class Mundo {
 		Chunk chunk = chunks.get(chave);
 		chaveReuso.free(chave);
 		if(chunk == null) return 0; 
+		
+		int localX = Math.floorMod(x, TAM_CHUNK);
+		int localZ = Math.floorMod(z, TAM_CHUNK);
 
-		return ChunkUtil.obterBloco(chunkX, y, chunkZ, chunk);
+		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
 	}
 
 	public static void defBlocoMundo(int x, int y, int z, int bloco) {
@@ -251,8 +276,11 @@ public class Mundo {
 		chave.x = chunkX; chave.z = chunkZ;
 		Chunk chunk = chunks.get(chave);
 		if(chunk == null) return;
+		
+		int localX = Math.floorMod(x, TAM_CHUNK);
+		int localZ = Math.floorMod(z, TAM_CHUNK);
 
-		ChunkUtil.defBloco(chunkX, y, chunkZ, bloco, chunk);
+		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 		if(bloco == 2) ChunkUtil.defLuz(chunkX, y, chunkZ, (byte) 5, chunk);
 
 		chunk.att = true;
@@ -338,7 +366,9 @@ public class Mundo {
 				gerarChunk(chave);
 				return;
 			} else {
-				chunks.put(chave, new Chunk());
+				Chunk chunk = new Chunk();
+				ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
+				chunks.put(chave, chunk);
 				gerarChunk(chave);
 			}
 		}
@@ -431,16 +461,5 @@ public class Mundo {
 						});
 				}
 			});
-	}
-
-	public static interface Evento {
-		public void aoCarregar();
-		public void aoGerarChunk(int x, int z, String bioma);
-		public void aoSair();
-		public void aoGerarEntidade(String id);
-
-		public void aoIniciar();
-		public void porFrame(float delta);
-		public void aoFim();
 	}
 }

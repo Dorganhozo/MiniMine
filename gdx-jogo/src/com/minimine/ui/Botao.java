@@ -7,15 +7,16 @@ import com.minimine.cenas.UI;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.minimine.utils.Texturas;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.minimine.utils.InterUtil;
 
-public class Botao implements UI.Evento {
+public class Botao extends InterUtil.Objeto {
 	public Sprite sprite;
 	public Rectangle hitbox;
-	public String nome;
 	public float x, y;
 	public float tamX, tamY;
 	
 	public Botao(Texture tex, float x, float y, float tamX, float tamY, String nome) {
+		super(nome);
 		sprite = new Sprite(tex);
 		this.x = x; this.y = y;
 		this.tamX = tamX; this.tamY = tamY;
@@ -23,9 +24,9 @@ public class Botao implements UI.Evento {
 		sprite.setSize(tamX, tamY);
 		
 		hitbox = new Rectangle(x, y, tamX, tamY);
-		
-		this.nome = nome;
 	}
+	
+	public void aoAjustar(int vertical, int horizontal) {}
 	
 	@Override
 	public void porFrame(float delta, SpriteBatch sb, BitmapFont fonte) {

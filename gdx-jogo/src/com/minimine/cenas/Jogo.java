@@ -17,7 +17,7 @@ import com.minimine.utils.Texturas;
 
 public class Jogo implements Screen {
 	public UI ui;
-	public Mundo mundo;
+	public Mundo mundo = new Mundo();;
 	public Jogador jogador = new Jogador();
 	public Net net;
 	public static boolean pronto = false;
@@ -28,29 +28,11 @@ public class Jogo implements Screen {
 
     @Override
 	public void show() {
-        mundo = new Mundo();
+		mundo.ciclo = true;
 		ui = new UI(jogador);
 		net = new Net(Net.SERVIDOR_MODO);
 		
-		ArquivosUtil.crMundo(mundo);
-		
-		Mundo.texturas.add("blocos/grama_topo.png");
-		Mundo.texturas.add("blocos/grama_lado.png");
-		Mundo.texturas.add("blocos/terra.png");
-		Mundo.texturas.add("blocos/pedra.png");
-		Mundo.texturas.add("blocos/agua_fixa.png");
-		Mundo.texturas.add("blocos/areia.png");
-		Mundo.texturas.add("blocos/tronco_topo.png");
-		Mundo.texturas.add("blocos/tronco_lado.png");
-		Mundo.texturas.add("blocos/folha.png");
-		
-		ChunkUtil.blocos.add(new Bloco("grama", (byte)1, 0, 1, 2));
-		ChunkUtil.blocos.add(new Bloco("terra", (byte)2, 2));
-		ChunkUtil.blocos.add(new Bloco("pedra", (byte)3, 3));
-		ChunkUtil.blocos.add(new Bloco("agua", (byte)4, 4, false));
-		ChunkUtil.blocos.add(new Bloco("areia", (byte)5, 5));
-		ChunkUtil.blocos.add(new Bloco("tronco", (byte)6, 6, 7));
-		ChunkUtil.blocos.add(new Bloco("folhas", (byte)7, 8, true, false));
+		ArquivosUtil.crMundo(mundo, jogador);
 		
 		LuaAPI.iniciar(this);
 		
@@ -67,14 +49,16 @@ public class Jogo implements Screen {
 	}
 
     @Override
-    public void render(float delta) {
-		float luz = DiaNoiteUtil.luz;
-		if(luz < 0.1f) luz = 0f;
-		if(luz > 1f) luz = 1f;
+	public void render(float delta) {
+		DiaNoiteUtil.att();
 
-		float r = 0.5f * luz;
-		float g = 0.7f * luz;
-		float b = 1.0f * luz;
+		float fator = DiaNoiteUtil.obterFatorTransicao();
+		float[] corNoite = {0.05f, 0.05f, 0.15f};
+		float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
+
+		float r = corNoite[0] * (1f - fator) + corDia[0] * fator;
+		float g = corNoite[1] * (1f - fator) + corDia[1] * fator;
+		float b = corNoite[2] * (1f - fator) + corDia[2] * fator;
 
 		Gdx.gl.glClearColor(r, g, b, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -92,13 +76,12 @@ public class Jogo implements Screen {
 				jo.camera.position.y + jo.camera.direction.y * 0.5f + 1.2f, 
 				jo.camera.position.z + jo.camera.direction.z * 0.5f + 0.3f
 			);
-			jo.modelo.transform.rotate(0, 1, 0, -ui.yaw);
-			jo.modelo.transform.rotate(1, 0, 0, -ui.tom);
+			jo.modelo.transform.rotate(0, 1, 0, -jogador.yaw);
+			jo.modelo.transform.rotate(1, 0, 0, -jogador.tom);
 
 			mb.render(jo.modelo, ambiente);
 			mb.end();
 		}
-		
 		if(mundo.carregado) jogador.att(delta);
 		if(pronto) LuaAPI.att(delta);
 		
@@ -124,7 +107,7 @@ public class Jogo implements Screen {
 	public void pause() {
 		LuaAPI.iniciar(this);
 		mundo.carregado = false;
-		ArquivosUtil.svMundo(mundo);
+		ArquivosUtil.svMundo(mundo, jogador);
 	}
 	@Override public void resume() {}
 }

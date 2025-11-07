@@ -17,20 +17,45 @@ import com.minimine.Cenas;
 import com.minimine.Inicio;
 import com.badlogic.gdx.graphics.GL20;
 import com.minimine.utils.Texturas;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.minimine.utils.ArquivosUtil;
+import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.DiaNoiteUtil;
+import com.minimine.utils.InterUtil;
 
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;
     public static BitmapFont fonte;
-	public List<Texto> textos = new ArrayList<>();
-	public List<Botao> botoes = new ArrayList<>();
-	public float botaoTam = 130;
+	public static List<Texto> textos = new ArrayList<>();
+	public static List<Botao> botoes = new ArrayList<>();
+	public static float botaoTam = 130;
+	
+	public static Jogador tela = new Jogador();
+	public Mundo mundo = new Mundo();
 	
 	@Override
 	public void show() {
+		mundo.ciclo = false;
 		sb = new SpriteBatch(); 
+		
+		PerspectiveCamera camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        camera.position.set(10f, 18f, 10f);
+        camera.lookAt(0, 0, 0);
+        camera.near = 0.1f;
+        camera.far = 400f;
+        camera.update();
+		
+		tela.camera = camera;
+		tela.modo = 0;
+		tela.camera.position.z = 200-32;
+		tela.camera.position.y = 100;
+		
+		ArquivosUtil.crMundo(mundo, tela);
+		
+		mundo.iniciar();
 
-		fonte = new BitmapFont();
-		fonte.getData().setScale(1.5f);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
 		Gdx.input.setInputProcessor(this);
 		
 		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irJogo") {
@@ -43,25 +68,81 @@ public class Menu implements Screen, InputProcessor {
 				defPos((v - tamX) / 2, (h - tamY) / 2);
 			}
 		});
-		textos.add(new Texto("teste", 100, 500));
+		textos.add(new Texto("Um Jogador", 0, 0) {
+				@Override
+				public void aoAjustar(int v, int h) {
+					GlyphLayout l = new GlyphLayout(fonte, texto);
+					x = (v - l.width) / 2f;
+					y = h / 2f;
+				}
+			});
+		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irConfig") {
+				@Override
+				public void aoTocar(int tx, int ty, int p) {
+					Inicio.defTela(Cenas.jogo);
+				}
+				@Override
+				public void aoAjustar(int v, int h) {
+					defPos((v - tamX) / 2f, (h - tamY) / 3f);
+				}
+			});
+		textos.add(new Texto("Configurações", 0, 0) {
+				@Override
+				public void aoAjustar(int v, int h) {
+					GlyphLayout l = new GlyphLayout(fonte, texto);
+					x = (v - l.width) / 2f;
+					y = h / 2.95f;
+				}
+			});
+		textos.add(new Texto("MiniMine", 0, 0) {
+				@Override
+				public void aoAjustar(int v, int h) {
+					GlyphLayout l = new GlyphLayout(fonte, texto);
+					x = (v - l.width) / 2f;
+					y = h - 200;
+				}
+			});
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
+		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+		Gdx.gl.glCullFace(GL20.GL_BACK);
+		Gdx.gl.glEnable(GL20.GL_BLEND);
 	}
 	@Override
 	public void render(float delta) {
-		Gdx.gl.glClearColor(0, 0, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		float luz = DiaNoiteUtil.luz;
+		if(luz < 0.1f) luz = 0f;
+		if(luz > 1f) luz = 1f;
+
+		float r = 0.5f * luz;
+		float g = 0.7f * luz;
+		float b = 1.0f * luz;
+
+		Gdx.gl.glClearColor(r, g, b, 1f);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		
+		mundo.att(delta, tela);
+		tela.camera.update();
+		
+		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+		
 		sb.begin();
-		for(Botao b : botoes) {
-			b.porFrame(delta, sb, fonte);
+		for(Botao bt : botoes) {
+			bt.porFrame(delta, sb, fonte);
 		}
 		for(Texto t : textos) {
 			t.porFrame(delta, sb, fonte);
 		}
+		UI.attCamera(tela.camera, tela.yaw, tela.tom);
 		sb.end();
 	}
 	@Override
 	public void resize(int v, int h) {
-		for(int i = 0; i < botoes.size(); i++) {
-			if(botoes.get(i) != null) botoes.get(i).aoAjustar(v, h);
+		for(Botao b : botoes) {
+			if(b != null) b.aoAjustar(v, h);
+		}
+		for(Texto b : textos) {
+			if(b != null) b.aoAjustar(v, h);
 		}
 	}
 	@Override
@@ -69,7 +150,6 @@ public class Menu implements Screen, InputProcessor {
 		sb.dispose();
 		fonte.dispose();
 	}
-	
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
@@ -80,19 +160,8 @@ public class Menu implements Screen, InputProcessor {
 		}
 		return false;
 	}
-
-	@Override
-	public boolean touchDragged(int p, int p1, int p2) {
-
-		return false;
-	}
-
-	@Override
-	public boolean touchUp(int p, int p1, int p2, int p3) {
-
-		return false;
-	}
-	
+	@Override public boolean touchDragged(int p, int p1, int p2) {return false;}
+	@Override public boolean touchUp(int p, int p1, int p2, int p3) {return false;}
 	@Override public void hide(){}
 	@Override public void pause(){}
 	@Override public void resume(){}

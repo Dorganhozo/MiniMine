@@ -18,23 +18,25 @@ import java.io.BufferedInputStream;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Gdx;
 import java.io.FileWriter;
+import com.badlogic.gdx.math.Matrix4;
+import com.minimine.cenas.Jogador;
 
 public class ArquivosUtil {
-	public static void svMundo(Mundo mundo) {
+	public static void svMundo(Mundo mundo, Jogador jogador) {
 		try {
 			File pasta = new File(Inicio.externo+"/MiniMine");
 			if(!pasta.exists()) pasta.mkdirs();
 
 			File arquivo = new File(pasta, mundo.nome+".mini");
 			FileOutputStream fos = new FileOutputStream(arquivo);
-			salvarMundo(fos, mundo.seed, mundo.chunksMod);
+			salvarMundo(fos, mundo.seed, mundo.chunksMod, jogador);
 			fos.close();
 		} catch(IOException e) {
 			Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());
 		}
 	}
 
-	public static void crMundo(Mundo mundo) {
+	public static void crMundo(Mundo mundo, Jogador jogador) {
 		try {
 			File arquivo = new File(Inicio.externo + "/MiniMine/"+mundo.nome+".mini");
 			if(!arquivo.exists()) {
@@ -42,14 +44,14 @@ public class ArquivosUtil {
 				return;
 			}
 			FileInputStream fis = new FileInputStream(arquivo);
-			carregarMundo(fis, mundo);
+			carregarMundo(fis, mundo, jogador);
 			fis.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void salvarMundo(OutputStream saida, int seed, Map<ChunkUtil.Chave, Chunk> chunksCarregados) throws IOException {
+	public static void salvarMundo(OutputStream saida, int seed, Map<ChunkUtil.Chave, Chunk> chunksCarregados, Jogador jogador) throws IOException {
 		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(saida));
 		// seed
 		dos.writeInt(seed);
@@ -84,24 +86,24 @@ public class ArquivosUtil {
 							dos.writeInt(x);
 							dos.writeInt(y);
 							dos.writeInt(z);
-							dos.writeByte(b);
+							dos.writeInt(b);
 						}
 					}
 				}
 			}
 		}
-		dos.writeFloat(UI.jogador.posicao.x);
-		dos.writeFloat(UI.jogador.posicao.y);
-		dos.writeFloat(UI.jogador.posicao.z);
+		dos.writeFloat(jogador.posicao.x);
+		dos.writeFloat(jogador.posicao.y);
+		dos.writeFloat(jogador.posicao.z);
 
-		dos.writeFloat(UI.tom);
-		dos.writeFloat(UI.yaw);
+		dos.writeFloat(jogador.tom);
+		dos.writeFloat(jogador.yaw);
 		
 		dos.flush();
 		dos.close();
 	}
 
-	public static void carregarMundo(InputStream entrada, Mundo mundo) throws IOException {
+	public static void carregarMundo(InputStream entrada, Mundo mundo, Jogador jogador) throws IOException {
 		DataInputStream dis = new DataInputStream(new BufferedInputStream(entrada));
 		// bota a seed
 		mundo.seed = dis.readInt();
@@ -111,28 +113,57 @@ public class ArquivosUtil {
 		for(int i = 0; i < totalChunks; i++) {
 			int chunkX = dis.readInt();
 			int chunkZ = dis.readInt();
-			
+
 			Chunk chunk = new Chunk();
+			ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
 			chunk.x = chunkX;
 			chunk.z = chunkZ;
-			// constroi a chunk
+
 			int totalNaoAr = dis.readInt();
 			for(int k = 0; k < totalNaoAr; k++) {
 				int x = dis.readInt();
 				int y = dis.readInt();
 				int z = dis.readInt();
-				byte id = dis.readByte();
-				// convertendo pra coordenadas globais
+				int id = dis.readInt();
+				
 				ChunkUtil.defBloco(x, y, z, id, chunk);
 			}
+			
+			chunk.mesh = Mundo.meshReuso.obtain();
+
 			mundo.chunksMod.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
 			mundo.chunks.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
+			
+			attMeshChunk(chunk);
 		}
-		UI.jogador.posicao = new Vector3(dis.readFloat(), dis.readFloat(), dis.readFloat());
-		UI.tom = dis.readFloat();
-		UI.yaw = dis.readFloat();
-		
+		jogador.posicao = new Vector3(dis.readFloat(), dis.readFloat(), dis.readFloat());
+		jogador.tom = dis.readFloat();
+		jogador.yaw = dis.readFloat();
+
 		dis.close();
+	}
+	
+	public static void attMeshChunk(final Chunk chunk) {
+		Mundo.exec.submit(new Runnable() {
+				@Override
+				public void run() {
+					final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
+					final IntArrayUtil idcGeral = new IntArrayUtil();
+
+					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
+
+					Gdx.app.postRunnable(new Runnable() {
+							@Override
+							public void run() {
+								ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
+								Matrix4 matrizTmp = new Matrix4();
+								matrizTmp.setToTranslation(chunk.x * Mundo.TAM_CHUNK, 0, chunk.z * Mundo.TAM_CHUNK);
+								chunk.mesh.transform(matrizTmp);
+								chunk.att = false;
+							}
+						});
+				}
+			});
 	}
 	
 	public static void criar(String caminho) {

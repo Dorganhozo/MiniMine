@@ -6,7 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.minimine.utils.Texturas;
 
-public class Inventario implements UI.Evento {
+public class Inventario {
     public int quantSlots = 25;
     public int slotsV = 5, slotsH = 5;
     public int tamSlot = 64+16;
@@ -29,7 +29,6 @@ public class Inventario implements UI.Evento {
         aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
     
-	@Override
     public void aoAjustar(int v, int h) {
         invX = v / 2 - (slotsH * tamSlot) / 2;
         invY = h / 2 - (slotsV * tamSlot) / 2;
@@ -64,7 +63,7 @@ public class Inventario implements UI.Evento {
             rectsHotbar[x] = rect;
         }
     }
-	@Override
+	
     public void aoTocar(int telaX, int telaY, int p) {
         if(aberto) {
             // no inventario:

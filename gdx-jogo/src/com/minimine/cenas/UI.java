@@ -24,10 +24,12 @@ import java.util.Map;
 import com.minimine.ui.Texto;
 import org.luaj.vm2.LuaValue;
 import com.minimine.utils.DiaNoiteUtil;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.minimine.Inicio;
+import com.minimine.utils.InterUtil;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
-	public static List<Evento> eventos = new ArrayList<>();
 	public static Map<CharSequence, Botao> botoes = new HashMap<>();
 	public static Map<CharSequence, Texto> textos = new HashMap<>();
     public static SpriteBatch sb;
@@ -44,9 +46,7 @@ public class UI implements InputProcessor {
 	public float sensi = 0.25f;
 
 	public final HashMap<Integer, CharSequence> toques = new HashMap<>();
-    // camera
-    public static float yaw = 180f, tom = -20f;
-
+ 
     public int telaV;
     public int telaH;
 	public Runtime rt;
@@ -78,18 +78,15 @@ public class UI implements InputProcessor {
 
 		sb = new SpriteBatch(); 
 
-		fonte = new BitmapFont();
-		fonte.getData().setScale(1.5f);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 25);
 
         Gdx.input.setInputProcessor(this);
 		rt = Runtime.getRuntime();
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
-		for(Evento e : eventos) {
-			e.aoIniciar();
-		}
-		abrirChat();
+		
+		// abrirChat();
     }
 	
 	private boolean chatAberto = false;
@@ -118,9 +115,7 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		for(Evento e : eventos) {
-			e.aoTocar(telaX, y, p);
-		}
+		
 		for(Botao e : botoes.values()) {
 			if(e.hitbox.contains(telaX, y)) {
 				e.aoTocar(telaX, y, p);
@@ -139,9 +134,7 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchUp(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		for(Evento e : eventos) {
-			e.aoSoltar(telaX, y, p);
-		}
+		
 		CharSequence botao = toques.remove(p);
 		if(botao != null) {
 			for(Botao e : botoes.values()) {
@@ -158,16 +151,14 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchDragged(int telaX, int telaY, int p) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		for(Evento e : eventos) {
-			e.aoArrastar(telaX, y, p);
-		}
+		
 		if(p == pontoDir) {
 			float dx = telaX - ultimaDir.x;
 			float dy = y - ultimaDir.y;
-			yaw -= dx * sensi;
-			tom += dy * sensi;
-			if(tom > 89f) tom = 89f;
-			if(tom < -89f) tom = -89f;
+			jogador.yaw -= dx * sensi;
+			jogador.tom += dy * sensi;
+			if(jogador.tom > 89f) jogador.tom = 89f;
+			if(jogador.tom < -89f) jogador.tom = -89f;
 			ultimaDir.set(telaX, y);
 		}
 		if(toques.containsKey(p)) {
@@ -312,9 +303,6 @@ public class UI implements InputProcessor {
 		
 		spriteMira.draw(sb);
 		
-		for(Evento e : eventos) {
-			e.porFrame(delta, sb, fonte);
-		}
 		for(Botao e : botoes.values()) {
 			e.porFrame(delta, sb, fonte);
 		}
@@ -332,13 +320,13 @@ public class UI implements InputProcessor {
 			
 			fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
 			"Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
-			"Jogador:\nModo: %s\nSlot: %d\nItem: %s\n\n"+
+			"Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\n\n"+
 			"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
 			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\n"+
 			"Logs:\n%s",
 			camera.position.x, camera.position.y, camera.position.z, fps,
 			Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
-			(this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
+			mundo.nome, (this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
 			this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
 			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo,
 			logs.logs), 50, Gdx.graphics.getHeight() - 100);
@@ -346,7 +334,7 @@ public class UI implements InputProcessor {
 		sb.end();  
 	}
 
-	public void attCamera() {
+	public static void attCamera(PerspectiveCamera camera, float yaw, float tom) {
 		float yawRad = yaw * MathUtils.degRad;
 		float tomRad = tom * MathUtils.degRad;
 
@@ -357,13 +345,14 @@ public class UI implements InputProcessor {
 		camera.direction.set(cx, cy, cz).nor();
 		camera.up.set(0, 1, 0);
 	}
+	
+	public void attCamera() {
+		attCamera(this.camera, jogador.yaw, jogador.tom);
+	}
 
     public void ajustar(int v, int h) {
-		for(int i = 0; i < eventos.size(); i++) {
-			if(eventos.get(i) != null) eventos.get(i).aoAjustar(v, h);
-		}
-		for(int i = 0; i < botoes.size(); i++) {
-			if(botoes.get(i) != null) botoes.get(i).aoAjustar(v, h);
+		for(Botao b : botoes.values()) {
+			if(b != null) b.aoAjustar(v, h);
 		}
         camera.viewportWidth = v;
         camera.viewportHeight = h;
@@ -376,9 +365,6 @@ public class UI implements InputProcessor {
     }
 
     public void liberar() {
-		for(Evento e : eventos) {
-			e.aoFim();
-		}
 		for(Botao e : botoes.values()) {
 			e.aoFim();
 		}
@@ -429,6 +415,16 @@ public class UI implements InputProcessor {
 				@Override
 				public void aoAjustar(int v, int h) {}
 		});
+		return textos.get(nome);
+	}
+	
+	public Texto addTexto(String nome, String texto, int x, int y, final LuaFunction func) {
+		textos.put(nome, new Texto(texto, x, y) {
+				@Override
+				public void aoAjustar(int v, int h) {
+					func.call(LuaValue.valueOf(v), LuaValue.valueOf(h));
+				}
+			});
 		return textos.get(nome);
 	}
 	
@@ -506,14 +502,4 @@ public class UI implements InputProcessor {
 	@Override public boolean keyUp(int p){return false;}
 	@Override public boolean mouseMoved(int p, int p1){return false;}
 	@Override public boolean scrolled(float p, float p1){return false;}
-
-	public static interface Evento {
-		default public void aoTocar(int telaX, int telaY, int ponto) {}
-		default public void aoSoltar(int telaX, int telaY, int ponto) {}
-		default public void aoArrastar(int telaX, int telaY, int ponto) {}
-		default public void aoIniciar() {}
-		default public void porFrame(float delta, SpriteBatch sb, BitmapFont fonte) {}
-		default public void aoFim() {}
-		default public void aoAjustar(int vertical, int horizontal) {}
-	}
 }
