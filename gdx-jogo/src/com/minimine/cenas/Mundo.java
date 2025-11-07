@@ -56,7 +56,7 @@ public class Mundo {
 
 	public static final int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6, maxVerts = maxFaces * 4, maxIndices = maxFaces * 6;
 	public static final VertexAttribute[] atriburs = new VertexAttribute[] {
-		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_posicao"),
+		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
 		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
 		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
 	};
@@ -74,26 +74,24 @@ public class Mundo {
 	};
 	
 	public static String vert = 
-	"attribute vec3 a_posicao;\n" +
+	"attribute vec3 a_pos;\n" +
 	"attribute vec2 a_texCoord;\n" + 
 	"attribute vec4 a_cor;\n" +
-	"uniform mat4 u_projTrans;\n" +
+	"uniform mat4 u_projPos;\n" +
 	"uniform float u_luzGlobal;\n" +
 	"uniform float u_tempoDia;\n" +
 	"varying vec2 v_texCoord;\n" +
 	"varying vec4 v_cor;\n" +
 	"void main() {\n" +
 	"  v_texCoord = a_texCoord;\n" +
-	"  \n" +
-	"  float intensidade = u_luzGlobal;\n" +
+	"  float inten = u_luzGlobal;\n" +
 	"  \n" +
 	"  if(u_luzGlobal < 0.3) {\n" +
-	"    intensidade *= 0.7;\n" +
+	"    inten *= 0.7;\n" +
 	"  }\n" +
-	"  \n" +
-	"  vec4 corAjustada = a_cor * intensidade;\n" +
-	"  v_cor = corAjustada;\n" +
-	"  gl_Position = u_projTrans * vec4(a_posicao, 1.0);\n" +
+	"  vec4 corFinal = a_cor * inten;\n" +
+	"  v_cor = corFinal;\n" +
+	"  gl_Position = u_projPos * vec4(a_pos, 1.0);\n" +
 	"}";
 
 	public static String frag =
@@ -207,7 +205,7 @@ public class Mundo {
 		if(nuvens) NuvensUtil.att(delta, jogador.posicao);
 		
 		shader.begin();
-		shader.setUniformMatrix("u_projTrans", jogador.camera.combined);
+		shader.setUniformMatrix("u_projPos", jogador.camera.combined);
 		
 		if(ciclo) DiaNoiteUtil.aplicarShader(shader);
 
@@ -263,6 +261,22 @@ public class Mundo {
 		int localZ = Math.floorMod(z, TAM_CHUNK);
 
 		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
+	}
+	
+	public static Bloco addBloco(String nome, int tipo, int topo) {
+		return new Bloco(nome, tipo, topo);
+	}
+	
+	public static Bloco addBloco(String nome, int tipo, int topo, int lados) {
+		return new Bloco(nome, tipo, topo, lados);
+	}
+	
+	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo) {
+		return new Bloco(nome, tipo, topo, lados, baixo);
+	}
+	
+	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo, boolean alfa) {
+		return new Bloco(nome, tipo, topo, lados, baixo, alfa);
 	}
 
 	public static void defBlocoMundo(int x, int y, int z, int bloco) {

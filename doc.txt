@@ -35,6 +35,11 @@ mundo.Y_CHUNK -- tamanho vertical das chuhks
 mundo.TAM_CHUNK -- tamanho horizontal das chunks
 mundo:defBlocoMundo(x, y, z, tipoDoBloco) -- define um bloco nas coordenadas globais
 mundo:obterBlocoMundo(x, y, z) -- obtem o tipo do bloco nas coordenadas globais
+mundo:addBloco(nome, tipo, texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
+mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados) -- variacao
+mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, texturaIdBaixo) -- variacao
+mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, ehTransparente) -- variacao se é transparente, true, senao, false
+mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, ehTransparente, ehSolido) -- variacao se é solido, true, senao, false
 
 mundo.chunks:
 
@@ -160,6 +165,7 @@ nomes de botões:
 "frente"
 "tras"
 "acao"
+"inv"
 
 indices de biomas padrão:
 

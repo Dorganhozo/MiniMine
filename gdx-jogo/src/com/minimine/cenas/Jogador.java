@@ -47,7 +47,7 @@ public class Jogador {
 		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelo.gltf"));
 		this.modelo = new ModelInstance(asset.scene.model);
 	}
-	/*
+	
 	public Jogador() {
 		if(modo != 2) {
 			// itens iniciais:
@@ -57,8 +57,10 @@ public class Jogador {
 			inv.itens[3] = new Inventario.Item(4, "Agua", Texturas.texs.get("agua"), 1);
 		}
 	}
-	*/
+	
 	public void interagirBloco() {
+		if(inv.itens[inv.slotSelecionado] != null) blocoSele = inv.itens[inv.slotSelecionado].tipo;
+		else blocoSele = 0;
 		Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
 			Gdx.graphics.getHeight() / 2f);

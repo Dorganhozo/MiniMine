@@ -15,13 +15,12 @@ public class NuvensUtil {
     public static ShaderProgram shaderNuvens;
     public static float tempo = 0f;
     public static float[] nuvensPos; // [x, y, z, tam] pra cada nuvem
-    public static final int NUM_NUVENS = 50;
-    public static final float RAIO_VISIVEL = 100f;
-    public static final float VELOCIDADE = 10f;
+    public static final int NUM_NUVENS = 100;
+    public static final float RAIO_VISIVEL = 150f;
+    public static final float VELOCIDADE = 0.2f;
 	
     public static Vector3 centro= new Vector3();
     public static boolean primeiraVez = true;
-	public static float p = 1f;
 	
     public static String vert = 
     "attribute vec3 a_pos;\n" +
@@ -125,7 +124,7 @@ public class NuvensUtil {
     }
 
     public static void att(float delta, Vector3 pos) {
-        tempo += delta;
+        tempo = DiaNoiteUtil.tempo_velo;
         if(primeiraVez) {
             for(int i = 0; i < NUM_NUVENS; i++) {
                 gerarNuvem(i, pos);

@@ -78,7 +78,7 @@ public class UI implements InputProcessor {
 
 		sb = new SpriteBatch(); 
 
-		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 25);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 10);
 
         Gdx.input.setInputProcessor(this);
 		rt = Runtime.getRuntime();
@@ -115,26 +115,26 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		
+
 		for(Botao e : botoes.values()) {
 			if(e.hitbox.contains(telaX, y)) {
 				e.aoTocar(telaX, y, p);
 				toques.put(p, e.nome);
-				break;
+				return true; // botão pressionado não faz mais nada
 			}
 		}
+		jogador.inv.aoTocar(telaX, y, p);
 		if(telaX >= telaV / 2 && pontoDir == -1) { 
 			pontoDir = p; 
 			ultimaDir.set(telaX, y); 
 		}
-		jogador.inv.aoTocar(telaX, y, p);
 		return true;
 	}
 
 	@Override
 	public boolean touchUp(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		
+
 		CharSequence botao = toques.remove(p);
 		if(botao != null) {
 			for(Botao e : botoes.values()) {
@@ -151,7 +151,9 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean touchDragged(int telaX, int telaY, int p) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		
+
+        jogador.inv.aoArrastar(telaX, y, p);
+
 		if(p == pontoDir) {
 			float dx = telaX - ultimaDir.x;
 			float dy = y - ultimaDir.y;
@@ -162,15 +164,12 @@ public class UI implements InputProcessor {
 			ultimaDir.set(telaX, y);
 		}
 		if(toques.containsKey(p)) {
-			CharSequence botaoAntigo = toques.get(p);
-			// verifica se ainda ta sobre algum botão
+            CharSequence botaoAntigo = toques.get(p);
 			boolean sobreBotao = false;
 			for(Botao e : botoes.values()) {
 				if(e.hitbox.contains(telaX, y)) {
 					sobreBotao = true;
-					// se mudou pra um botão diferente
 					if(!e.nome.equals(botaoAntigo)) {
-						// solta o botão antigo
 						if(botaoAntigo != null) {
 							for(Botao b : botoes.values()) {
 								if(b.nome.equals(botaoAntigo)) {
@@ -179,14 +178,12 @@ public class UI implements InputProcessor {
 								}
 							}
 						}
-						// pressiona o novo botão
 						e.aoTocar(telaX, y, p);
 						toques.put(p, e.nome);
 					}
 					break;
 				}
 			}
-			// se não ta sobre nenhum botão, solta o botão atual
 			if(!sobreBotao && botaoAntigo != null) {
 				for(Botao e : botoes.values()) {
 					if(e.nome.equals(botaoAntigo)) {
@@ -242,6 +239,15 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar(int t, int t2, int p){ acao = false; }
 			});
+		botoes.put("inv", new Botao(Texturas.texs.get("clique"), 0, 0, botaoTam, botaoTam, "inv") {
+				public void aoTocar(int t, int t2, int p){
+					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
+					else jogador.blocoSele = 0;
+					jogador.inv.alternar();
+					toques.put(p, "inv");
+				}
+				public void aoSoltar(int t, int t2, int p){}
+			});
 	}
 
 	public void configDpad(int v, int h) {
@@ -265,7 +271,9 @@ public class UI implements InputProcessor {
 				b.sprite.setPosition(v - botaoTam*1.5f, centroY - botaoTam - espaco);
 			else if(b.nome.equals("acao"))
 				b.sprite.setPosition(v - botaoTam*1.5f, centroY*2 + espaco);
-
+			else if(b.nome.equals("inv"))
+				b.sprite.setPosition(v - botaoTam, h - botaoTam);
+				
 			b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
 		}
 
@@ -331,7 +339,7 @@ public class UI implements InputProcessor {
 			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo,
 			logs.logs), 50, Gdx.graphics.getHeight() - 100);
 		}
-		sb.end();  
+		sb.end();
 	}
 
 	public static void attCamera(PerspectiveCamera camera, float yaw, float tom) {

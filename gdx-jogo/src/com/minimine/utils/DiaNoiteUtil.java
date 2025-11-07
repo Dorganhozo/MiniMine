@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class DiaNoiteUtil {
     public static float tempo = 0.0f;
-	public static float tempo_velo = 0.00028f; // 1 minuto = 1 dia
+	public static float tempo_velo = 0.00028f / 8; // 1 minuto = 1 dia, / 8 = 8 minutos = 1 dia
     public static float luz = 1.0f;
     public static long ultimaAtt = 0;
     public static final Vector3 posicaoSol = new Vector3();
@@ -57,7 +57,7 @@ public class DiaNoiteUtil {
     public static void calcularPosicoesCorposCelestes() {
         // angulo baseado no tempo(0-360 graus)
         float angulo = tempo * 360f;
-		/* sol: comeca a leste (0°) e move para oeste 180°)
+		/* sol: comeca a leste(0°) e move para oeste(180°)
 		quando angulo = 0°: sol no leste amanhecer)
 		quando angulo = 90°: sol no zênite(meio-dia)  
 		quando angulo = 180°: sol no oeste(anoitecer) */

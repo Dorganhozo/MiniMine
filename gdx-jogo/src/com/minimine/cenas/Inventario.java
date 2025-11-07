@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.minimine.utils.Texturas;
+import com.badlogic.gdx.math.Vector2;
+import com.minimine.utils.ChunkUtil;
 
 public class Inventario {
     public int quantSlots = 25;
@@ -14,18 +16,26 @@ public class Inventario {
     public Sprite[] sprites;
     public Rectangle[] rects;
     public int invX, invY;
-
+	
+	public Item itemSendoArrastado = null;
+    public int slotOrigem = -1;
+    public int ponteiroArrastando = -1; // ID do toque que ta arrastando
+    
     public Item[] itens = new Item[quantSlots];
     public int slotSelecionado = 0;
     public boolean aberto = false;
-    // hotbar
+    
     public int hotbarSlots = 5;
     public Rectangle[] rectsHotbar;
     public Sprite[] spritesHotbar;
     public int hotbarY = 20;
+	
+	public Item itemFlutuante = null;
+    public int slotOrigemFlutuante = -1;
+    private Vector2 posFlutuante = new Vector2(); // posicao visual do item flutuante
 
     public Inventario() {
-        texSlot = new Texture(Gdx.files.internal("ui/slot.png"));
+        texSlot = Texturas.texs.get("slot");
         aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
     
@@ -63,25 +73,42 @@ public class Inventario {
             rectsHotbar[x] = rect;
         }
     }
-	
-    public void aoTocar(int telaX, int telaY, int p) {
-        if(aberto) {
-            // no inventario:
+
+    public void aoSoltar(int telaX, int telaY, int p) {
+        // se o ponteiro que foi solto nao é o que tava arrastando,  da gelo no insta K-K-K-K
+        if(p != ponteiroArrastando || itemSendoArrastado == null) return;
+
+        int slotDestino = -1;
+        // procura o slot de destino na hotbar
+        for(int i = 0; i < rectsHotbar.length; i++) {
+            if(rectsHotbar[i].contains(telaX, telaY)) {
+                slotDestino = i;
+                break;
+            }
+        }
+        // se não achou, procura no inv
+        if(slotDestino == -1 && aberto) { // segurança
             for(int i = 0; i < rects.length; i++) {
                 if(rects[i].contains(telaX, telaY)) {
-                    selecionarSlot(i, UI.jogador);
-                    return;
-                }
-            }
-        } else {
-            // na hotbar:
-            for(int i = 0; i < rectsHotbar.length; i++) {
-                if(rectsHotbar[i].contains(telaX, telaY)) {
-                    selecionarSlot(i, UI.jogador);
-                    return;
+                    slotDestino = i;
+                    break;
                 }
             }
         }
+        // logica de troca
+        if(slotDestino != -1) {
+            // troca os itens(itemNoDestino pode ser null se o slot estiver vazio)
+            Item itemNoDestino = itens[slotDestino];
+            itens[slotDestino] = itemSendoArrastado; // Coloca o item arrastado no destino
+            itens[slotOrigem] = itemNoDestino;      // Coloca o item do destino na origem
+        } else {
+            // destino invalido(soltou fora de um slot): retorna o item para a origem
+            itens[slotOrigem] = itemSendoArrastado;
+        }
+        // retorna ao estado de arrasto
+        itemSendoArrastado = null;
+        slotOrigem = -1;
+        ponteiroArrastando = -1;
     }
 
     public void selecionarSlot(int slot, Jogador jogador) {
@@ -108,33 +135,18 @@ public class Inventario {
 				return;
 			}
 		}
-		// senão, colocar no primeiro slot vazio:
+		// senao, colocar no primeiro slot vazio:
 		for(int i = 0; i < itens.length; i++) {
 			if(itens[i] == null) {
-				String nome = "Ar";
+				CharSequence nome = "Ar";
 				Texture textura = texSlot;
-
-				if(tipo == 1) {
-					nome = "Grama";
-					textura = Texturas.texs.get("grama_lado");
-				} else if(tipo == 2) {
-					nome = "Terra";
-					textura = Texturas.texs.get("terra");
-				} else if(tipo == 3) {
-					nome = "Pedra";
-					textura = Texturas.texs.get("pedra");
-				} else if(tipo == 4) {
-					nome = "Agua";
-					textura = Texturas.texs.get("agua");
-				} else if(tipo == 5) {
-					nome = "Areia";
-					textura = Texturas.texs.get("areia");
-				} else if(tipo == 6) {
-					nome = "Tronco";
-					textura = Texturas.texs.get("tronco_lado");
-				} else if(tipo == 7) {
-					nome = "Folha";
-					textura = Texturas.texs.get("folha");
+				
+				for(Bloco b : ChunkUtil.blocos) {
+					if(b.tipo == tipo) {
+						nome = b.nome;
+						textura = Texturas.texs.get(b.nome+"_lado");
+						textura = textura == null ? textura = Texturas.texs.get(b.nome) : textura;
+					}
 				}
 				itens[i] = new Item(tipo, nome, textura, quantidade);
 				return;
@@ -152,58 +164,160 @@ public class Inventario {
     }
 
     public void att() {
-        // hotbar:
-        for(int i = 0; i < spritesHotbar.length; i++) {
-            spritesHotbar[i].draw(UI.sb);
+		// hotbar:
+		for(int i = 0; i < spritesHotbar.length; i++) {
+			spritesHotbar[i].draw(UI.sb);
 
-            if(i == slotSelecionado) {
-                UI.sb.setColor(1, 1, 1, 0.5f);
-                spritesHotbar[i].draw(UI.sb);
-                UI.sb.setColor(1, 1, 1, 1);
-            }
-            if(itens[i] != null) {
-                Sprite itemSprite = new Sprite(itens[i].textura);
-                itemSprite.setSize(tamSlot - 10, tamSlot - 10);
-                itemSprite.setPosition(spritesHotbar[i].getX() + 5, spritesHotbar[i].getY() + 5);
-                itemSprite.draw(UI.sb);
+			if(i == slotSelecionado) {
+				UI.sb.setColor(1, 1, 1, 0.5f);
+				spritesHotbar[i].draw(UI.sb);
+				UI.sb.setColor(1, 1, 1, 1);
+			}
+			// apenas checa se temum item no slot.
+			// se o item foi pego, itens[i] é null e o desenho é ignorado
+			if(itens[i] != null) {
+				Sprite itemSprite = new Sprite(itens[i].textura);
+				itemSprite.setSize(tamSlot - 10, tamSlot - 10);
+				itemSprite.setPosition(spritesHotbar[i].getX() + 5, spritesHotbar[i].getY() + 5);
+				itemSprite.draw(UI.sb);
 
-                if(itens[i].quantidade > 1) {
-                    UI.fonte.getData().setScale(1f);
-                    UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
+				if(itens[i].quantidade > 1) {
+					UI.fonte.getData().setScale(1f);
+					UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
 					spritesHotbar[i].getX() + tamSlot - 15, 
 					spritesHotbar[i].getY() + 15);
-                    UI.fonte.getData().setScale(1.5f);
+					UI.fonte.getData().setScale(1.5f);
+				}
+			}
+		}
+		// inventario:
+		if(aberto) {
+			for(int i = 0; i < sprites.length; i++) {
+				sprites[i].draw(UI.sb);
+				// checa se tem um item no slot
+				if(itens[i] != null) {
+					Sprite itemSprite = new Sprite(itens[i].textura);
+					
+					itemSprite.setSize(tamSlot - 5, tamSlot - 5); 
+					itemSprite.setPosition(sprites[i].getX() + 5, sprites[i].getY() + 5);
+					itemSprite.draw(UI.sb);
+
+					if(itens[i].quantidade > 1) {
+						UI.fonte.getData().setScale(0.8f); 
+						UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
+						sprites[i].getX() + tamSlot - 15, 
+						sprites[i].getY() + 15);
+						UI.fonte.getData().setScale(1.5f);
+					}
+				}
+			}
+		}
+		if(itemFlutuante != null) {
+			Sprite itemSprite = new Sprite(itemFlutuante.textura);
+			itemSprite.setSize(tamSlot - 10, tamSlot - 10); 
+
+			// centraliza o sprite na posição do ultimo toque/arrasto posFlutuante)
+			itemSprite.setPosition(posFlutuante.x - itemSprite.getWidth() / 2, 
+			posFlutuante.y - itemSprite.getHeight() / 2);
+			itemSprite.draw(UI.sb);
+			// renderiza a quantidade
+			if(itemFlutuante.quantidade > 1) {
+				UI.fonte.getData().setScale(1f);
+				UI.fonte.draw(UI.sb, String.valueOf(itemFlutuante.quantidade), 
+				itemSprite.getX() + tamSlot - 15, 
+				itemSprite.getY() + 15);
+				UI.fonte.getData().setScale(1.5f); 
+			}
+		}
+	}
+	
+	public void aoTocar(int telaX, int telaY, int p) {
+        if(!aberto) {
+            for(int i = 0; i < rectsHotbar.length; i++) {
+                if(rectsHotbar[i].contains(telaX, telaY)) {
+                    selecionarSlot(i, UI.jogador);
+                    return;
+                }
+            }
+            return;
+        }
+        // encontrar qual slot foi clicado
+        int slotClicado = -1;
+        // lrocura na hotbar
+        for(int i = 0; i < rectsHotbar.length; i++) {
+            if(rectsHotbar[i].contains(telaX, telaY)) {
+                slotClicado = i;
+                break;
+            }
+        }
+        // procura no inventario se não achou na hotbar)
+        if(slotClicado == -1) {
+            for(int i = 0; i < rects.length; i++) {
+                if(rects[i].contains(telaX, telaY)) {
+                    slotClicado = i;
+                    break;
                 }
             }
         }
-        // inventario:
-        if(aberto) {
-            for(int i = 0; i < sprites.length; i++) {
-                sprites[i].draw(UI.sb);
-                if(itens[i] != null) {
-                    Sprite itemSprite = new Sprite(itens[i].textura);
-                    itemSprite.setSize(tamSlot - 5, tamSlot - 5);
-                    itemSprite.setPosition(sprites[i].getX() + 5, sprites[i].getY() + 5);
-                    itemSprite.draw(UI.sb);
+        // se não clicou em nenhum slot, não faz nada
+        if(slotClicado == -1)  return;
+        // logica de pegar/soltar/trocar
+        posFlutuante.set(telaX, telaY); // atualiza a posicao
 
-                    if(itens[i].quantidade > 1) {
-                        UI.fonte.getData().setScale(0.8f);
-                        UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
-						sprites[i].getX() + tamSlot - 15, 
-						sprites[i].getY() + 15);
-                        UI.fonte.getData().setScale(1.5f);
-                    }
-                }
+        if(itemFlutuante == null) {
+            // nal segurando nada
+            // se o slot clicado tem um item, pega ele, ih, la ele rapaiz
+            if(itens[slotClicado] != null) {
+                itemFlutuante = itens[slotClicado];
+                slotOrigemFlutuante = slotClicado;
+                itens[slotClicado] = null;
+            }
+        } else {
+            // segurando um item
+            // trocamos o item flutuante com o item do slot clicado
+            Item itemNoSlot = itens[slotClicado]; // guarda o item do slot(pode ser null)
+            itens[slotClicado] = itemFlutuante; // coloca o item flutuante no slot
+            itemFlutuante = itemNoSlot; // o item do slot(ou null) agora é o flutuante
+            // se o novo item flutuante for null (trocamos com slot vazio), resetamos a origem.
+            if(itemFlutuante == null) {
+                slotOrigemFlutuante = -1;
+            } else {
+                // se pegamos um novo item, a nova origem"é este slot
+                slotOrigemFlutuante = slotClicado;
             }
         }
     }
+
+    public void aoArrastar(int telaX, int telaY, int p) {
+        if(itemFlutuante != null) posFlutuante.set(telaX, telaY);
+    }
+
+    public void alternar() {
+		if(aberto) {
+			aberto = false;
+			if(itemFlutuante != null) {
+				// tenta mansar pro slot de origem
+				if(itens[slotOrigemFlutuante] == null) {
+					itens[slotOrigemFlutuante] = itemFlutuante;
+				} else {
+					// se o slot de origem foi ocupado procura o primeiro vazio
+					addItem(itemFlutuante.tipo, itemFlutuante.quantidade);
+				}
+				itemFlutuante = null;
+				slotOrigemFlutuante = -1;
+			}
+		} else {
+			aberto = true;
+		}
+    }
+	
     public static class Item {
         public int tipo;
-        public String nome;
+        public CharSequence nome;
         public Texture textura;
         public int quantidade;
 
-        public Item(int tipo, String nome, Texture textura, int quantidade) {
+        public Item(int tipo, CharSequence nome, Texture textura, int quantidade) {
             this.tipo = tipo;
             this.nome = nome;
             this.textura = textura;

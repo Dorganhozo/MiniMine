@@ -28,6 +28,21 @@ public class Bloco {
 		this.solido = solido;
 	}
 	
+	public Bloco(CharSequence nome, int tipo, int topo, int lados, int baixo, boolean transparente) {
+		this.nome = nome;
+		this.tipo = tipo;
+		this.topo = topo; this.lados = lados; this.baixo = baixo;
+		this.transparente = transparente;
+	}
+	
+	public Bloco(CharSequence nome, int tipo, int topo, int lados, int baixo, boolean transparente, boolean solido) {
+		this.nome = nome;
+		this.tipo = tipo;
+		this.topo = topo; this.lados = lados; this.baixo = baixo;
+		this.transparente = transparente;
+		this.solido = solido;
+	}
+	
 	public Bloco(CharSequence nome, int tipo, int topo, int lados) {
 		this.nome = nome;
 		this.tipo = tipo;
