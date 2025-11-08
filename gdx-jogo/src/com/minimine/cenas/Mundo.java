@@ -52,7 +52,6 @@ public class Mundo {
 	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
 
-	// cada bloco pode ter até 6 faces visíveis, mas na prática ~15% são visíveis
 	public static int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6 / 6;
 	public static int maxVerts = maxFaces * 4;
 	public static int maxIndices = maxFaces * 6;
@@ -142,7 +141,7 @@ public class Mundo {
 		shader = new ShaderProgram(vert, frag);
 		if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
 		
-		if(nuvens) NuvensUtil.iniciar();
+		if(nuvens && NuvensUtil.primeiraVez) NuvensUtil.iniciar();
 		if(ciclo) CorposCelestes.iniciar();
 		Gdx.app.log("Debug", "chunks: "+chunksTotais);
 	}
@@ -341,7 +340,6 @@ public class Mundo {
 		final Chunk chunkExistente = chunks.get(chave);
 
 		if(chunkExistente != null && chunkExistente.att) {
-			chunkExistente.mesh.dispose();
 			exec.submit(new Runnable() {
 					@Override
 					public void run() {
@@ -353,7 +351,6 @@ public class Mundo {
 						Gdx.app.postRunnable(new Runnable() {
 								@Override
 								public void run() {
-									chunkExistente.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
 									ChunkUtil.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
 									matrizTmp.setToTranslation(chunkExistente.x * TAM_CHUNK, 0, chunkExistente.z * TAM_CHUNK);
 									chunkExistente.mesh.transform(matrizTmp);

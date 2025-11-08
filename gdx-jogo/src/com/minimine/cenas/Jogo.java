@@ -106,7 +106,10 @@ public class Jogo implements Screen {
 		LuaAPI.ajustar(v, h);
 	}
 
-	@Override public void hide() {}
+	@Override public void hide() {
+		mundo.carregado = false;
+		ArquivosUtil.svMundo(mundo, jogador);
+	}
 	@Override
 	public void pause() {
 		LuaAPI.iniciar(this);

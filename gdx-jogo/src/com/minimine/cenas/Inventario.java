@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.minimine.utils.Texturas;
 import com.badlogic.gdx.math.Vector2;
 import com.minimine.utils.ChunkUtil;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 public class Inventario {
     public int quantSlots = 25;
@@ -182,11 +183,12 @@ public class Inventario {
 				itemSprite.draw(UI.sb);
 
 				if(itens[i].quantidade > 1) {
-					UI.fonte.getData().setScale(1f);
+					BitmapFont o = UI.fonte;
+					UI.fonte.getData().setScale(1.5f);
 					UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
 					spritesHotbar[i].getX() + tamSlot - 15, 
 					spritesHotbar[i].getY() + 15);
-					UI.fonte.getData().setScale(1.5f);
+					UI.fonte = o;
 				}
 			}
 		}
@@ -203,11 +205,12 @@ public class Inventario {
 					itemSprite.draw(UI.sb);
 
 					if(itens[i].quantidade > 1) {
-						UI.fonte.getData().setScale(0.8f); 
+						BitmapFont o = UI.fonte;
+						UI.fonte.getData().setScale(2f); 
 						UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
 						sprites[i].getX() + tamSlot - 15, 
 						sprites[i].getY() + 15);
-						UI.fonte.getData().setScale(1.5f);
+						UI.fonte = o;
 					}
 				}
 			}
@@ -222,11 +225,12 @@ public class Inventario {
 			itemSprite.draw(UI.sb);
 			// renderiza a quantidade
 			if(itemFlutuante.quantidade > 1) {
-				UI.fonte.getData().setScale(1f);
+				BitmapFont o = UI.fonte;
+				UI.fonte.getData().setScale(2f);
 				UI.fonte.draw(UI.sb, String.valueOf(itemFlutuante.quantidade), 
 				itemSprite.getX() + tamSlot - 15, 
 				itemSprite.getY() + 15);
-				UI.fonte.getData().setScale(1.5f); 
+				UI.fonte = o;
 			}
 		}
 	}

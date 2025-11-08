@@ -143,36 +143,13 @@ public class ArquivosUtil {
 			mundo.chunksMod.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
 			mundo.chunks.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
 			
-			attMeshChunk(chunk);
+			chunk.att = true;
 		}
 		jogador.posicao = new Vector3(dis.readFloat(), dis.readFloat(), dis.readFloat());
 		jogador.tom = dis.readFloat();
 		jogador.yaw = dis.readFloat();
 
 		dis.close();
-	}
-	
-	public static void attMeshChunk(final Chunk chunk) {
-		Mundo.exec.submit(new Runnable() {
-				@Override
-				public void run() {
-					final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
-					final ShortArrayUtil idcGeral = new ShortArrayUtil();
-
-					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
-
-					Gdx.app.postRunnable(new Runnable() {
-							@Override
-							public void run() {
-								ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);
-								Matrix4 matrizTmp = new Matrix4();
-								matrizTmp.setToTranslation(chunk.x * Mundo.TAM_CHUNK, 0, chunk.z * Mundo.TAM_CHUNK);
-								chunk.mesh.transform(matrizTmp);
-								chunk.att = false;
-							}
-						});
-				}
-			});
 	}
 	
 	public static void criar(String caminho) {

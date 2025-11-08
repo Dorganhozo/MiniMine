@@ -76,6 +76,6 @@ public class LuaAPI {
 	public static void ajustar(int ve, int ho) {
 		v = ve;
 		h = ho;
-		aoAjustar.call(ajuste);
+		if(ajuste != null) aoAjustar.call(ajuste);
 	}
 }

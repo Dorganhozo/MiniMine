@@ -296,7 +296,7 @@ public class ChunkUtil {
 			int bits = chunk.paletaBits;
 			int blocosPorInt = chunk.blocosPorInt;
 			int idx = lerPacote(total, bits, chunk.blocos, blocosPorInt);
-			if(idx < 0 || idx >= chunk.paletaTamanho) return 0;
+			if(idx < 0 || idx >= chunk.paletaTam) return 0;
 			return chunk.paleta[idx];
 		} else {
 			int bits = chunk.bitsPorBloco;
@@ -313,22 +313,22 @@ public class ChunkUtil {
 		if(chunk.usaPaleta) {
 			// procura na paleta
 			int idc = -1;
-			for(int i = 0; i < chunk.paletaTamanho; i++) {
+			for(int i = 0; i < chunk.paletaTam; i++) {
 				if(chunk.paleta[i] == bloco) { idc = i; break; }
 			}
 			if(idc == -1) {
 				// não existe ainda na paleta -> tentar inserir
 				int capacidade = 1 << chunk.paletaBits;
-				if(chunk.paletaTamanho < capacidade) {
+				if(chunk.paletaTam < capacidade) {
 					// cabe na paleta atual
-					if(chunk.paletaTamanho >= chunk.paleta.length) {
+					if(chunk.paletaTam >= chunk.paleta.length) {
 						// aumenta array se necessário
 						int[] novo = new int[Math.max(chunk.paleta.length * 2, capacidade)];
 						System.arraycopy(chunk.paleta, 0, novo, 0, chunk.paleta.length);
 						chunk.paleta = novo;
 					}
-					chunk.paleta[chunk.paletaTamanho] = bloco;
-					idc = chunk.paletaTamanho++;
+					chunk.paleta[chunk.paletaTam] = bloco;
+					idc = chunk.paletaTam++;
 				} else {
 					// paleta cheia para paletaBits atual
 					if(chunk.paletaBits < 8) {
@@ -336,17 +336,17 @@ public class ChunkUtil {
 						refazerPaleta(chunk.paletaBits + 1, chunk);
 						// inserir agora (deve caber)
 						int[] pal = chunk.paleta;
-						for(int i = 0; i < chunk.paletaTamanho; i++) {
+						for(int i = 0; i < chunk.paletaTam; i++) {
 							if(pal[i] == bloco) { idc = i; break; }
 						}
 						if(idc == -1) {
-							if(chunk.paletaTamanho >= chunk.paleta.length) {
+							if(chunk.paletaTam >= chunk.paleta.length) {
 								int[] novo = new int[Math.max(chunk.paleta.length * 2, 1 << chunk.paletaBits)];
 								System.arraycopy(chunk.paleta, 0, novo, 0, chunk.paleta.length);
 								chunk.paleta = novo;
 							}
-							chunk.paleta[chunk.paletaTamanho] = bloco;
-							idc = chunk.paletaTamanho++;
+							chunk.paleta[chunk.paletaTam] = bloco;
+							idc = chunk.paletaTam++;
 						}
 					} else {
 						// paleta ja com 8 bits e cheia -> converte para modo direto
@@ -404,7 +404,7 @@ public class ChunkUtil {
 	public static void convertPaletaDireto(Chunk chunk, int blocoExtra) {
 		// encontra o maior id real que precisa ser representado
 		int maxVal = blocoExtra;
-		for(int i = 0; i < chunk.paletaTamanho; i++) {
+		for(int i = 0; i < chunk.paletaTam; i++) {
 			if(chunk.paleta[i] > maxVal) maxVal = chunk.paleta[i];
 		}
 		int bitsParaReal = bitsPraMaxId(maxVal);
@@ -428,7 +428,7 @@ public class ChunkUtil {
 				int idxPal = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
 					& ((1 << bitsAntigo) - 1);
 				int real = 0;
-				if(idxPal >= 0 && idxPal < chunk.paletaTamanho) real = chunk.paleta[idxPal];
+				if(idxPal >= 0 && idxPal < chunk.paletaTam) real = chunk.paleta[idxPal];
 				int idNovoIdc = i / chunk.blocosPorInt;
 				int idNovoBit = (i % chunk.blocosPorInt) * chunk.bitsPorBloco;
 				novos[idNovoIdc] |= (real & ((1 << chunk.bitsPorBloco) - 1)) << idNovoBit;
@@ -437,7 +437,7 @@ public class ChunkUtil {
 		chunk.blocos = novos;
 		// limpa paleta pra liberar memoria
 		chunk.paleta = null;
-		chunk.paletaTamanho = 0;
+		chunk.paletaTam = 0;
 		chunk.paletaBits = 0;
 	}
 
@@ -449,7 +449,7 @@ public class ChunkUtil {
 			// descobre maior id na paleta
 			int maxVal = 0;
 			if(chunk.paleta != null) {
-				for(int i = 0; i < chunk.paletaTamanho; i++) {
+				for(int i = 0; i < chunk.paletaTam; i++) {
 					if(chunk.paleta[i] > maxVal) maxVal = chunk.paleta[i];
 				}
 			}

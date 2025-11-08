@@ -27,8 +27,8 @@ import com.minimine.utils.InterUtil;
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;
     public static BitmapFont fonte;
-	public static List<Texto> textos = new ArrayList<>();
-	public static List<Botao> botoes = new ArrayList<>();
+	public static List<Texto> textos;
+	public static List<Botao> botoes;
 	public static float botaoTam = 130;
 	
 	public static Jogador tela = new Jogador();
@@ -36,6 +36,8 @@ public class Menu implements Screen, InputProcessor {
 	
 	@Override
 	public void show() {
+		textos = new ArrayList<>();
+		botoes = new ArrayList<>();
 		mundo.ciclo = true;
 		sb = new SpriteBatch(); 
 		
@@ -59,7 +61,7 @@ public class Menu implements Screen, InputProcessor {
 		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irJogo") {
 			@Override
 			public void aoTocar(int tx, int ty, int p) {
-				Inicio.defTela(Cenas.jogo);
+				Inicio.defTela(Cenas.selecao);
 			}
 			@Override
 			public void aoAjustar(int v, int h) {
@@ -109,7 +111,7 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override
 	public void render(float delta) {
-		if(mundo.carregado) mundo.ciclo = false;
+		if(mundo.chunks.size() >= 9) mundo.ciclo = false;
 		float luz = DiaNoiteUtil.luz;
 		if(luz < 0.1f) luz = 0f;
 		if(luz > 1f) luz = 1f;
@@ -165,9 +167,7 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override public boolean touchDragged(int p, int p1, int p2) {return false;}
 	@Override public boolean touchUp(int p, int p1, int p2, int p3) {return false;}
-	@Override public void hide() {
-		dispose();
-	}
+	@Override public void hide() {dispose();}
 	@Override public void pause(){}
 	@Override public void resume(){}
 	@Override public boolean keyDown(int p){return false;}
