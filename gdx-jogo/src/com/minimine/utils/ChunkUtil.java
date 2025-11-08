@@ -1,7 +1,7 @@
 package com.minimine.utils;
 
-import com.minimine.utils.FloatArrayUtil;
-import com.minimine.utils.IntArrayUtil;
+import com.minimine.utils.arrays.FloatArrayUtil;
+import com.minimine.utils.arrays.ShortArrayUtil;
 import com.badlogic.gdx.graphics.Mesh;
 import java.util.Map;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class ChunkUtil {
         0.8f  // lado -Z
     };
 	public static List<Bloco> blocos = new ArrayList<>();
-	
+
     public static float calcularNivelLuz(int x, int y, int z, int faceId, Chunk chunk) {
         float luzCeu = calcularLuzCeu(x, y, z, chunk);
         float luzFinal = Math.max(LUZ_AMBIENTE, luzCeu);
@@ -39,22 +39,18 @@ public class ChunkUtil {
     }
 
     public static float calcularLuzCeu(int x, int y, int z, Chunk chunk) {
-        // se estiver no topo do mundo, recebe luz maxima
         if(y >= Mundo.Y_CHUNK - 1)  return LUZ_SOL;
-        // se tem bloco solido em cima:
         int blocosAcima = 0;
         for(int cy = y + 1; cy < Mundo.Y_CHUNK; cy++) {
             if(ehSolido(x, cy, z, chunk)) blocosAcima++;
         }
         if(blocosAcima == 0) return LUZ_SOL;
-        // luz badeada no num de blocos em cima
-        float atenuacao = 1.0f - (blocosAcima * 0.15f); // 15% de redução por bloco
+        float atenuacao = 1.0f - (blocosAcima * 0.15f);
         return Math.max(LUZ_AMBIENTE, LUZ_SOL * atenuacao);
     }
-	
-	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, IntArrayUtil idcGeral) {
+
+	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
 		attLuz(chunk);
-		// chunks adkentiv3s, sei la comk escreve, cê entendeu
 		Chave chave = Mundo.chaveReuso.obtain();
 		chave.x = chunk.x + 1; chave.z = chunk.z;
 		Chunk chunkXP = Mundo.chunks.get(chave);
@@ -75,8 +71,8 @@ public class ChunkUtil {
 					if(blocoTipo == null) continue;
 
 					lidarFacesDoBloco(x, y, z, blocoTipo,
-					chunk, chunkXP, chunkXN, chunkZP, chunkZN,
-					vertsGeral, idcGeral);
+									  chunk, chunkXP, chunkXN, chunkZP, chunkZN,
+									  vertsGeral, idcGeral);
 				}
 			}
 		}
@@ -84,49 +80,43 @@ public class ChunkUtil {
 	}
 
 	public static void lidarFacesDoBloco(int x, int y, int z, BlocoTipo blocoTipo,
-	Chunk chunk, Chunk chunkXP, Chunk chunkXN, 
-	Chunk chunkZP, Chunk chunkZN, FloatArrayUtil verts, IntArrayUtil idc) {
+										 Chunk chunk, Chunk chunkXP, Chunk chunkXN, 
+										 Chunk chunkZP, Chunk chunkZN, FloatArrayUtil verts, ShortArrayUtil idc) {
 		float posX = x * 1f;
 		float posY = y * 1f;
 		float posZ = z * 1f;
-		// face topo(Y+)
 		if(deveRenderFaceTopo(x, y + 1, z, chunk, blocoTipo)) {
 			float luz = calcularNivelLuz(x, y, z, 0, chunk);
 			int textureId = blocoTipo.textureId(0);
 			BlocoModelo.addFace(0, textureId, posX, posY, posZ, luz, verts, idc);
 		}
-		// face baixo(Y-)
 		if(deveRenderFaceBaixo(x, y - 1, z, chunk, blocoTipo)) {
 			float luz = calcularNivelLuz(x, y, z, 1, chunk);
 			int textureId = blocoTipo.textureId(1);
 			BlocoModelo.addFace(1, textureId, posX, posY, posZ, luz, verts, idc);
 		}
-		// face +X(leste)
 		if(deveRenderFaceXPositivo(x + 1, y, z, chunk, chunkXP, blocoTipo)) {
 			float luz = calcularNivelLuz(x, y, z, 2, chunk);
 			int textureId = blocoTipo.textureId(2);
 			BlocoModelo.addFace(2, textureId, posX, posY, posZ, luz, verts, idc);
 		}
-		// face -X (oeste)
 		if(deveRenderFaceXNegativo(x - 1, y, z, chunk, chunkXN, blocoTipo)) {
 			float luz = calcularNivelLuz(x, y, z, 3, chunk);
 			int textureId = blocoTipo.textureId(3);
 			BlocoModelo.addFace(3, textureId, posX, posY, posZ, luz, verts, idc);
 		}
-		// face +Z(norte)
 		if(deveRenderFaceZPositivo(x, y, z + 1, chunk, chunkZP, blocoTipo)) {
 			float luz = calcularNivelLuz(x, y, z, 4, chunk);
 			int textureId = blocoTipo.textureId(4);
 			BlocoModelo.addFace(4, textureId, posX, posY, posZ, luz, verts, idc);
 		}
-		// face -Z(sul)
 		if(deveRenderFaceZNegativo(x, y, z - 1, chunk, chunkZN, blocoTipo)) {
 			float luz = calcularNivelLuz(x, y, z, 5, chunk);
 			int textureId = blocoTipo.textureId(5);
 			BlocoModelo.addFace(5, textureId, posX, posY, posZ, luz, verts, idc);
 		}
 	}
-	// metodos especificos pra cada face que lidam com chunks adjacentes
+
 	public static boolean deveRenderFaceTopo(int x, int y, int z, Chunk chunk, BlocoTipo blocoAtual) {
 		if(y >= Mundo.Y_CHUNK) return true;
 		BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
@@ -134,14 +124,13 @@ public class ChunkUtil {
 	}
 
 	public static boolean deveRenderFaceBaixo(int x, int y, int z, Chunk chunk, BlocoTipo blocoAtual) {
-		if(y < 0) return true; // fora do fundo - sempre renderiza
+		if(y < 0) return true;
 		BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
 		return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 	}
 
 	public static boolean deveRenderFaceXPositivo(int x, int y, int z, Chunk chunk, Chunk chunkXP, BlocoTipo blocoAtual) {
 		if(x >= Mundo.TAM_CHUNK) {
-			// ta na borda direita, verificar chunk adjacente
 			if(chunkXP == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(0, y, z, chunkXP, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
@@ -153,7 +142,6 @@ public class ChunkUtil {
 
 	public static boolean deveRenderFaceXNegativo(int x, int y, int z, Chunk chunk, Chunk chunkXN, BlocoTipo blocoAtual) {
 		if(x < 0) {
-			// ta na borda esquerda, verificar chunk adjacente
 			if(chunkXN == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(Mundo.TAM_CHUNK - 1, y, z, chunkXN, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
@@ -165,7 +153,6 @@ public class ChunkUtil {
 
 	public static boolean deveRenderFaceZPositivo(int x, int y, int z, Chunk chunk, Chunk chunkZP, BlocoTipo blocoAtual) {
 		if(z >= Mundo.TAM_CHUNK) {
-			// tana borda frontal, verificar chunk adjacente
 			if (chunkZP == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(x, y, 0, chunkZP, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
@@ -177,7 +164,6 @@ public class ChunkUtil {
 
 	public static boolean deveRenderFaceZNegativo(int x, int y, int z, Chunk chunk, Chunk chunkZN, BlocoTipo blocoAtual) {
 		if(z < 0) {
-			// ta na borda traseira, verificar chunk adjacente
 			if(chunkZN == null) return true;
 			BlocoTipo adjacente = obterblocoTipo(x, y, Mundo.TAM_CHUNK - 1, chunkZN, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
@@ -188,14 +174,11 @@ public class ChunkUtil {
 	}
 
 	public static BlocoTipo obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
-		// se as coordenadas estão dentro do chunk atual
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
 			int blocoId = obterBloco(x, y, z, chunk);
 			return blocoId == 0 ? null : BlocoTipo.criar(blocoId);
 		}
-		// se ta fora dos limites e temos um chunk adjacente especifico
 		if(chunkAdj != null) {
-			// ajusta coordenadas pra o sistema do chunk adjacente
 			int adjX = x;
 			int adjZ = z;
 
@@ -208,7 +191,6 @@ public class ChunkUtil {
 			int blocoId = obterBloco(adjX, y, adjZ, chunkAdj);
 			return blocoId == 0 ? null : BlocoTipo.criar(blocoId);
 		}
-		// fora dos limites e sem chunk adjacente = considerar como ar
 		return null;
 	}
 
@@ -216,55 +198,49 @@ public class ChunkUtil {
         for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
             for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
                 boolean bloqueado = false;
-                // do topo pra baixo
                 for(int y = Mundo.Y_CHUNK - 1; y >= 0; y--) {
                     if(!bloqueado) {
-                        // se encontrou um bloco solido, começa a bloquear
                         if(ehSolido(x, y, z, chunk)) {
                             bloqueado = true;
-                            // armazena luz reduzida pra esse bloco
-                            defLuz(x, y, z, (byte)10, chunk); // 10/15 de luz
+                            defLuz(x, y, z, (byte)10, chunk);
                         } else {
-                            // ar, luz maxima
                             defLuz(x, y, z, (byte)15, chunk);
                         }
                     } else {
-                        // ja ta bloqueado, luz ambiente min
-                        defLuz(x, y, z, (byte)2, chunk); // 2/15 de luz
+                        defLuz(x, y, z, (byte)2, chunk);
                     }
                 }
             }
         }
     }
-	
-	public static void defMesh(Mesh mesh, FloatArrayUtil verts, IntArrayUtil idc) {
+
+	public static void defMesh(Mesh mesh, FloatArrayUtil verts, ShortArrayUtil idc) {
 		if(verts.tam == 0) {
 			mesh.setVertices(new float[0]);
 			mesh.setIndices(new short[0]);
 			return;
 		}
 		float[] vArr = verts.praArray();
-		int[] iArr = idc.praArray();
+		short[] iArr = idc.praArray();
 		short[] sIdc = new short[iArr.length];
-		for(int i = 0; i < iArr.length; i++) sIdc[i] = (short) iArr[i];
+		for(int i = 0; i < iArr.length; i++) sIdc[i] = iArr[i];
 		mesh.setVertices(vArr);
 		mesh.setIndices(sIdc);
 	}
-	
+
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
 			int b = obterBloco(x, y, z, chunk);
 			return  b != 0 && b != 7;
 		}
-		// se ta fora dos limites, verifica no mundo
 		int mundoX = chunk.x * Mundo.TAM_CHUNK + x;
 		int mundoZ = chunk.z * Mundo.TAM_CHUNK + z;
-		
+
 		int b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
 
 		return b != 0 && b != 7;
 	}
-	
+
 	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
 			int b = obterBloco(x, y, z, chunk);
@@ -272,7 +248,7 @@ public class ChunkUtil {
 		}
 		return false;
 	}
-	
+
 	public static byte obterLuz(int x, int y, int z, Chunk chunk) {
         int i = x + (z * 16) + (y * 16 * 16);
 		int byteIdc = i / 2;
@@ -287,7 +263,7 @@ public class ChunkUtil {
 		byte mascara = (byte) ~(0b1111 << bitPos);
 		chunk.luz[byteIdc] = (byte)((chunk.luz[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
     }
-	
+
 	public static int bitsPraMaxId(int maxId) {
 		int val = 1;
 		int bits = 0;
@@ -295,34 +271,222 @@ public class ChunkUtil {
 		if(bits == 0) bits = 1;
 		return Math.min(bits, 8);
 	}
-	
-	public static int obterBloco(int x, int y, int z, Chunk chunk) {
-		int bits = chunk.bitsPorBloco;
-		int blocosPorInt = chunk.blocosPorInt;
-		int i = x + (z * Mundo.TAM_CHUNK) + (y * Mundo.TAM_CHUNK * Mundo.TAM_CHUNK);
-		int idc = i / blocosPorInt;
-		int pos = i % blocosPorInt;
+
+	public static int lerPacote(int indiceGlobal, int bits, int[] arr, int blocosPorInt) {
+		int idc = indiceGlobal / blocosPorInt;
+		int pos = indiceGlobal % blocosPorInt;
 		int bitPos = pos * bits;
 		int mascara = (1 << bits) - 1;
-		return (chunk.blocos[idc] >>> bitPos) & mascara;
+		return (arr[idc] >>> bitPos) & mascara;
 	}
 
-	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
-		if(bloco > chunk.maxIds) {
-			ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(bloco), chunk);
-		}
-		int bits = chunk.bitsPorBloco;
-		int blocosPorInt = chunk.blocosPorInt;
-		int i = x + (z * Mundo.TAM_CHUNK) + (y * Mundo.TAM_CHUNK * Mundo.TAM_CHUNK);
-		int idc = i / blocosPorInt;
-		int pos = i % blocosPorInt;
+	public static void gravarPacote(int indiceGlobal, int valor, int bits, int[] arr, int blocosPorInt) {
+		int idc = indiceGlobal / blocosPorInt;
+		int pos = indiceGlobal % blocosPorInt;
 		int bitPos = pos * bits;
 		int mascara = ((1 << bits) - 1) << bitPos;
-		chunk.blocos[idc] = (chunk.blocos[idc] & ~mascara) | ((bloco & ((1 << bits) - 1)) << bitPos);
+		arr[idc] = (arr[idc] & ~mascara) | ((valor & ((1 << bits) - 1)) << bitPos);
+	}
+
+	public static int obterBloco(int x, int y, int z, Chunk chunk) {
+		int totalWidth = Mundo.TAM_CHUNK;
+		int total = x + (z * totalWidth) + (y * totalWidth * totalWidth);
+		if(chunk.blocos == null) return 0;
+		if(chunk.usaPaleta) {
+			int bits = chunk.paletaBits;
+			int blocosPorInt = chunk.blocosPorInt;
+			int idx = lerPacote(total, bits, chunk.blocos, blocosPorInt);
+			if(idx < 0 || idx >= chunk.paletaTamanho) return 0;
+			return chunk.paleta[idx];
+		} else {
+			int bits = chunk.bitsPorBloco;
+			int blocosPorInt = chunk.blocosPorInt;
+			int val = lerPacote(total, bits, chunk.blocos, blocosPorInt);
+			return val;
+		}
 	}
 	
+	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
+		int totalTam = Mundo.TAM_CHUNK;
+		int total = x + (z * totalTam) + (y * totalTam * totalTam);
+		// se estamos em modo paleta, tentamos usar/expandir paleta
+		if(chunk.usaPaleta) {
+			// procura na paleta
+			int idc = -1;
+			for(int i = 0; i < chunk.paletaTamanho; i++) {
+				if(chunk.paleta[i] == bloco) { idc = i; break; }
+			}
+			if(idc == -1) {
+				// não existe ainda na paleta -> tentar inserir
+				int capacidade = 1 << chunk.paletaBits;
+				if(chunk.paletaTamanho < capacidade) {
+					// cabe na paleta atual
+					if(chunk.paletaTamanho >= chunk.paleta.length) {
+						// aumenta array se necessário
+						int[] novo = new int[Math.max(chunk.paleta.length * 2, capacidade)];
+						System.arraycopy(chunk.paleta, 0, novo, 0, chunk.paleta.length);
+						chunk.paleta = novo;
+					}
+					chunk.paleta[chunk.paletaTamanho] = bloco;
+					idc = chunk.paletaTamanho++;
+				} else {
+					// paleta cheia para paletaBits atual
+					if(chunk.paletaBits < 8) {
+						// aumenta paletaBits (repack indices)
+						refazerPaleta(chunk.paletaBits + 1, chunk);
+						// inserir agora (deve caber)
+						int[] pal = chunk.paleta;
+						for(int i = 0; i < chunk.paletaTamanho; i++) {
+							if(pal[i] == bloco) { idc = i; break; }
+						}
+						if(idc == -1) {
+							if(chunk.paletaTamanho >= chunk.paleta.length) {
+								int[] novo = new int[Math.max(chunk.paleta.length * 2, 1 << chunk.paletaBits)];
+								System.arraycopy(chunk.paleta, 0, novo, 0, chunk.paleta.length);
+								chunk.paleta = novo;
+							}
+							chunk.paleta[chunk.paletaTamanho] = bloco;
+							idc = chunk.paletaTamanho++;
+						}
+					} else {
+						// paleta ja com 8 bits e cheia -> converte para modo direto
+						convertPaletaDireto(chunk, bloco);
+						// agora no modo direto
+					}
+				}
+			}
+			// se ainda estamos em paleta (idx válido), gravamos índice
+			if(chunk.usaPaleta) {
+				gravarPacote(total, idc, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt);
+				return;
+			}
+			// caso contrario, conversion ocorreu e prosseguimos para modo direto
+		}
+		// kodo direto: garantias de bits e compactação se necessario
+		if(!chunk.usaPaleta) {
+			if(bloco > chunk.maxIds) {
+				ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(bloco), chunk);
+			}
+			// escrever valor direto
+			gravarPacote(total, bloco, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt);
+		}
+	}
+
+	public static void refazerPaleta(int novosBits, Chunk chunk) {
+		if(!chunk.usaPaleta) return;
+		if(novosBits <= 0 || novosBits > 8) novosBits = 8;
+
+		int bitsAntigo = chunk.paletaBits;
+		int blocosPorIntAntigo = chunk.blocosPorInt;
+		int[] antigos = chunk.blocos;
+
+		chunk.paletaBits = novosBits;
+		chunk.blocosPorInt = 32 / chunk.paletaBits;
+
+		int totalBlocos = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
+		int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+		int[] novos = new int[tamNovo];
+
+		if(antigos != null && blocosPorIntAntigo > 0 && bitsAntigo > 0) {
+			for(int i = 0; i < totalBlocos; i++) {
+				int idAntigo = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
+					& ((1 << bitsAntigo) - 1);
+				// idAntigo é índice de paleta -> mantém mesmo índice no novo packing
+				int idNovoIdc = i / chunk.blocosPorInt;
+				int idNovoBit = (i % chunk.blocosPorInt) * chunk.paletaBits;
+				novos[idNovoIdc] |= (idAntigo & ((1 << chunk.paletaBits) - 1)) << idNovoBit;
+			}
+		}
+		chunk.blocos = novos;
+	}
+
+	// converte completamente do modo paleta para modo direto
+	public static void convertPaletaDireto(Chunk chunk, int blocoExtra) {
+		// encontra o maior id real que precisa ser representado
+		int maxVal = blocoExtra;
+		for(int i = 0; i < chunk.paletaTamanho; i++) {
+			if(chunk.paleta[i] > maxVal) maxVal = chunk.paleta[i];
+		}
+		int bitsParaReal = bitsPraMaxId(maxVal);
+		if(bitsParaReal < 1) bitsParaReal = 1;
+
+		int bitsAntigo = chunk.paletaBits;
+		int blocosPorIntAntigo = chunk.blocosPorInt;
+		int[] antigos = chunk.blocos;
+
+		chunk.usaPaleta = false;
+		chunk.bitsPorBloco = bitsParaReal;
+		chunk.blocosPorInt = 32 / chunk.bitsPorBloco;
+		chunk.maxIds = (1 << chunk.bitsPorBloco) - 1;
+
+		int totalBlocos = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
+		int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+		int[] novos = new int[tamNovo];
+
+		if(antigos != null && blocosPorIntAntigo > 0 && bitsAntigo > 0) {
+			for(int i = 0; i < totalBlocos; i++) {
+				int idxPal = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
+					& ((1 << bitsAntigo) - 1);
+				int real = 0;
+				if(idxPal >= 0 && idxPal < chunk.paletaTamanho) real = chunk.paleta[idxPal];
+				int idNovoIdc = i / chunk.blocosPorInt;
+				int idNovoBit = (i % chunk.blocosPorInt) * chunk.bitsPorBloco;
+				novos[idNovoIdc] |= (real & ((1 << chunk.bitsPorBloco) - 1)) << idNovoBit;
+			}
+		}
+		chunk.blocos = novos;
+		// limpa paleta pra liberar memoria
+		chunk.paleta = null;
+		chunk.paletaTamanho = 0;
+		chunk.paletaBits = 0;
+	}
+
 	public static void compactar(int bitsPorBloco, Chunk chunk) {
-		if(bitsPorBloco < 1) bitsPorBloco = 1; // proteção contra divisão por zero
+		// se chunk estava em paleta e compactar é pedido pra modo direto
+		// converte paleta->direto usando bitsPorBloco calculado
+		if(chunk.usaPaleta && bitsPorBloco > 0) {
+			// converter paleta para direto mantendi bitsPorBloco minimo requerido
+			// descobre maior id na paleta
+			int maxVal = 0;
+			if(chunk.paleta != null) {
+				for(int i = 0; i < chunk.paletaTamanho; i++) {
+					if(chunk.paleta[i] > maxVal) maxVal = chunk.paleta[i];
+				}
+			}
+			if(bitsPraMaxId(maxVal) > bitsPorBloco) {
+				bitsPorBloco = bitsPraMaxId(maxVal);
+			}
+			convertPaletaDireto(chunk, 0);
+			// agora talvez seja necessario reajustar bits se convertPaleta escolheu bits diferentes
+			if(chunk.bitsPorBloco < bitsPorBloco) {
+				// aumenta bitsPorBloco se solicitado(refaz direto)
+				int bitsAntigo = chunk.bitsPorBloco;
+				int blocosPorIntAntigo = chunk.blocosPorInt;
+				int[] antigos = chunk.blocos;
+
+				chunk.bitsPorBloco = bitsPorBloco;
+				chunk.blocosPorInt = 32 / chunk.bitsPorBloco;
+				chunk.maxIds = (1 << chunk.bitsPorBloco) - 1;
+
+				int totalBlocos = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
+				int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+				int[] novos = new int[tamNovo];
+
+				if(antigos != null && blocosPorIntAntigo > 0 && bitsAntigo > 0) {
+					for(int i = 0; i < totalBlocos; i++) {
+						int idAntigo = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
+							& ((1 << bitsAntigo) - 1);
+						int idNovoIdc = i / chunk.blocosPorInt;
+						int idNovoBit = (i % chunk.blocosPorInt) * chunk.bitsPorBloco;
+						novos[idNovoIdc] |= (idAntigo & ((1 << chunk.bitsPorBloco) - 1)) << idNovoBit;
+					}
+				}
+				chunk.blocos = novos;
+			}
+			return;
+		}
+		// comportamento antigo
+		if(bitsPorBloco < 1) bitsPorBloco = 1;
 
 		int bitsAntigo = chunk.bitsPorBloco;
 		int blocosPorIntAntigo = chunk.blocosPorInt;
@@ -347,7 +511,7 @@ public class ChunkUtil {
 		}
 		chunk.blocos = novos;
 	}
-	
+
 	public static class Chave {
 		public int x, z;
 		public Chave(int x, int z) {this.x = x; this.z = z;}

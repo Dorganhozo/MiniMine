@@ -10,6 +10,9 @@ import com.minimine.utils.Texturas;
 import com.badlogic.gdx.graphics.Texture;
 import com.minimine.cenas.Bloco;
 import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.InterUtil;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 
 public class Util {
 	public static ModelInstance obterModeloGLTF(String caminho) {
@@ -18,26 +21,19 @@ public class Util {
 	}
 	
 	public static Texture carregarTextura(String nome, String caminho) {
-		Texture tex = new Texture(Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho));
-		Texturas.texs.put(nome, tex);
-		return tex;
+		Texturas.texs.put(nome, new Texture(Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho)));
+		return Texturas.texs.get(nome);
 	}
 	
-	public static Bloco addBloco(CharSequence nome, byte tipo, int topoId) {
-		Bloco b = new Bloco(nome, tipo, topoId);
-		ChunkUtil.blocos.add(b);
-		return b;
+	public static BitmapFont carregarFonte(String caminho, int tam) {
+		return InterUtil.carregarFonte(caminho, tam);
 	}
 	
-	public static Bloco addBloco(CharSequence nome, byte tipo, int topoId, boolean transp) {
-		Bloco b = new Bloco(nome, tipo, topoId, transp);
-		ChunkUtil.blocos.add(b);
-		return b;
+	public static Sprite criarSprite(Texture textura) {
+		return new Sprite(textura);
 	}
 	
-	public static Bloco addBloco(CharSequence nome, byte tipo, int topoId, boolean transp, boolean solido) {
-		Bloco b = new Bloco(nome, tipo, topoId, transp, solido);
-		ChunkUtil.blocos.add(b);
-		return b;
+	public static Sprite criarSprite(String textura) {
+		return new Sprite(Texturas.texs.get(textura));
 	}
 }

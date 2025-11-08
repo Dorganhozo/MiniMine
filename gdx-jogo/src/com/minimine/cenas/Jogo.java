@@ -14,23 +14,23 @@ import com.minimine.utils.ChunkUtil;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Texturas;
+import com.minimine.utils.CorposCelestes;
 
 public class Jogo implements Screen {
 	public UI ui;
-	public Mundo mundo = new Mundo();;
+	public Mundo mundo = new Mundo();
 	public Jogador jogador = new Jogador();
 	public Net net;
 	public static boolean pronto = false;
 	public Environment ambiente;
 	public ModelBatch mb;
 	public List<Jogador> jgs = new ArrayList<>();
-	public static NuvensUtil nuvens = new NuvensUtil();
-
+	
     @Override
 	public void show() {
 		mundo.ciclo = true;
 		ui = new UI(jogador);
-		net = new Net(Net.SERVIDOR_MODO);
+		// net = new Net(Net.SERVIDOR_MODO);
 		
 		ArquivosUtil.crMundo(mundo, jogador);
 		
@@ -63,24 +63,26 @@ public class Jogo implements Screen {
 		Gdx.gl.glClearColor(r, g, b, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 		
 		if(pronto) mundo.att(delta, jogador);
 		
-		for(Jogador jo : jgs) {
-			mb.begin(ui.camera);
-			if(jo.modelo == null) jo.criarModelo3D();
-			
-			jo.modelo.transform.setToTranslation(
-				jo.camera.position.x + jo.camera.direction.x * 0.5f + 0.3f,
-				jo.camera.position.y + jo.camera.direction.y * 0.5f + 1.2f, 
-				jo.camera.position.z + jo.camera.direction.z * 0.5f + 0.3f
-			);
-			jo.modelo.transform.rotate(0, 1, 0, -jogador.yaw);
-			jo.modelo.transform.rotate(1, 0, 0, -jogador.tom);
+		if(jgs.size() > 1) {
+			for(Jogador jo : jgs) {
+				mb.begin(ui.camera);
+				if(jo.modelo == null) jo.criarModelo3D();
 
-			mb.render(jo.modelo, ambiente);
-			mb.end();
+				jo.modelo.transform.setToTranslation(
+					jo.camera.position.x + jo.camera.direction.x * 0.5f + 0.3f,
+					jo.camera.position.y + jo.camera.direction.y * 0.5f + 1.2f, 
+					jo.camera.position.z + jo.camera.direction.z * 0.5f + 0.3f
+				);
+				jo.modelo.transform.rotate(0, 1, 0, -jogador.yaw);
+				jo.modelo.transform.rotate(1, 0, 0, -jogador.tom);
+
+				mb.render(jo.modelo, ambiente);
+				mb.end();
+			}
+			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 		}
 		if(mundo.carregado) jogador.att(delta);
 		if(pronto) LuaAPI.att(delta);
@@ -91,8 +93,9 @@ public class Jogo implements Screen {
 
     @Override
     public void dispose() {
+		mundo.carregado = false;
+		ArquivosUtil.svMundo(mundo, jogador);
 		mundo.liberar();
-		ui.liberar();
 		net.liberar();
     }
 	
@@ -100,6 +103,7 @@ public class Jogo implements Screen {
 	public void resize(int v, int h) {
 		ui.ajustar(v, h);
 		Gdx.gl.glViewport(0, 0, v, h);
+		LuaAPI.ajustar(v, h);
 	}
 
 	@Override public void hide() {}

@@ -20,12 +20,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.graphics.Mesh;
-import com.minimine.utils.FloatArrayUtil;
-import com.minimine.utils.IntArrayUtil;
+import com.minimine.utils.arrays.FloatArrayUtil;
+import com.minimine.utils.arrays.ShortArrayUtil;
 import com.badlogic.gdx.utils.Pool;
-import com.minimine.utils.EstruturaUtil;
-import com.minimine.utils.ruidos.PerlinNoise2D;
-import com.minimine.utils.ruidos.PerlinNoise3D;
 import com.minimine.utils.ruidos.SimplexNoise2D;
 import com.minimine.utils.BiomasUtil;
 import com.minimine.utils.Mat;
@@ -40,21 +37,25 @@ public class Mundo {
     // mapa de UVs:
     // (atlas ID -> [u_min, v_min, u_max, v_max])
 	public static final List<Object> texturas = new ArrayList<>();
-    public static final Map<Integer, float[]> atlasUVs = new HashMap<>();
+    public static Map<Integer, float[]> atlasUVs = new HashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
 	public static final Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
 
 	public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
-	public static int seed = 0, RAIO_CHUNKS = 10;
+	public static int seed = 0, RAIO_CHUNKS = 5;
+	public static int chunksTotais = (RAIO_CHUNKS *2 + 1) * (RAIO_CHUNKS *2 + 1);
 	public static SimplexNoise2D s2D;
 	
-	public static ShaderProgram shader;
+	public ShaderProgram shader;
 	public static boolean neblina = false, carregado = false, ciclo = true, nuvens = true;
 
 	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
 
-	public static final int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6, maxVerts = maxFaces * 4, maxIndices = maxFaces * 6;
+	// cada bloco pode ter até 6 faces visíveis, mas na prática ~15% são visíveis
+	public static int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6 / 6;
+	public static int maxVerts = maxFaces * 4;
+	public static int maxIndices = maxFaces * 6;
 	public static final VertexAttribute[] atriburs = new VertexAttribute[] {
 		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
 		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
@@ -66,6 +67,7 @@ public class Mundo {
 			return new Mesh(true, maxVerts, maxIndices, atriburs);
 		}
 	};
+	
 	public static final Pool<ChunkUtil.Chave> chaveReuso = new Pool<ChunkUtil.Chave>() {
 		@Override
 		protected ChunkUtil.Chave newObject() {
@@ -120,14 +122,14 @@ public class Mundo {
 		texturas.add(Texturas.texs.get("tronco_topo"));
 		texturas.add(Texturas.texs.get("tronco_lado"));
 		texturas.add(Texturas.texs.get("folha"));
-
+		
 		ChunkUtil.blocos.add(new Bloco("grama", 1, 0, 1, 2));
 		ChunkUtil.blocos.add(new Bloco("terra", 2, 2));
 		ChunkUtil.blocos.add(new Bloco("pedra", 3, 3));
 		ChunkUtil.blocos.add(new Bloco("agua", 4, 4, false));
 		ChunkUtil.blocos.add(new Bloco("areia", 5, 5));
 		ChunkUtil.blocos.add(new Bloco("tronco", 6, 6, 7));
-		ChunkUtil.blocos.add(new Bloco("folhas", 7, 8, true, false));
+		ChunkUtil.blocos.add(new Bloco("folha", 7, 8, true, false));
 	}
 	
 	public void iniciar() {
@@ -139,10 +141,10 @@ public class Mundo {
 		ShaderProgram.pedantic = false;
 		shader = new ShaderProgram(vert, frag);
 		if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
-		for(int i = 0; i < RAIO_CHUNKS; i++) meshReuso.obtain();	
 		
-		NuvensUtil.iniciar();
-		CorposCelestes.iniciar();
+		if(nuvens) NuvensUtil.iniciar();
+		if(ciclo) CorposCelestes.iniciar();
+		Gdx.app.log("Debug", "chunks: "+chunksTotais);
 	}
 		
 	public void criarAtlas() {
@@ -187,7 +189,6 @@ public class Mundo {
 			atlasUVs.put(i, new float[]{u1, v1, u2, v2});
 			px.dispose();
 		}
-
 		atlasGeral = new Texture(atlasPx);
 		atlasPx.dispose();
 		primeiroPx.dispose();
@@ -195,8 +196,12 @@ public class Mundo {
 	// chamado em render:
 	public void att(float delta, Jogador jogador) {
 		if(shader == null) return;
-		if(!carregado) {
-			if(chunks.size() > 4) carregado = true;
+		
+		if(chunks.size() >= chunksTotais) {
+			System.gc();
+			if(!carregado) {
+				carregado = true;
+			}
 		}
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 		
@@ -233,15 +238,17 @@ public class Mundo {
 	}
 	// chamado em dispose:
 	public void liberar() {
-        atlasGeral.dispose();
-		for(Chunk chunk : chunks.values()) chunk.mesh.dispose();
-		shader.dispose();
-		texturas.clear();
-		chunks.clear();
-		atlasUVs.clear();
-		exec.shutdown();
-		NuvensUtil.liberar();
-		CorposCelestes.liberar();
+        this.atlasGeral.dispose();
+		for(Chunk chunk : chunks.values()) {
+			if(chunk.mesh != null) {
+				chunk.mesh.dispose();
+				meshReuso.free(chunk.mesh);
+			}
+		}
+		meshReuso.clear();
+		this.shader.dispose();
+		this.chunks.clear();
+		this.atlasUVs.clear();
 	}
 	// MANIPULAÇÃO DE BLOCOS:
 	public static int obterBlocoMundo(int x, int y, int z) {
@@ -261,22 +268,6 @@ public class Mundo {
 		int localZ = Math.floorMod(z, TAM_CHUNK);
 
 		return ChunkUtil.obterBloco(localX, y, localZ, chunk);
-	}
-	
-	public static Bloco addBloco(String nome, int tipo, int topo) {
-		return new Bloco(nome, tipo, topo);
-	}
-	
-	public static Bloco addBloco(String nome, int tipo, int topo, int lados) {
-		return new Bloco(nome, tipo, topo, lados);
-	}
-	
-	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo) {
-		return new Bloco(nome, tipo, topo, lados, baixo);
-	}
-	
-	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo, boolean alfa) {
-		return new Bloco(nome, tipo, topo, lados, baixo, alfa);
 	}
 
 	public static void defBlocoMundo(int x, int y, int z, int bloco) {
@@ -350,17 +341,19 @@ public class Mundo {
 		final Chunk chunkExistente = chunks.get(chave);
 
 		if(chunkExistente != null && chunkExistente.att) {
+			chunkExistente.mesh.dispose();
 			exec.submit(new Runnable() {
 					@Override
 					public void run() {
 						final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
-						final IntArrayUtil idcGeral = new IntArrayUtil();
+						final ShortArrayUtil idcGeral = new ShortArrayUtil();
 
 						ChunkUtil.attMesh(chunkExistente, vertsGeral, idcGeral);
 
 						Gdx.app.postRunnable(new Runnable() {
 								@Override
 								public void run() {
+									chunkExistente.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
 									ChunkUtil.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
 									matrizTmp.setToTranslation(chunkExistente.x * TAM_CHUNK, 0, chunkExistente.z * TAM_CHUNK);
 									chunkExistente.mesh.transform(matrizTmp);
@@ -387,7 +380,7 @@ public class Mundo {
 			}
 		}
 	}
-
+		
 	public void limparChunks(int chunkXPlayer, int chunkZPlayer) {
 		iterator = chunks.entrySet().iterator();
 
@@ -417,8 +410,8 @@ public class Mundo {
 					chunk.x = chave.x;
 					chunk.z = chave.z;
 
-					for (int lx = 0; lx < TAM_CHUNK; lx++) {
-						for (int lz = 0; lz < TAM_CHUNK; lz++) {
+					for(int lx = 0; lx < TAM_CHUNK; lx++) {
+						for(int lz = 0; lz < TAM_CHUNK; lz++) {
 
 							float v = (Mundo.s2D.ruidoFractal(
 								(chave.x * TAM_CHUNK + lx) * 0.0005f,
@@ -453,7 +446,6 @@ public class Mundo {
 							if(escolhido == null) {
 								escolhido = BiomasUtil.biomas.get(BiomasUtil.biomas.size() - 1);
 							}
-
 							if(escolhido != null) {
 								escolhido.gerarColuna(lx, lz, chunk);
 							}
@@ -461,7 +453,7 @@ public class Mundo {
 					}
 
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
-					final IntArrayUtil idcGeral = new IntArrayUtil();
+					final ShortArrayUtil idcGeral = new ShortArrayUtil();
 					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
 
 					Gdx.app.postRunnable(new Runnable() {
@@ -475,5 +467,22 @@ public class Mundo {
 						});
 				}
 			});
+	}
+	// API:
+	public static Bloco addBloco(String nome, int tipo, int topo) {
+		return addBloco(nome, tipo, topo, topo, topo, false, true);
+	}
+
+	public static Bloco addBloco(String nome, int tipo, int topo, int lados) {
+		return addBloco(nome, tipo, topo, lados, topo, false, true);
+	}
+
+	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo) {
+		return addBloco(nome, tipo, topo, lados, baixo, false, true);
+	}
+
+	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo, boolean alfa, boolean solido) {
+		ChunkUtil.blocos.add(new Bloco(nome, tipo, topo, lados, baixo, alfa, solido));
+		return ChunkUtil.blocos.get(tipo-1);
 	}
 }

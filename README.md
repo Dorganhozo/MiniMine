@@ -40,7 +40,7 @@ Reuso de objetos ChunkUtil.Chave.
 Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
-Compactação de dados, memória dinamica conforme a necessidade.
+Compressão baseada em paleta.
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.

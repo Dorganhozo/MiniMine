@@ -20,11 +20,15 @@ import com.badlogic.gdx.Gdx;
 import java.io.FileWriter;
 import com.badlogic.gdx.math.Matrix4;
 import com.minimine.cenas.Jogador;
+import java.io.FileReader;
+import java.util.List;
+import com.minimine.utils.arrays.FloatArrayUtil;
+import com.minimine.utils.arrays.ShortArrayUtil;
 
 public class ArquivosUtil {
 	public static void svMundo(Mundo mundo, Jogador jogador) {
 		try {
-			File pasta = new File(Inicio.externo+"/MiniMine");
+			File pasta = new File(Inicio.externo+"/MiniMine/mundos");
 			if(!pasta.exists()) pasta.mkdirs();
 
 			File arquivo = new File(pasta, mundo.nome+".mini");
@@ -38,7 +42,7 @@ public class ArquivosUtil {
 
 	public static void crMundo(Mundo mundo, Jogador jogador) {
 		try {
-			File arquivo = new File(Inicio.externo + "/MiniMine/"+mundo.nome+".mini");
+			File arquivo = new File(Inicio.externo + "/MiniMine/mundos/"+mundo.nome+".mini");
 			if(!arquivo.exists()) {
 				Mundo.carregado = true;
 				return;
@@ -53,6 +57,7 @@ public class ArquivosUtil {
 
 	public static void salvarMundo(OutputStream saida, int seed, Map<ChunkUtil.Chave, Chunk> chunksCarregados, Jogador jogador) throws IOException {
 		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(saida));
+		dos.writeInt(Inicio.versao);
 		// seed
 		dos.writeInt(seed);
 		// quantos chunks salvos
@@ -105,6 +110,10 @@ public class ArquivosUtil {
 
 	public static void carregarMundo(InputStream entrada, Mundo mundo, Jogador jogador) throws IOException {
 		DataInputStream dis = new DataInputStream(new BufferedInputStream(entrada));
+		int versao = dis.readInt();
+		if(Inicio.versao != versao) {
+			Gdx.app.log("ArquivosUtil", "[AVISO] a versão do mundo não é a mais atual");
+		}
 		// bota a seed
 		mundo.seed = dis.readInt();
 		// quantidade ds chumks
@@ -148,7 +157,7 @@ public class ArquivosUtil {
 				@Override
 				public void run() {
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil(); 
-					final IntArrayUtil idcGeral = new IntArrayUtil();
+					final ShortArrayUtil idcGeral = new ShortArrayUtil();
 
 					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);
 
@@ -180,7 +189,34 @@ public class ArquivosUtil {
         }
     }
 	
-	public static void escreverArquivo(String caminho, String texto) {
+	public static String ler(String caminho) {
+        criar(caminho);
+
+        StringBuilder sb = new StringBuilder();
+        FileReader fr = null;
+
+        try {
+            fr = new FileReader(new File(caminho));
+
+            char[] buff = new char[1024];
+            int tamanho = 0;
+
+            while((tamanho = fr.read(buff)) > 0) sb.append(new String(buff, 0, tamanho));
+        } catch(Exception e) {
+            e.printStackTrace();
+        } finally {
+            if(fr != null) {
+                try {
+                    fr.close();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return sb.toString();
+    }
+	
+	public static void escrever(String caminho, String texto) {
         criar(caminho);
         FileWriter escritor = null;
         try {
@@ -195,6 +231,57 @@ public class ArquivosUtil {
             } catch(Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+	
+	public static void delete(String caminho) {
+        File arquivo = new File(caminho);
+
+        if(!arquivo.exists()) return;
+        if(arquivo.isFile()) {
+            arquivo.delete();
+            return;
+        }
+        File[] arquivos = arquivo.listFiles();
+
+        if(arquivos != null) {
+            for(File subArquivo : arquivos) {
+                if(subArquivo.isDirectory()) {
+                    delete(subArquivo.getAbsolutePath());
+                }
+                if(subArquivo.isFile()) {
+                    subArquivo.delete();
+                }
+            }
+        }
+        arquivo.delete();
+    }
+	
+	public static void listar(String caminho, List<String> lista) {
+        File dir = new File(caminho);
+        if(!dir.exists() || dir.isFile()) return;
+
+        File[] listaArquivos = dir.listFiles();
+        if(listaArquivos == null || listaArquivos.length <= 0) return;
+
+        if(lista==null) return;
+        lista.clear();
+        for(File arquivo : listaArquivos) {
+            lista.add(arquivo.getName());
+        }
+    }
+
+    public static void listarAbs(String caminho, List<String> lista) {
+        File dir = new File(caminho);
+        if(!dir.exists() || dir.isFile()) return;
+
+        File[] listaArquivos = dir.listFiles();
+        if(listaArquivos==null || listaArquivos.length <= 0) return;
+
+        if(lista==null) return;
+        lista.clear();
+        for(File arquivo : listaArquivos) {
+            lista.add(arquivo.getAbsolutePath());
         }
     }
 	

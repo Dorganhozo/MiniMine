@@ -36,7 +36,7 @@ public class Menu implements Screen, InputProcessor {
 	
 	@Override
 	public void show() {
-		mundo.ciclo = false;
+		mundo.ciclo = true;
 		sb = new SpriteBatch(); 
 		
 		PerspectiveCamera camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -48,13 +48,11 @@ public class Menu implements Screen, InputProcessor {
 		
 		tela.camera = camera;
 		tela.modo = 0;
-		tela.camera.position.z = 200-32;
-		tela.camera.position.y = 100;
 		
 		ArquivosUtil.crMundo(mundo, tela);
 		
 		mundo.iniciar();
-
+		
 		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
 		Gdx.input.setInputProcessor(this);
 		
@@ -106,9 +104,12 @@ public class Menu implements Screen, InputProcessor {
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 		Gdx.gl.glCullFace(GL20.GL_BACK);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
+		
+		tela.att(0);
 	}
 	@Override
 	public void render(float delta) {
+		if(mundo.carregado) mundo.ciclo = false;
 		float luz = DiaNoiteUtil.luz;
 		if(luz < 0.1f) luz = 0f;
 		if(luz > 1f) luz = 1f;
@@ -134,6 +135,7 @@ public class Menu implements Screen, InputProcessor {
 			t.porFrame(delta, sb, fonte);
 		}
 		UI.attCamera(tela.camera, tela.yaw, tela.tom);
+		// UI.console(tela, sb, fonte, mundo);
 		sb.end();
 	}
 	@Override
@@ -149,6 +151,7 @@ public class Menu implements Screen, InputProcessor {
 	public void dispose() {
 		sb.dispose();
 		fonte.dispose();
+		mundo.liberar();
 	}
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
@@ -162,7 +165,9 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override public boolean touchDragged(int p, int p1, int p2) {return false;}
 	@Override public boolean touchUp(int p, int p1, int p2, int p3) {return false;}
-	@Override public void hide(){}
+	@Override public void hide() {
+		dispose();
+	}
 	@Override public void pause(){}
 	@Override public void resume(){}
 	@Override public boolean keyDown(int p){return false;}

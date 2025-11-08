@@ -26,11 +26,22 @@ public class Botao extends InterUtil.Objeto {
 		hitbox = new Rectangle(x, y, tamX, tamY);
 	}
 	
+	public Botao(Sprite sprite, float x, float y, float tamX, float tamY, String nome) {
+		super(nome);
+		this.sprite = sprite;
+		this.x = x; this.y = y;
+		this.tamX = tamX; this.tamY = tamY;
+		sprite.setPosition(x, y);
+		sprite.setSize(tamX, tamY);
+
+		hitbox = new Rectangle(x, y, tamX, tamY);
+	}
+	
 	public void aoAjustar(int vertical, int horizontal) {}
 	
 	@Override
 	public void porFrame(float delta, SpriteBatch sb, BitmapFont fonte) {
-		sprite.draw(sb);
+		if(sprite != null) sprite.draw(sb);
 	}
 	
 	public void defTextura(String nomeId) {

@@ -20,10 +20,13 @@ public class LuaAPI {
 	public static Globals globais;
 	public static Jogo tela;
 	public static String att;
+	public static LuaFunction aoAjustar, ajuste;
 	public static boolean pronto = true;
+	public static int v, h;
 	
 	public static void iniciar(Jogo principal) {
 		tela = principal;
+		String script = "";
 		
 		globais = JsePlatform.standardGlobals();
 		
@@ -36,13 +39,21 @@ public class LuaAPI {
 		globais.set("texutil", CoerceJavaToLua.coerce(new Texturas()));
 		globais.set("nuvens", CoerceJavaToLua.coerce(new NuvensUtil()));
 		
+		aoAjustar = new LuaFunction() {
+			public LuaValue call(LuaValue arg) {
+				ajuste = (LuaFunction) arg;
+				arg.call(LuaValue.valueOf(v), LuaValue.valueOf(h));
+				return LuaValue.NIL;
+			}
+		};
 		globais.set("log", new LuaFunction() {
 				@Override
 				public LuaValue call(LuaValue arg) {
-					tela.ui.logs.log(arg.tojstring());
+					tela.ui.logs.logs += arg.tojstring() + "\n";
 					return LuaValue.NIL;
 				}
 			});
+		globais.set("aoAjustar", aoAjustar);
 		File dir = new File(Inicio.externo+"/MiniMine/mods/");
 		if(!dir.exists()) {
 			dir.mkdirs();
@@ -51,13 +62,20 @@ public class LuaAPI {
 		String[] str = Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/arquivos.mini").readString().split("\n");
 		for(int i = 0; i < str.length; i++) {
 			if(str == null || str[i].equals("")) continue;
-			globais.loadfile(Inicio.externo+"/MiniMine/mods/"+str[i]).call();
+			script += ArquivosUtil.ler(Inicio.externo+"/MiniMine/mods/"+str[i]);
 		}
-		att = Inicio.externo+"/MiniMine/mods/att.lua";
+		globais.load(script, "script").call();
+		att = ArquivosUtil.ler(Inicio.externo+"/MiniMine/mods/att.lua");
 		if(!(new File(att).exists())) pronto = false;
 	}
 	
 	public static void att(float delta) {
-		if(pronto) globais.loadfile(att).call();
+		if(pronto) globais.load(att, "script").call();
+	}
+	
+	public static void ajustar(int ve, int ho) {
+		v = ve;
+		h = ho;
+		aoAjustar.call(ajuste);
 	}
 }

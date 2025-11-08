@@ -99,8 +99,8 @@ public class Inventario {
         if(slotDestino != -1) {
             // troca os itens(itemNoDestino pode ser null se o slot estiver vazio)
             Item itemNoDestino = itens[slotDestino];
-            itens[slotDestino] = itemSendoArrastado; // Coloca o item arrastado no destino
-            itens[slotOrigem] = itemNoDestino;      // Coloca o item do destino na origem
+            itens[slotDestino] = itemSendoArrastado; // coloca o item arrastado no destino
+            itens[slotOrigem] = itemNoDestino;      // coloca o item do destino na origem
         } else {
             // destino invalido(soltou fora de um slot): retorna o item para a origem
             itens[slotOrigem] = itemSendoArrastado;
@@ -145,7 +145,7 @@ public class Inventario {
 					if(b.tipo == tipo) {
 						nome = b.nome;
 						textura = Texturas.texs.get(b.nome+"_lado");
-						textura = textura == null ? textura = Texturas.texs.get(b.nome) : textura;
+						textura = textura == null ? Texturas.texs.get(b.nome) : textura;
 					}
 				}
 				itens[i] = new Item(tipo, nome, textura, quantidade);

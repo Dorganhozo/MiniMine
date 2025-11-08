@@ -39,7 +39,10 @@ mundo:addBloco(nome, tipo, texturaIdTopo) --  retorna o objeto e cria uma textur
 mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados) -- variacao
 mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, texturaIdBaixo) -- variacao
 mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, ehTransparente) -- variacao se é transparente, true, senao, false
-mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, ehTransparente, ehSolido) -- variacao se é solido, true, senao, false
+
+mundo.texturas:
+
+mundo.texturas:add(textura) -- adiciona uma textura, faça mundo.texturas(util:carregarTextura(caminho)) para adicionar uma, e depois chame mundo:iniciar() no final do script
 
 mundo.chunks:
 

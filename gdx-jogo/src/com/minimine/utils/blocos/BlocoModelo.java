@@ -1,7 +1,7 @@
 package com.minimine.utils.blocos;
 
-import com.minimine.utils.FloatArrayUtil;
-import com.minimine.utils.IntArrayUtil;
+import com.minimine.utils.arrays.FloatArrayUtil;
+import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.cenas.Mundo;
 
 public class BlocoModelo {
@@ -60,7 +60,7 @@ public class BlocoModelo {
         {{0,1}, {0,0}, {1,0}, {1,1}}  // -Z
     };
 
-    public static void addFace(int faceId, int atlasId, float x, float y, float z, float nivelLuz, FloatArrayUtil verts, IntArrayUtil idc) {
+    public static void addFace(int faceId, int atlasId, float x, float y, float z, float nivelLuz, FloatArrayUtil verts, ShortArrayUtil idc) {
         float[] atlasCoords = Mundo.atlasUVs.get(atlasId);
         if(atlasCoords == null) return;
 
@@ -75,7 +75,7 @@ public class BlocoModelo {
         int a = 255;
         int cor = (a << 24) | (b << 16) | (g << 8) | r;
 
-        int vertConta = verts.tam / 6;
+        short vertConta = (short)(verts.tam / 6);
         // add vertices:
         for(int i = 0; i < 4; i++) {
             float[] vert = FACE_VERTICES[faceId][i];
@@ -92,11 +92,11 @@ public class BlocoModelo {
             verts.add(Float.intBitsToFloat(cor));
         }
         // add indices(triangulos)
-        idc.add(vertConta + 0);
-        idc.add(vertConta + 1);
-        idc.add(vertConta + 2);
-        idc.add(vertConta + 2);
-        idc.add(vertConta + 3);
-        idc.add(vertConta + 0);
+        idc.add((short)(vertConta + 0));
+        idc.add((short)(vertConta + 1));
+        idc.add((short)(vertConta + 2));
+        idc.add((short)(vertConta + 2));
+        idc.add((short)(vertConta + 3));
+        idc.add((short)(vertConta + 0));
     }
 }

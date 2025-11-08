@@ -51,7 +51,7 @@ public class UI implements InputProcessor {
     public int telaH;
 	public Runtime rt;
 
-	public Logs logs;
+	public static Logs logs = new Logs();
 	
 	public float botaoTam = 140f;
 	public float espaco = 60f;
@@ -64,9 +64,6 @@ public class UI implements InputProcessor {
 		telaV = Gdx.graphics.getWidth();
 		telaH = Gdx.graphics.getHeight();
 
-		logs = new Logs();
-		Gdx.app.setApplicationLogger(logs);
-
         camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 18f, 10f);
         camera.lookAt(0, 0, 0);
@@ -78,7 +75,7 @@ public class UI implements InputProcessor {
 
 		sb = new SpriteBatch(); 
 
-		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 10);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 15);
 
         Gdx.input.setInputProcessor(this);
 		rt = Runtime.getRuntime();
@@ -341,6 +338,39 @@ public class UI implements InputProcessor {
 		}
 		sb.end();
 	}
+	
+	public static void console(Jogador jg, SpriteBatch sb, BitmapFont fonte, Mundo mundo) {
+		final float MB = 1048576.0f; // Conversão de bytes para Megabytes
+
+		// 1. Memória Nativa (Alocada pelo OpenGL/LibGDX)
+		// nativaUsada: O valor principal que contém o vazamento de 45.0 MB/chunk
+		float nativaUsada = Gdx.app.getNativeHeap() / MB;
+
+		// nativaLivre e nativaTotal são incertos sem acesso ao sistema operacional
+		// (O Gdx não fornece esses valores para o heap nativo)
+		float nativaTotal = 0.0f; 
+		float nativaLivre = 0.0f; 
+
+		// 2. Memória do Heap Java (Alocada pelo LibGDX)
+		// Gdx.app.getJavaHeap() é a memória USADA no heap Java (ex: seus 12.0 MB)
+		float usadaJava = Gdx.app.getJavaHeap() / MB;
+
+		// Sem Runtime, não podemos obter o Total e Livre de forma precisa.
+		// Usamos um valor aproximado (ou 0) para o total e o livre é a diferença.
+		// Para fins de preenchimento, usaremos o 'Usada' como o valor principal de interesse.
+		float total = 0.0f;
+		float livre = 0.0f; // Ou um valor default para evitar crash
+
+
+		// Renderização do console
+		fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
+									 "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
+									 "Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\n"+
+									 "Logs:\n%s",
+									 jg.posicao.x, jg.posicao.y, jg.posicao.z, Gdx.graphics.getFramesPerSecond(),
+									 Thread.activeCount(), livre, total, usadaJava, nativaLivre, nativaTotal, nativaUsada,
+									 mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, logs.logs), 50, Gdx.graphics.getHeight() - 100);
+	}
 
 	public static void attCamera(PerspectiveCamera camera, float yaw, float tom) {
 		float yawRad = yaw * MathUtils.degRad;
@@ -372,7 +402,7 @@ public class UI implements InputProcessor {
         sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);
     }
 
-    public void liberar() {
+    public static void liberar() {
 		for(Botao e : botoes.values()) {
 			e.aoFim();
 		}
@@ -504,7 +534,24 @@ public class UI implements InputProcessor {
 			});
 		return botoes.get(nome);
 	}
-
+	
+	public Botao addBotao(Sprite sprite, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2, final LuaFunction func3) {
+		botoes.put(nome, new Botao(sprite, x, y, escalaX, escalaY, nome) {
+				@Override
+				public void aoTocar(int telaX, int telaY, int p) {
+					func.call();
+				}
+				@Override
+				public void aoSoltar(int telaX, int telaY, int p) {
+					func2.call();
+				}
+				@Override
+				public void aoAjustar(int v, int h) {
+					func3.call(LuaValue.valueOf(v), LuaValue.valueOf(h));
+				}
+			});
+		return botoes.get(nome);
+	}
 	@Override public boolean keyDown(int p){return false;}
 	@Override public boolean keyTyped(char p){return false;}
 	@Override public boolean keyUp(int p){return false;}
