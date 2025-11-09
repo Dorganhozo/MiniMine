@@ -132,7 +132,6 @@ public class Crash extends Application {
                                     @Override
                                     public void run() {
                                         Toast.makeText(mCtx, e.toString(), Toast.LENGTH_LONG).show();
-					Log.e("OI", e.toString());
                                     }
                                 });
                         } else {

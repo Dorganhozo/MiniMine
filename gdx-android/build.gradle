@@ -34,9 +34,8 @@ android {
 }
 
 dependencies {   
-	//implementation 'androidx.appcompat:appcompat:1.1.0'
 	implementation project(":gdx-jogo")
 	implementation fileTree(dir: 'libs', include: ['*.jar'])
 	implementation fileTree(dir: '../gdx-jogo/libs', include: ['*.jar']) 
-	//testImplementation 'junit:junit:4.12'
 }
+

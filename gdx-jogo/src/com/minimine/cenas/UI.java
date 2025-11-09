@@ -55,7 +55,7 @@ public class UI implements InputProcessor {
 	public float espaco = 60f;
 
 	public static Jogador jogador;
-	public static boolean debug = true;
+	public static boolean debug = false;
 	public int fps = 0;
 	public static Debugador debugador;
 	
