@@ -24,9 +24,10 @@ import java.util.Map;
 import com.minimine.ui.Texto;
 import org.luaj.vm2.LuaValue;
 import com.minimine.utils.DiaNoiteUtil;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.minimine.Inicio;
 import com.minimine.utils.InterUtil;
+import com.badlogic.gdx.Input;
+import com.minimine.utils.ArquivosUtil;
+import com.minimine.Inicio;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -39,15 +40,13 @@ public class UI implements InputProcessor {
 	public Sprite spriteMira;
 	public int pontoEsq = -1;
     public int pontoDir = -1;
-    public Vector2 esqCentro = new Vector2();
-    public Vector2 esqPos = new Vector2();
-    public Vector2 ultimaDir = new Vector2();
+    public final Vector2 esqCentro = new Vector2();
+    public final Vector2 esqPos = new Vector2();
+    public final Vector2 ultimaDir = new Vector2();
 
 	public float sensi = 0.25f;
-
-	public final HashMap<Integer, CharSequence> toques = new HashMap<>();
- 
-	public Runtime rt;
+	public static final HashMap<Integer, CharSequence> toques = new HashMap<>();
+	public static Runtime rt = Runtime.getRuntime();
 
 	public static Logs logs = new Logs();
 	
@@ -57,6 +56,8 @@ public class UI implements InputProcessor {
 	public static Jogador jogador;
 	public static boolean debug = false;
 	public int fps = 0;
+	
+	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
 	
     public UI(Jogador jogador) {
         camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -68,10 +69,9 @@ public class UI implements InputProcessor {
 
 		sb = new SpriteBatch(); 
 
-		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 12);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 15);
 
         Gdx.input.setInputProcessor(this);
-		rt = Runtime.getRuntime();
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
@@ -80,15 +80,15 @@ public class UI implements InputProcessor {
 		configDpad();
     }
 	
-	private boolean chatAberto = false;
-	private String ultimaMensagem = "";
-	private List<String> mensagens = new ArrayList<String>();
+	public boolean chatAberto = false;
+	public String ultimaMensagem = "";
+	public List<String> mensagens = new ArrayList<String>();
 
 	public void abrirChat() {
 		if(chatAberto) return;
 		chatAberto = true;
 
-		Gdx.input.getTextInput(new com.badlogic.gdx.Input.TextInputListener() {
+		Gdx.input.getTextInput(new Input.TextInputListener() {
 				public void input(String texto) {
 					if(texto != null && texto.length() > 0) {
 						ultimaMensagem = texto;
@@ -275,17 +275,20 @@ public class UI implements InputProcessor {
 	public void att(float delta, Mundo mundo) {
 		attCamera();
 
-		Vector3 frente = new Vector3(camera.direction.x, 0, camera.direction.z).nor();  
-		Vector3 direita = new Vector3(frente.z, 0, -frente.x).nor();
+		frenteV.x = camera.direction.x;
+		frenteV.z = camera.direction.z;
+		frenteV.nor();  
+		direitaV.x = frenteV.z;
+		direitaV.z = -frenteV.x;
 
 		jogador.velocidade.x = 0;
 		jogador.velocidade.z = 0;
 		if(jogador.modo != 2) jogador.velocidade.y = 0;
 
-		if(this.frente) jogador.velocidade.add(new Vector3(frente).scl(jogador.velo));
-		if(this.tras)  jogador.velocidade.sub(new Vector3(frente).scl(jogador.velo));
-		if(this.esquerda) jogador.velocidade.add(new Vector3(direita).scl(jogador.velo));
-		if(this.direita) jogador.velocidade.sub(new Vector3(direita).scl(jogador.velo));
+		if(this.frente) jogador.velocidade.add(frenteV.scl(jogador.velo));
+		if(this.tras)  jogador.velocidade.sub(frenteV.scl(jogador.velo));
+		if(this.esquerda) jogador.velocidade.add(direitaV.scl(jogador.velo));
+		if(this.direita) jogador.velocidade.sub(direitaV.scl(jogador.velo));
 		if(this.cima) {
 			if(jogador.modo != 2 || jogador.noChao) {
 				jogador.velocidade.y = jogador.pulo; // pulo
@@ -318,18 +321,21 @@ public class UI implements InputProcessor {
 			
 			fps = Gdx.graphics.getFramesPerSecond();
 			
-			fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\nFPS: %d\n"+
-			"Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
+			fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\n"+
 			"Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\n\n"+
 			"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
-			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\n"+
-			"Logs:\n%s",
-			camera.position.x, camera.position.y, camera.position.z, fps,
-			Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
+			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\nTick: %.3f",
+			camera.position.x, camera.position.y, camera.position.z,
 			mundo.nome, (this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
 			this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
-			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo,
-			logs.logs), 50, Gdx.graphics.getHeight() - 100);
+			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick), 50, Gdx.graphics.getHeight() - 100);
+			
+			fonte.draw(sb, String.format("FPS: %d\n"+
+			"Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
+			"Logs:\n%s",
+			fps,
+			Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
+			logs.logs), Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
 		}
 		sb.end();
 	}
@@ -403,6 +409,7 @@ public class UI implements InputProcessor {
 		@Override
 		public void log(String string, String string1) {
 			logs += string + ": " + string1 + "\n";
+			ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 		}
 
 		@Override

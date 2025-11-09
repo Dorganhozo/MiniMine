@@ -33,7 +33,7 @@ public class Inventario {
 	
 	public Item itemFlutuante = null;
     public int slotOrigemFlutuante = -1;
-    private Vector2 posFlutuante = new Vector2(); // posicao visual do item flutuante
+    public Vector2 posFlutuante = new Vector2(); // posicao visual do item flutuante
 
     public Inventario() {
         texSlot = Texturas.texs.get("slot");
@@ -183,12 +183,9 @@ public class Inventario {
 				itemSprite.draw(UI.sb);
 
 				if(itens[i].quantidade > 1) {
-					BitmapFont o = UI.fonte;
-					UI.fonte.getData().setScale(1.5f);
 					UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
 					spritesHotbar[i].getX() + tamSlot - 15, 
 					spritesHotbar[i].getY() + 15);
-					UI.fonte = o;
 				}
 			}
 		}
@@ -205,12 +202,9 @@ public class Inventario {
 					itemSprite.draw(UI.sb);
 
 					if(itens[i].quantidade > 1) {
-						BitmapFont o = UI.fonte;
-						UI.fonte.getData().setScale(2f); 
 						UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
 						sprites[i].getX() + tamSlot - 15, 
 						sprites[i].getY() + 15);
-						UI.fonte = o;
 					}
 				}
 			}
@@ -225,12 +219,9 @@ public class Inventario {
 			itemSprite.draw(UI.sb);
 			// renderiza a quantidade
 			if(itemFlutuante.quantidade > 1) {
-				BitmapFont o = UI.fonte;
-				UI.fonte.getData().setScale(2f);
 				UI.fonte.draw(UI.sb, String.valueOf(itemFlutuante.quantidade), 
 				itemSprite.getX() + tamSlot - 15, 
 				itemSprite.getY() + 15);
-				UI.fonte = o;
 			}
 		}
 	}

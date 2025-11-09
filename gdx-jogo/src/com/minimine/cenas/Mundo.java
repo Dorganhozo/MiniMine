@@ -38,8 +38,8 @@ public class Mundo {
     // (atlas ID -> [u_min, v_min, u_max, v_max])
 	public static final List<Object> texturas = new ArrayList<>();
     public static Map<Integer, float[]> atlasUVs = new HashMap<>();
-	public static final Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
-	public static final Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
+	public static Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();
+	public static Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
 
 	public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
 	public static int seed = 0, RAIO_CHUNKS = 5;
@@ -48,8 +48,9 @@ public class Mundo {
 	
 	public ShaderProgram shader;
 	public static boolean neblina = false, carregado = false, ciclo = true, nuvens = true;
+	public static float tick = 1;
 
-	public static final ExecutorService exec = Executors.newFixedThreadPool(4);
+	public static ExecutorService exec;
 	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;
 
 	public static int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6 / 6;
@@ -144,6 +145,7 @@ public class Mundo {
 		if(nuvens && NuvensUtil.primeiraVez) NuvensUtil.iniciar();
 		if(ciclo) CorposCelestes.iniciar();
 		Gdx.app.log("Debug", "chunks: "+chunksTotais);
+		exec = Executors.newFixedThreadPool(8);
 	}
 		
 	public void criarAtlas() {
@@ -203,9 +205,7 @@ public class Mundo {
 			}
 		}
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
-		
 		if(ciclo) DiaNoiteUtil.att();
-		
 		if(nuvens) NuvensUtil.att(delta, jogador.posicao);
 		
 		shader.begin();
@@ -224,6 +224,7 @@ public class Mundo {
 		shader.end();
 		if(nuvens) NuvensUtil.att(jogador.camera.combined);
 		if(ciclo) CorposCelestes.att(jogador.camera.combined);
+		tick += DiaNoiteUtil.tempo_velo;
 	}
 
 	public boolean frustrum(Chunk chunk, Jogador jogador) {
@@ -248,6 +249,7 @@ public class Mundo {
 		this.shader.dispose();
 		this.chunks.clear();
 		this.atlasUVs.clear();
+		exec.shutdown();
 	}
 	// MANIPULAÇÃO DE BLOCOS:
 	public static int obterBlocoMundo(int x, int y, int z) {
@@ -314,8 +316,8 @@ public class Mundo {
 	}
 	// GERAÇÃO DE DADOS:
 	public void attChunks(int playerX, int playerZ) {
-		final int chunkX = playerX / TAM_CHUNK;
-		final int chunkZ = playerZ / TAM_CHUNK;
+		final int chunkX = playerX >> 4;
+		final int chunkZ = playerZ >> 4;
 
 		limparChunks(chunkX, chunkZ);
 
@@ -448,7 +450,6 @@ public class Mundo {
 							}
 						}
 					}
-
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
 					final ShortArrayUtil idcGeral = new ShortArrayUtil();
 					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);

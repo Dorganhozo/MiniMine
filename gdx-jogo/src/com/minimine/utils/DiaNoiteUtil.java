@@ -16,6 +16,7 @@ public class DiaNoiteUtil {
     public static final float[] corLua = {0.9f, 0.95f, 1.0f, 1.0f};
     public static float visibiSol = 1.0f;
     public static float visibiLua = 0.0f;
+	public static float[] posTmp = new float[3];
 
     public static void att() {
         tempo += tempo_velo;
@@ -82,8 +83,10 @@ public class DiaNoiteUtil {
     public static void aplicarShader(ShaderProgram shader) {
         shader.setUniformf("u_luzGlobal", luz);
         shader.setUniformf("u_tempoDia", tempo);
-        shader.setUniform3fv("u_posSol", new float[]{posicaoSol.x, posicaoSol.y, posicaoSol.z}, 0, 3);
-        shader.setUniform3fv("u_posLua", new float[]{posicaoLua.x, posicaoLua.y, posicaoLua.z}, 0, 3);
+		posTmp[0] =posicaoSol.x; posTmp[1] = posicaoSol.y; posTmp[2] = posicaoSol.z;
+        shader.setUniform3fv("u_posSol", posTmp, 0, 3);
+		posTmp[0] =posicaoLua.x; posTmp[1] = posicaoLua.y; posTmp[2] = posicaoLua.z;
+        shader.setUniform3fv("u_posLua", posTmp, 0, 3);
         shader.setUniform4fv("u_corSol", corSol, 0, 4);
         shader.setUniform4fv("u_corLua", corLua, 0, 4);
     }

@@ -15,6 +15,7 @@ refeito com LibGDX.
 10. Mods por Lua no armazenamento externo.
 11. Sistema de ciclo noturno e diário.
 12. Nuvens.
+13. salvamento dinamico de mundos binario.
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -52,7 +53,7 @@ Compressão baseada em paleta.
 Android 4 até Android 14.
 
 ## desempenho:
-FPS de 26 a 33 padrão testado com até 441 chunks (raio de 10 chunks).
+FPS de 40 a 50 padrão testado com até 121 chunks (raio de 5 por padrão).
 
 ## mods:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -60,6 +61,8 @@ você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo.
 att.lua // será chamado no loop principal
 
 e para adicionar mais de um arquivo individual, adicione o caminho relativo a pasta atual em *MiniMine/mods/arquivos.mini*. os arquivos são separados e carregados por quebra de linha.
+
+caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
 
 ## dispositivo usado para testes:
 Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.

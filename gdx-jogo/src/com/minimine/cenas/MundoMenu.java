@@ -31,6 +31,7 @@ public class MundoMenu implements Screen, InputProcessor {
     
     @Override
     public void show() {
+		ArquivosUtil.debug = true;
         sb = new SpriteBatch();
         fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
         Gdx.input.setInputProcessor(this);
@@ -144,7 +145,7 @@ public class MundoMenu implements Screen, InputProcessor {
 				public void input(final String nomeDigitado) {
 					if(nomeDigitado == null || nomeDigitado.trim().isEmpty()) return;
 
-					final String nome = nomeDigitado.trim().replaceAll("[^a-zA-Z0-9_\\-]", "_");
+					final String nome = nomeDigitado.trim(); //.replaceAll("[^a-zA-Z0-9_\\-]", "_");
 
 					Gdx.input.getTextInput(new Input.TextInputListener() {
 							@Override
@@ -213,7 +214,7 @@ public class MundoMenu implements Screen, InputProcessor {
     public boolean touchDown(int telaX, int telaY, int p, int b) {
         int y = Gdx.graphics.getHeight() - telaY;
 
-        List<Botao> botoesCopia = new ArrayList<>(this.botoes);
+        List<Botao> botoesCopia = this.botoes;
 
         for(Botao bt : botoesCopia) {
             if(bt.hitbox.contains(telaX, y)) {

@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.InputProcessor;
+import com.minimine.utils.Texturas;
 
 public class TesteUI implements Screen, InputProcessor {
 	public PerspectiveCamera camera;
@@ -36,7 +37,6 @@ public class TesteUI implements Screen, InputProcessor {
     public SpriteBatch sb;
     public BitmapFont fonte;
 
-    public Texture texEsquerda, texDireita, texCima, texBaixo, texMira;
     public Sprite spriteEsquerda, spriteDireita, spriteCima, spriteBaixo, spriteMira;
     public Rectangle rectEsquerda, rectDireita, rectCima, rectBaixo;
 
@@ -154,17 +154,11 @@ public class TesteUI implements Screen, InputProcessor {
 	}
 
     public void carregarTexturasDPad() {
-        texEsquerda = new Texture(Gdx.files.internal("ui/botao_e.png"));
-        texDireita = new Texture(Gdx.files.internal("ui/botao_d.png"));
-        texCima = new Texture(Gdx.files.internal("ui/botao_f.png"));
-        texBaixo = new Texture(Gdx.files.internal("ui/botao_t.png"));
-        texMira = new Texture(Gdx.files.internal("ui/mira.png"));
-		
-        spriteEsquerda = new Sprite(texEsquerda);
-        spriteDireita = new Sprite(texDireita);
-        spriteCima = new Sprite(texCima);
-        spriteBaixo = new Sprite(texBaixo);
-        spriteMira = new Sprite(texMira);
+        spriteEsquerda = new Sprite(Texturas.texs.get("botao_e"));
+        spriteDireita = new Sprite(Texturas.texs.get("botao_d"));
+        spriteCima = new Sprite(Texturas.texs.get("botao_f"));
+        spriteBaixo = new Sprite(Texturas.texs.get("botao_t"));
+        spriteMira = new Sprite(Texturas.texs.get("mira"));
 
         float botaoTam = 140f;
         spriteEsquerda.setSize(botaoTam, botaoTam);
@@ -282,11 +276,6 @@ public class TesteUI implements Screen, InputProcessor {
         modelo.dispose();
         sb.dispose();
         fonte.dispose();
-        texEsquerda.dispose();
-        texDireita.dispose();
-        texCima.dispose();
-        texBaixo.dispose();
-        texMira.dispose();
     }
 
     @Override public void hide() {}

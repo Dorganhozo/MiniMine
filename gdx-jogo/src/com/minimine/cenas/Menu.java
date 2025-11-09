@@ -32,26 +32,26 @@ public class Menu implements Screen, InputProcessor {
 	public static float botaoTam = 130;
 	
 	public static Jogador tela = new Jogador();
-	public Mundo mundo = new Mundo();
+	public static Mundo mundo = new Mundo();
 	
-	@Override
-	public void show() {
-		textos = new ArrayList<>();
-		botoes = new ArrayList<>();
-		mundo.ciclo = true;
-		sb = new SpriteBatch(); 
-		
+	static {
 		PerspectiveCamera camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 18f, 10f);
         camera.lookAt(0, 0, 0);
         camera.near = 0.1f;
         camera.far = 400f;
         camera.update();
-		
+
 		tela.camera = camera;
 		tela.modo = 0;
-		
-		ArquivosUtil.crMundo(mundo, tela);
+	}
+	
+	@Override
+	public void show() {
+		textos = new ArrayList<>();
+		botoes = new ArrayList<>();
+		mundo.ciclo = true;
+		sb = new SpriteBatch();
 		
 		mundo.iniciar();
 		

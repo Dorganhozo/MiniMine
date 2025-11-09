@@ -38,7 +38,7 @@ public class Jogador {
 	
 	public int blocoSele = 0;
 	public CharSequence item = "Ar";
-	public static final float ALCANCE = 6f;
+	public static int ALCANCE = 6;
 	public Inventario inv;
 	
 	public float yaw = 180f, tom = -20f;

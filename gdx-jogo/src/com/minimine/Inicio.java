@@ -24,7 +24,7 @@ public class Inicio extends Game {
 	@Override
 	public void create() {
 		Gdx.app.setApplicationLogger(UI.logs);
-		defTela(Cenas.menu);
+		defTela(Cenas.intro);
 	}
 
 	public static void defTela(Screen tela) {
@@ -51,7 +51,6 @@ public class Inicio extends Game {
 			UI.liberar();
 			NuvensUtil.liberar();
 			CorposCelestes.liberar();
-			Mundo.exec.shutdown();
 		} catch(Exception e) {
 			Gdx.app.log("Inicio", "[ERRO] ao liberar: "+e);
 		}

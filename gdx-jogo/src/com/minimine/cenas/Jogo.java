@@ -15,6 +15,7 @@ import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.CorposCelestes;
+import com.minimine.Inicio;
 
 public class Jogo implements Screen {
 	public UI ui;
@@ -30,11 +31,12 @@ public class Jogo implements Screen {
 	public void show() {
 		mundo.ciclo = true;
 		ui = new UI(jogador);
+		
 		// net = new Net(Net.SERVIDOR_MODO);
 		
-		ArquivosUtil.crMundo(mundo, jogador);
-		
 		LuaAPI.iniciar(this);
+
+		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		
 		mundo.iniciar();
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
@@ -89,12 +91,20 @@ public class Jogo implements Screen {
 		
 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 		ui.att(delta, mundo);
+		if(mundo.tick > 0.01) {
+			mundo.exec.submit(new Runnable() {
+				@Override
+				public void run() {
+					ArquivosUtil.svMundo(mundo, jogador);
+				}
+			});
+			mundo.tick = 0;
+		}
     }
 
     @Override
     public void dispose() {
 		mundo.carregado = false;
-		ArquivosUtil.svMundo(mundo, jogador);
 		mundo.liberar();
 		net.liberar();
     }
