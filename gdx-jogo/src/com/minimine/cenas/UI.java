@@ -321,21 +321,39 @@ public class UI implements InputProcessor {
 			
 			fps = Gdx.graphics.getFramesPerSecond();
 			
-			fonte.draw(sb, String.format("X: %.1f, Y: %.1f, Z: %.1f\n"+
-			"Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\n\n"+
-			"Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n"+
-			"Raio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\nTick: %.3f",
-			camera.position.x, camera.position.y, camera.position.z,
-			mundo.nome, (this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), this.jogador.inv.slotSelecionado, this.jogador.item,
-			this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
-			mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick), 50, Gdx.graphics.getHeight() - 100);
-			
-			fonte.draw(sb, String.format("FPS: %d\n"+
-			"Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n"+
-			"Logs:\n%s",
-			fps,
-			Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
-			logs.logs), Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
+			String[] logsArr = logs.logs.split("\n");
+			StringBuilder construtorLogs = new StringBuilder();
+
+// Pegar os últimos 10 registros de log (ou menos se não houver muitos)
+			int inicio = Math.max(0, logsArr.length - 10);
+			for (int i = inicio; i < logsArr.length; i++) {
+				construtorLogs.append(logsArr[i]).append("\n");
+			}
+			String logsTexto = construtorLogs.toString();
+
+// Desenhar informações do jogador e mundo
+			fonte.draw(sb, String.format(
+						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
+						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\n\n" +
+						   "Controles:\nDireita: %b\nEsquerda: %b\nFrente: %b\nTrás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
+						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\nTick: %.3f",
+						   camera.position.x, camera.position.y, camera.position.z,
+						   mundo.nome, 
+						   (this.jogador.modo == 0 ? "espectador" : this.jogador.modo == 1 ? "criativo" : "sobrevivencia"), 
+						   this.jogador.inv.slotSelecionado, this.jogador.item,
+						   this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
+						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick), 
+					   50, Gdx.graphics.getHeight() - 100);
+
+// Desenhar informações de sistema
+			fonte.draw(sb, String.format(
+						   "FPS: %d\n" +
+						   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n" +
+						   "Logs:\n%s",
+						   fps,
+						   Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
+						   logsTexto), 
+					   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
 		}
 		sb.end();
 	}

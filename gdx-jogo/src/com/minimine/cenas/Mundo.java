@@ -126,10 +126,10 @@ public class Mundo {
 		ChunkUtil.blocos.add(new Bloco("grama", 1, 0, 1, 2));
 		ChunkUtil.blocos.add(new Bloco("terra", 2, 2));
 		ChunkUtil.blocos.add(new Bloco("pedra", 3, 3));
-		ChunkUtil.blocos.add(new Bloco("agua", 4, 4, false));
+		ChunkUtil.blocos.add(new Bloco("agua", 4, 4, false, false, true));
 		ChunkUtil.blocos.add(new Bloco("areia", 5, 5));
 		ChunkUtil.blocos.add(new Bloco("tronco", 6, 6, 7));
-		ChunkUtil.blocos.add(new Bloco("folha", 7, 8, true, false));
+		ChunkUtil.blocos.add(new Bloco("folha", 7, 8, true, false, true));
 	}
 	
 	public void iniciar() {
@@ -180,7 +180,6 @@ public class Mundo {
 				px.drawPixmap(tmp, 0, 0);
 				tmp.dispose();
 			}
-
 			atlasPx.drawPixmap(px, x, y);
 
 			float u1 = (float)x / atlasLarg;
@@ -223,7 +222,7 @@ public class Mundo {
 		}	
 		shader.end();
 		if(nuvens) NuvensUtil.att(jogador.camera.combined);
-		if(ciclo) CorposCelestes.att(jogador.camera.combined);
+		if(ciclo) CorposCelestes.att(jogador.camera.combined, jogador.posicao);
 		tick += DiaNoiteUtil.tempo_velo;
 	}
 

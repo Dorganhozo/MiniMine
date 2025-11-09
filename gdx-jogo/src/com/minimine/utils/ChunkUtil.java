@@ -10,7 +10,6 @@ import java.util.Objects;
 import com.minimine.cenas.Mundo;
 import com.badlogic.gdx.utils.Pool;
 import java.util.Arrays;
-import com.minimine.utils.blocos.BlocoTipo;
 import com.minimine.utils.blocos.BlocoModelo;
 import java.util.List;
 import com.minimine.cenas.Bloco;
@@ -67,7 +66,7 @@ public class ChunkUtil {
 					int blocoId = obterBloco(x, y, z, chunk);
 					if(blocoId == 0) continue;
 
-					BlocoTipo blocoTipo = BlocoTipo.criar(blocoId);
+					Bloco blocoTipo = Bloco.criar(blocoId);
 					if(blocoTipo == null) continue;
 
 					lidarFacesDoBloco(x, y, z, blocoTipo,
@@ -79,7 +78,7 @@ public class ChunkUtil {
 		Mundo.chaveReuso.free(chave);
 	}
 
-	public static void lidarFacesDoBloco(int x, int y, int z, BlocoTipo blocoTipo,
+	public static void lidarFacesDoBloco(int x, int y, int z, Bloco blocoTipo,
 										 Chunk chunk, Chunk chunkXP, Chunk chunkXN, 
 										 Chunk chunkZP, Chunk chunkZN, FloatArrayUtil verts, ShortArrayUtil idc) {
 		float posX = x * 1f;
@@ -117,66 +116,82 @@ public class ChunkUtil {
 		}
 	}
 
-	public static boolean deveRenderFaceTopo(int x, int y, int z, Chunk chunk, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceTopo(int x, int y, int z, Chunk chunk, Bloco blocoAtual) {
 		if(y >= Mundo.Y_CHUNK) return true;
-		BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
-		return adjacente == null || !adjacente.solido || blocoAtual.transparente;
+		Bloco adjacente = obterblocoTipo(x, y, z, chunk, null);
+		return adjacente == null || !deveOcultarFace(blocoAtual, adjacente);
 	}
 
-	public static boolean deveRenderFaceBaixo(int x, int y, int z, Chunk chunk, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceBaixo(int x, int y, int z, Chunk chunk, Bloco blocoAtual) {
 		if(y < 0) return true;
-		BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
-		return adjacente == null || !adjacente.solido || blocoAtual.transparente;
+		Bloco adjacente = obterblocoTipo(x, y, z, chunk, null);
+		return adjacente == null || !deveOcultarFace(blocoAtual, adjacente);
 	}
 
-	public static boolean deveRenderFaceXPositivo(int x, int y, int z, Chunk chunk, Chunk chunkXP, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceXPositivo(int x, int y, int z, Chunk chunk, Chunk chunkXP, Bloco blocoAtual) {
 		if(x >= Mundo.TAM_CHUNK) {
 			if(chunkXP == null) return true;
-			BlocoTipo adjacente = obterblocoTipo(0, y, z, chunkXP, null);
+			Bloco adjacente = obterblocoTipo(0, y, z, chunkXP, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
-			BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
-			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
+			Bloco adjacente = obterblocoTipo(x, y, z, chunk, null);
+			return adjacente == null || !deveOcultarFace(blocoAtual, adjacente);
 		}
 	}
 
-	public static boolean deveRenderFaceXNegativo(int x, int y, int z, Chunk chunk, Chunk chunkXN, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceXNegativo(int x, int y, int z, Chunk chunk, Chunk chunkXN, Bloco blocoAtual) {
 		if(x < 0) {
 			if(chunkXN == null) return true;
-			BlocoTipo adjacente = obterblocoTipo(Mundo.TAM_CHUNK - 1, y, z, chunkXN, null);
+			Bloco adjacente = obterblocoTipo(Mundo.TAM_CHUNK - 1, y, z, chunkXN, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
-			BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
-			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
+			Bloco adjacente = obterblocoTipo(x, y, z, chunk, null);
+			return adjacente == null || !deveOcultarFace(blocoAtual, adjacente);
 		}
 	}
 
-	public static boolean deveRenderFaceZPositivo(int x, int y, int z, Chunk chunk, Chunk chunkZP, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceZPositivo(int x, int y, int z, Chunk chunk, Chunk chunkZP, Bloco blocoAtual) {
 		if(z >= Mundo.TAM_CHUNK) {
 			if (chunkZP == null) return true;
-			BlocoTipo adjacente = obterblocoTipo(x, y, 0, chunkZP, null);
+			Bloco adjacente = obterblocoTipo(x, y, 0, chunkZP, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
-			BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
-			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
+			Bloco adjacente = obterblocoTipo(x, y, z, chunk, null);
+			return adjacente == null || !deveOcultarFace(blocoAtual, adjacente);
 		}
 	}
 
-	public static boolean deveRenderFaceZNegativo(int x, int y, int z, Chunk chunk, Chunk chunkZN, BlocoTipo blocoAtual) {
+	public static boolean deveRenderFaceZNegativo(int x, int y, int z, Chunk chunk, Chunk chunkZN, Bloco blocoAtual) {
 		if(z < 0) {
 			if(chunkZN == null) return true;
-			BlocoTipo adjacente = obterblocoTipo(x, y, Mundo.TAM_CHUNK - 1, chunkZN, null);
+			Bloco adjacente = obterblocoTipo(x, y, Mundo.TAM_CHUNK - 1, chunkZN, null);
 			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
 		} else {
-			BlocoTipo adjacente = obterblocoTipo(x, y, z, chunk, null);
-			return adjacente == null || !adjacente.solido || blocoAtual.transparente;
+			Bloco adjacente = obterblocoTipo(x, y, z, chunk, null);
+			return adjacente == null || !deveOcultarFace(blocoAtual, adjacente);
 		}
 	}
+	
+	public static boolean deveOcultarFace(Bloco blocoAtual, Bloco blocoAdjacente) {
+		// ocultam faces entre si
+		if(blocoAtual.cullingAlto && blocoAdjacente.cullingAlto) {
+			return true;
+		}
+		// normais se ocultam
+		if(blocoAtual.solido && blocoAdjacente.solido) {
+			return true;
+		}
+		// outros transparentes não se ocultam entre tipos diferentes
+		if(blocoAtual.transparente && blocoAdjacente.transparente) {
+			return blocoAtual.tipo == blocoAdjacente.tipo;
+		}
+		return false;
+	}
 
-	public static BlocoTipo obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
+	public static Bloco obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
 			int blocoId = obterBloco(x, y, z, chunk);
-			return blocoId == 0 ? null : BlocoTipo.criar(blocoId);
+			return blocoId == 0 ? null : Bloco.criar(blocoId);
 		}
 		if(chunkAdj != null) {
 			int adjX = x;
@@ -189,7 +204,7 @@ public class ChunkUtil {
 			else if(z >= Mundo.TAM_CHUNK) adjZ = 0;
 
 			int blocoId = obterBloco(adjX, y, adjZ, chunkAdj);
-			return blocoId == 0 ? null : BlocoTipo.criar(blocoId);
+			return blocoId == 0 ? null : Bloco.criar(blocoId);
 		}
 		return null;
 	}

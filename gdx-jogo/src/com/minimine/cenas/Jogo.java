@@ -107,6 +107,7 @@ public class Jogo implements Screen {
 		mundo.carregado = false;
 		mundo.liberar();
 		net.liberar();
+		CorposCelestes.liberar();
     }
 	
 	@Override

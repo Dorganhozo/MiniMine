@@ -82,34 +82,42 @@ public class CorposCelestes {
         return mesh;
     }
 
-    public static void att(Matrix4 matrizCamera) {
-        if(shaderCelestial == null || !shaderCelestial.isCompiled()) return;
+    public static void att(Matrix4 matrizCamera, Vector3 posicaoCamera) {
+		if(shaderCelestial == null || !shaderCelestial.isCompiled()) return;
 
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-        
-        shaderCelestial.begin();
-        shaderCelestial.setUniformMatrix("u_projPos", matrizCamera);
-        // renderizar sol(se visivel)
-        if(DiaNoiteUtil.visibiSol > 0.01f) {
-            shaderCelestial.setUniform3fv("u_posCorpo",
-			new float[]{DiaNoiteUtil.posicaoSol.x, DiaNoiteUtil.posicaoSol.y, DiaNoiteUtil.posicaoSol.z}, 0, 3);
-            shaderCelestial.setUniformf("u_tam", 8f); // sol maior
-            shaderCelestial.setUniform4fv("u_cor", DiaNoiteUtil.corSol, 0, 4);
-            meshSol.render(shaderCelestial, GL20.GL_TRIANGLES);
-        }
-        // renderizar lua(se visivel)
-        if(DiaNoiteUtil.visibiLua > 0.01f) {
-            shaderCelestial.setUniform3fv("u_posCorpo", 
-			new float[]{DiaNoiteUtil.posicaoLua.x, DiaNoiteUtil.posicaoLua.y, DiaNoiteUtil.posicaoLua.z}, 0, 3);
-            shaderCelestial.setUniformf("u_tam", 6f); // lua menor
-            shaderCelestial.setUniform4fv("u_cor", DiaNoiteUtil.corLua, 0, 4);
-            meshLua.render(shaderCelestial, GL20.GL_TRIANGLES);
-        }
-        shaderCelestial.end();
-        // restaura estado do blend
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-    }
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+		shaderCelestial.begin();
+		shaderCelestial.setUniformMatrix("u_projPos", matrizCamera);
+
+		float[] posSolRelativa = {
+			DiaNoiteUtil.posicaoSol.x + posicaoCamera.x,
+			DiaNoiteUtil.posicaoSol.y + posicaoCamera.y, 
+			DiaNoiteUtil.posicaoSol.z + posicaoCamera.z
+		};
+		float[] posLuaRelativa = {
+			DiaNoiteUtil.posicaoLua.x + posicaoCamera.x,
+			DiaNoiteUtil.posicaoLua.y + posicaoCamera.y,
+			DiaNoiteUtil.posicaoLua.z + posicaoCamera.z
+		};
+		// renderizar sol(se visivel)
+		if(DiaNoiteUtil.visibiSol > 0.01f) {
+			shaderCelestial.setUniform3fv("u_posCorpo", posSolRelativa, 0, 3);
+			shaderCelestial.setUniformf("u_tam", 8f);
+			shaderCelestial.setUniform4fv("u_cor", DiaNoiteUtil.corSol, 0, 4);
+			meshSol.render(shaderCelestial, GL20.GL_TRIANGLES);
+		}
+		// renderizar lua(se visivel)
+		if(DiaNoiteUtil.visibiLua > 0.01f) {
+			shaderCelestial.setUniform3fv("u_posCorpo", posLuaRelativa, 0, 3);
+			shaderCelestial.setUniformf("u_tam", 6f);
+			shaderCelestial.setUniform4fv("u_cor", DiaNoiteUtil.corLua, 0, 4);
+			meshLua.render(shaderCelestial, GL20.GL_TRIANGLES);
+		}
+		shaderCelestial.end();
+		Gdx.gl.glDisable(GL20.GL_BLEND);
+	}
 
     public static void liberar() {
         meshSol.dispose();

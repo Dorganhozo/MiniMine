@@ -23,6 +23,7 @@ import com.minimine.utils.ArquivosUtil;
 import com.minimine.utils.ChunkUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.InterUtil;
+import com.minimine.utils.CorposCelestes;
 
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;
@@ -154,6 +155,7 @@ public class Menu implements Screen, InputProcessor {
 		sb.dispose();
 		fonte.dispose();
 		mundo.liberar();
+		CorposCelestes.liberar();
 	}
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
