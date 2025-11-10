@@ -145,7 +145,7 @@ public class MundoMenu implements Screen, InputProcessor {
 				public void input(final String nomeDigitado) {
 					if(nomeDigitado == null || nomeDigitado.trim().isEmpty()) return;
 
-					final String nome = nomeDigitado.trim(); //.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+					final String nome = nomeDigitado.trim();
 
 					Gdx.input.getTextInput(new Input.TextInputListener() {
 							@Override
@@ -156,12 +156,10 @@ public class MundoMenu implements Screen, InputProcessor {
 								} catch(Exception e) {
 									seed = (int)(Math.random() * 1000000);
 								}
-								Mundo mundo = new Mundo();
-								mundo.nome = nome;
-								mundo.seed = seed;
-
-								Jogador jogador = new Jogador();
-								ArquivosUtil.svMundo(mundo, jogador);
+								Mundo.nome = nome;
+								Mundo.seed = seed;
+								
+								Inicio.defTela(Cenas.jogo);
 
 								carregarMundos();
 								criarInterface();

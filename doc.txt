@@ -1,4 +1,14 @@
-variaveis manipulaveis e metodos:
+basico:
+
+vá até a pasta /MiniMine/mods/
+
+adicione um arquivo .lua e escreva seu codigo nele. "script.lua" por exemplo.
+
+abra o arquivo "arquivos.mini" e escreva o caminho de seu script nele.
+
+inicie um mundo e veja seu script ser executado. Adicione mais scripts colocando seus caminhos separados por quebra de linha.
+
+API publica:
 
 jogador:
 
@@ -14,6 +24,7 @@ jogador.blocoSele -- o tipo do bloco em id que o jogador tem selecionado
 jogador.modo -- 0 = espectador, 1 = criativo, 2 = sobeevivencia
 jogador.ALCANCE -- alcance de destruicao e criacao de blocos
 jogador.noChao -- booleano
+jogador.naAgua -- booleano
 jogador:criarModelo3D() -- carrega o modelo padrão do jogador
 
 jogador.inv:
@@ -95,6 +106,8 @@ ui:addTexto(texto, x, y) -- define e retorna um objeto Texto
 ui:addTexto(texto, x, y, func_aoAjustarATela(v, h)) -- variacao
 ui:subsTexto(nomeId, textoObj) -- substitui um texto pelo objeto
 ui:rmTexto(nomeId) -- remove um texto
+ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto)) -- cria um dialogo que executa uma função ao apertar enter
+ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto), func_cancelar) -- variação que executa uma função ao cancelar
 
 ui.botoes:
 
@@ -121,6 +134,17 @@ util:
 util:carregarTextura(nomeId, caminho) -- carrega uma textura e guarda ela com um ID, além de retornar o objeto Texture
 util:obterModeloGLTF(caminho) -- retorna um ModelInstance da LibGDX de um arquivo .gltf
 util:carregarFonte(caminho, tamanhoInteiro) -- retorna a fonte bitmap, ui.fonte = util:carregarFonte(...) para alterar a fonte
+
+nuvens.RAIO_VISIVEL -- distancia que as nuvens cobrem ao redor do jogador
+nuvens.NUM_NUVENS -- quantidade de nuvens reutilizaveis no mundo
+
+ciclo:
+
+ciclo.tempo -- tempo do dia noite, fica sempre entre 1.0 e 0.0
+ciclo.tempo_velo -- velocidade que influencia o ciclo diario e a velocidade das nuvens
+ciclo:ehDia() -- retorna se é dia booleano
+ciclo:ehNoite() -- retorna se é noite booleano
+ciclo.obterFatorTrancisao()
 
 mapeamento de IDs:
 
@@ -175,3 +199,7 @@ indices de biomas padrão:
 0 = "floresta"
 1 = "padrao"
 2 = "deserto"
+
+sobre especificações:
+
+todos os caminhos devem ser relativos a pasta "/MiniMine/mods/".

@@ -29,12 +29,12 @@ public class Jogador {
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
 	public float largura = 0.6f, altura = 1.8f, profundidade = 0.6f;
-	public boolean noChao = true;
+	public boolean noChao = true, naAgua = false;
 	public BoundingBox hitbox = new BoundingBox();
 	public static final BoundingBox blocoBox = new BoundingBox();
 	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();
 	
-	public static final float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
+	public static float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
 	
 	public int blocoSele = 0;
 	public CharSequence item = "Ar";
@@ -44,7 +44,7 @@ public class Jogador {
 	public float yaw = 180f, tom = -20f;
 	
 	public void criarModelo3D() {
-		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelo.gltf"));
+		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelos/jogador.gltf"));
 		this.modelo = new ModelInstance(asset.scene.model);
 	}
 	
@@ -123,11 +123,18 @@ public class Jogador {
 			for(int y = minY; y <= maxY; y++) {
 				for(int z = minZ; z <= maxZ; z++) {
 					int bloco = Mundo.obterBlocoMundo(x, y, z);
-
+					
+					naAgua = false;
+					
 					if(bloco > 0) {
 						blocoBox.set(minVec.set(x, y, z), maxVec.set(x + 1, y + 1, z + 1));
-						if(bloco == 4) return false;
-						if(hitbox.intersects(blocoBox)) return true;
+						if(bloco == 4) {
+							naAgua = true;
+							return false;
+						}
+						if(hitbox.intersects(blocoBox)) {
+							return true;
+						}
 					}
 				}
 			}
@@ -136,16 +143,10 @@ public class Jogador {
 	}
 	
 	public void att(float delta) {
-		if(blocoSele == 0) item = "Ar";
-		else if(blocoSele == 1) item = "Grama";
-		else if(blocoSele == 2) item = "Terra";
-		else if(blocoSele == 3) item = "Pedra";
-		else if(blocoSele == 4) item = "Agua";
-		else if(blocoSele == 4) item = "Areia";
-		else if(blocoSele == 4) item = "Tronco";
-		else if(blocoSele == 4) item = "Folha";
 		// gravidade no sobrevivencia
-		if(modo == 2 && !noChao) { 
+		if(naAgua) GRAVIDADE = -10;
+		else GRAVIDADE = -30;
+		if(modo == 2 && !noChao || naAgua) { 
             this.velocidade.y += GRAVIDADE * delta;
 
 			if(this.velocidade.y < VELO_MAX_QUEDA) {

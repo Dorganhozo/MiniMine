@@ -12,7 +12,6 @@ import com.minimine.utils.CorposCelestes;
 import com.minimine.cenas.Mundo;
 
 public class Inicio extends Game {
-	public static int versao = 00001; // 0.0.0.0.1
 	public static String externo;
 	public static boolean telaNova = false;
 	public static Screen telaAtual;

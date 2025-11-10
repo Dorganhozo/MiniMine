@@ -77,7 +77,7 @@ public class UI implements InputProcessor {
 		this.jogador.inv = new Inventario();
 		
 		// abrirChat();
-		configDpad();
+		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 	
 	public boolean chatAberto = false;
@@ -89,6 +89,7 @@ public class UI implements InputProcessor {
 		chatAberto = true;
 
 		Gdx.input.getTextInput(new Input.TextInputListener() {
+			@Override
 				public void input(String texto) {
 					if(texto != null && texto.length() > 0) {
 						ultimaMensagem = texto;
@@ -187,10 +188,6 @@ public class UI implements InputProcessor {
 		}
 		return true;
 	}
-	
-	public void configDpad() {
-		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-	}
 
 	public void criarBotoesPadrao() {
 		if(!botoes.isEmpty()) return;
@@ -273,7 +270,7 @@ public class UI implements InputProcessor {
 	}
 
 	public void att(float delta, Mundo mundo) {
-		attCamera();
+		attCamera(camera, jogador.yaw, jogador.tom);
 
 		frenteV.x = camera.direction.x;
 		frenteV.z = camera.direction.z;
@@ -290,7 +287,7 @@ public class UI implements InputProcessor {
 		if(this.esquerda) jogador.velocidade.add(direitaV.scl(jogador.velo));
 		if(this.direita) jogador.velocidade.sub(direitaV.scl(jogador.velo));
 		if(this.cima) {
-			if(jogador.modo != 2 || jogador.noChao) {
+			if(jogador.modo != 2 || jogador.noChao || jogador.naAgua) {
 				jogador.velocidade.y = jogador.pulo; // pulo
 				jogador.noChao = false;
 			}
@@ -323,15 +320,13 @@ public class UI implements InputProcessor {
 			
 			String[] logsArr = logs.logs.split("\n");
 			StringBuilder construtorLogs = new StringBuilder();
-
-// Pegar os últimos 10 registros de log (ou menos se não houver muitos)
-			int inicio = Math.max(0, logsArr.length - 10);
-			for (int i = inicio; i < logsArr.length; i++) {
+			
+			int inicio = Math.max(0, logsArr.length - 15);
+			for(int i = inicio; i < logsArr.length; i++) {
 				construtorLogs.append(logsArr[i]).append("\n");
 			}
 			String logsTexto = construtorLogs.toString();
 
-// Desenhar informações do jogador e mundo
 			fonte.draw(sb, String.format(
 						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
 						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\n\n" +
@@ -345,7 +340,6 @@ public class UI implements InputProcessor {
 						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick), 
 					   50, Gdx.graphics.getHeight() - 100);
 
-// Desenhar informações de sistema
 			fonte.draw(sb, String.format(
 						   "FPS: %d\n" +
 						   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n" +
@@ -368,10 +362,6 @@ public class UI implements InputProcessor {
 
 		camera.direction.set(cx, cy, cz).nor();
 		camera.up.set(0, 1, 0);
-	}
-	
-	public void attCamera() {
-		attCamera(this.camera, jogador.yaw, jogador.tom);
 	}
 
     public void ajustar(int v, int h) {
@@ -421,7 +411,8 @@ public class UI implements InputProcessor {
 		}
 		
 		public void log(String msg) {
-			Gdx.app.log("", msg);
+			logs += msg + "\n";
+			ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 		}
 
 		@Override
@@ -539,6 +530,22 @@ public class UI implements InputProcessor {
 				}
 			});
 		return botoes.get(nome);
+	}
+	
+	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func) {
+		abrirDialogo(titulo, padrao, msg, func, null);
+	}
+	
+	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2) {
+		Gdx.input.getTextInput(new Input.TextInputListener() {
+				@Override
+				public void input(String texto) {
+					if(func != null) func.call(LuaValue.valueOf(texto));
+				}
+				public void canceled() {
+					if(func2 != null) func2.call();
+				}
+			}, titulo, padrao, msg);
 	}
 	@Override public boolean keyDown(int p){return false;}
 	@Override public boolean keyTyped(char p){return false;}

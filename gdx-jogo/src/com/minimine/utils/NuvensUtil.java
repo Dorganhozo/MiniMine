@@ -22,6 +22,8 @@ public class NuvensUtil {
     public static Vector3 centro= new Vector3();
     public static boolean primeiraVez = true;
 	
+	public static boolean mod = false;
+	
     public static String vert = 
     "attribute vec3 a_pos;\n" +
     "uniform mat4 u_projPos;\n" +
@@ -45,7 +47,7 @@ public class NuvensUtil {
 
     public static void iniciar() {
         nuvensPos = new float[NUM_NUVENS * 4];
-        shaderNuvens = new ShaderProgram(vert, frag);
+        if(!mod) shaderNuvens = new ShaderProgram(vert, frag);
 
         if(!shaderNuvens.isCompiled()) {
             Gdx.app.log("Shader", "[ERRO]: " + shaderNuvens.getLog());

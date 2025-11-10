@@ -16,6 +16,8 @@ import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.CorposCelestes;
 import com.minimine.Inicio;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 
 public class Jogo implements Screen {
 	public UI ui;
@@ -46,8 +48,11 @@ public class Jogo implements Screen {
 		
 		mb = new ModelBatch();
 		ambiente = new Environment();
+		ambiente.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
+		ambiente.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
 		
 		pronto = true;
+		jgs.add(jogador);
 	}
 
     @Override
@@ -68,7 +73,7 @@ public class Jogo implements Screen {
 		
 		if(pronto) mundo.att(delta, jogador);
 		
-		if(jgs.size() > 1) {
+		if(jgs.size() >= 1) {
 			for(Jogador jo : jgs) {
 				mb.begin(ui.camera);
 				if(jo.modelo == null) jo.criarModelo3D();

@@ -15,13 +15,13 @@ import com.minimine.utils.BiomasUtil;
 import com.minimine.utils.ChunkUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.NuvensUtil;
+import com.minimine.utils.DiaNoiteUtil;
 
 public class LuaAPI {
 	public static Globals globais;
 	public static Jogo tela;
 	public static String att;
 	public static LuaFunction aoAjustar, ajuste;
-	public static boolean pronto = true;
 	public static int v, h;
 	
 	public static void iniciar(Jogo principal) {
@@ -38,6 +38,8 @@ public class LuaAPI {
 		globais.set("chunkutil", CoerceJavaToLua.coerce(new ChunkUtil()));
 		globais.set("texutil", CoerceJavaToLua.coerce(new Texturas()));
 		globais.set("nuvens", CoerceJavaToLua.coerce(new NuvensUtil()));
+		globais.set("ciclo", CoerceJavaToLua.coerce(new DiaNoiteUtil()));
+		globais.set("gdx", CoerceJavaToLua.coerce(new Gdx()));
 		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
@@ -50,6 +52,15 @@ public class LuaAPI {
 				@Override
 				public LuaValue call(LuaValue arg) {
 					tela.ui.logs.logs += arg.tojstring() + "\n";
+					return LuaValue.NIL;
+				}
+			});
+		globais.set("rescripts", new LuaFunction() {
+				@Override
+				public LuaValue call() {
+					att = "";
+					ajuste = null;
+					iniciar(tela);
 					return LuaValue.NIL;
 				}
 			});
@@ -66,11 +77,10 @@ public class LuaAPI {
 		}
 		globais.load(script, "script").call();
 		att = ArquivosUtil.ler(Inicio.externo+"/MiniMine/mods/att.lua");
-		if(!(new File(att).exists())) pronto = false;
 	}
 	
 	public static void att(float delta) {
-		if(pronto) globais.load(att, "script").call();
+		globais.load(att, "script").call();
 	}
 	
 	public static void ajustar(int ve, int ho) {

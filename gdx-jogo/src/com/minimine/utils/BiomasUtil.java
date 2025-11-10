@@ -13,12 +13,6 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 public class BiomasUtil {
 	public static List<Bioma> biomas = new ArrayList<>();
 	
-	public float[] obterClima(int localX, int y, int localZ) {
-		float temp = 0f, umidade = 0f;
-		
-		return new float[]{ temp, umidade };
-	}
-	
 	static {
 		biomas.add(new Bioma() {
 				@Override
@@ -61,7 +55,7 @@ public class BiomasUtil {
 						else bloco = 2;
 						if(bloco != 0) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 					}
-					if(Mundo.s2D.ruido(px, pz) > 0.7f) EstruturaUtil.gerarArvore(lx,altura,  lz, chunk);
+					if(Mundo.s2D.ruido(px, pz) > 0.7f) BiomasUtil.gerarArvore(lx,altura,  lz, chunk);
 				}
 			});
 		biomas.add(new Bioma() {
@@ -178,6 +172,37 @@ public class BiomasUtil {
 					gerarColuna.call(LuaValue.valueOf(localX), LuaValue.valueOf(localZ), CoerceJavaToLua.coerce(chunk));
 				}
 			});
+	}
+	
+	public static void gerarArvore(int x, int y, int z, Chunk chunk) {
+		// tronco
+		for(int i = 0; i < 5; i++) {
+			if(dentroLimite(x, y + i, z)) {
+				ChunkUtil.defBloco(x, y + i, z, (byte)6, chunk);
+			}
+		}
+		// copa(duas camadas e topo)
+		for(int dy = 4; dy <= 6; dy++) {
+			int raio = dy == 4 ? 2 : (dy == 5 ? 1 : 0);
+			for(int dx = -raio; dx <= raio; dx++) {
+				for(int dz = -raio; dz <= raio; dz++) {
+					if(Mat.abs(dx) + Mat.abs(dz) <= raio + 1) {
+						int xx = x + dx;
+						int yy = y + dy;
+						int zz = z + dz;
+						if(dentroLimite(xx, yy, zz)) {
+							ChunkUtil.defBloco(xx, yy, zz, (byte)7, chunk);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public static boolean dentroLimite(int x, int y, int z) {
+		return x >= 0 && x < Mundo.TAM_CHUNK &&
+			z >= 0 && z < Mundo.TAM_CHUNK &&
+			y >= 0 && y < Mundo.Y_CHUNK;
 	}
 	
 	public static class Bioma {

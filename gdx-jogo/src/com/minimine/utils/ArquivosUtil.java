@@ -346,13 +346,11 @@ public class ArquivosUtil {
 		try {    
 			if(!arquivo.exists()) arquivo.createNewFile();    
 		} catch(Exception e) {    
-			e.printStackTrace();    
+			Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());    
 		}    
 	}    
 
 	public static String ler(String caminho) {    
-		criar(caminho);    
-
 		StringBuilder sb = new StringBuilder();    
 		FileReader fr = null;    
 
@@ -370,7 +368,7 @@ public class ArquivosUtil {
 				try {    
 					fr.close();    
 				} catch(Exception e) {    
-					e.printStackTrace();    
+					Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());
 				}    
 			}    
 		}    
@@ -390,7 +388,7 @@ public class ArquivosUtil {
 			try {    
 				if(escritor != null) escritor.close();    
 			} catch(Exception e) {    
-				e.printStackTrace();    
+				Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());    
 			}    
 		}    
 	}    
@@ -410,9 +408,7 @@ public class ArquivosUtil {
 				if(subArquivo.isDirectory()) {    
 					delete(subArquivo.getAbsolutePath());    
 				}    
-				if(subArquivo.isFile()) {    
-					subArquivo.delete();    
-				}    
+				if(subArquivo.isFile()) subArquivo.delete();    
 			}    
 		}    
 		arquivo.delete();    

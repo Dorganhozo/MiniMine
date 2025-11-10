@@ -70,8 +70,8 @@ public class ChunkUtil {
 					if(blocoTipo == null) continue;
 
 					lidarFacesDoBloco(x, y, z, blocoTipo,
-									  chunk, chunkXP, chunkXN, chunkZP, chunkZN,
-									  vertsGeral, idcGeral);
+					chunk, chunkXP, chunkXN, chunkZP, chunkZN,
+					vertsGeral, idcGeral);
 				}
 			}
 		}
@@ -79,8 +79,8 @@ public class ChunkUtil {
 	}
 
 	public static void lidarFacesDoBloco(int x, int y, int z, Bloco blocoTipo,
-										 Chunk chunk, Chunk chunkXP, Chunk chunkXN, 
-										 Chunk chunkZP, Chunk chunkZN, FloatArrayUtil verts, ShortArrayUtil idc) {
+	Chunk chunk, Chunk chunkXP, Chunk chunkXN, 
+	Chunk chunkZP, Chunk chunkZN, FloatArrayUtil verts, ShortArrayUtil idc) {
 		float posX = x * 1f;
 		float posY = y * 1f;
 		float posZ = z * 1f;
@@ -173,6 +173,7 @@ public class ChunkUtil {
 	}
 	
 	public static boolean deveOcultarFace(Bloco blocoAtual, Bloco blocoAdjacente) {
+		if(blocoAdjacente == null) return false;
 		// ocultam faces entre si
 		if(blocoAtual.cullingAlto && blocoAdjacente.cullingAlto) {
 			return true;
@@ -248,8 +249,8 @@ public class ChunkUtil {
 			int b = obterBloco(x, y, z, chunk);
 			return  b != 0 && b != 7;
 		}
-		int mundoX = chunk.x * Mundo.TAM_CHUNK + x;
-		int mundoZ = chunk.z * Mundo.TAM_CHUNK + z;
+		int mundoX = (chunk.x >> 4) + x;
+		int mundoZ = (chunk.z >> 4) + z;
 
 		int b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
 

@@ -7,7 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.minimine.cenas.Mundo;
 
 public class Texturas {
-	public static Map<CharSequence, Texture> texs = new HashMap<>();
+	public static Map<CharSequence, Texture> texs = new TexLista<>();
 	
 	static {
 		try {
@@ -31,6 +31,19 @@ public class Texturas {
 			Texturas.texs.put("botao_opcao", new Texture(Gdx.files.internal("ui/botao_opcao.png")));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: "+e);
+		}
+	}
+	
+	public static class TexLista extends HashMap {
+
+		@Override
+		public Object get(Object chave) {
+			Object o = super.get(chave);
+			if(o == null) {
+				Gdx.app.log("Texturas", "[ERRO] em: "+chave);
+				return super.get("slot");
+			}
+			return o;
 		}
 	}
 }
