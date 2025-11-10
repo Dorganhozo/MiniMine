@@ -17,8 +17,9 @@ public class Inicio extends Game {
 	public static boolean telaNova = false;
 	public static Screen telaAtual;
 
-	public Inicio(String externo) {
+	public Inicio(String externo, Debugador debugador) {
 		Inicio.externo = externo;
+		UI.debugador = debugador;
 	}
 
 	@Override

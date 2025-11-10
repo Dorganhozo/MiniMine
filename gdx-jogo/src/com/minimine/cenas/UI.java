@@ -18,7 +18,8 @@ import java.util.List;
 import java.util.ArrayList;
 import com.minimine.utils.Texturas;
 import com.minimine.ui.Botao;
-import android.os.Debug;
+//import android.os.Debug;
+import com.minimine.Debugador;
 import org.luaj.vm2.LuaFunction;
 import java.util.Map;
 import com.minimine.ui.Texto;
@@ -56,6 +57,7 @@ public class UI implements InputProcessor {
 	public static Jogador jogador;
 	public static boolean debug = false;
 	public int fps = 0;
+	public static Debugador debugador;
 	
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
 	
@@ -316,8 +318,10 @@ public class UI implements InputProcessor {
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
 			float total = rt.totalMemory() >> 20;
-			float nativaLivre = Debug.getNativeHeapFreeSize() >> 20;
-			float nativaTotal = Debug.getNativeHeapSize() >> 20;
+			//float nativaLivre = Debug.getNativeHeapFreeSize() >> 20;
+			//float nativaTotal = Debug.getNativeHeapSize() >> 20;
+			float nativaLivre = debugador.getNativeHeapFreeSize() >> 20;
+			float nativaTotal = debugador.getNativeHeapSize() >> 20;
 			
 			fps = Gdx.graphics.getFramesPerSecond();
 			

@@ -12,6 +12,6 @@ public class MainActivity extends AndroidApplication {
         
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         
-        initialize(new Inicio(Sistema.externo), cfg);
+        initialize(new Inicio(Sistema.externo, new DebugadorDoAndroid()), cfg);
     }
 }
