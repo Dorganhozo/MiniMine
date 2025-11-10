@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="/gdx-jogo/src" exported="true"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="src" exported="true" path="/gdx-jogo" combineaccessrules="false"/>
 	<classpathentry kind="output" path="bin/classes"/>

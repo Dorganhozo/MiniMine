@@ -59,9 +59,9 @@ public class InterUtil {
 		}
 		public void porFrame(float delta, SpriteBatch sb, BitmapFont fonte) {}
 		public void aoAjustar(int v, int h) {}
-		default public void aoTocar(int telaX, int telaY, int p) {}
-		default public void aoSoltar(int telaX, int telaY, int p) {}
-		default public void aoArrastar(int telaX, int telaY, int p) {}
-		default public void aoFim() {}
+		public void aoTocar(int telaX, int telaY, int p) {}
+		public void aoSoltar(int telaX, int telaY, int p) {}
+		public void aoArrastar(int telaX, int telaY, int p) {}
+		public void aoFim() {}
 	}
 }
