@@ -14,6 +14,5 @@ public final class Chunk {
     public int paletaTam = 0;    // quantos entries existem
     public int paletaBits = 1; // bits para indice da paleta(1..8)
 	public int[] paleta = new int[1 << this.paletaBits]; // array de valores reais(ids de blocos)
-	public volatile boolean dadosProntos = false;
-	public volatile boolean meshEmConstrucao = false;
+	public volatile boolean fazendo = false;
 }

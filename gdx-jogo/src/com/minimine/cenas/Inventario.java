@@ -141,12 +141,14 @@ public class Inventario {
 			if(itens[i] == null) {
 				CharSequence nome = "Ar";
 				Texture textura = texSlot;
-				
+
 				for(Bloco b : ChunkUtil.blocos) {
 					if(b.tipo == tipo) {
 						nome = b.nome;
-						textura = Texturas.texs.get(b.nome+"_lado");
-						textura = textura == null ? Texturas.texs.get(b.nome) : textura;
+						textura = Texturas.texs.tentar(b.nome + "_lado");
+						if(textura == null) textura = Texturas.texs.tentar(b.nome);
+						if(textura == null) textura = Texturas.texs.obter(b.nome + "_topo");
+						break;
 					}
 				}
 				itens[i] = new Item(tipo, nome, textura, quantidade);

@@ -23,8 +23,10 @@ public class LuaAPI {
 	public static String att;
 	public static LuaFunction aoAjustar, ajuste;
 	public static int v, h;
+	public static String pacote;
 	
 	public static void iniciar(Jogo principal) {
+		pacote = Inicio.externo+"/MiniMine/mods/";
 		tela = principal;
 		String script = "";
 		
@@ -40,7 +42,9 @@ public class LuaAPI {
 		globais.set("nuvens", CoerceJavaToLua.coerce(new NuvensUtil()));
 		globais.set("ciclo", CoerceJavaToLua.coerce(new DiaNoiteUtil()));
 		globais.set("gdx", CoerceJavaToLua.coerce(new Gdx()));
-		
+		globais.set("lua", CoerceJavaToLua.coerce(new LuaAPI()));
+		globais.set("arquivos", CoerceJavaToLua.coerce(new ArquivosUtil()));
+			
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
 				ajuste = (LuaFunction) arg;
@@ -58,8 +62,8 @@ public class LuaAPI {
 		globais.set("rescripts", new LuaFunction() {
 				@Override
 				public LuaValue call() {
-					att = "";
 					ajuste = null;
+					att = "";
 					iniciar(tela);
 					return LuaValue.NIL;
 				}
@@ -87,5 +91,9 @@ public class LuaAPI {
 		v = ve;
 		h = ho;
 		if(ajuste != null) aoAjustar.call(ajuste);
+	}
+	
+	public static void exec(String codigo) {
+		globais.load(codigo, "script").call();
 	}
 }

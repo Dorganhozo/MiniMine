@@ -47,19 +47,26 @@ public class ChunkUtil {
         float atenuacao = 1.0f - (blocosAcima * 0.15f);
         return Math.max(LUZ_AMBIENTE, LUZ_SOL * atenuacao);
     }
-
+	
 	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
 		attLuz(chunk);
-		Chave chave = Mundo.chaveReuso.obtain();
-		chave.x = chunk.x + 1; chave.z = chunk.z;
-		Chunk chunkXP = Mundo.chunks.get(chave);
-		chave.x = chunk.x - 1; chave.z = chunk.z;
-		Chunk chunkXN = Mundo.chunks.get(chave);
-		chave.x = chunk.x; chave.z = chunk.z + 1;
-		Chunk chunkZP = Mundo.chunks.get(chave);
-		chave.x = chunk.x; chave.z = chunk.z - 1;
-		Chunk chunkZN = Mundo.chunks.get(chave);
+		
+		Chunk chunkXP = null, chunkXN = null, chunkZP = null, chunkZN = null;
+		ChunkUtil.Chave chave = null;
+		
+		synchronized(Mundo.chunks) {
+			chave = new ChunkUtil.Chave(chunk.x + 1, chunk.z);
+			chunkXP = Mundo.chunks.get(chave);
 
+			chave = new ChunkUtil.Chave(chunk.x - 1, chunk.z);
+			chunkXN = Mundo.chunks.get(chave);
+
+			chave = new ChunkUtil.Chave(chunk.x, chunk.z + 1);
+			chunkZP = Mundo.chunks.get(chave);
+
+			chave = new ChunkUtil.Chave(chunk.x, chunk.z - 1);
+			chunkZN = Mundo.chunks.get(chave);
+		}
 		for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
 			for(int y = 0; y < Mundo.Y_CHUNK; y++) {
 				for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
@@ -75,7 +82,6 @@ public class ChunkUtil {
 				}
 			}
 		}
-		Mundo.chaveReuso.free(chave);
 	}
 
 	public static void lidarFacesDoBloco(int x, int y, int z, Bloco blocoTipo,

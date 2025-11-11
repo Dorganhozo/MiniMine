@@ -52,7 +52,6 @@ public class Jogo implements Screen {
 		ambiente.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
 		
 		pronto = true;
-		jgs.add(jogador);
 	}
 
     @Override

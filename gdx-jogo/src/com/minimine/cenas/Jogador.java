@@ -37,9 +37,9 @@ public class Jogador {
 	public static float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
 	
 	public int blocoSele = 0;
-	public CharSequence item = "Ar";
+	public CharSequence item = "ar";
 	public static int ALCANCE = 6;
-	public Inventario inv;
+	public Inventario inv = new Inventario();
 	
 	public float yaw = 180f, tom = -20f;
 	
@@ -59,8 +59,6 @@ public class Jogador {
 	}
 	
 	public void interagirBloco() {
-		if(inv.itens[inv.slotSelecionado] != null) blocoSele = inv.itens[inv.slotSelecionado].tipo;
-		else blocoSele = 0;
 		Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
 			Gdx.graphics.getHeight() / 2f);
@@ -80,7 +78,6 @@ public class Jogador {
 			if(bloco > 0) {
 				if(blocoSele == 0) {
 					if(modo == 2) inv.addItem(bloco, 1);
-					if(inv.itens[inv.slotSelecionado] != null) blocoSele = inv.itens[inv.slotSelecionado].tipo;
 					Mundo.defBlocoMundo(x, y, z, 0);
 				} else {
 					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
@@ -94,8 +91,6 @@ public class Jogador {
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, blocoSele);
 						
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
-						
-						if(inv.itens[inv.slotSelecionado] == null) blocoSele = 0;
 					}
 				}
 				return;
@@ -144,8 +139,11 @@ public class Jogador {
 	
 	public void att(float delta) {
 		// gravidade no sobrevivencia
-		if(naAgua) GRAVIDADE = -10;
-		else GRAVIDADE = -30;
+		if(naAgua) {
+			GRAVIDADE = -10;
+		} else {
+			GRAVIDADE = -30;
+		}
 		if(modo == 2 && !noChao || naAgua) { 
             this.velocidade.y += GRAVIDADE * delta;
 

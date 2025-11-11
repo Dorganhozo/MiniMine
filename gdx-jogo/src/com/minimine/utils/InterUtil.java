@@ -45,7 +45,7 @@ public class InterUtil {
 		FreeTypeFontGenerator gerador = new FreeTypeFontGenerator(caminho.equals("ui/fontes/pixel.ttf") ? Gdx.files.internal(caminho) : Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho));
 		FreeTypeFontGenerator.FreeTypeFontParameter args = new FreeTypeFontGenerator.FreeTypeFontParameter();
 		args.size = tamanho;
-		args.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+-/×%^*#$&|=,.:!?(){}<>@\"'~áãâçéêèēóõôò";
+		args.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_?!π√×|§°←↑↓→€¥¢£+-/×%^*#$&|=,.:;!?(){}[]<>@\"'~áãâçéêèēóõôò";
 		BitmapFont fonte = gerador.generateFont(args);
 		gerador.dispose();
 		return fonte;

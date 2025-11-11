@@ -40,6 +40,7 @@ jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
 
 mundo:
 
+mundo.nome -- nome do mundo atual
 mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
 mundo.seed
 mundo.Y_CHUNK -- tamanho vertical das chuhks
@@ -128,6 +129,7 @@ local bloco = 1 -- grama
 chunkutil:defBloco(localX, 0, localZ, bloco, chunk) -- define um bloco na chunk
 end)
 biomas:subsBioma(func_inicio, func_geracao, indice) -- substitui um bioma pelo indice
+biomas:gerarArvore(localX, y, localZ, chunk) -- gera uma arvore dentro dos limites da chunk
 
 util:
 
@@ -146,6 +148,28 @@ ciclo:ehDia() -- retorna se é dia booleano
 ciclo:ehNoite() -- retorna se é noite booleano
 ciclo.obterFatorTrancisao()
 
+texutil.texs:
+
+texutil.texs:size()
+texutil.texs:get(nome)
+
+lua:
+
+lua:exec(codigoTexto) -- executa um codigo Lua em tempo de execução
+lua.v -- tamanho vertical da tela
+lua.h -- tamanho horizontal da tela
+lua.pacote -- caminho absoluto da pasta mods
+
+arquivos:
+
+-- esses metodos dependem do nome do objeto Mundo passado
+arquivos:sv(mundo, jogador) -- salva o mundo(pode lagar)
+arquivos:cr(mundo, jogador) -- carrega o mundo(pode lagar também)
+arquivos:ler(lua.pacote .. "arquivo.txt") -- retorna o conteudo em string
+arquivos:escrever(lua.pacote .. "arquivo.txt", "texto) -- escreve uma string no caminho ou cria um arquivo com esse conteudo
+arquivos:existe(lua.pacote .. "arquivo.txt") -- retorna booleano
+arquivos:listar(lua.pacote) -- retorna um objeto List<String> com os nomes de arquivos e pastas no caminho
+
 mapeamento de IDs:
 
 blocos:
@@ -157,6 +181,10 @@ blocos:
 5 = areia
 6 = tronco de madeira
 7 = bloco de folhas
+8 = tabua de madeira
+9 = cacto
+10 = vidro
+11 = tocha
 
 texturas internas:
 
@@ -171,6 +199,11 @@ blocos:
 "tronco_topo"
 "tronco_lado"
 "folha"
+"tabua_madeira"
+"cacto_topo"
+"cacto_lado"
+"vidro"
+"tocha"
 
 interface:
 
@@ -180,8 +213,10 @@ interface:
 "botao_e"
 "mira"
 "clique"
+"ataque"
 "slot"
 "botao_opcao"
+"receita"
 
 nomes de botões:
 
@@ -192,14 +227,19 @@ nomes de botões:
 "frente"
 "tras"
 "acao"
+"ataque"
 "inv"
+"receita"
 
 indices de biomas padrão:
 
 0 = "floresta"
 1 = "padrao"
 2 = "deserto"
+3 = "deserto_cactos"
 
 sobre especificações:
 
 todos os caminhos devem ser relativos a pasta "/MiniMine/mods/".
+
+a unica classe que quebra essa regra é "arquivos".

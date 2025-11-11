@@ -37,6 +37,7 @@ public class Intro implements Screen {
 
     public float cuboX = 0;
     public float cuboY = 0;
+	public int contagem = 0;
 	
     // camera
     public float yaw = 180f;
@@ -44,7 +45,7 @@ public class Intro implements Screen {
 
     public int telaV;
     public int telaH;
-	public int frame = 0;
+	public int frame = 0, frame2 = 0;
 
     @Override
     public void show() {
@@ -81,13 +82,9 @@ public class Intro implements Screen {
 			@Override
 			public void run() {
 				ArquivosUtil.debug = false;
-				if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/novo mundo.mini")) ArquivosUtil.crMundo(Menu.mundo, Menu.tela);
-				Gdx.app.postRunnable(new Runnable() {
-						@Override
-						public void run() {
-							Inicio.defTela(Cenas.menu);
-						}
-				});
+				if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/novo mundo.mini")) {
+					ArquivosUtil.crMundo(Menu.mundo, Menu.tela);
+				}
 			}
 		}).start();
     }
@@ -109,6 +106,7 @@ public class Intro implements Screen {
 
 		sb.begin();  
 		
+		fonte.draw(sb, "100/"+contagem+"%",Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 1.5f);  
 		fonte.draw(sb, mensagem,Gdx.graphics.getWidth() / 2.5f, Gdx.graphics.getHeight() / 2);  
 		
 		if(frame % 10 == 0) {
@@ -116,6 +114,13 @@ public class Intro implements Screen {
 			else if(mensagem.equals("Carregando.")) mensagem = "Carregando..";
 			else if(mensagem.equals("Carregando..")) mensagem = "Carregando...";
 			else mensagem = "Carregando";
+			
+			if(contagem >= 100) {
+				Inicio.defTela(Cenas.menu);
+			}
+		}
+		if(frame2 % 60 == 0) {
+			contagem++;
 		}
 		frame++;
 		sb.end();  

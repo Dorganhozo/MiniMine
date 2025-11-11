@@ -146,6 +146,52 @@ public class BiomasUtil {
 					}
 				}
 			});
+		biomas.add(new Bioma() {
+				@Override
+				public void aoIniciar() {
+					nome[0] = "deserto_cacto";
+					status[0] = 0.3f;
+					status[1] = 0.5f;
+					raridade[0] = 0.27f;
+				}
+				@Override
+				public void gerarColuna(int lx, int lz, Chunk chunk) {
+					int px = chunk.x * Mundo.TAM_CHUNK + lx;
+					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
+					int bloco = 0;
+					// ruido continental: define onde ha oceanos e terra
+					float continente = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.0003f, 1.0f, 4, 0.5f);
+					// ruido de detalhe local
+					float detalhe = Mundo.s2D.ruidoFractal(px * 0.015f, pz * 0.015f, 2.0f, 2, 0.5f);
+					// ruido de escala intermediaria para morros
+					float relevo = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.03f, 1.0f, 3, 0.55f);
+					// continente controla a intensidade do relevo: regiões "oceanicas" ficam planas
+					float base = continente;
+					if(base < -0.25f) base = -0.25f; // evita profundidades exageradas
+					float intensi = (base + 0.3f) * 1.6f;
+					if(intensi < 0f) intensi = 0f;
+					// elevação final misturando tudo
+					float alturaNorm = (relevo * intensi) + (detalhe * 0.2f);
+					// curva exponencial para picos altos e vales suaves
+					if(alturaNorm > 0) alturaNorm = (float)Math.pow(alturaNorm, 1.8f);
+					else alturaNorm = -((float)Math.pow(-alturaNorm, 0.8f));
+
+					int altura = (int)(50 + alturaNorm * 160f);
+					if(altura < 30) altura = 30;
+					if(altura > Mundo.Y_CHUNK - 2) altura = Mundo.Y_CHUNK - 2;
+					int limiteY = Math.max(altura, 50);
+					for(int y = 0; y < limiteY; y++) {
+						if(y < altura - 8) bloco = 3;
+						else if(y <= altura) bloco = 5;
+						else bloco = 0;
+
+						if(y < 45 && bloco == 0) bloco = 4;
+
+						if(bloco != 0) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+						if(Mundo.s2D.ruido(px, pz) > 0.5f) BiomasUtil.gerarCacto(lx,altura,  lz, chunk);
+					}
+				}
+			});
 	}
 	
 	public static void addBioma(final LuaFunction inicio, final LuaFunction gerarColuna) {
@@ -178,7 +224,7 @@ public class BiomasUtil {
 		// tronco
 		for(int i = 0; i < 5; i++) {
 			if(dentroLimite(x, y + i, z)) {
-				ChunkUtil.defBloco(x, y + i, z, (byte)6, chunk);
+				ChunkUtil.defBloco(x, y + i, z, 6, chunk);
 			}
 		}
 		// copa(duas camadas e topo)
@@ -191,12 +237,17 @@ public class BiomasUtil {
 						int yy = y + dy;
 						int zz = z + dz;
 						if(dentroLimite(xx, yy, zz)) {
-							ChunkUtil.defBloco(xx, yy, zz, (byte)7, chunk);
+							ChunkUtil.defBloco(xx, yy, zz, 7, chunk);
 						}
 					}
 				}
 			}
 		}
+	}
+	
+	public static void gerarCacto(int lx, int y, int lz, Chunk chunk) {
+		ChunkUtil.defBloco(lx, y, lz, 9, chunk);
+		ChunkUtil.defBloco(lx, y+1, lz, 9, chunk);
 	}
 
 	public static boolean dentroLimite(int x, int y, int z) {
@@ -208,9 +259,8 @@ public class BiomasUtil {
 	public static class Bioma {
 		public float[] raridade = new float[1];
 		public CharSequence[] nome = new CharSequence[1];
-		public float[] status = new float[2]; // 0 = temperatura, 1 = umidade
-		
+		public float[] status = new float[2];
 		public void aoIniciar() {}
-		public void gerarColuna(int localX, int localZ, Chunk chunks) {}
+		public void gerarColuna(int localX, int localZ, Chunk chunk) {}
 	}
 }

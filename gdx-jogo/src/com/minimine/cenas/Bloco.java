@@ -31,15 +31,6 @@ public class Bloco {
 		this.solido = solido;
 	}
 	
-	public Bloco(CharSequence nome, int tipo, int topo, boolean transparente, boolean solido, boolean cullingAlto) {
-		this.nome = nome;
-		this.tipo = tipo;
-		this.topo = topo; this.lados = topo; this.baixo = topo;
-		this.transparente = transparente;
-		this.solido = solido;
-		this.cullingAlto = cullingAlto;
-	}
-	
 	public Bloco(CharSequence nome, int tipo, int topo, int lados, int baixo, boolean transparente) {
 		this.nome = nome;
 		this.tipo = tipo;
@@ -69,6 +60,19 @@ public class Bloco {
 		this.lados = lados;
 		this.baixo = baixo;
 	}
+	
+	public Bloco(String nome, int tipo, int topo, boolean transparente, boolean solido, boolean cullingAlto) {
+		this.nome = nome;
+		this.tipo = tipo;
+		this.topo = topo; this.lados = topo; this.baixo = topo;
+		this.transparente = transparente;
+		this.solido = solido;
+		this.cullingAlto = cullingAlto;
+		// this.emissorLuz = (tipo == ChunkUtil.LUZ_TOCHA); // Adicione esta propriedade
+	}
+
+// Adicione esta propriedade na classe Bloco
+	public boolean emissorLuz = false;
 	
 	public int textureId(int faceId) {
         switch(faceId) {

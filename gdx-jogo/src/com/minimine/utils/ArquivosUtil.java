@@ -31,11 +31,12 @@ import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 
 public class ArquivosUtil {
     public static final String VERSAO = "v0.0.1";
 	public static boolean debug = true;
-    // salva o mundo compactado (.mini), e faz escrita atomica para evitar arquivos truncados
+    // salva o mundo compactado(.mini), e faz escrita atomica para evitar arquivos truncados
     public static void svMundo(Mundo mundo, Jogador jogador) {
         File pasta = new File(Inicio.externo + "/MiniMine/mundos");
         if(!pasta.exists()) pasta.mkdirs();
@@ -44,7 +45,7 @@ public class ArquivosUtil {
         File tmp = new File(pasta, mundo.nome + ".mini.tmp");
 
         try {
-            // escreve em arquivo temporário
+            // escreve em arquivo temporario
             ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(tmp)));
             DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(zos));
 
@@ -54,7 +55,7 @@ public class ArquivosUtil {
                 byte[] vt = VERSAO.getBytes(Charset.forName("UTF-8"));
                 zos.write(vt);
                 zos.closeEntry();
-                // mundo.bin (escreve diretamente no zip usando o mesmo DataOutputStream)
+                // mundo.bin(escreve diretamente no zip usando o mesmo DataOutputStream)
                 zos.putNextEntry(new ZipEntry("mundo.bin"));
                 gravarMundo(dos, mundo);
                 dos.flush();
@@ -78,7 +79,7 @@ public class ArquivosUtil {
             } finally {
                 try { dos.close(); } catch(Throwable t) {}
             }
-            // renomeia de forma atomica quando possível
+            // renomeia de forma atomica quando possivel
             if(tmp.exists()) {
                 if(destino.exists()) destino.delete();
                 boolean ok = tmp.renameTo(destino);
@@ -99,9 +100,9 @@ public class ArquivosUtil {
                     tmp.delete();
                 }
             }
-            if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] mundo salvo (compactado)");
+            if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] mundo salvo");
         } catch(Throwable t) {
-            Gdx.app.log("ArquivosUtil", "[ERRO] falha ao salvar mundo compactado: " + t.getMessage());
+            Gdx.app.log("ArquivosUtil", "[ERRO] falha ao salvar mundo: " + t.getMessage());
             if(tmp.exists()) tmp.delete();
         }
     }
@@ -119,12 +120,12 @@ public class ArquivosUtil {
             zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(arquivo)));
             DataInputStream dis = new DataInputStream(new BufferedInputStream(zis));
 
-            ZipEntry entry;
-            boolean any = false;
-            while((entry = zis.getNextEntry()) != null) {
-                any = true;
-                String nome = entry.getName();
-                if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] lendo entry: " + nome);
+            ZipEntry e;
+            boolean qualquer = false;
+            while((e = zis.getNextEntry()) != null) {
+                qualquer = true;
+                String nome = e.getName();
+                if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] lendo entrada: " + nome);
                 try {
                     if("versao.txt".equals(nome)) {
                         // ler linha simples
@@ -134,7 +135,7 @@ public class ArquivosUtil {
                         while((r = zis.read(buf)) > 0) tmp.write(buf, 0, r);
                         String v = new String(tmp.toByteArray(), Charset.forName("UTF-8")).trim();
 						if(!VERSAO.equals(v)) {
-							if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] a versao "+v+" do mundo (int) não e a mais atual "+VERSAO);
+							if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] a versao "+v+" do mundo não e a mais atual "+VERSAO);
 						}
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] versao.txt: " + v);
                     } else if("mundo.bin".equals(nome)) {
@@ -163,7 +164,7 @@ public class ArquivosUtil {
                     try { zis.closeEntry(); } catch(Throwable t) {}
                 }
             }
-            if(!any) {
+            if(!qualquer) {
                 Gdx.app.log("ArquivosUtil", "[ERRO] .mini vazio ou corrompido");
                 sucesso = false;
             } else {
@@ -229,6 +230,7 @@ public class ArquivosUtil {
         dos.writeInt(jogador.blocoSele);
         dos.writeInt(jogador.ALCANCE);
         dos.writeInt(jogador.inv != null ? jogador.inv.slotSelecionado : 0);
+		dos.writeFloat(jogador.velo);
         dos.flush();
     }
 
@@ -301,6 +303,7 @@ public class ArquivosUtil {
         jogador.ALCANCE = dis.readInt();
         if(jogador.inv == null) jogador.inv = new Inventario();
         jogador.inv.slotSelecionado = dis.readInt();
+		jogador.velo = dis.readFloat();
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {
@@ -414,18 +417,20 @@ public class ArquivosUtil {
 		arquivo.delete();    
 	}    
 
-	public static void listar(String caminho, List<String> lista) {    
+	public static List<String> listar(String caminho) {
+		List<String> lista = new ArrayList<>();
 		File dir = new File(caminho);    
-		if(!dir.exists() || dir.isFile()) return;    
+		if(!dir.exists() || dir.isFile()) return null;
 
 		File[] listaArquivos = dir.listFiles();    
-		if(listaArquivos == null || listaArquivos.length <= 0) return;    
+		if(listaArquivos == null || listaArquivos.length <= 0) return null;    
 
-		if(lista==null) return;    
+		if(lista==null) return null;    
 		lista.clear();    
 		for(File arquivo : listaArquivos) {    
 			lista.add(arquivo.getName());    
-		}    
+		}
+		return lista;
 	}    
 
 	public static void listarAbs(String caminho, List<String> lista) {    
