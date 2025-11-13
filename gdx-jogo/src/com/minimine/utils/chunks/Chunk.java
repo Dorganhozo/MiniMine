@@ -1,4 +1,4 @@
-package com.minimine.cenas;
+package com.minimine.utils.chunks;
 
 import com.badlogic.gdx.graphics.Mesh;
 

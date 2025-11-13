@@ -20,7 +20,7 @@ import com.minimine.utils.Texturas;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.minimine.utils.ArquivosUtil;
-import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.chunks.ChunkUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.InterUtil;
 import com.minimine.utils.CorposCelestes;

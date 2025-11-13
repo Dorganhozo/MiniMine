@@ -3,12 +3,13 @@ package com.minimine.utils;
 import java.util.List;
 import java.util.ArrayList;
 import com.minimine.cenas.Mundo;
-import com.minimine.cenas.Chunk;
+import com.minimine.utils.chunks.Chunk;
 import com.minimine.utils.ruidos.PerlinNoise2D;
 import com.minimine.utils.ruidos.SimplexNoise2D;
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
+import com.minimine.utils.chunks.ChunkUtil;
 
 public class BiomasUtil {
 	public static List<Bioma> biomas = new ArrayList<>();

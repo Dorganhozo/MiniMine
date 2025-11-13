@@ -7,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.util.Map;
-import com.minimine.cenas.Chunk;
 import java.io.DataOutputStream;
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
@@ -32,6 +31,10 @@ import java.util.zip.ZipInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import com.minimine.utils.chunks.Chave;
+import java.util.concurrent.ConcurrentHashMap;
+import com.minimine.utils.chunks.Chunk;
+import com.minimine.utils.chunks.ChunkUtil;
 
 public class ArquivosUtil {
     public static final String VERSAO = "v0.0.1";
@@ -185,8 +188,8 @@ public class ArquivosUtil {
         dos.writeInt(mundo.seed);
         // quantos chunks salvos
         dos.writeInt(mundo.chunksMod.size());
-        for (Map.Entry<ChunkUtil.Chave, Chunk> entry : mundo.chunksMod.entrySet()) {
-            ChunkUtil.Chave chave = entry.getKey();
+        for (Map.Entry<Chave, Chunk> entry : mundo.chunksMod.entrySet()) {
+            Chave chave = entry.getKey();
             Chunk chunk = entry.getValue();
             int cx = Mundo.TAM_CHUNK;
             int cy = Mundo.Y_CHUNK;
@@ -284,11 +287,11 @@ public class ArquivosUtil {
             }
             chunk.mesh = Mundo.meshReuso.obtain();
 
-            if(mundo.chunksMod == null) mundo.chunksMod = new java.util.concurrent.ConcurrentHashMap<ChunkUtil.Chave, Chunk>();
-            if(mundo.chunks == null) mundo.chunks = new java.util.concurrent.ConcurrentHashMap<ChunkUtil.Chave, Chunk>();
+            if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Chave, Chunk>();
+            if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Chave, Chunk>();
 
-            mundo.chunksMod.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
-            mundo.chunks.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
+            mundo.chunksMod.put(new Chave(chunkX, chunkZ), chunk);
+            mundo.chunks.put(new Chave(chunkX, chunkZ), chunk);
 
             chunk.att = true;
         }

@@ -6,8 +6,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.minimine.utils.Texturas;
 import com.badlogic.gdx.math.Vector2;
-import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.chunks.ChunkUtil;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.minimine.utils.blocos.Bloco;
 
 public class Inventario {
     public int quantSlots = 25;
@@ -142,7 +143,7 @@ public class Inventario {
 				CharSequence nome = "Ar";
 				Texture textura = texSlot;
 
-				for(Bloco b : ChunkUtil.blocos) {
+				for(Bloco b : Bloco.blocos) {
 					if(b.tipo == tipo) {
 						nome = b.nome;
 						textura = Texturas.texs.tentar(b.nome + "_lado");

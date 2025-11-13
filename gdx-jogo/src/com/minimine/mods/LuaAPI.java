@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.utils.BiomasUtil;
-import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.chunks.ChunkUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;

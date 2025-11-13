@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.List;  
 import java.util.HashMap;  
 import java.util.ArrayList;  
-import com.minimine.utils.ChunkUtil;  
+import com.minimine.utils.chunks.ChunkUtil;  
 import java.util.concurrent.ConcurrentHashMap;  
 import java.util.concurrent.ExecutorService;  
 import java.util.Iterator;  
@@ -29,7 +29,11 @@ import com.minimine.utils.Mat;
 import com.minimine.utils.NuvensUtil;  
 import com.minimine.utils.DiaNoiteUtil;  
 import com.minimine.utils.Texturas;  
-import com.minimine.utils.CorposCelestes;  
+import com.minimine.utils.CorposCelestes;
+import com.minimine.utils.chunks.Chave;
+import com.minimine.utils.chunks.ChunkMesh;
+import com.minimine.utils.blocos.Bloco;
+import com.minimine.utils.chunks.Chunk;  
 
 public class Mundo {  
 	public static String nome = "novo mundo";  
@@ -38,8 +42,8 @@ public class Mundo {
     // (atlas ID -> [u_min, v_min, u_max, v_max])  
 	public static final List<Object> texturas = new ArrayList<>();  
     public static Map<Integer, float[]> atlasUVs = new HashMap<>();  
-	public static Map<ChunkUtil.Chave, Chunk> chunks = new ConcurrentHashMap<>();  
-	public static Map<ChunkUtil.Chave, Chunk> chunksMod = new ConcurrentHashMap<>();  
+	public static Map<Chave, Chunk> chunks = new ConcurrentHashMap<>();  
+	public static Map<Chave, Chunk> chunksMod = new ConcurrentHashMap<>();  
 
 	public static final int TAM_CHUNK = 16, Y_CHUNK = 255;  
 	public static int seed = 0, RAIO_CHUNKS = 5;  
@@ -51,7 +55,7 @@ public class Mundo {
 	public static float tick = 1;  
 
 	public static ExecutorService exec;  
-	public static Iterator<Map.Entry<ChunkUtil.Chave, Chunk>> iterator;  
+	public static Iterator<Map.Entry<Chave, Chunk>> iterator;  
 
 	public static int maxFaces = TAM_CHUNK * Y_CHUNK * TAM_CHUNK * 6 / 6;  
 	public static int maxVerts = maxFaces * 4;  
@@ -120,17 +124,17 @@ public class Mundo {
 		texturas.add(Texturas.texs.get("vidro"));  
 		texturas.add(Texturas.texs.get("tocha"));  
 		
-		ChunkUtil.blocos.add(new Bloco("grama", 1, 0, 1, 2));  
-		ChunkUtil.blocos.add(new Bloco("terra", 2, 2));  
-		ChunkUtil.blocos.add(new Bloco("pedra", 3, 3));  
-		ChunkUtil.blocos.add(new Bloco("agua", 4, 4, true, false, true));  
-		ChunkUtil.blocos.add(new Bloco("areia", 5, 5));  
-		ChunkUtil.blocos.add(new Bloco("tronco", 6, 6, 7));  
-		ChunkUtil.blocos.add(new Bloco("folha", 7, 8, true, false, true));  
-		ChunkUtil.blocos.add(new Bloco("tabua_madeira", 8, 9));  
-		ChunkUtil.blocos.add(new Bloco("cacto", 9, 10, 11));
-		ChunkUtil.blocos.add(new Bloco("vidro", 10, 12, true, false, true));
-		ChunkUtil.blocos.add(new Bloco("tocha", 11, 13, true, false, true));
+		Bloco.blocos.add(new Bloco("grama", 1, 0, 1, 2));  
+		Bloco.blocos.add(new Bloco("terra", 2, 2));  
+		Bloco.blocos.add(new Bloco("pedra", 3, 3));  
+		Bloco.blocos.add(new Bloco("agua", 4, 4, true, false, true));  
+		Bloco.blocos.add(new Bloco("areia", 5, 5));  
+		Bloco.blocos.add(new Bloco("tronco", 6, 6, 7));  
+		Bloco.blocos.add(new Bloco("folha", 7, 8, true, false, true));  
+		Bloco.blocos.add(new Bloco("tabua_madeira", 8, 9));  
+		Bloco.blocos.add(new Bloco("cacto", 9, 10, 11));
+		Bloco.blocos.add(new Bloco("vidro", 10, 12, true, false, true));
+		Bloco.blocos.add(new Bloco("tocha", 11, 13, true, false, true));
 	}  
 	  
 	public void iniciar() {  
@@ -262,7 +266,7 @@ public class Mundo {
 		final int chunkX = Math.floorDiv(x, TAM_CHUNK);  
 		final int chunkZ = Math.floorDiv(z, TAM_CHUNK);  
   
-		ChunkUtil.Chave chave = new ChunkUtil.Chave(chunkX, chunkZ);
+		Chave chave = new Chave(chunkX, chunkZ);
 		Chunk chunk = chunks.get(chave);  
 		
 		if(chunk == null) return 0;   
@@ -279,7 +283,7 @@ public class Mundo {
 		final int chunkX = x >> 4;
 		final int chunkZ = z >> 4;
 
-		ChunkUtil.Chave chave = new ChunkUtil.Chave(chunkX, chunkZ);
+		Chave chave = new Chave(chunkX, chunkZ);
 		
 		Chunk chunk = chunks.get(chave);
 		if(chunk == null) return;
@@ -288,8 +292,7 @@ public class Mundo {
 		int localZ = Math.floorMod(z, TAM_CHUNK);
 
 		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-		if(bloco == 2) ChunkUtil.defLuz(chunkX, y, chunkZ, (byte) 5, chunk);
-
+		
 		chunk.att = true;
 		// chunks perto pra atualizacao se o bloco for na borda
 		if(localX == 0) {
@@ -312,7 +315,7 @@ public class Mundo {
 			Chunk chunkAdj = chunks.get(chave);
 			if(chunkAdj != null) chunkAdj.att = true;
 		}
-		chunksMod.put(new ChunkUtil.Chave(chunkX, chunkZ), chunk);
+		chunksMod.put(new Chave(chunkX, chunkZ), chunk);
 	}  
 	// GERAÇÃO DE DADOS:  
 	public boolean deveAttChunk(int chunkX, int chunkZ, int playerChunkX, int playerChunkZ) {
@@ -344,7 +347,7 @@ public class Mundo {
 	}  
   
 	public void tentarGerarChunk(int x, int z) {
-		final ChunkUtil.Chave chave = new ChunkUtil.Chave(x, z);
+		final Chave chave = new Chave(x, z);
 		final Chunk chunkExistente;
 
 		synchronized(chunks) {
@@ -363,14 +366,14 @@ public class Mundo {
 							final FloatArrayUtil vertsGeral = new FloatArrayUtil();   
 							final ShortArrayUtil idcGeral = new ShortArrayUtil();
 
-							ChunkUtil.attMesh(chunkExistente, vertsGeral, idcGeral);
+							ChunkMesh.attMesh(chunkExistente, vertsGeral, idcGeral);
 
 							Gdx.app.postRunnable(new Runnable() {
 									@Override
 									public void run() {
 										synchronized(chunkExistente) {
 											if(chunkExistente.mesh == null) chunkExistente.mesh = meshReuso.obtain();
-											ChunkUtil.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
+											ChunkMesh.defMesh(chunkExistente.mesh, vertsGeral, idcGeral);
 											matrizTmp.setToTranslation(chunkExistente.x * TAM_CHUNK, 0, chunkExistente.z * TAM_CHUNK);
 											chunkExistente.mesh.transform(matrizTmp);
 											chunkExistente.att = false;
@@ -407,8 +410,8 @@ public class Mundo {
 	
 	public void limparChunks(int chunkXPlayer, int chunkZPlayer) {
 		synchronized(chunks) {
-			for(Map.Entry<ChunkUtil.Chave, Chunk> e : chunks.entrySet()) {
-				ChunkUtil.Chave chave = e.getKey();
+			for(Map.Entry<Chave, Chunk> e : chunks.entrySet()) {
+				Chave chave = e.getKey();
 				
 				int distX = Math.abs(chave.x - chunkXPlayer);
 				int distZ = Math.abs(chave.z - chunkZPlayer);
@@ -425,7 +428,7 @@ public class Mundo {
 		}
 	}  
   
-	public void gerarChunk(final ChunkUtil.Chave chave) {  
+	public void gerarChunk(final Chave chave) {  
 		exec.submit(new Runnable() {  
 				@Override  
 				public void run() {  
@@ -476,13 +479,13 @@ public class Mundo {
 					}  
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();  
 					final ShortArrayUtil idcGeral = new ShortArrayUtil();  
-					ChunkUtil.attMesh(chunk, vertsGeral, idcGeral);  
+					ChunkMesh.attMesh(chunk, vertsGeral, idcGeral);  
   
 					Gdx.app.postRunnable(new Runnable() {  
 							@Override  
 							public void run() {  
 								chunk.mesh = meshReuso.obtain();  
-								ChunkUtil.defMesh(chunk.mesh, vertsGeral, idcGeral);  
+								ChunkMesh.defMesh(chunk.mesh, vertsGeral, idcGeral);  
 								matrizTmp.setToTranslation(chunk.x * TAM_CHUNK, 0, chunk.z * TAM_CHUNK);  
 								chunk.mesh.transform(matrizTmp);  
 							}  
@@ -504,7 +507,7 @@ public class Mundo {
 	}  
   
 	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo, boolean alfa, boolean solido) {  
-		ChunkUtil.blocos.add(new Bloco(nome, tipo, topo, lados, baixo, alfa, solido));  
-		return ChunkUtil.blocos.get(tipo-1);  
+		Bloco.blocos.add(new Bloco(nome, tipo, topo, lados, baixo, alfa, solido));  
+		return Bloco.blocos.get(tipo-1);  
 	}  
 }  

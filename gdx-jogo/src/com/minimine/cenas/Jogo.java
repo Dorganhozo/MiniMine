@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import com.minimine.mods.LuaAPI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.minimine.utils.ChunkUtil;
+import com.minimine.utils.chunks.ChunkUtil;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Texturas;
