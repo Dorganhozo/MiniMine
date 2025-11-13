@@ -377,7 +377,7 @@ public class ChunkUtil {
 					}
 				}
 			}
-			// se ainda estamos em paleta (idx válido), gravamos índice
+			// se ainda estamos em paleta(idc valido), gravamos indice
 			if(chunk.usaPaleta) {
 				gravarPacote(total, idc, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt);
 				return;
@@ -413,7 +413,7 @@ public class ChunkUtil {
 			for(int i = 0; i < totalBlocos; i++) {
 				int idAntigo = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
 					& ((1 << bitsAntigo) - 1);
-				// idAntigo é índice de paleta -> mantém mesmo índice no novo packing
+				// idAntigo é indice de paleta -> mantem mesmo indice no novo pacote
 				int idNovoIdc = i / chunk.blocosPorInt;
 				int idNovoBit = (i % chunk.blocosPorInt) * chunk.paletaBits;
 				novos[idNovoIdc] |= (idAntigo & ((1 << chunk.paletaBits) - 1)) << idNovoBit;
@@ -544,6 +544,6 @@ public class ChunkUtil {
 			Chave chave = (Chave) o;
 			return  x == chave.x && z == chave.z;
 		}
-		@Override public int hashCode() {return Objects.hash(x, z);}
+		@Override public int hashCode() {return (x * 31) ^ z;}
 	}
 }

@@ -276,6 +276,12 @@ public class UI implements InputProcessor {
 						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
 						else jogador.blocoSele = 0;
 						logs.log("feito vidro");
+					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].tipo == 7) {
+						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
+						jogador.inv.addItem(11, 1);
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
+						else jogador.blocoSele = 0;
+						logs.log("feito tocha");
 					}
 					toques.put(p, "receita");
 					sprite.setAlpha(0.5f);
