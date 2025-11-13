@@ -13,7 +13,6 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.InputProcessor;
 import java.util.HashMap;
-import com.badlogic.gdx.ApplicationLogger;
 import java.util.List;
 import java.util.ArrayList;
 import com.minimine.utils.Texturas;
@@ -28,6 +27,8 @@ import com.minimine.utils.InterUtil;
 import com.badlogic.gdx.Input;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.Inicio;
+import com.minimine.Logs;
+import android.webkit.JavascriptInterface;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -48,8 +49,6 @@ public class UI implements InputProcessor {
 	public static final HashMap<Integer, CharSequence> toques = new HashMap<>();
 	public static Runtime rt = Runtime.getRuntime();
 
-	public static Logs logs = new Logs();
-	
 	public float botaoTam = 140f;
 	public float espaco = 60f;
 
@@ -269,19 +268,19 @@ public class UI implements InputProcessor {
 						jogador.inv.addItem(8, 4);
 						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
 						else jogador.blocoSele = 0;
-						logs.log("feito tabua");
+						Logs.log("feito tabua");
 					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].tipo == 5) {
 						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
 						jogador.inv.addItem(10, 1);
 						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
 						else jogador.blocoSele = 0;
-						logs.log("feito vidro");
+						Logs.log("feito vidro");
 					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].tipo == 7) {
 						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
 						jogador.inv.addItem(11, 1);
 						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
 						else jogador.blocoSele = 0;
-						logs.log("feito tocha");
+						Logs.log("feito tocha");
 					}
 					toques.put(p, "receita");
 					sprite.setAlpha(0.5f);
@@ -392,7 +391,7 @@ public class UI implements InputProcessor {
 			
 			fps = Gdx.graphics.getFramesPerSecond();
 			
-			String[] logsArr = logs.logs.split("\n");
+			String[] logsArr = Logs.logs.split("\n");
 			StringBuilder construtorLogs = new StringBuilder();
 			
 			int inicio = Math.max(0, logsArr.length - 15);
@@ -460,46 +459,6 @@ public class UI implements InputProcessor {
         sb.dispose();
         fonte.dispose();
     }
-
-	public static class Logs implements ApplicationLogger {
-		public String logs = "";
-
-		@Override
-		public void debug(String string, String string1) {
-			logs += string + ": " + string1 + "\n";
-		}
-
-		@Override
-		public void debug(String string, String string1, Throwable throwable) {
-			logs += string + ": " + string1 + throwable.getMessage() + "\n";
-		}
-
-		@Override
-		public void error(String string, String string1) {
-			logs += string + ": " + string1 + "\n";
-		}
-
-		@Override
-		public void error(String string, String string1, Throwable throwable) {
-			logs += string + ": " + string1 + throwable.getMessage() + "\n";
-		}
-		
-		public void log(String msg) {
-			logs += msg + "\n";
-			ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
-		}
-
-		@Override
-		public void log(String string, String string1) {
-			logs += string + ": " + string1 + "\n";
-			ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
-		}
-
-		@Override
-		public void log(String string, String string1, Throwable throwable) {
-			logs += string + ": " + string1 + throwable.getMessage() + "\n";
-		}
-	}
 	
 	public Texto addTexto(String nome, String texto, int x, int y) {
 		textos.put(nome, new Texto(texto, x, y) {
@@ -620,6 +579,11 @@ public class UI implements InputProcessor {
 					if(func2 != null) func2.call();
 				}
 			}, titulo, padrao, msg);
+	}
+	
+	@JavascriptInterface
+	public static void debug(boolean modo) {
+		debug = modo;
 	}
 	@Override public boolean keyDown(int p){return false;}
 	@Override public boolean keyTyped(char p){return false;}

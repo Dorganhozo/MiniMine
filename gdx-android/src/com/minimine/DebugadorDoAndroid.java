@@ -2,7 +2,7 @@ package com.minimine;
 
 import android.os.Debug;
 
-public class DebugadorDoAndroid implements Debugador{
+public class DebugadorDoAndroid implements Debugador {
 	@Override
 	public long getNativeHeapFreeSize(){
 		return Debug.getNativeHeapFreeSize();

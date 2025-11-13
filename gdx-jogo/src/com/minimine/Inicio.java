@@ -15,15 +15,17 @@ public class Inicio extends Game {
 	public static String externo;
 	public static boolean telaNova = false;
 	public static Screen telaAtual;
+	public static JS js;
 
-	public Inicio(String externo, Debugador debugador) {
+	public Inicio(String externo, Debugador debugador, JS js) {
 		Inicio.externo = externo;
+		Inicio.js = js;
 		UI.debugador = debugador;
 	}
 
 	@Override
 	public void create() {
-		Gdx.app.setApplicationLogger(UI.logs);
+		Gdx.app.setApplicationLogger(new Logs());
 		defTela(Cenas.intro);
 	}
 

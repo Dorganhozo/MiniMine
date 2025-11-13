@@ -18,6 +18,11 @@ import com.minimine.utils.CorposCelestes;
 import com.minimine.Inicio;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.minimine.mods.Util;
+import com.minimine.utils.BiomasUtil;
+import com.minimine.Logs;
+import com.minimine.JS;
+import com.minimine.MainActivity;
 
 public class Jogo implements Screen {
 	public UI ui;
@@ -28,7 +33,6 @@ public class Jogo implements Screen {
 	public Environment ambiente;
 	public ModelBatch mb;
 	public List<Jogador> jgs = new ArrayList<>();
-	
     @Override
 	public void show() {
 		mundo.ciclo = true;
@@ -37,7 +41,30 @@ public class Jogo implements Screen {
 		// net = new Net(Net.SERVIDOR_MODO);
 		
 		LuaAPI.iniciar(this);
+		try {
+			MainActivity.ISSO.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					Inicio.js.config();
+					Inicio.js.API(mundo, "Mundo");
+					Inicio.js.API(ui.jogador, "Jogador");
+					Inicio.js.API(ui, "Ui");
+					Inicio.js.API(new Util(), "Util");
+					Inicio.js.API(new BiomasUtil(), "Biomas");
+					Inicio.js.API(new ChunkUtil(), "ChunkUtil");
+					Inicio.js.API(new Texturas(), "TexUtil");
+					Inicio.js.API(new NuvensUtil(), "Nuvens");
+					Inicio.js.API(new DiaNoiteUtil(), "Ciclo");
+					Inicio.js.API(new Gdx(), "Gdx");
+					Inicio.js.API(new LuaAPI(), "Lua");
+					Inicio.js.API(new ArquivosUtil(), "Arquivos");
 
+					Inicio.js.iniciar(Inicio.externo+"/MiniMine/mods/arquivos.html");
+				}
+			});
+		} catch(Exception e) {
+			Logs.log("JAVASCRIPT API: [ERRO]: "+e.getMessage());
+		}
 		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		
 		mundo.iniciar();
@@ -128,6 +155,7 @@ public class Jogo implements Screen {
 	@Override
 	public void pause() {
 		LuaAPI.iniciar(this);
+		
 		mundo.carregado = false;
 		ArquivosUtil.svMundo(mundo, jogador);
 	}

@@ -12,7 +12,7 @@ refeito com LibGDX.
 7. Debug visual.
 8. Sistema de construção.
 9. Hotbar.
-10. Mods por Lua no armazenamento externo.
+10. Mods por Lua/JavaScript no armazenamento externo. (beta)
 11. Sistema de ciclo noturno e diário.
 12. Nuvens.
 13. salvamento dinamico de mundos binario.
@@ -33,6 +33,9 @@ você pode descobrir mais sobre a API Lua em doc.txt.
 6. Areia.
 7. Tronco de madeira.
 8. Bloco de folhas.
+9. Tabua de madeira.
+10. Cacto.
+11. Vidro.
 
 ## otimizações:
 Geração em Thread separada com ExecutorService.
@@ -53,25 +56,24 @@ Compressão baseada em paleta.
 Android 4 até Android 14.
 
 ## desempenho:
-FPS de 40 a 50 padrão testado com até 121 chunks (raio de 5 por padrão).
+FPS de 30 a 40 padrão testado com até 121 chunks (raio de 5 por padrão).
 
-## mods:
+## mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
 
 att.lua // será chamado no loop principal
 
 e para adicionar mais de um arquivo individual, adicione o caminho relativo a pasta atual em *MiniMine/mods/arquivos.mini*. os arquivos são separados e carregados por quebra de linha.
 
+## mods JavaScript:
+
+adicione seus scripts em "MiniMine/mods/arquivos.html".
+
+sem documentação ainda.
+
+## adicionais:
+
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
 
 ## dispositivo usado para testes:
 Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.
-
-## dica para mod
-ao criar biomas personalizados, no inicio da geração utilize:
-
-```Lua
-chunkutil.compactar(chunkutil.bitsPraMaxId(bloco), chunk);
-```
-
-substitua "bloco" pelo maior ID de bloco (bloco mais novo) que sua geração utiliza, assim sua chunk será gerada sem recalculo de memória dinamica.

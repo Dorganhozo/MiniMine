@@ -16,6 +16,7 @@ import com.minimine.utils.ChunkUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
+import com.minimine.Logs;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -55,7 +56,7 @@ public class LuaAPI {
 		globais.set("log", new LuaFunction() {
 				@Override
 				public LuaValue call(LuaValue arg) {
-					tela.ui.logs.logs += arg.tojstring() + "\n";
+					Logs.logs += arg.tojstring() + "\n";
 					return LuaValue.NIL;
 				}
 			});
