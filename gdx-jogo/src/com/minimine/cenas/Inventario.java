@@ -164,8 +164,11 @@ public class Inventario {
     }
 
     public void att() {
+		if(spritesHotbar == null || spritesHotbar.length == 0 ||
+		itens == null || itens.length == 0) return;
 		// hotbar:
 		for(int i = 0; i < spritesHotbar.length; i++) {
+			if(spritesHotbar[i] == null) continue;
 			spritesHotbar[i].draw(UI.sb);
 
 			if(i == slotSelecionado) {

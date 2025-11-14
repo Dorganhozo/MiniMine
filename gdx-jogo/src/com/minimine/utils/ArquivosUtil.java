@@ -35,6 +35,7 @@ import com.minimine.utils.chunks.Chave;
 import java.util.concurrent.ConcurrentHashMap;
 import com.minimine.utils.chunks.Chunk;
 import com.minimine.utils.chunks.ChunkUtil;
+import com.minimine.utils.blocos.Bloco;
 
 public class ArquivosUtil {
     public static final String VERSAO = "v0.0.1";
@@ -212,10 +213,11 @@ public class ArquivosUtil {
                     for(int z = 0; z < cz; z++) {
                         int b = ChunkUtil.obterBloco(x, y, z, chunk);
                         if(b != 0) {
+							CharSequence bloco = Bloco.numIds.get(b).nome;
                             dos.writeInt(x);
                             dos.writeInt(y);
                             dos.writeInt(z);
-                            dos.writeInt(b);
+                            dos.writeUTF(""+bloco);
                         }
                     }
                 }
@@ -238,22 +240,26 @@ public class ArquivosUtil {
     }
 
     public static void gravarInventario(DataOutputStream dos, Jogador jogador) throws IOException {
-        if(jogador.inv == null || jogador.inv.itens == null) {
-            dos.writeInt(0);
-            dos.flush();
-            return;
-        }
-        dos.writeInt(jogador.inv.itens.length);
-        for(int i = 0; i < jogador.inv.itens.length; i++) {
-            if(jogador.inv.itens[i] == null) {
-                dos.writeBoolean(false);
-            } else {
-                dos.writeBoolean(true);
-                dos.writeUTF(jogador.inv.itens[i].nome == null ? "" : jogador.inv.itens[i].nome+"");
-                dos.writeInt(jogador.inv.itens[i].quantidade);
-            }
-        }
-        dos.flush();
+		try {
+			if(jogador.inv == null || jogador.inv.itens == null) {
+				dos.writeInt(0);
+				dos.flush();
+				return;
+			}
+			dos.writeInt(jogador.inv.itens.length);
+			for(int i = 0; i < jogador.inv.itens.length; i++) {
+				if(jogador.inv.itens[i] == null) {
+					dos.writeBoolean(false);
+				} else {
+					dos.writeBoolean(true);
+					dos.writeUTF(jogador.inv.itens[i].nome+"");
+					dos.writeInt(jogador.inv.itens[i].quantidade);
+				}
+			}
+			dos.flush();
+		} catch(Exception e) {
+			Gdx.app.log("ArquivosUtil", "[ERRO] ao gravar inv: "+e);
+		}
     }
 
     public static void gravarCiclo(DataOutputStream dos) throws IOException {
@@ -309,35 +315,39 @@ public class ArquivosUtil {
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {
-        int total = dis.readInt();
-        if(jogador.inv == null) jogador.inv = new Inventario();
-        if(jogador.inv.itens == null || jogador.inv.itens.length != total) jogador.inv.itens = new Inventario.Item[total];
+		try {
+			int total = dis.readInt();
+			if(jogador.inv == null || total == 0) jogador.inv = new Inventario();
+			if(jogador.inv.itens == null || (jogador.inv.itens.length != total && total != 0)) jogador.inv.itens = new Inventario.Item[total];
 
-        for(int i = 0; i < total; i++) {
-            boolean temItem = false;
-            try {
-                temItem = dis.readBoolean();
-            } catch(Throwable t) {
-                Gdx.app.log("ArquivosUtil", "[ERRO] falha ao ler marcação de item slot " + i + ": " + t.getMessage());
-                jogador.inv.itens[i] = null;
-                continue;
-            }
-            if(temItem) {
-                String nome = dis.readUTF();
-                int quantidade = dis.readInt();
+			for(int i = 0; i < total; i++) {
+				boolean temItem = false;
+				try {
+					temItem = dis.readBoolean();
+				} catch(Throwable t) {
+					Gdx.app.log("ArquivosUtil", "[ERRO] falha ao ler marcação de item slot " + i + ": " + t.getMessage());
+					jogador.inv.itens[i] = null;
+					continue;
+				}
+				if(temItem) {
+					String nome = dis.readUTF();
+					int quantidade = dis.readInt();
 
-                Texture textura = Texturas.texs.get(nome + "_lado");
-                if(textura == null) textura = Texturas.texs.get(nome);
-                if(textura == null) {
-                    Gdx.app.log("ArquivosUtil", "[ERRO] textura do item nao encontrada: " + nome + " (slot " + i + ") - ignorando item");
-                    jogador.inv.itens[i] = null;
-                    continue;
-                }
-                jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
-            } else {
-                jogador.inv.itens[i] = null;
-            }
-        }
+					Texture textura = Texturas.texs.get(nome + "_lado");
+					if(textura == null) textura = Texturas.texs.get(nome);
+					if(textura == null) {
+						Gdx.app.log("ArquivosUtil", "[ERRO] textura do item nao encontrada: " + nome + " (slot " + i + ") - ignorando item");
+						jogador.inv.itens[i] = null;
+						continue;
+					}
+					jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
+				} else {
+					jogador.inv.itens[i] = null;
+				}
+			}
+		} catch(Exception e) {
+			Gdx.app.log("ArquivosUtil", "[ERRO] ao carregar inv: "+e);
+		}
     }
 
     public static void criar(String caminho) {    
