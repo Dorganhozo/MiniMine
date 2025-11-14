@@ -276,7 +276,7 @@ public class Mundo {
 		return ChunkUtil.obterBloco(localX, y, localZ, chunk);  
 	}  
   
-	public static void defBlocoMundo(int x, int y, int z, int bloco) {
+	public static void defBlocoMundo(int x, int y, int z, CharSequence bloco) {
 		if(y < 0 || y >= Y_CHUNK) return; // fora dos limites
 
 		final int chunkX = x >> 4;

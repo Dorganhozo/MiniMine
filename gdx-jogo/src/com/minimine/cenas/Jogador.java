@@ -21,6 +21,7 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.minimine.utils.Texturas;
 import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
+import com.minimine.utils.blocos.Bloco;
 
 public class Jogador {
 	public ModelInstance modelo;
@@ -36,7 +37,6 @@ public class Jogador {
 	
 	public static float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
 	
-	public int blocoSele = 0;
 	public CharSequence item = "ar";
 	public static int ALCANCE = 6;
 	public Inventario inv = new Inventario();
@@ -51,10 +51,10 @@ public class Jogador {
 	public Jogador() {
 		if(modo != 2) {
 			// itens iniciais:
-			inv.itens[0] = new Inventario.Item(1, "Grama", Texturas.texs.get("grama_lado"), 1);
-			inv.itens[1] = new Inventario.Item(2, "Terra", Texturas.texs.get("terra"), 1);
-			inv.itens[2] = new Inventario.Item(3, "Pedra", Texturas.texs.get("pedra"), 1);
-			inv.itens[3] = new Inventario.Item(4, "Agua", Texturas.texs.get("agua"), 1);
+			inv.itens[0] = new Inventario.Item("grama", Texturas.texs.get("grama_lado"), 1);
+			inv.itens[1] = new Inventario.Item("terra", Texturas.texs.get("terra"), 1);
+			inv.itens[2] = new Inventario.Item("pedra", Texturas.texs.get("pedra"), 1);
+			inv.itens[3] = new Inventario.Item("agua", Texturas.texs.get("agua"), 1);
 		}
 	}
 	
@@ -74,11 +74,12 @@ public class Jogador {
 			int y = Mat.floor(olhoY + dirY * t);
 			int z = Mat.floor(olhoZ + dirZ * t);
 
-			int bloco = Mundo.obterBlocoMundo(x, y, z);
-			if(bloco > 0) {
-				if(blocoSele == 0) {
-					if(modo == 2) inv.addItem(bloco, 1);
-					Mundo.defBlocoMundo(x, y, z, 0);
+			Bloco bloco = Bloco.numIds.get(Mundo.obterBlocoMundo(x, y, z));
+			
+			if(bloco != null) {
+				if(item.equals("ar")) {
+					if(modo == 2) inv.addItem(bloco.nome, 1);
+					Mundo.defBlocoMundo(x, y, z, "ar");
 				} else {
 					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
 					int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));
@@ -88,7 +89,7 @@ public class Jogador {
 						blocoBox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
 						attHitbox();
 						if(blocoBox.intersects(hitbox)) return;
-						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, blocoSele);
+						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, item);
 						
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
 					}
@@ -114,26 +115,32 @@ public class Jogador {
 		int minZ = Mat.floor(hitbox.min.z);
 		int maxZ = Mat.floor(hitbox.max.z);
 
+		naAgua = false;
+
 		for(int x = minX; x <= maxX; x++) {
 			for(int y = minY; y <= maxY; y++) {
 				for(int z = minZ; z <= maxZ; z++) {
-					int bloco = Mundo.obterBlocoMundo(x, y, z);
-					
-					naAgua = false;
-					
-					if(bloco > 0) {
-						blocoBox.set(minVec.set(x, y, z), maxVec.set(x + 1, y + 1, z + 1));
-						if(bloco == 4) {
-							naAgua = true;
-							return false;
-						}
-						if(hitbox.intersects(blocoBox)) {
-							return true;
-						}
+
+					int id = Mundo.obterBlocoMundo(x, y, z);
+					Bloco b = Bloco.numIds.get(id);
+
+					if(b == null) continue;
+
+					CharSequence bloco = b.nome;
+
+					blocoBox.set(
+						minVec.set(x, y, z),
+						maxVec.set(x + 1, y + 1, z + 1)
+					);
+					if(bloco.equals("agua")) {
+						naAgua = true;
+						continue;
 					}
+					if(hitbox.intersects(blocoBox)) return true;
 				}
 			}
 		}
+
 		return false;
 	}
 	

@@ -35,7 +35,7 @@ public class ChunkUtil {
 
 		int b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
 
-		return b != 0 && b != 7;
+		return b != 0 && !Bloco.numIds.get(b).solido;
 	}
 
 	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
@@ -88,7 +88,8 @@ public class ChunkUtil {
 		}
 	}
 
-	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
+	public static void defBloco(int x, int y, int z, CharSequence nome, Chunk chunk) {
+		int bloco = nome.equals("ar") ? 0 : Bloco.texIds.get(nome).tipo;
 		int totalTam = Mundo.TAM_CHUNK;
 		int total = x + (z * totalTam) + (y * totalTam * totalTam);
 		// se estamos em modo paleta, tentamos usar/expandir paleta
@@ -114,9 +115,9 @@ public class ChunkUtil {
 				} else {
 					// paleta cheia para paletaBits atual
 					if(chunk.paletaBits < 8) {
-						// aumenta paletaBits (repack indices)
+						// aumenta paletaBits(repacota indices)
 						refazerPaleta(chunk.paletaBits + 1, chunk);
-						// inserir agora (deve caber)
+						// inserir agora(deve caber)
 						int[] pal = chunk.paleta;
 						for(int i = 0; i < chunk.paletaTam; i++) {
 							if(pal[i] == bloco) { idc = i; break; }

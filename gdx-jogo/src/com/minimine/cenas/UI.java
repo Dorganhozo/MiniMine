@@ -228,12 +228,12 @@ public class UI implements InputProcessor {
 			});
 		botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, botaoTam, botaoTam, "acao") {
 				public void aoTocar(int t, int t2, int p){
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-					else jogador.blocoSele = 0;
+					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+					else jogador.item = "ar";
 					acao = true;
 					jogador.interagirBloco();
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-					else jogador.blocoSele = 0;
+					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+					else jogador.item = "ar";
 					toques.put(p, "acao");
 					sprite.setAlpha(0.5f);
 				}
@@ -241,19 +241,19 @@ public class UI implements InputProcessor {
 			});
 		botoes.put("ataque", new Botao(Texturas.texs.get("ataque"), 0, 0, botaoTam, botaoTam, "ataque") {
 				public void aoTocar(int t, int t2, int p){
-					jogador.blocoSele = 0;
+					jogador.item = "ar";
 					jogador.interagirBloco();
 					toques.put(p, "ataque");
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-					else jogador.blocoSele = 0;
+					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+					else jogador.item = "ar";
 					sprite.setAlpha(0.5f);
 				}
 				public void aoSoltar(int t, int t2, int p){ acao = false; sprite.setAlpha(0.9f);}
 			});
 		botoes.put("inv", new Botao(Texturas.texs.get("clique"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "inv") {
 				public void aoTocar(int t, int t2, int p){
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-					else jogador.blocoSele = 0;
+					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+					else jogador.item = "ar";
 					jogador.inv.alternar();
 					toques.put(p, "inv");
 					sprite.setAlpha(0.5f);
@@ -263,23 +263,23 @@ public class UI implements InputProcessor {
 		botoes.put("receita", new Botao(Texturas.texs.get("receita"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "receita") {
 				public void aoTocar(int t, int t2, int p){
 					if(jogador.inv.itens[jogador.inv.slotSelecionado] == null) return;
-					if(jogador.inv.itens[jogador.inv.slotSelecionado].tipo == 6) {
+					if(jogador.inv.itens[jogador.inv.slotSelecionado].nome.equals("tronco")) {
 						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
-						jogador.inv.addItem(8, 4);
-						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-						else jogador.blocoSele = 0;
+						jogador.inv.addItem("tabua_madeira", 4);
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
 						Logs.log("feito tabua");
-					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].tipo == 5) {
+					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].nome.equals("areia")) {
 						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
-						jogador.inv.addItem(10, 1);
-						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-						else jogador.blocoSele = 0;
+						jogador.inv.addItem("vidro", 1);
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
 						Logs.log("feito vidro");
-					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].tipo == 7) {
+					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].nome.equals("folhas")) {
 						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
-						jogador.inv.addItem(11, 1);
-						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.blocoSele = jogador.inv.itens[jogador.inv.slotSelecionado].tipo;
-						else jogador.blocoSele = 0;
+						jogador.inv.addItem("tocha", 1);
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
 						Logs.log("feito tocha");
 					}
 					toques.put(p, "receita");

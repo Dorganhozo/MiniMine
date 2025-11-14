@@ -116,23 +116,21 @@ public class Inventario {
     public void selecionarSlot(int slot, Jogador jogador) {
         slotSelecionado = slot;
         if(itens[slot] != null) {
-            jogador.blocoSele = itens[slot].tipo;
             jogador.item = itens[slot].nome;
         } else {
-            jogador.blocoSele = 0;
-            jogador.item = "Ar";
+            jogador.item = "ar";
         }
     }
 
-    public void addItem(int tipo, int quantidade) {
+    public void addItem(CharSequence nome, int quantidade) {
 		// se o slot tem o mesmo item:
-		if(itens[slotSelecionado] != null && itens[slotSelecionado].tipo == tipo) {
+		if(itens[slotSelecionado] != null && itens[slotSelecionado].nome.equals(nome)) {
 			itens[slotSelecionado].quantidade += quantidade;
 			return;
 		}
 		// se o slot atual é diferente, coloca o item onde tiver espaço:
 		for(int i = 0; i < itens.length; i++) {
-			if(itens[i] != null && itens[i].tipo == tipo) {
+			if(itens[i] != null && itens[i].nome.equals(nome)) {
 				itens[i].quantidade += quantidade;
 				return;
 			}
@@ -140,19 +138,17 @@ public class Inventario {
 		// senao, colocar no primeiro slot vazio:
 		for(int i = 0; i < itens.length; i++) {
 			if(itens[i] == null) {
-				CharSequence nome = "Ar";
 				Texture textura = texSlot;
 
 				for(Bloco b : Bloco.blocos) {
-					if(b.tipo == tipo) {
-						nome = b.nome;
+					if(b.nome == nome) {
 						textura = Texturas.texs.tentar(b.nome + "_lado");
 						if(textura == null) textura = Texturas.texs.tentar(b.nome);
 						if(textura == null) textura = Texturas.texs.obter(b.nome + "_topo");
 						break;
 					}
 				}
-				itens[i] = new Item(tipo, nome, textura, quantidade);
+				itens[i] = new Item(nome, textura, quantidade);
 				return;
 			}
 		}
@@ -299,7 +295,7 @@ public class Inventario {
 					itens[slotOrigemFlutuante] = itemFlutuante;
 				} else {
 					// se o slot de origem foi ocupado procura o primeiro vazio
-					addItem(itemFlutuante.tipo, itemFlutuante.quantidade);
+					addItem(itemFlutuante.nome, itemFlutuante.quantidade);
 				}
 				itemFlutuante = null;
 				slotOrigemFlutuante = -1;
@@ -310,13 +306,11 @@ public class Inventario {
     }
 	
     public static class Item {
-        public int tipo;
         public CharSequence nome;
         public Texture textura;
         public int quantidade;
 
-        public Item(int tipo, CharSequence nome, Texture textura, int quantidade) {
-            this.tipo = tipo;
+        public Item(CharSequence nome, Texture textura, int quantidade) {
             this.nome = nome;
             this.textura = textura;
             this.quantidade = quantidade;

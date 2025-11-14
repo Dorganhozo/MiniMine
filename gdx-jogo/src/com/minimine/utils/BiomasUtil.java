@@ -27,7 +27,7 @@ public class BiomasUtil {
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
 					int px = chunk.x * Mundo.TAM_CHUNK + lx;
 					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
-					byte bloco = 0;
+					CharSequence bloco = "ar";
 					// ruido continental: define onde ha oceanos e terra
 					float continente = Mundo.s2D.ruidoFractal(px * 0.0005f, pz * 0.0005f, 1.0f, 3, 0.5f);
 					// ruido de detalhe local
@@ -50,11 +50,11 @@ public class BiomasUtil {
 					if(altura > Mundo.Y_CHUNK - 2) altura = Mundo.Y_CHUNK - 2;
 
 					for(int y = 0; y < altura; y++) {
-						if(y < altura - 8) bloco = 3;       // pedra
-						else if(y < altura - 1) bloco = 2;  // terra
-						else if(y == altura - 1) bloco = 1; // grama
-						else bloco = 2;
-						if(bloco != 0) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+						if(y < altura - 8) bloco = "pedra";       // pedra
+						else if(y < altura - 1) bloco = "terra";  // terra
+						else if(y == altura - 1) bloco = "grama"; // grama
+						else bloco = "terra";
+						if(!bloco.equals("ar")) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 					}
 					if(Mundo.s2D.ruido(px, pz) > 0.7f) BiomasUtil.gerarArvore(lx,altura,  lz, chunk);
 				}
@@ -71,7 +71,7 @@ public class BiomasUtil {
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
 					int px = chunk.x * Mundo.TAM_CHUNK + lx;
 					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
-					byte bloco = 0;
+					CharSequence bloco = "ar";
 					// ruido continental: define onde ha oceanos e terra
 					float continente = Mundo.s2D.ruidoFractal(px * 0.0005f, pz * 0.0005f, 1.0f, 3, 0.5f);
 					// ruido de detalhe local
@@ -94,11 +94,11 @@ public class BiomasUtil {
 					if(altura > Mundo.Y_CHUNK - 2) altura = Mundo.Y_CHUNK - 2;
 
 					for(int y = 0; y < altura; y++) {
-						if(y < altura - 8) bloco = 3;       // pedra
-						else if(y < altura - 1) bloco = 2;  // terra
-						else if(y == altura - 1) bloco = 1; // grama
-						else bloco = 2;
-						if(bloco != 0) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+						if(y < altura - 8) bloco = "pedra";       // pedra
+						else if(y < altura - 1) bloco = "terra";  // terra
+						else if(y == altura - 1) bloco = "grama"; // grama
+						else bloco = "terra";
+						if(!bloco.equals("ar")) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 					}
 				}
 			});
@@ -114,7 +114,7 @@ public class BiomasUtil {
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
 					int px = chunk.x * Mundo.TAM_CHUNK + lx;
 					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
-					byte bloco = 0;
+					CharSequence bloco = "ar";
 					// ruido continental: define onde ha oceanos e terra
 					float continente = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.0003f, 1.0f, 4, 0.5f);
 					// ruido de detalhe local
@@ -137,13 +137,13 @@ public class BiomasUtil {
 					if(altura > Mundo.Y_CHUNK - 2) altura = Mundo.Y_CHUNK - 2;
 					int limiteY = Math.max(altura, 50);
 					for(int y = 0; y < limiteY; y++) {
-						if(y < altura - 8) bloco = 3;
-						else if(y <= altura) bloco = 5;
-						else bloco = 0;
+						if(y < altura - 8) bloco = "pedra";
+						else if(y <= altura) bloco = "areia";
+						else bloco = "ar";
 
-						if(y < 50 && bloco == 0) bloco = 4;
+						if(y < 50 && bloco.equals("ar")) bloco = "agua";
 
-						if(bloco != 0) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+						if(!bloco.equals("ar")) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 					}
 				}
 			});
@@ -159,7 +159,7 @@ public class BiomasUtil {
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
 					int px = chunk.x * Mundo.TAM_CHUNK + lx;
 					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
-					int bloco = 0;
+					CharSequence bloco = "ar";
 					// ruido continental: define onde ha oceanos e terra
 					float continente = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.0003f, 1.0f, 4, 0.5f);
 					// ruido de detalhe local
@@ -182,13 +182,13 @@ public class BiomasUtil {
 					if(altura > Mundo.Y_CHUNK - 2) altura = Mundo.Y_CHUNK - 2;
 					int limiteY = Math.max(altura, 50);
 					for(int y = 0; y < limiteY; y++) {
-						if(y < altura - 8) bloco = 3;
-						else if(y <= altura) bloco = 5;
-						else bloco = 0;
+						if(y < altura - 8) bloco = "pedra";
+						else if(y <= altura) bloco = "areia";
+						else bloco = "ar";
 
-						if(y < 45 && bloco == 0) bloco = 4;
+						if(y < 45 && bloco.equals("ar")) bloco = "agua";
 
-						if(bloco != 0) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
+						if(!bloco.equals("ar")) ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 						if(Mundo.s2D.ruido(px, pz) > 0.5f) BiomasUtil.gerarCacto(lx,altura,  lz, chunk);
 					}
 				}
@@ -225,7 +225,7 @@ public class BiomasUtil {
 		// tronco
 		for(int i = 0; i < 5; i++) {
 			if(dentroLimite(x, y + i, z)) {
-				ChunkUtil.defBloco(x, y + i, z, 6, chunk);
+				ChunkUtil.defBloco(x, y + i, z, "tronco", chunk);
 			}
 		}
 		// copa(duas camadas e topo)
@@ -238,7 +238,7 @@ public class BiomasUtil {
 						int yy = y + dy;
 						int zz = z + dz;
 						if(dentroLimite(xx, yy, zz)) {
-							ChunkUtil.defBloco(xx, yy, zz, 7, chunk);
+							ChunkUtil.defBloco(xx, yy, zz, "folhas", chunk);
 						}
 					}
 				}
@@ -247,8 +247,8 @@ public class BiomasUtil {
 	}
 	
 	public static void gerarCacto(int lx, int y, int lz, Chunk chunk) {
-		ChunkUtil.defBloco(lx, y, lz, 9, chunk);
-		ChunkUtil.defBloco(lx, y+1, lz, 9, chunk);
+		ChunkUtil.defBloco(lx, y, lz, "cacto", chunk);
+		ChunkUtil.defBloco(lx, y+1, lz, "cacto", chunk);
 	}
 
 	public static boolean dentroLimite(int x, int y, int z) {

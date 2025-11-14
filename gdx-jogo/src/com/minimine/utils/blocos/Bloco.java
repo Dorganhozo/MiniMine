@@ -2,9 +2,12 @@ package com.minimine.utils.blocos;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Bloco {
 	public static List<Bloco> blocos = new ArrayList<>();
+	public static HashMap<CharSequence, Bloco> texIds = new HashMap<>();
+	public static HashMap<Integer, Bloco> numIds = new HashMap<>();
 	public static Bloco[] blocosId;
 	
 	public CharSequence nome;
@@ -35,6 +38,8 @@ public class Bloco {
 		for(int i = 0; i < blocosId.length; i++) {
 			blocosId[i] = blocos.get(i);
 		}
+		numIds.put(this.tipo, this);
+		texIds.put(this.nome, this);
 	}
 
 	public int texturaId(int faceId) {

@@ -230,7 +230,7 @@ public class ArquivosUtil {
         dos.writeFloat(jogador.posicao.z);
         dos.writeFloat(jogador.yaw);
         dos.writeFloat(jogador.tom);
-        dos.writeInt(jogador.blocoSele);
+        dos.writeUTF(""+jogador.item);
         dos.writeInt(jogador.ALCANCE);
         dos.writeInt(jogador.inv != null ? jogador.inv.slotSelecionado : 0);
 		dos.writeFloat(jogador.velo);
@@ -249,7 +249,6 @@ public class ArquivosUtil {
                 dos.writeBoolean(false);
             } else {
                 dos.writeBoolean(true);
-                dos.writeInt(jogador.inv.itens[i].tipo);
                 dos.writeUTF(jogador.inv.itens[i].nome == null ? "" : jogador.inv.itens[i].nome+"");
                 dos.writeInt(jogador.inv.itens[i].quantidade);
             }
@@ -282,7 +281,7 @@ public class ArquivosUtil {
                 int x = dis.readInt();
                 int y = dis.readInt();
                 int z = dis.readInt();
-                int id = dis.readInt();
+                CharSequence id = dis.readUTF();
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
             chunk.mesh = Mundo.meshReuso.obtain();
@@ -302,7 +301,7 @@ public class ArquivosUtil {
         jogador.posicao = new Vector3(dis.readFloat(), dis.readFloat(), dis.readFloat());
         jogador.yaw = dis.readFloat();
         jogador.tom = dis.readFloat();
-        jogador.blocoSele = dis.readInt();
+        jogador.item = dis.readUTF();
         jogador.ALCANCE = dis.readInt();
         if(jogador.inv == null) jogador.inv = new Inventario();
         jogador.inv.slotSelecionado = dis.readInt();
@@ -324,7 +323,6 @@ public class ArquivosUtil {
                 continue;
             }
             if(temItem) {
-                int tipo = dis.readInt();
                 String nome = dis.readUTF();
                 int quantidade = dis.readInt();
 
@@ -335,7 +333,7 @@ public class ArquivosUtil {
                     jogador.inv.itens[i] = null;
                     continue;
                 }
-                jogador.inv.itens[i] = new Inventario.Item(tipo, nome, textura, quantidade);
+                jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
             } else {
                 jogador.inv.itens[i] = null;
             }

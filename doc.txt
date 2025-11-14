@@ -35,7 +35,7 @@ jogador.inv.hotbarSlots
 jogador.inv.slotSelecionado -- indice do slot atual
 jogador.inv.aberto -- abre ou fecha inventario
 jogador.inv:rmItem(slotId, quantidade) -- remove o item de um slot pela quantidade
-jogador.inv:addItem(tipoId, quantidade) -- adiciona um item pelo tipo e quantidade
+jogador.inv:addItem(blocoId, quantidade) -- adiciona um item pelo tipo e quantidade
 jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
 
 mundo:
@@ -47,10 +47,10 @@ mundo.Y_CHUNK -- tamanho vertical das chuhks
 mundo.TAM_CHUNK -- tamanho horizontal das chunks
 mundo:defBlocoMundo(x, y, z, tipoDoBloco) -- define um bloco nas coordenadas globais
 mundo:obterBlocoMundo(x, y, z) -- obtem o tipo do bloco nas coordenadas globais
-mundo:addBloco(nome, tipo, texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
-mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados) -- variacao
-mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, texturaIdBaixo) -- variacao
-mundo:addBloco(nome, tipo, texturaIdTopo, texturaIdLados, ehTransparente) -- variacao se é transparente, true, senao, false
+mundo:addBloco(nome, texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
+mundo:addBloco(nome, texturaIdTopo, texturaIdLados) -- variacao
+mundo:addBloco(nome, texturaIdTopo, texturaIdLados, texturaIdBaixo) -- variacao
+mundo:addBloco(nome, texturaIdTopo, texturaIdLados, ehTransparente) -- variacao se é transparente, true, senao, false
 
 mundo.texturas:
 
@@ -82,6 +82,14 @@ chunkutil:defBloco(localX, localY, localZ, tipoId, chunk) -- define um bloco de 
 chunkutil:obterBloco(localX, localY, localZ, chunk)
 chunkutil:defLuz(localX, localY, localZ, nivel, chunk) -- define uma luz na chunk com um nivel luminosidade
 chunkutil:defLuz(localX, localY, localZ, chunk) -- retorna o nivel de luz na chunk
+
+bloco.numIds:
+
+bloco.numIds:get(0) -- retorna um objeto bloco baseado no seu ID dinamico de numero inteiro
+
+bloco.texIds:
+
+bloco.texIds:get(bloco) -- retorna um objeto Bloco baseado em seu ID imutavel de texto
 
 ui:
 
@@ -174,17 +182,17 @@ mapeamento de IDs:
 
 blocos:
 
-1 = grama
-2 = terra
-3 = pedra
-4 = agua
-5 = areia
-6 = tronco de madeira
-7 = bloco de folhas
-8 = tabua de madeira
-9 = cacto
-10 = vidro
-11 = tocha
+"grama"
+"terra"
+"pedra"
+"agua"
+"areia"
+"tronco"
+"folhas"
+"tabua_madeira"
+"cacto"
+"vidro"
+"tocha"
 
 texturas internas:
 
