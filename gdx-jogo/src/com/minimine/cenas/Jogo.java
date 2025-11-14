@@ -33,6 +33,7 @@ public class Jogo implements Screen {
 	public Environment ambiente;
 	public ModelBatch mb;
 	public List<Jogador> jgs = new ArrayList<>();
+	
     @Override
 	public void show() {
 		mundo.ciclo = true;

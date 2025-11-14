@@ -137,12 +137,12 @@ public class ChunkUtil {
 					}
 				}
 			}
-			// se ainda estamos em paleta(idc valido), gravamos indice
+			// se ainda estamos em paleta(idc valido), grava ndice
 			if(chunk.usaPaleta) {
 				gravarPacote(total, idc, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt);
 				return;
 			}
-			// caso contrario, conversion ocorreu e prosseguimos para modo direto
+			// caso contrario, conversão ocorreu e prossegue pra modo direto
 		}
 		// kodo direto: garantias de bits e compactação se necessario
 		if(!chunk.usaPaleta) {

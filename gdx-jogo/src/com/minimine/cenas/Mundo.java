@@ -83,8 +83,7 @@ public class Mundo {
 	"varying vec4 v_cor;\n" +  
 	"void main() {\n" +  
 	"  v_texCoord = a_texCoord;\n" +  
-	"  float inten = u_luzGlobal;\n" +  
-	"  \n" +  
+	"  float inten = u_luzGlobal;\n" + 
 	"  if(u_luzGlobal < 0.3) {\n" +  
 	"    inten *= 0.7;\n" +  
 	"  }\n" +  
@@ -124,17 +123,17 @@ public class Mundo {
 		texturas.add(Texturas.texs.get("vidro"));  
 		texturas.add(Texturas.texs.get("tocha"));  
 		
-		Bloco.blocos.add(new Bloco("grama", 1, 0, 1, 2));  
-		Bloco.blocos.add(new Bloco("terra", 2, 2));  
-		Bloco.blocos.add(new Bloco("pedra", 3, 3));  
-		Bloco.blocos.add(new Bloco("agua", 4, 4, true, false, true));  
-		Bloco.blocos.add(new Bloco("areia", 5, 5));  
-		Bloco.blocos.add(new Bloco("tronco", 6, 6, 7));  
-		Bloco.blocos.add(new Bloco("folha", 7, 8, true, false, true));  
+		Bloco.blocos.add(new Bloco("grama", 0, 1, 2));  
+		Bloco.blocos.add(new Bloco("terra", 2));  
+		Bloco.blocos.add(new Bloco("pedra", 3));  
+		Bloco.blocos.add(new Bloco("agua", 4, true, false, true));  
+		Bloco.blocos.add(new Bloco("areia", 5));  
+		Bloco.blocos.add(new Bloco("tronco", 6, 7));  
+		Bloco.blocos.add(new Bloco("folha", 8, true, false, true));  
 		Bloco.blocos.add(new Bloco("tabua_madeira", 8, 9));  
-		Bloco.blocos.add(new Bloco("cacto", 9, 10, 11));
-		Bloco.blocos.add(new Bloco("vidro", 10, 12, true, false, true));
-		Bloco.blocos.add(new Bloco("tocha", 11, 13, true, false, true));
+		Bloco.blocos.add(new Bloco("cacto", 10, 11));
+		Bloco.blocos.add(new Bloco("vidro", 12, true, false, true));
+		Bloco.blocos.add(new Bloco("tocha", 13, true, false, true));
 	}  
 	  
 	public void iniciar() {  
@@ -494,20 +493,20 @@ public class Mundo {
 			});  
 	}  
 	// API:  
-	public static Bloco addBloco(String nome, int tipo, int topo) {  
-		return addBloco(nome, tipo, topo, topo, topo, false, true);  
+	public static Bloco addBloco(String nome, int topo) {  
+		return addBloco(nome, topo, topo, topo, false, true);  
 	}  
   
-	public static Bloco addBloco(String nome, int tipo, int topo, int lados) {  
-		return addBloco(nome, tipo, topo, lados, topo, false, true);  
+	public static Bloco addBloco(String nome, int topo, int lados) {  
+		return addBloco(nome, topo, lados, topo, false, true);  
 	}  
   
-	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo) {  
-		return addBloco(nome, tipo, topo, lados, baixo, false, true);  
+	public static Bloco addBloco(String nome, int topo, int lados, int baixo) {  
+		return addBloco(nome, topo, lados, baixo, false, true);  
 	}  
   
-	public static Bloco addBloco(String nome, int tipo, int topo, int lados, int baixo, boolean alfa, boolean solido) {  
-		Bloco.blocos.add(new Bloco(nome, tipo, topo, lados, baixo, alfa, solido));  
-		return Bloco.blocos.get(tipo-1);  
+	public static Bloco addBloco(String nome, int topo, int lados, int baixo, boolean alfa, boolean solido) {  
+		Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido));  
+		return Bloco.blocos.get(Bloco.blocos.size()-1);  
 	}  
 }  

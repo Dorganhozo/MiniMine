@@ -21,8 +21,6 @@ public class JSWebView implements JS {
 				public void run() {
 					web = new WebView(MainActivity.ISSO);
 					config();
-					((ViewGroup) MainActivity.ISSO.getWindow().getDecorView()).addView(web, 0);
-					web.setVisibility(View.INVISIBLE);
 				}
 			});
 	}
@@ -33,7 +31,7 @@ public class JSWebView implements JS {
 		MainActivity.ISSO.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					web.loadUrl("file:///" + caminho);
+					web.loadUrl("file://" + caminho);
 				}
 			});
 	}
@@ -44,7 +42,7 @@ public class JSWebView implements JS {
 		MainActivity.ISSO.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+					if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
 						web.evaluateJavascript(codigo, null);
 					else
 						web.loadUrl("javascript:" + codigo);
@@ -68,47 +66,47 @@ public class JSWebView implements JS {
 		MainActivity.ISSO.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-		WebSettings s = web.getSettings();
-		s.setJavaScriptEnabled(true);
-		s.setAllowFileAccess(true);
-		s.setAllowContentAccess(true);
-		s.setSupportZoom(true);
-		s.setCacheMode(WebSettings.LOAD_NO_CACHE);
-		web.clearCache(true);
+					WebSettings s = web.getSettings();
+					s.setJavaScriptEnabled(true);
+					s.setAllowFileAccess(true);
+					s.setAllowContentAccess(true);
+					s.setSupportZoom(true);
+					s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+					web.clearCache(true);
 
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-			WebView.setWebContentsDebuggingEnabled(true);
+					if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+						WebView.setWebContentsDebuggingEnabled(true);
 
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-			s.setAllowFileAccessFromFileURLs(true);
-			s.setAllowUniversalAccessFromFileURLs(true);
-		}
-
-		web.setWebViewClient(new WebViewClient() {
-				@Override
-				public boolean shouldOverrideUrlLoading(WebView v, String url) {
-					if (url.startsWith("http://")) {
-						Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-						MainActivity.ISSO.startActivity(i);
-						return true;
+					if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+						s.setAllowFileAccessFromFileURLs(true);
+						s.setAllowUniversalAccessFromFileURLs(true);
 					}
-					return false;
+
+					web.setWebViewClient(new WebViewClient() {
+							@Override
+							public boolean shouldOverrideUrlLoading(WebView v, String url) {
+								if(url.startsWith("http://")) {
+									Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+									MainActivity.ISSO.startActivity(i);
+									return true;
+								}
+								return false;
+							}
+						});
+
+					web.setWebChromeClient(new WebChromeClient() {
+							@Override
+							public boolean onConsoleMessage(ConsoleMessage msg) {
+								Logs.log(msg.message());
+								return true;
+							}
+						});
+
+					s.setDomStorageEnabled(true);
+					s.setDatabaseEnabled(true);
+					if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+						s.setAllowFileAccess(true);
 				}
 			});
-
-		web.setWebChromeClient(new WebChromeClient() {
-				@Override
-				public boolean onConsoleMessage(ConsoleMessage msg) {
-					Logs.log(msg.message());
-					return true;
-				}
-			});
-
-		s.setDomStorageEnabled(true);
-		s.setDatabaseEnabled(true);
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-			s.setAllowFileAccess(true);
-			}
-		});
 	}
 }

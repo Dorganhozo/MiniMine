@@ -189,8 +189,8 @@ public class Jogador {
         }
         camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
 		
-		if(camera.position.y < -100f) {
-			camera.position.y = 80f;
+		if(posicao.y < -100f) {
+			posicao.y = 80f;
 		}
     }
 	
