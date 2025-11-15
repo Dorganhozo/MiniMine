@@ -23,6 +23,7 @@ import com.minimine.utils.BiomasUtil;
 import com.minimine.Logs;
 import com.minimine.JS;
 import com.minimine.MainActivity;
+import com.minimine.utils.audio.AudioUtil;
 
 public class Jogo implements Screen {
 	public UI ui;
@@ -42,6 +43,7 @@ public class Jogo implements Screen {
 		// net = new Net(Net.SERVIDOR_MODO);
 		
 		LuaAPI.iniciar(this);
+		/*
 		try {
 			MainActivity.ISSO.runOnUiThread(new Runnable() {
 				@Override
@@ -66,6 +68,7 @@ public class Jogo implements Screen {
 		} catch(Exception e) {
 			Logs.log("JAVASCRIPT API: [ERRO]: "+e.getMessage());
 		}
+		*/
 		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		
 		mundo.iniciar();
@@ -78,6 +81,11 @@ public class Jogo implements Screen {
 		ambiente = new Environment();
 		ambiente.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
 		ambiente.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
+		
+		AudioUtil.sons.put("rapaiz", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/rapaiz.mp3")));
+		AudioUtil.sons.put("uepa", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/uepa.mp3")));
+		AudioUtil.sons.put("pare", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/pare.mp3")));
+		AudioUtil.sons.put("iha", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/iha.mp3")));
 		
 		pronto = true;
 	}

@@ -17,6 +17,7 @@ import com.minimine.utils.Texturas;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.Logs;
+import com.minimine.utils.audio.AudioUtil;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -45,7 +46,8 @@ public class LuaAPI {
 		globais.set("gdx", CoerceJavaToLua.coerce(new Gdx()));
 		globais.set("lua", CoerceJavaToLua.coerce(new LuaAPI()));
 		globais.set("arquivos", CoerceJavaToLua.coerce(new ArquivosUtil()));
-			
+		globais.set("audio", CoerceJavaToLua.coerce(new AudioUtil()));
+		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
 				ajuste = (LuaFunction) arg;

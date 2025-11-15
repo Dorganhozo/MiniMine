@@ -7,7 +7,7 @@ public class ChunkUtil {
 	public static Bloco obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
 		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
 			int blocoId = obterBloco(x, y, z, chunk);
-			return blocoId == 0 ? null : Bloco.existe(blocoId);
+			return blocoId == 0 ? null : Bloco.numIds.get(blocoId);
 		}
 		if(chunkAdj != null) {
 			int adjX = x;
@@ -20,7 +20,7 @@ public class ChunkUtil {
 			else if(z >= Mundo.TAM_CHUNK) adjZ = 0;
 
 			int blocoId = obterBloco(adjX, y, adjZ, chunkAdj);
-			return blocoId == 0 ? null : Bloco.existe(blocoId);
+			return blocoId == 0 ? null : Bloco.numIds.get(blocoId);
 		}
 		return null;
 	}

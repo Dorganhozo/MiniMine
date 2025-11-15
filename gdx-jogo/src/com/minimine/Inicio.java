@@ -10,6 +10,7 @@ import com.minimine.cenas.UI;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.CorposCelestes;
 import com.minimine.cenas.Mundo;
+import com.minimine.utils.audio.AudioUtil;
 
 public class Inicio extends Game {
 	public static String externo;
@@ -53,6 +54,7 @@ public class Inicio extends Game {
 			UI.liberar();
 			NuvensUtil.liberar();
 			CorposCelestes.liberar();
+			AudioUtil.liberar();
 		} catch(Exception e) {
 			Gdx.app.log("Inicio", "[ERRO] ao liberar: "+e);
 		}

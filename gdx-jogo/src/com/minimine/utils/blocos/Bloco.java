@@ -8,7 +8,6 @@ public class Bloco {
 	public static List<Bloco> blocos = new ArrayList<>();
 	public static HashMap<CharSequence, Bloco> texIds = new HashMap<>();
 	public static HashMap<Integer, Bloco> numIds = new HashMap<>();
-	public static Bloco[] blocosId;
 	
 	public CharSequence nome;
 	public int tipo;
@@ -34,10 +33,6 @@ public class Bloco {
 		this.solido = solido;
 		this.cullingAlto = cullingAlto;
 		
-		blocosId = new Bloco[blocos.size()];
-		for(int i = 0; i < blocosId.length; i++) {
-			blocosId[i] = blocos.get(i);
-		}
 		numIds.put(this.tipo, this);
 		texIds.put(this.nome, this);
 	}
@@ -49,9 +44,4 @@ public class Bloco {
             default: return lados;
         }
     }
-
-	public static Bloco existe(int id) {
-		for(int i = 0; i < blocosId.length; i++) if(blocosId[i].tipo == id) return blocosId[i];
-		return null;
-	}
 }

@@ -65,12 +65,7 @@ public class Mundo {
 		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),  
 		new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")  
 	};  
-	public static Pool<Mesh> meshReuso = new Pool<Mesh>(chunksTotais) {
-		@Override  
-		protected Mesh newObject() {
-			return new Mesh(true, maxVerts, maxIndices, atriburs);  
-		}
-	};  
+	public static Pool<Mesh> meshReuso;
 	  
 	public static String vert =   
 	"attribute vec3 a_pos;\n" +  

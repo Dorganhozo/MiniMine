@@ -161,6 +161,14 @@ texutil.texs:
 texutil.texs:size()
 texutil.texs:get(nome)
 
+audio:
+
+audio:addSom(nome, caminho) -- adiciona um som a lista e retorna um objeto Sound, use som:play() como na LibGDX
+
+audio.sons:
+
+audio.sons:get(nome) -- retorna um objeto Sound
+
 lua:
 
 lua:exec(codigoTexto) -- executa um codigo Lua em tempo de execução
@@ -245,6 +253,10 @@ indices de biomas padrão:
 1 = "padrao"
 2 = "deserto"
 3 = "deserto_cactos"
+
+IDs de aúdios:
+
+// nenhum permanente ainda...
 
 sobre especificações:
 

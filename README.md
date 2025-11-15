@@ -15,7 +15,8 @@ refeito com LibGDX.
 10. Mods por Lua/JavaScript no armazenamento externo. (beta)
 11. Sistema de ciclo noturno e diário.
 12. Nuvens.
-13. salvamento dinamico de mundos binario.
+13. Salvamento dinamico de mundos binario.
+14. Aúdio (ainda temporario até aúdios gravados manualmente).
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -25,22 +26,22 @@ refeito com LibGDX.
 você pode descobrir mais sobre a API Lua em doc.txt.
 
 ## blocos:
-1. Ar.
-2. Grama.
-3. Terra.
-4. Pedra.
-5. Água.
-6. Areia.
-7. Tronco de madeira.
-8. Bloco de folhas.
-9. Tabua de madeira.
-10. Cacto.
-11. Vidro.
+0. Ar.
+1. Grama.
+2. Terra.
+3. Pedra.
+4. Água.
+5. Areia.
+6. Tronco de madeira.
+7. Bloco de folhas.
+8. Tabua de madeira.
+9. Cacto.
+10. Vidro.
+11. Tocha. (ainda não emite luz)
 
 ## otimizações:
 Geração em Thread separada com ExecutorService.
 Reuso de objetos Mesh.
-Reuso de objetos ChunkUtil.Chave.
 Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
@@ -65,7 +66,7 @@ att.lua // será chamado no loop principal
 
 e para adicionar mais de um arquivo individual, adicione o caminho relativo a pasta atual em *MiniMine/mods/arquivos.mini*. os arquivos são separados e carregados por quebra de linha.
 
-## mods JavaScript:
+## mods JavaScript (descontinuado por consuno excessivo de Threads):
 
 adicione seus scripts em "MiniMine/mods/arquivos.html".
 

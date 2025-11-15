@@ -32,7 +32,7 @@ public class ChunkMesh {
 					int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
 					if(blocoId == 0) continue;
 
-					Bloco blocoTipo = Bloco.existe(blocoId);
+					Bloco blocoTipo = Bloco.numIds.get(blocoId);
 					if(blocoTipo == null) continue;
 
 					ChunkOtimiza.lidarFacesDoBloco(x, y, z, blocoTipo,
