@@ -2,10 +2,11 @@ package com.minimine.utils;
 
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
+import com.minimine.cenas.Mundo;
 
 public class DiaNoiteUtil {
     public static float tempo = 0.0f;
-	public static float tempo_velo = 0.00028f / 8; // 1 minuto = 1 dia, / 8 = 8 minutos = 1 dia
+	public static float tempo_velo = 0.00028f;
     public static float luz = 1.0f;
     public static long ultimaAtt = 0;
     public static final Vector3 posicaoSol = new Vector3();
@@ -37,6 +38,7 @@ public class DiaNoiteUtil {
         corLua[3] = visibiLua;
 
         ultimaAtt = System.currentTimeMillis();
+		Mundo.tick += tempo_velo;
     }
 
     public static float calcularvisibiSol(float alturaNorm) {
@@ -81,8 +83,6 @@ public class DiaNoiteUtil {
     }
 
     public static void aplicarShader(ShaderProgram shader) {
-        shader.setUniformf("u_luzGlobal", luz);
-        shader.setUniformf("u_tempoDia", tempo);
 		posTmp[0] =posicaoSol.x; posTmp[1] = posicaoSol.y; posTmp[2] = posicaoSol.z;
         shader.setUniform3fv("u_posSol", posTmp, 0, 3);
 		posTmp[0] =posicaoLua.x; posTmp[1] = posicaoLua.y; posTmp[2] = posicaoLua.z;

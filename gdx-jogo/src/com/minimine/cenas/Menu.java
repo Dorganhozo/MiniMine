@@ -24,6 +24,9 @@ import com.minimine.utils.chunks.ChunkUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.InterUtil;
 import com.minimine.utils.CorposCelestes;
+import com.minimine.utils.chunks.Chunk;
+import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.graphics.Mesh;
 
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;
@@ -138,7 +141,6 @@ public class Menu implements Screen, InputProcessor {
 			t.porFrame(delta, sb, fonte);
 		}
 		UI.attCamera(tela.camera, tela.yaw, tela.tom);
-		// UI.console(tela, sb, fonte, mundo);
 		sb.end();
 	}
 	@Override
@@ -153,7 +155,7 @@ public class Menu implements Screen, InputProcessor {
 	@Override
 	public void dispose() {
 		sb.dispose();
-		fonte.dispose();
+		fonte.dispose();	
 		mundo.liberar();
 		CorposCelestes.liberar();
 	}

@@ -140,6 +140,7 @@ public class Intro implements Screen {
         mb.dispose();
         sb.dispose();
         fonte.dispose();
+		Menu.mundo.liberar();
     }
 
     @Override public void hide() {}

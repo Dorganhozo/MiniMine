@@ -1,16 +1,43 @@
 plugins {
-	id 'java-library'
+    id 'java-library'
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
-sourceSets{
-	main.java.srcDirs = ["src"]
+
+sourceSets {
+    main.java.srcDirs = ["src"]
 }
 
 dependencies {
-	implementation fileTree(dir: 'libs', include: ['*.jar'])
-	
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
+
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor 0, 'seconds'
+        cacheDynamicVersionsFor 0, 'seconds'
+    }
+}
+
+task limpezaSeletiva2(type: Delete) {
+    description = 'limpa arquivos compilados do módulo principal'
+    delete fileTree('build/classes') {
+        include '**/*.class'
+    }
+    delete 'build/tmp'
+    delete 'build/generated'
+}
+
+tasks.withType(JavaCompile) {
+    outputs.upToDateWhen { false }
+    
+    doFirst {
+        println "recompilando módulo gdx-jogo..."
+        limpezaSeletiva2.execute()
+    }
+}
+
+tasks.clean.dependsOn limpezaSeletiva2

@@ -39,7 +39,7 @@ public class Jogador {
 	public static float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
 	
 	public CharSequence item = "ar";
-	public static int ALCANCE = 6;
+	public static int ALCANCE = 7;
 	public Inventario inv = new Inventario();
 	
 	public float yaw = 180f, tom = -20f;
@@ -132,35 +132,31 @@ public class Jogador {
 				for(int z = minZ; z <= maxZ; z++) {
 
 					int id = Mundo.obterBlocoMundo(x, y, z);
+					if(id == 0) continue;
+					
 					Bloco b = Bloco.numIds.get(id);
-
-					if(b == null) continue;
-
-					CharSequence bloco = b.nome;
 
 					blocoBox.set(
 						minVec.set(x, y, z),
 						maxVec.set(x + 1, y + 1, z + 1)
 					);
-					if(bloco.equals("agua")) {
+					if(!b.solido) {
 						naAgua = true;
 						continue;
+					} else {
+						if(hitbox.intersects(blocoBox)) return true;
 					}
-					if(hitbox.intersects(blocoBox)) return true;
 				}
 			}
 		}
-
 		return false;
 	}
 	
 	public void att(float delta) {
 		// gravidade no sobrevivencia
-		if(naAgua) {
-			GRAVIDADE = -10;
-		} else {
-			GRAVIDADE = -30;
-		}
+		if(naAgua) GRAVIDADE = -10;
+		else GRAVIDADE = -30;
+		
 		if(modo == 2 && !noChao || naAgua) { 
             this.velocidade.y += GRAVIDADE * delta;
 

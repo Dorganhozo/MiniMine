@@ -10,36 +10,28 @@ public class ChunkMesh {
 	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
 		ChunkLuz.attLuz(chunk);
 
-		Chunk chunkXP = null, chunkXN = null, chunkZP = null, chunkZN = null;
-		Chave chave = null;
+		Chunk chunkXP, chunkXN, chunkZP, chunkZN;
+		chunkXP = Mundo.chunks.get(new Chave(chunk.x + 1, chunk.z));
+		chunkXN = Mundo.chunks.get(new Chave(chunk.x - 1, chunk.z));
+		chunkZP = Mundo.chunks.get(new Chave(chunk.x, chunk.z + 1));
+		chunkZN = Mundo.chunks.get(new Chave(chunk.x, chunk.z - 1));
 
-		synchronized(Mundo.chunks) {
-			chave = new Chave(chunk.x + 1, chunk.z);
-			chunkXP = Mundo.chunks.get(chave);
+		for(int idc = 0; idc < Mundo.CHUNK_AREA * Mundo.Y_CHUNK; idc++) {
+			int x = idc & 0xF;
+			int z = (idc >> 4) & 0xF;
+			int y = idc >> 8;
 
-			chave = new Chave(chunk.x - 1, chunk.z);
-			chunkXN = Mundo.chunks.get(chave);
+			int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
+			if(blocoId == 0) continue;
 
-			chave = new Chave(chunk.x, chunk.z + 1);
-			chunkZP = Mundo.chunks.get(chave);
+			Bloco blocoTipo = Bloco.numIds.get(blocoId);
+			if(blocoTipo == null) continue;
 
-			chave = new Chave(chunk.x, chunk.z - 1);
-			chunkZN = Mundo.chunks.get(chave);
-		}
-		for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
-			for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-				for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
-					int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
-					if(blocoId == 0) continue;
-
-					Bloco blocoTipo = Bloco.numIds.get(blocoId);
-					if(blocoTipo == null) continue;
-
-					ChunkOtimiza.lidarFacesDoBloco(x, y, z, blocoTipo,
-									  chunk, chunkXP, chunkXN, chunkZP, chunkZN,
-									  vertsGeral, idcGeral);
-				}
-			}
+			ChunkOtimiza.lidarFacesDoBloco(
+				x, y, z, blocoTipo,
+				chunk, chunkXP, chunkXN, chunkZP, chunkZN,
+				vertsGeral, idcGeral
+			);
 		}
 	}
 	

@@ -24,10 +24,11 @@ import com.minimine.Logs;
 import com.minimine.JS;
 import com.minimine.MainActivity;
 import com.minimine.utils.audio.AudioUtil;
+import com.minimine.utils.chunks.Chunk;
 
 public class Jogo implements Screen {
 	public UI ui;
-	public Mundo mundo = new Mundo();
+	public static Mundo mundo = new Mundo();
 	public Jogador jogador = new Jogador();
 	public Net net;
 	public static boolean pronto = false;
@@ -88,12 +89,21 @@ public class Jogo implements Screen {
 		AudioUtil.sons.put("iha", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/iha.mp3")));
 		
 		pronto = true;
+		
+		new java.util.Timer().schedule(
+			new java.util.TimerTask() {
+				@Override
+				public void run() {
+					if(mundo.ciclo) DiaNoiteUtil.att();
+				}
+			},
+			0,
+			120
+		);
 	}
 
     @Override
 	public void render(float delta) {
-		DiaNoiteUtil.att();
-
 		float fator = DiaNoiteUtil.obterFatorTransicao();
 		float[] corNoite = {0.05f, 0.05f, 0.15f};
 		float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
@@ -131,15 +141,6 @@ public class Jogo implements Screen {
 		
 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 		ui.att(delta, mundo);
-		if(mundo.tick > 0.01) {
-			mundo.exec.submit(new Runnable() {
-				@Override
-				public void run() {
-					ArquivosUtil.svMundo(mundo, jogador);
-				}
-			});
-			mundo.tick = 0;
-		}
     }
 
     @Override

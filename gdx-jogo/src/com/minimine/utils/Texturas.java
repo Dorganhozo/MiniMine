@@ -37,15 +37,13 @@ public class Texturas {
 			texs.put("botao_opcao", new Texture(Gdx.files.internal("ui/botao_opcao.png")));
 			texs.put("botao_ld", new Texture(Gdx.files.internal("ui/botao_ld.png")));
 			texs.put("botao_le", new Texture(Gdx.files.internal("ui/botao_le.png")));
+			texs.put("salvar", new Texture(Gdx.files.internal("ui/salvar.png")));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: " + e);
 		}
 	}
 
 	public static class TexLista<K, V> extends HashMap<K, V> {
-		public V tentar(Object chave) {
-			return super.get(chave);
-		}
 		public V obter(Object chave) {
 			V o = super.get(chave);
 			if(o == null) {

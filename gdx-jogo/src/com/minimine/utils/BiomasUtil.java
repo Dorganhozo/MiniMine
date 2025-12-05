@@ -238,7 +238,7 @@ public class BiomasUtil {
 						int yy = y + dy;
 						int zz = z + dz;
 						if(dentroLimite(xx, yy, zz)) {
-							ChunkUtil.defBloco(xx, yy, zz, "folhas", chunk);
+							ChunkUtil.defBloco(xx, yy, zz, "folha", chunk);
 						}
 					}
 				}

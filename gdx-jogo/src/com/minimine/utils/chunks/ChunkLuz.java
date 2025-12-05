@@ -1,9 +1,9 @@
 package com.minimine.utils.chunks;
 
 import com.minimine.cenas.Mundo;
+import com.minimine.utils.DiaNoiteUtil;
 
 public class ChunkLuz {
-	public static float LUZ_SOL = 1.0f;
     public static float LUZ_AMBIENTE = 0.25f;
     public static final float[] FACE_LUZ = {
         1.0f, // topo, luz max
@@ -44,14 +44,14 @@ public class ChunkLuz {
     }
 
     public static float calcularLuzCeu(int x, int y, int z, Chunk chunk) {
-        if(y >= Mundo.Y_CHUNK - 1)  return LUZ_SOL;
+        if(y >= Mundo.Y_CHUNK - 1)  return DiaNoiteUtil.luz;
         int blocosAcima = 0;
         for(int cy = y + 1; cy < Mundo.Y_CHUNK; cy++) {
             if(ChunkUtil.ehSolido(x, cy, z, chunk)) blocosAcima++;
         }
-        if(blocosAcima == 0) return LUZ_SOL;
+        if(blocosAcima == 0) return DiaNoiteUtil.luz;
         float atenuacao = 1.0f - (blocosAcima * 0.15f);
-        return Math.max(LUZ_AMBIENTE, LUZ_SOL * atenuacao);
+        return Math.max(LUZ_AMBIENTE, DiaNoiteUtil.luz * atenuacao);
     }
 	
 	public static byte obterLuz(int x, int y, int z, Chunk chunk) {

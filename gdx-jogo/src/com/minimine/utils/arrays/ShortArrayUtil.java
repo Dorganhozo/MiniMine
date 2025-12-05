@@ -1,7 +1,7 @@
 package com.minimine.utils.arrays;
 
 public class ShortArrayUtil {
-	public short[] arr = new short[1024];
+	public short[] arr = new short[12288]; // 2046 faces de uma vez
 	public int tam = 0;
 
 	public ShortArrayUtil() {}

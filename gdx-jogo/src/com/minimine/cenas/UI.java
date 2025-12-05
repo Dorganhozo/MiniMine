@@ -75,7 +75,7 @@ public class UI implements InputProcessor {
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
-		// abrirChat();
+		
 		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 	
@@ -287,6 +287,26 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
 			});
+		botoes.put("salvar", new Botao(Texturas.texs.get("salvar"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "salvar") {
+				public void aoTocar(int t, int t2, int p){
+					toques.put(p, "salvar");
+					sprite.setAlpha(0.5f);
+					Mundo.exec.submit(new Runnable() {
+						@Override
+						public void run() {
+							ArquivosUtil.svMundo(Jogo.mundo, jogador);
+							Gdx.app.postRunnable(new Runnable() {
+								@Override
+								public void run() {
+									abrirDialogo("seu jogo foi salvo");
+									sprite.setAlpha(0.9f);
+								}
+							});
+						}
+					});
+				}
+				public void aoSoltar(int t, int t2, int p){}
+			});
 	}
 
 	public void configDpad(int v, int h) {
@@ -334,6 +354,9 @@ public class UI implements InputProcessor {
 			} else if(b.nome.equals("receita")) {
 				b.sprite.setAlpha(0.9f);
 				b.sprite.setPosition(v - botaoTam, h - botaoTam);
+			} else if(b.nome.equals("salvar")) {
+				b.sprite.setAlpha(0.9f);
+				b.sprite.setPosition((v - botaoTam)-botaoTam, h - botaoTam);
 			}
 			b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
 		}
@@ -404,13 +427,13 @@ public class UI implements InputProcessor {
 						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
 						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\n\n" +
 						   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
-						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.1f\nTick: %.3f",
-						   camera.position.x, camera.position.y, camera.position.z,
+						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.3f",
+						   jogador.posicao.x, jogador.posicao.y, jogador.posicao.z,
 						   mundo.nome, 
 						   (jogador.modo == 0 ? "espectador" : jogador.modo == 1 ? "criativo" : "sobrevivencia"), 
 						   jogador.inv.slotSelecionado, jogador.item, jogador.noChao, jogador.naAgua,
 						   this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
-						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick), 
+						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo), 
 					   50, Gdx.graphics.getHeight() - 100);
 
 			fonte.draw(sb, String.format(
@@ -563,6 +586,10 @@ public class UI implements InputProcessor {
 				}
 			});
 		return botoes.get(nome);
+	}
+	
+	public static void abrirDialogo(String titulo) {
+		abrirDialogo(titulo, "", "", null, null);
 	}
 	
 	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func) {

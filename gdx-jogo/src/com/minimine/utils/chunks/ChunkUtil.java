@@ -10,6 +10,8 @@ public class ChunkUtil {
 			return blocoId == 0 ? null : Bloco.numIds.get(blocoId);
 		}
 		if(chunkAdj != null) {
+			if(y < 0 || y >= Mundo.Y_CHUNK) return null;
+
 			int adjX = x;
 			int adjZ = z;
 
@@ -35,7 +37,7 @@ public class ChunkUtil {
 
 		int b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
 
-		return b != 0 && !Bloco.numIds.get(b).solido;
+		return b != 0 || !Bloco.numIds.get(b).solido;
 	}
 
 	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
@@ -56,35 +58,29 @@ public class ChunkUtil {
 
 	public static int lerPacote(int indiceGlobal, int bits, int[] arr, int blocosPorInt) {
 		int idc = indiceGlobal / blocosPorInt;
-		int pos = indiceGlobal % blocosPorInt;
-		int bitPos = pos * bits;
+		int bitPos = (indiceGlobal % blocosPorInt) * bits;
 		int mascara = (1 << bits) - 1;
 		return (arr[idc] >>> bitPos) & mascara;
 	}
 
 	public static void gravarPacote(int indiceGlobal, int valor, int bits, int[] arr, int blocosPorInt) {
 		int idc = indiceGlobal / blocosPorInt;
-		int pos = indiceGlobal % blocosPorInt;
-		int bitPos = pos * bits;
+		int bitPos = (indiceGlobal % blocosPorInt) * bits;
 		int mascara = ((1 << bits) - 1) << bitPos;
 		arr[idc] = (arr[idc] & ~mascara) | ((valor & ((1 << bits) - 1)) << bitPos);
 	}
 
 	public static int obterBloco(int x, int y, int z, Chunk chunk) {
-		int totalWidth = Mundo.TAM_CHUNK;
-		int total = x + (z * totalWidth) + (y * totalWidth * totalWidth);
+		int total = x + (z << 4) + (y * Mundo.CHUNK_AREA); 
+
 		if(chunk.blocos == null) return 0;
+
 		if(chunk.usaPaleta) {
-			int bits = chunk.paletaBits;
-			int blocosPorInt = chunk.blocosPorInt;
-			int idx = lerPacote(total, bits, chunk.blocos, blocosPorInt);
-			if(idx < 0 || idx >= chunk.paletaTam) return 0;
-			return chunk.paleta[idx];
+			int idc = lerPacote(total, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt);
+			if(idc < 0 || idc >= chunk.paletaTam) return 0;
+			return chunk.paleta[idc];
 		} else {
-			int bits = chunk.bitsPorBloco;
-			int blocosPorInt = chunk.blocosPorInt;
-			int val = lerPacote(total, bits, chunk.blocos, blocosPorInt);
-			return val;
+			return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt);
 		}
 	}
 
@@ -92,7 +88,7 @@ public class ChunkUtil {
 		int bloco = nome.equals("ar") ? 0 : Bloco.texIds.get(nome).tipo;
 		int totalTam = Mundo.TAM_CHUNK;
 		int total = x + (z * totalTam) + (y * totalTam * totalTam);
-		// se estamos em modo paleta, tentamos usar/expandir paleta
+		// se ta em modo paleta, tenta usar/expandir paleta
 		if(chunk.usaPaleta) {
 			// procura na paleta
 			int idc = -1;
@@ -105,7 +101,7 @@ public class ChunkUtil {
 				if(chunk.paletaTam < capacidade) {
 					// cabe na paleta atual
 					if(chunk.paletaTam >= chunk.paleta.length) {
-						// aumenta array se necessário
+						// aumenta array se necessario
 						int[] novo = new int[Math.max(chunk.paleta.length * 2, capacidade)];
 						System.arraycopy(chunk.paleta, 0, novo, 0, chunk.paleta.length);
 						chunk.paleta = novo;

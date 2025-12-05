@@ -189,9 +189,9 @@ public class ArquivosUtil {
         dos.writeInt(mundo.seed);
         // quantos chunks salvos
         dos.writeInt(mundo.chunksMod.size());
-        for (Map.Entry<Chave, Chunk> entry : mundo.chunksMod.entrySet()) {
-            Chave chave = entry.getKey();
-            Chunk chunk = entry.getValue();
+        for(Map.Entry<Chave, Chunk> e : mundo.chunksMod.entrySet()) {
+            Chave chave = e.getKey();
+            Chunk chunk = e.getValue();
             int cx = Mundo.TAM_CHUNK;
             int cy = Mundo.Y_CHUNK;
             int cz = Mundo.TAM_CHUNK;
@@ -335,6 +335,7 @@ public class ArquivosUtil {
 
 					Texture textura = Texturas.texs.get(nome + "_lado");
 					if(textura == null) textura = Texturas.texs.get(nome);
+					if(textura == null) textura = Texturas.texs.get(nome + "_topo");
 					if(textura == null) {
 						Gdx.app.log("ArquivosUtil", "[ERRO] textura do item nao encontrada: " + nome + " (slot " + i + ") - ignorando item");
 						jogador.inv.itens[i] = null;

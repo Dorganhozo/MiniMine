@@ -141,10 +141,15 @@ public class Inventario {
 				Texture textura = texSlot;
 
 				for(Bloco b : Bloco.blocos) {
-					if(b.nome == nome) {
-						textura = Texturas.texs.tentar(b.nome + "_lado");
-						if(textura == null) textura = Texturas.texs.tentar(b.nome);
-						if(textura == null) textura = Texturas.texs.obter(b.nome + "_topo");
+					if(b == null) continue;
+					if(b.nome.equals(nome)) {
+						textura = Texturas.texs.get(nome + "_lado");
+						if(textura == null) textura = Texturas.texs.get(nome);
+						if(textura == null) textura = Texturas.texs.get(nome + "_topo");
+						if(textura == null) {
+							Gdx.app.log("[Inventario]", "textura não existe: " + nome);
+							textura = Texturas.texs.obter(nome);
+						}
 						break;
 					}
 				}

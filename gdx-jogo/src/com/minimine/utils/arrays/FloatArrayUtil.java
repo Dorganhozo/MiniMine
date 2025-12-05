@@ -1,7 +1,7 @@
 package com.minimine.utils.arrays;
 
 public class FloatArrayUtil {
-	public float[] arr = new float[1024];
+	public float[] arr = new float[16384];
 	public int tam = 0;
 
 	public FloatArrayUtil() {}

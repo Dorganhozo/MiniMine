@@ -14,24 +14,24 @@ public class Bloco {
 	public int topo, lados, baixo;
 	public boolean transparente;
 	public boolean solido;
-	public boolean cullingAlto;
+	public boolean culling;
 
-	public Bloco(CharSequence nome, int topo) {this(nome, topo, topo, topo, false, true, false);}
-	public Bloco(CharSequence nome, int topo, int lados) {this(nome, topo, lados, topo, false, true, false);}
-	public Bloco(CharSequence nome, int topo, int lados, int baixo) {this(nome,topo, lados, baixo, false, true, false);}
-	public Bloco(CharSequence nome, int topo, boolean transparente) {this(nome, topo, topo, topo, transparente, true, false);}
-	public Bloco(CharSequence nome, int topo, boolean transparente, boolean solido) {this(nome, topo, topo, topo, transparente, solido, false);}
-	public Bloco(CharSequence nome, int topo, int lados, int baixo, boolean transparente) {this(nome, topo, lados, baixo, transparente, true, false);}
-	public Bloco(CharSequence nome, int topo, int lados, int baixo, boolean transparente, boolean solido) {this(nome, topo, lados, baixo, transparente, solido, false);}
-	public Bloco(CharSequence nome, int topo, boolean transparente, boolean solido, boolean cullingAlto) {this(nome, topo, topo, topo, transparente, solido, cullingAlto);}
+	public Bloco(CharSequence nome, int topo) {this(nome, topo, topo, topo, false, true, true);}
+	public Bloco(CharSequence nome, int topo, int lados) {this(nome, topo, lados, topo, false, true, true);}
+	public Bloco(CharSequence nome, int topo, int lados, int baixo) {this(nome,topo, lados, baixo, false, true, true);}
+	public Bloco(CharSequence nome, int topo, boolean transparente) {this(nome, topo, topo, topo, transparente, true, true);}
+	public Bloco(CharSequence nome, int topo, boolean transparente, boolean solido) {this(nome, topo, topo, topo, transparente, solido, true);}
+	public Bloco(CharSequence nome, int topo, int lados, int baixo, boolean transparente) {this(nome, topo, lados, baixo, transparente, true, true);}
+	public Bloco(CharSequence nome, int topo, int lados, int baixo, boolean transparente, boolean solido) {this(nome, topo, lados, baixo, transparente, solido, true);}
+	public Bloco(CharSequence nome, int topo, boolean transparente, boolean solido, boolean culling) {this(nome, topo, topo, topo, transparente, solido, culling);}
 
-	public Bloco(CharSequence nome, int topo, int lados, int baixo, boolean transparente, boolean solido, boolean cullingAlto) {
+	public Bloco(CharSequence nome, int topo, int lados, int baixo, boolean transparente, boolean solido, boolean culling) {
 		this.nome = nome;
-		this.tipo = blocos.size()+1;
+		this.tipo = blocos.size();
 		this.topo = topo; this.lados = lados; this.baixo = baixo;
 		this.transparente = transparente;
 		this.solido = solido;
-		this.cullingAlto = cullingAlto;
+		this.culling = culling;
 		
 		numIds.put(this.tipo, this);
 		texIds.put(this.nome, this);
