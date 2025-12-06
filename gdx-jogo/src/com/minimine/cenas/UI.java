@@ -427,7 +427,7 @@ public class UI implements InputProcessor {
 						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
 						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\n\n" +
 						   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
-						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.3f",
+						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.5f",
 						   jogador.posicao.x, jogador.posicao.y, jogador.posicao.z,
 						   mundo.nome, 
 						   (jogador.modo == 0 ? "espectador" : jogador.modo == 1 ? "criativo" : "sobrevivencia"), 

@@ -5,67 +5,91 @@ import com.minimine.utils.DiaNoiteUtil;
 
 public class ChunkLuz {
     public static float LUZ_AMBIENTE = 0.25f;
-    public static final float[] FACE_LUZ = {
-        1.0f, // topo, luz max
-        0.4f, // baixo, mais escuro
-        0.7f, // lado +X
-        0.7f, // lado -X  
-        0.8f, // lado +Z
-        0.8f  // lado -Z
-    };
-	
-	public static void attLuz(Chunk chunk) {
-        for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
-            for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
-                boolean bloqueado = false;
-                for(int y = Mundo.Y_CHUNK - 1; y >= 0; y--) {
-                    if(!bloqueado) {
-                        if(ChunkUtil.ehSolido(x, y, z, chunk)) {
-                            bloqueado = true;
-                            defLuz(x, y, z, (byte)10, chunk);
-                        } else {
-                            defLuz(x, y, z, (byte)15, chunk);
-                        }
-                    } else {
-                        defLuz(x, y, z, (byte)2, chunk);
+    public static float[] FACE_LUZ = {1.0f, 0.4f, 0.7f, 0.7f, 0.8f, 0.8f};
+    public static final int Y_MAX = Mundo.Y_CHUNK - 1;
+
+    public static void attLuz(Chunk chunk) {
+        byte[] luzBytes = chunk.luz;
+        int area = Mundo.CHUNK_AREA; // local para JIT
+        int yMax = Y_MAX; // local para JIT
+
+        for(int z = 0; z < Mundo.TAM_CHUNK; z++) {
+            int zArea = z << 4;
+
+            for(int x = 0; x < Mundo.TAM_CHUNK; x++) {
+                int xzIdc = x + zArea;
+                // encontra topo(comeca do ultimo solido conhecido se existir)
+                int topo = -1;
+                for(int y = yMax; y >= 0; y--) {
+                    if(ChunkUtil.ehSolido(x, y, z, chunk)) {
+                        topo = y;
+                        break;
                     }
+                }
+                // processa toda a coluna y de uma vez
+                int byteIdc = xzIdc >> 1;
+                int bitShift = (xzIdc & 1) << 2;
+
+                for(int y = yMax; y >= 0; y--) {
+                    byte valorLuz;
+
+                    if(topo == -1) valorLuz = 15;
+                    else if(y > topo) valorLuz = 15;
+                    else if(y == topo) valorLuz = 10;
+                    else valorLuz = 2;
+
+                    int idc = byteIdc + (y * (area >> 1));
+					
+                    luzBytes[idc] = (byte)(
+                        (luzBytes[idc] & ~(15 << bitShift)) | 
+                        ((valorLuz & 15) << bitShift)
+						);
                 }
             }
         }
     }
-	
-    public static float calcularNivelLuz(int x, int y, int z, int faceId, Chunk chunk) {
-        float luzCeu = calcularLuzCeu(x, y, z, chunk);
-        float luzFinal = Math.max(LUZ_AMBIENTE, luzCeu);
 
-        luzFinal *= FACE_LUZ[faceId];
+    public static float calcularNivelLuz(int x, int y, int z, int idFace, Chunk chunk) {
+        float c = calcularLuzCeu(x, y, z, chunk);
+        if(c < LUZ_AMBIENTE) c = LUZ_AMBIENTE;
 
-        return Math.max(0.1f, Math.min(1.0f, luzFinal));
+        float f = c * FACE_LUZ[idFace];
+
+        return Math.min(Math.max(f, 0.1f), 1.0f);
     }
 
     public static float calcularLuzCeu(int x, int y, int z, Chunk chunk) {
-        if(y >= Mundo.Y_CHUNK - 1)  return DiaNoiteUtil.luz;
-        int blocosAcima = 0;
-        for(int cy = y + 1; cy < Mundo.Y_CHUNK; cy++) {
-            if(ChunkUtil.ehSolido(x, cy, z, chunk)) blocosAcima++;
+        if(y >= Y_MAX) return DiaNoiteUtil.luz;
+
+        int bloqueios = 0;
+        // loop invertido e pre verificado
+        for(int cy = Y_MAX; cy > y; cy--) {
+            if(ChunkUtil.ehSolido(x, cy, z, chunk)) {
+                bloqueios++;
+                // se ja tem muitos blocos, retorna cedo
+                if(bloqueios >= 7) return LUZ_AMBIENTE;
+            }
         }
-        if(blocosAcima == 0) return DiaNoiteUtil.luz;
-        float atenuacao = 1.0f - (blocosAcima * 0.15f);
-        return Math.max(LUZ_AMBIENTE, DiaNoiteUtil.luz * atenuacao);
+        if(bloqueios == 0) return DiaNoiteUtil.luz;
+		
+        float atenuacao = 1.0f - (bloqueios * 0.15f);
+        float resultado = DiaNoiteUtil.luz * atenuacao;
+
+        return resultado > LUZ_AMBIENTE ? resultado : LUZ_AMBIENTE;
     }
-	
-	public static byte obterLuz(int x, int y, int z, Chunk chunk) {
-        int i = x + (z * 16) + (y * 16 * 16);
-		int byteIdc = i / 2;
-		int bitPos = (i % 2) * 4;
-        return (byte)((chunk.luz[byteIdc] >> bitPos) & 0b1111);
+
+    public static byte obterLuz(int x, int y, int z, Chunk chunk) {
+        int idc = x + (z * Mundo.TAM_CHUNK) + (y * Mundo.CHUNK_AREA);
+        return (byte)((chunk.luz[idc >> 1] >> ((idc & 1) << 2)) & 15);
     }
 
     public static void defLuz(int x, int y, int z, byte valor, Chunk chunk) {
-		int i = x + (z * 16) + (y * 16 * 16);
-		int byteIdc = i / 2;
-		int bitPos = (i % 2) * 4;
-		byte mascara = (byte) ~(0b1111 << bitPos);
-		chunk.luz[byteIdc] = (byte)((chunk.luz[byteIdc] & mascara) | ((valor & 0b1111) << bitPos));
+        int idc = x + (z * Mundo.TAM_CHUNK) + (y * Mundo.CHUNK_AREA);
+        int byteIdc = idc >> 1;
+        int shift = (idc & 1) << 2;
+        chunk.luz[byteIdc] = (byte)(
+            (chunk.luz[byteIdc] & ~(15 << shift)) | 
+            ((valor & 15) << shift)
+			);
     }
 }

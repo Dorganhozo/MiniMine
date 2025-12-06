@@ -28,16 +28,24 @@ public class ChunkUtil {
 	}
 
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
-		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			int b = obterBloco(x, y, z, chunk);
-			return  b != 0 && b != 7;
+		if(x < 0 || x >= 16 || y < 0 || y >= Mundo.Y_CHUNK || z < 0 || z >= 16) {
+			return false; // ou delega ao chunk adjacente antes
 		}
-		int mundoX = (chunk.x >> 4) + x;
-		int mundoZ = (chunk.z >> 4) + z;
+		int total = x + (z << 4) + (y * 256);
+		int[] arr = chunk.blocos;
 
-		int b = Mundo.obterBlocoMundo(mundoX, y, mundoZ);
-
-		return b != 0 || !Bloco.numIds.get(b).solido;
+		int bloco;
+		if(chunk.usaPaleta) {
+			int idc = (arr[total / chunk.blocosPorInt] >>> 
+				((total % chunk.blocosPorInt) * chunk.paletaBits))
+				& ((1 << chunk.paletaBits) - 1);
+			bloco = chunk.paleta[idc];
+		} else {
+			bloco = (arr[total / chunk.blocosPorInt] >>> 
+				((total % chunk.blocosPorInt) * chunk.bitsPorBloco))
+				& ((1 << chunk.bitsPorBloco) - 1);
+		}
+		return bloco != 0 && bloco != 7;
 	}
 
 	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {

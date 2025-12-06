@@ -157,6 +157,7 @@ public class Menu implements Screen, InputProcessor {
 		sb.dispose();
 		fonte.dispose();	
 		mundo.liberar();
+		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();
 		CorposCelestes.liberar();
 	}
 	@Override
@@ -169,11 +170,30 @@ public class Menu implements Screen, InputProcessor {
 		}
 		return false;
 	}
+	@Override
+	public void hide() {
+		sb.dispose();
+		fonte.dispose();	
+		mundo.liberar();
+		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();
+		mundo.chunks.clear();
+		CorposCelestes.liberar();
+	}
+	@Override
+	public void pause() {
+		mundo.carregado = false;
+		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();	
+		mundo.chunks.clear();
+	}
+	@Override
+	public void resume() {
+		for(Chunk c : mundo.chunks.values()) {
+			mundo.carregado = false;
+			c.mesh = new Mesh(true, mundo.maxVerts, mundo.maxIndices, mundo.atriburs);	
+		}
+	}
 	@Override public boolean touchDragged(int p, int p1, int p2) {return false;}
 	@Override public boolean touchUp(int p, int p1, int p2, int p3) {return false;}
-	@Override public void hide() {dispose();}
-	@Override public void pause(){}
-	@Override public void resume(){}
 	@Override public boolean keyDown(int p){return false;}
 	@Override public boolean keyTyped(char p){return false;}
 	@Override public boolean keyUp(int p){return false;}

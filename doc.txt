@@ -45,6 +45,8 @@ mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
 mundo.seed
 mundo.Y_CHUNK -- tamanho vertical das chuhks
 mundo.TAM_CHUNK -- tamanho horizontal das chunks
+mundo.nuvens -- booleana, desativa e ativa as nuvens no céu
+mundo.ciclo -- ativa ou desativa o ciclo diário incluindo o tick
 mundo:defBlocoMundo(x, y, z, tipoDoBloco) -- define um bloco nas coordenadas globais
 mundo:obterBlocoMundo(x, y, z) -- obtem o tipo do bloco nas coordenadas globais
 mundo:addBloco(nome, texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario

@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.minimine.utils.chunks.Chunk;
 import com.minimine.utils.chunks.ChunkUtil;
 import com.minimine.utils.blocos.Bloco;
+import com.badlogic.gdx.graphics.Mesh;
 
 public class ArquivosUtil {
     public static final String VERSAO = "v0.0.1";
@@ -290,7 +291,7 @@ public class ArquivosUtil {
                 CharSequence id = dis.readUTF();
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
-            chunk.mesh = Mundo.meshReuso.obtain();
+            chunk.mesh = new Mesh(true, Mundo.maxVerts, Mundo.maxIndices, Mundo.atriburs);
 
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Chave, Chunk>();
             if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Chave, Chunk>();

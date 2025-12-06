@@ -46,6 +46,7 @@ Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
 Compressão baseada em paleta.
+Otimização na atualização com variaveis locais. (JIT)
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.
@@ -57,7 +58,7 @@ Compressão baseada em paleta.
 Android 4 até Android 14.
 
 ## desempenho:
-FPS de 30 a 40 padrão testado com até 121 chunks (raio de 5 por padrão).
+FPS de 30 a 59 padrão testado com até 121 chunks ativas (raio de 5 por padrão).
 
 ## mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
