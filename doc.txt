@@ -8,6 +8,10 @@ abra o arquivo "arquivos.mini" e escreva o caminho de seu script nele.
 
 inicie um mundo e veja seu script ser executado. Adicione mais scripts colocando seus caminhos separados por quebra de linha.
 
+caso queira um loop de execução em tempo de jogo, crie um arquivo att.lua, que não precisa ser adicionado ao "arquivos.mini".
+
+ele será um loop automatico do jogo, e tudo nele será executado diversas vezes até o app fechar.
+
 API publica:
 
 jogador:
@@ -53,6 +57,7 @@ mundo:addBloco(nome, texturaIdTopo) --  retorna o objeto e cria uma textura de u
 mundo:addBloco(nome, texturaIdTopo, texturaIdLados) -- variacao
 mundo:addBloco(nome, texturaIdTopo, texturaIdLados, texturaIdBaixo) -- variacao
 mundo:addBloco(nome, texturaIdTopo, texturaIdLados, ehTransparente) -- variacao se é transparente, true, senao, false
+mundo:addBloco(nome, texturaIdTopo, texturaIdLados, ehTransparente, luz) -- variacao, nivel de luz de 0 a 15
 
 mundo.texturas:
 
@@ -198,7 +203,7 @@ blocos:
 "agua"
 "areia"
 "tronco"
-"folhas"
+"folha"
 "tabua_madeira"
 "cacto"
 "vidro"

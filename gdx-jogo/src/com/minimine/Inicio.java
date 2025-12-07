@@ -51,6 +51,7 @@ public class Inicio extends Game {
 			for(Texture tex : Texturas.texs.values()) {
 				tex.dispose();
 			}
+			Mundo.liberar();
 			UI.liberar();
 			NuvensUtil.liberar();
 			CorposCelestes.liberar();

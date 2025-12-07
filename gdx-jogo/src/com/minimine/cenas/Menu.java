@@ -62,16 +62,27 @@ public class Menu implements Screen, InputProcessor {
 		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
 		Gdx.input.setInputProcessor(this);
 		
+		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
+		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+		Gdx.gl.glCullFace(GL20.GL_BACK);
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		
+		tela.att(0f);
+	}
+	
+	public void attInterface() {
+		textos.clear();
+		botoes.clear();
 		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irJogo") {
-			@Override
-			public void aoTocar(int tx, int ty, int p) {
-				Inicio.defTela(Cenas.selecao);
-			}
-			@Override
-			public void aoAjustar(int v, int h) {
-				defPos((v - tamX) / 2, (h - tamY) / 2);
-			}
-		});
+				@Override
+				public void aoTocar(int tx, int ty, int p) {
+					Inicio.defTela(Cenas.selecao);
+				}
+				@Override
+				public void aoAjustar(int v, int h) {
+					defPos((v - tamX) / 2, (h - tamY) / 2);
+				}
+			});
 		textos.add(new Texto("Um Jogador", 0, 0) {
 				@Override
 				public void aoAjustar(int v, int h) {
@@ -106,13 +117,8 @@ public class Menu implements Screen, InputProcessor {
 					y = h - 200;
 				}
 			});
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		Gdx.gl.glCullFace(GL20.GL_BACK);
-		Gdx.gl.glEnable(GL20.GL_BLEND);
-		
-		tela.att(0);
 	}
+	
 	@Override
 	public void render(float delta) {
 		if(mundo.chunks.size() >= 9) mundo.ciclo = false;
@@ -145,6 +151,8 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override
 	public void resize(int v, int h) {
+		Gdx.gl.glViewport(0, 0, v, h);
+		attInterface();
 		for(Botao b : botoes) {
 			if(b != null) b.aoAjustar(v, h);
 		}
@@ -157,7 +165,6 @@ public class Menu implements Screen, InputProcessor {
 		sb.dispose();
 		fonte.dispose();	
 		mundo.liberar();
-		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();
 		CorposCelestes.liberar();
 	}
 	@Override
@@ -172,26 +179,19 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override
 	public void hide() {
-		sb.dispose();
-		fonte.dispose();	
 		mundo.liberar();
-		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();
-		mundo.chunks.clear();
 		CorposCelestes.liberar();
 	}
 	@Override
 	public void pause() {
 		mundo.carregado = false;
-		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();	
+		for(Chunk c : mundo.chunks.values()) {
+			if(c.mesh != null) c.mesh.dispose();
+			c.mesh = null;
+		}
 		mundo.chunks.clear();
 	}
-	@Override
-	public void resume() {
-		for(Chunk c : mundo.chunks.values()) {
-			mundo.carregado = false;
-			c.mesh = new Mesh(true, mundo.maxVerts, mundo.maxIndices, mundo.atriburs);	
-		}
-	}
+	@Override public void resume() {}
 	@Override public boolean touchDragged(int p, int p1, int p2) {return false;}
 	@Override public boolean touchUp(int p, int p1, int p2, int p3) {return false;}
 	@Override public boolean keyDown(int p){return false;}

@@ -37,7 +37,7 @@ import com.minimine.utils.chunks.Chunk;
 
 public class Mundo {
     public static String nome = "novo mundo";
-    public Texture atlasGeral;
+    public static Texture atlasGeral = null;
     // mapa de UVs:
     // (atlas ID -> [u_min, v_min, u_max, v_max])
     public static final List<Object> texturas = new ArrayList<>();
@@ -48,8 +48,8 @@ public class Mundo {
     public static Map<Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
-    public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK;
-    public static int seed = 0, RAIO_CHUNKS = 5;
+    public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK, chunksAtuais;
+    public static int seed = 0, RAIO_CHUNKS = 5, RAIO_ANTES = 0;
     public static int chunksTotais = (RAIO_CHUNKS *2 + 1) * (RAIO_CHUNKS *2 + 1);
     public static SimplexNoise2D s2D;
 
@@ -193,10 +193,13 @@ public class Mundo {
     // chamado em render:
     public void att(float delta, Jogador jogador) {
         if(shader == null) return;
-		int tam = chunks.size();
-        if(tam >= chunksTotais) {
+		chunksAtuais = chunks.size();
+        if(chunksAtuais >= chunksTotais) {
             if(!carregado) carregado = true;
         }
+		if(RAIO_CHUNKS == RAIO_ANTES) {
+			chunksTotais = (RAIO_CHUNKS *2 + 1) * (RAIO_CHUNKS *2 + 1);
+		}
         attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
         
         if(nuvens) NuvensUtil.att(delta, jogador.posicao);
@@ -237,16 +240,18 @@ public class Mundo {
         return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
     }
     // chamado em dispose:
-    public void liberar() {
-        this.atlasGeral.dispose();
+    public static void liberar() {
+		atlasGeral.dispose();
         for(Chunk chunk : chunks.values()) {
             if(chunk.mesh != null) {
                 chunk.mesh.dispose();
+				chunk.mesh = null;
             }
         }
-        this.shader.dispose();
-        this.chunks.clear();
-        this.atlasUVs.clear();
+		chunks.clear();
+        shader.dispose();
+        chunks.clear();
+        atlasUVs.clear();
         exec.shutdown();
     }
 
@@ -326,9 +331,8 @@ public class Mundo {
 
 		tentarGerarChunk(cx, cz);
 
-		while(passo <= RAIO_CHUNKS * 2) {
+		while(passo <= RAIO_CHUNKS << 1) {
 			int i;
-
 			for(i = 0; i < passo; i++) {
 				dx++;
 				int px = cx + dx;
@@ -364,6 +368,8 @@ public class Mundo {
 		final Chunk chunkExistente = chunks.get(chave);
 
 		if(chunkExistente != null) {
+			if(chunkExistente.mesh == null) return;
+			
 			if(chunkExistente.att) {
 				synchronized(chunkExistente) {
 					if(chunkExistente.fazendo) return;
@@ -381,9 +387,6 @@ public class Mundo {
 								Gdx.app.postRunnable(new Runnable() {
 										@Override
 										public void run() {
-											if(chunkExistente.mesh == null) {
-												chunkExistente.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
-											}
 											chunkExistente.mesh.setVertices(vertsGeral.praArray());
 											chunkExistente.mesh.setIndices(idcGeral.praArray());
 											
@@ -394,7 +397,7 @@ public class Mundo {
 											chunkExistente.fazendo = false;
 										}
 									});
-							} catch (Exception e) {
+							} catch(Exception e) {
 								Gdx.app.log("Mundo", "[ERRO] ao gerar chunk: " + e);
 								chunkExistente.fazendo = false;
 								chunkExistente.mesh.dispose();
@@ -404,14 +407,15 @@ public class Mundo {
 			}
 			return;
 		}
-		// chunk não existe: cria e marca imediatamente antes de submeter
-		Chunk novo = new Chunk();
-		ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(novo.maxIds), novo);
-		novo.x = x;
-		novo.z = z;
-		novo.fazendo = true;
-		chunks.put(chave, novo);
-		gerarChunk(chave);
+		// chunk não existe e não estourou o limite: cria e marca imediatamente antes
+		if(chunksAtuais < chunksTotais) {
+			Chunk novo = new Chunk();
+			ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(novo.maxIds), novo);
+			novo.x = x; novo.z = z;
+			novo.fazendo = true;
+			chunks.put(chave, novo);
+			gerarChunk(chave);
+		}
 	}
 
     public void limparChunks(int chunkX, int chunkZ) {

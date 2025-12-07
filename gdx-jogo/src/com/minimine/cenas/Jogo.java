@@ -161,21 +161,23 @@ public class Jogo implements Screen {
 
 	@Override public void hide() {
 		mundo.carregado = false;
+		for(Chunk c : mundo.chunks.values()) {
+			if(c.mesh != null) c.mesh.dispose();
+			c.mesh = null;
+		}
+		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);
 	}
 	@Override
 	public void pause() {
 		LuaAPI.iniciar(this);	
 		mundo.carregado = false;
-		
-		for(Chunk c : mundo.chunks.values()) c.mesh.dispose();
+		for(Chunk c : mundo.chunks.values()) {
+			if(c.mesh != null) c.mesh.dispose();
+			c.mesh = null;
+		}
 		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);
 	}
-	@Override public void resume() {
-		for(Chunk c : mundo.chunks.values()) {
-			mundo.carregado = false;
-			c.mesh = new Mesh(true, mundo.maxVerts, mundo.maxIndices, mundo.atriburs);	
-		}
-	}
+	@Override public void resume() {}
 }

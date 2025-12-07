@@ -48,14 +48,6 @@ public class ChunkUtil {
 		return bloco != 0 && bloco != 7;
 	}
 
-	public static boolean ehSolidoComChunk(int x, int y, int z, Chunk chunk, Chunk chunkAdjacente) {
-		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			int b = obterBloco(x, y, z, chunk);
-			return b != 0 && b != 7;
-		}
-		return false;
-	}
-
 	public static int bitsPraMaxId(int maxId) {
 		int val = 1;
 		int bits = 0;
@@ -79,7 +71,7 @@ public class ChunkUtil {
 	}
 
 	public static int obterBloco(int x, int y, int z, Chunk chunk) {
-		int total = x + (z << 4) + (y * Mundo.CHUNK_AREA); 
+		int total = x + (z << 4) + (y << 8); 
 
 		if(chunk.blocos == null) return 0;
 
@@ -94,7 +86,7 @@ public class ChunkUtil {
 
 	public static void defBloco(int x, int y, int z, CharSequence nome, Chunk chunk) {
 		int bloco = nome.equals("ar") ? 0 : Bloco.texIds.get(nome).tipo;
-		int totalTam = Mundo.TAM_CHUNK;
+		int totalTam = Mundo.TAM_CHUNK; // local pra JIT
 		int total = x + (z * totalTam) + (y * totalTam * totalTam);
 		// se ta em modo paleta, tenta usar/expandir paleta
 		if(chunk.usaPaleta) {

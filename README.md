@@ -37,7 +37,18 @@ você pode descobrir mais sobre a API Lua em doc.txt.
 8. Tabua de madeira.
 9. Cacto.
 10. Vidro.
-11. Tocha. (ainda não emite luz)
+11. Tocha.
+
+## receitas:
+ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.
+
+selecione o bloco em questão como item atual, e clique no botão de receita.
+
+essas são as receitas atuais e seus resultados:
+
+tronco = tabuas_madeira
+areia = vidro
+folha = tocha
 
 ## otimizações:
 Geração em Thread separada com ExecutorService.
@@ -46,7 +57,8 @@ Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
 Compressão baseada em paleta.
-Otimização na atualização com variaveis locais. (JIT)
+Otimização na atualização com variaveis locais (JIT).
+Proteção contra vazamentos de memória nativa pré calculando a quantidade de chunks.
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.

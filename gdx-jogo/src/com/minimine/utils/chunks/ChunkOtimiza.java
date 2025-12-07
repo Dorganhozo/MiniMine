@@ -8,11 +8,9 @@ import com.minimine.cenas.Mundo;
 
 public class ChunkOtimiza {
     // lida com a logica de limite da chunk e troca para a chunk vizinha
-    private static Bloco obterVizinho(int x, int y, int z, Chunk chunk, Chunk vizinhoChunk) {
+    public static Bloco obterVizinho(int x, int y, int z, Chunk chunk, Chunk vizinhoChunk) {
         // 1. checagem de limites do mundo(eixo Y)
-        if(y < 0 || y >= Mundo.Y_CHUNK) {
-            return null; // força a renderização da face no limite do mundo
-        }
+        if(y < 0 || y >= Mundo.Y_CHUNK) return null; // força a renderização da face no limite do mundo
         // 2. checagem se o vizinho ta no chunk atual
         // se as coordenadas(x, z) estão dentro dos limites [0, TAM_CHUNK), é na chunk atual
         if(x >= 0 && x < Mundo.TAM_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
@@ -20,23 +18,16 @@ public class ChunkOtimiza {
             return ChunkUtil.obterblocoTipo(x, y, z, chunk, null);
         }
         // 3. checagem de vizinhos(eixos X e Z)
-        if(vizinhoChunk == null) {
-            return null; // se deveria tiver uma chunk vizinha, mas ela não ta carregada
-        }
+        if(vizinhoChunk == null) return null; // se deveria tiver uma chunk vizinha, mas ela não ta carregada
         // calcular coordenadas locais(nx, nz) na chunk vizinha
         int nx = x;
         int nz = z;
 
-        if(x >= Mundo.TAM_CHUNK) {
-            nx = 0; // x+1 no limite da chunk atual -> (0, y, z) na chunk vizinha
-        } else if(x < 0) {
-            nx = Mundo.TAM_CHUNK - 1; // x-1 no limite da chunk atual -> (TAM_CHUNK - 1, y, z) na chunk vizinha
-        }
-        if(z >= Mundo.TAM_CHUNK) {
-            nz = 0; // z+1 no limite da chunk atual -> (x, y, 0) na chunk vizinha
-        } else if(z < 0) {
-            nz = Mundo.TAM_CHUNK - 1; // z-1 no limite da chunk atual -> (x, y, TAM_CHUNK - 1) na chunk vizinha
-        }
+        if(x >= Mundo.TAM_CHUNK) nx = 0; // x+1 no limite da chunk atual -> (0, y, z) na chunk vizinha
+        else if(x < 0) nx = Mundo.TAM_CHUNK - 1; // x-1 no limite da chunk atual -> (TAM_CHUNK - 1, y, z) na chunk vizinha
+        
+        if(z >= Mundo.TAM_CHUNK) nz = 0; // z+1 no limite da chunk atual -> (x, y, 0) na chunk vizinha
+        else if(z < 0) nz = Mundo.TAM_CHUNK - 1; // z-1 no limite da chunk atual -> (x, y, TAM_CHUNK - 1) na chunk vizinha
         // usamos a chunk vizinha pra buscar o bloco
         return ChunkUtil.obterblocoTipo(nx, y, nz, vizinhoChunk, null);
     }
@@ -52,53 +43,42 @@ public class ChunkOtimiza {
         Bloco adjZP = obterVizinho(x, y, z + 1, chunk, chunkZP);
         Bloco adjZN = obterVizinho(x, y, z - 1, chunk, chunkZN);
 
-		if(deveRenderFace(blocoTipo, adjTopo)) {
+		if(!deveOcultarFace(blocoTipo, adjTopo)) {
 			float luz = ChunkLuz.calcularNivelLuz(x, y, z, 0, chunk);
 			int textureId = blocoTipo.texturaId(0);
 			BlocoModelo.addFace(0, textureId, x, y, z, luz, verts, idc);
 		}
-		if(deveRenderFace(blocoTipo, adjBaixo)) {
+		if(!deveOcultarFace(blocoTipo, adjBaixo)) {
 			float luz = ChunkLuz.calcularNivelLuz(x, y, z, 1, chunk);
 			int textureId = blocoTipo.texturaId(1);
 			BlocoModelo.addFace(1, textureId, x, y, z, luz, verts, idc);
 		}
-		if(deveRenderFace(blocoTipo, adjXP)) {
+		if(!deveOcultarFace(blocoTipo, adjXP)) {
 			float luz = ChunkLuz.calcularNivelLuz(x, y, z, 2, chunk);
 			int textureId = blocoTipo.texturaId(2);
 			BlocoModelo.addFace(2, textureId, x, y, z, luz, verts, idc);
 		}
-		if(deveRenderFace(blocoTipo, adjXN)) {
+		if(!deveOcultarFace(blocoTipo, adjXN)) {
 			float luz = ChunkLuz.calcularNivelLuz(x, y, z, 3, chunk);
 			int textureId = blocoTipo.texturaId(3);
 			BlocoModelo.addFace(3, textureId, x, y, z, luz, verts, idc);
 		}
-		if(deveRenderFace(blocoTipo, adjZP)) {
+		if(!deveOcultarFace(blocoTipo, adjZP)) {
 			float luz = ChunkLuz.calcularNivelLuz(x, y, z, 4, chunk);
 			int textureId = blocoTipo.texturaId(4);
 			BlocoModelo.addFace(4, textureId, x, y, z, luz, verts, idc);
 		}
-		if(deveRenderFace(blocoTipo, adjZN)) {
+		if(!deveOcultarFace(blocoTipo, adjZN)) {
 			float luz = ChunkLuz.calcularNivelLuz(x, y, z, 5, chunk);
 			int textureId = blocoTipo.texturaId(5);
 			BlocoModelo.addFace(5, textureId, x, y, z, luz, verts, idc);
 		}
 	}
-    // ja tendo o vizinho
-    public static boolean deveRenderFace(Bloco blocoAtual, Bloco blocoAdjacente) {
-        if(blocoAdjacente == null) {
-            // se o vizinho é null(fora do mundo ou chunk não carregada), renderiza
-            return true;
-        }
-        // se o vizinho existe, checa se ele esconde a face atual
-        return !deveOcultarFace(blocoAtual, blocoAdjacente);
-    }
 
 	public static boolean deveOcultarFace(Bloco blocoAtual, Bloco blocoAdjacente) {
 		if(blocoAdjacente == null) return false;
 		// normais se ocultam
-		if(blocoAtual.culling && blocoAdjacente.culling) {
-			return true;
-		}
+		if(blocoAtual.culling && blocoAdjacente.culling) return true;
 		// outros transparentes não se ocultam entre tipos diferentes
 		if(blocoAtual.transparente && blocoAdjacente.transparente) {
 			return blocoAtual.tipo == blocoAdjacente.tipo;
