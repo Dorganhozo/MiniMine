@@ -283,9 +283,9 @@ public class Mundo {
 
         int localX = x & 0xF;
         int localZ = z & 0xF;
-
+		
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-
+		chunk.luzSuja = true;
         chunk.att = true;
         // chunks perto pra atualizar se o bloco for na borda
         if(localX == 0) {
@@ -542,7 +542,11 @@ public class Mundo {
     }
 
     public static Bloco addBloco(String nome, int topo, int lados, int baixo, boolean alfa, boolean solido) {
-        Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido));
+        return addBloco(nome, topo, lados, baixo, alfa, solido, 0);
+    }
+	
+	public static Bloco addBloco(String nome, int topo, int lados, int baixo, boolean alfa, boolean solido, int luz) {
+        Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido, true, luz));
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
 }

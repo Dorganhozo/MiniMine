@@ -17,6 +17,7 @@ refeito com LibGDX.
 12. Nuvens.
 13. Salvamento dinamico de mundos binario.
 14. Aúdio (ainda temporario até aúdios gravados manualmente).
+15. Agachamento (evita cair de bordas dos blocos).
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -59,6 +60,8 @@ Frustrum culling (incluindo por distância e direção de olhar).
 Compressão baseada em paleta.
 Otimização na atualização com variaveis locais (JIT).
 Proteção contra vazamentos de memória nativa pré calculando a quantidade de chunks.
+Cache de luz.
+Seleção de atualização de emissores e luz solar para atualizar.
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.

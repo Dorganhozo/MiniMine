@@ -31,24 +31,24 @@ public class Jogador {
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
 	public float largura = 0.6f, altura = 1.8f, profundidade = 0.6f;
-	public boolean noChao = true, naAgua = false;
+	public boolean noChao = true, naAgua = false, agachado = false;
 	public BoundingBox hitbox = new BoundingBox();
 	public static final BoundingBox blocoBox = new BoundingBox();
 	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();
-	
+
 	public static float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
-	
+
 	public CharSequence item = "ar";
 	public static int ALCANCE = 7;
 	public Inventario inv = new Inventario();
-	
+
 	public float yaw = 180f, tom = -20f;
-	
+
 	public void criarModelo3D() {
 		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelos/jogador.gltf"));
 		this.modelo = new ModelInstance(asset.scene.model);
 	}
-	
+
 	public Jogador() {
 		if(modo != 2) {
 			// itens iniciais:
@@ -58,7 +58,7 @@ public class Jogador {
 			inv.itens[3] = new Inventario.Item("agua", Texturas.texs.get("agua"), 1);
 		}
 	}
-	
+
 	public void interagirBloco() {
 		Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
@@ -70,23 +70,19 @@ public class Jogador {
 		float dirY = raio.direction.y;
 		float dirZ = raio.direction.z;
 
-		for(float t = 0; t < ALCANCE; t += 0.25f) { // passo menor = mais preciso
+		for(float t = 0; t < ALCANCE; t += 0.15f) { // passo menor = mais preciso
 			int x = Mat.floor(olhoX + dirX * t);
 			int y = Mat.floor(olhoY + dirY * t);
 			int z = Mat.floor(olhoZ + dirZ * t);
 
 			Bloco bloco = Bloco.numIds.get(Mundo.obterBlocoMundo(x, y, z));
-			
+
 			if(bloco != null) {
-				if(Math.random() > 0.46) {
-					AudioUtil.sons.get("rapaiz").play();
-				} else if(Math.random() > 0.45) {
-					AudioUtil.sons.get("pare").play();
-				} else if(Math.random() > 0.7) {
-					AudioUtil.sons.get("uepa").play();
-				} else {
-					AudioUtil.sons.get("iha").play();
-				}
+				if(Math.random() > 0.46) AudioUtil.sons.get("rapaiz").play();
+				else if(Math.random() > 0.45) AudioUtil.sons.get("pare").play();
+				else if(Math.random() > 0.7) AudioUtil.sons.get("uepa").play();
+				else AudioUtil.sons.get("iha").play();
+
 				if(item.equals("ar")) {
 					if(modo == 2) inv.addItem(bloco.nome, 1);
 					Mundo.defBlocoMundo(x, y, z, "ar");
@@ -100,7 +96,7 @@ public class Jogador {
 						attHitbox();
 						if(blocoBox.intersects(hitbox)) return;
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, item);
-						
+
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
 					}
 				}
@@ -133,7 +129,7 @@ public class Jogador {
 
 					int id = Mundo.obterBlocoMundo(x, y, z);
 					if(id == 0) continue;
-					
+
 					Bloco b = Bloco.numIds.get(id);
 
 					blocoBox.set(
@@ -151,74 +147,127 @@ public class Jogador {
 		}
 		return false;
 	}
-	
+
 	public void att(float delta) {
 		// gravidade no sobrevivencia
 		if(naAgua) GRAVIDADE = -10;
 		else GRAVIDADE = -30;
-		
+
 		if(modo == 2 && !noChao || naAgua) { 
-            this.velocidade.y += GRAVIDADE * delta;
+			this.velocidade.y += GRAVIDADE * delta;
 
 			if(this.velocidade.y < VELO_MAX_QUEDA) {
 				this.velocidade.y = VELO_MAX_QUEDA;
 			}
-        }
-        if(modo == 0) {
+		}
+		if(modo == 0) {
 			posicao.add(velocidade.x * delta, velocidade.y * delta, velocidade.z * delta);
 			attHitbox();
-
-            camera.position.set(posicao.x, posicao.y + altura * 0.95f, posicao.z);
-            return;
-        }
-        float dx = velocidade.x * delta;
-        float dy = velocidade.y * delta;
+			camera.position.set(posicao.x, posicao.y + altura * 0.95f, posicao.z);
+			return;
+		}
+		float dx = velocidade.x * delta;
+		float dy = velocidade.y * delta;
 		float dz = velocidade.z * delta;
+		// primeiro verifica colisão vertical
+		posicao.y += dy;
+		attHitbox();
 
-        attHitbox();
-		
-        noChao = false;
-
+		if(colideComMundo()) {
+			posicao.y -= dy;
+			attHitbox(); // atualiza hitbox apos corrigir posição
+			// verifica se ta colidindo por baixo(pé no chão)
+			if(dy < 0) {
+				noChao = true;
+			} else if(dy > 0) {
+				// colisão por cima(cabeça)
+				noChao = false;
+			}
+			velocidade.y = 0;
+		} else {
+			// se não ha colisão vertical, verifica se ta no chão usando uma verificação mais precisa
+			noChao = ehChao();
+		}
+		// agora processa movimento horizontal
+		if(agachado && noChao && dx != 0 && !temSuporte(posicao.x + dx, posicao.z)) {
+			dx = 0;
+		}
 		posicao.x += dx;
 		attHitbox();
 		if(colideComMundo()) {
 			posicao.x -= dx;
 			velocidade.x = 0;
+			attHitbox();
 		}
-        posicao.z += dz;
-        attHitbox();
-        if(colideComMundo()) {
-            posicao.z -= dz; 
-            velocidade.z = 0;
-        }
-        posicao.y += dy;
-        attHitbox();
-        if(colideComMundo()) {
-            posicao.y -= dy;
-            if(dy < 0) {
-                noChao = true;
-            }
-            velocidade.y = 0;
-        }
-        camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
-		
+		if(agachado && noChao && dz != 0 && !temSuporte(posicao.x, posicao.z + dz)) {
+			dz = 0;
+		}
+		posicao.z += dz;
+		attHitbox();
+		if(colideComMundo()) {
+			posicao.z -= dz; 
+			velocidade.z = 0;
+			attHitbox();
+		}
+		camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
+
 		if(posicao.y < -100f) {
 			posicao.y = 80f;
 		}
-    }
+	}
 	
-	public static interface Evento {
-		public void aoAndar();
-		public void aoVoar();
-		public void aoInteragir();
-		public void aoMorrer();
-		public void aoColidir(byte bloco);
-		public void aoLevarDano(int dano, String motivo);
-		public void blocoAbaixo(byte bloco, int acao);
-		public void slotAtual(Inventario.Item slot, int indice);
+	public boolean ehChao() {
+		// verifica se ha blocos solidos logo abaixo dos pes do jogador
+		float epsilon = 0.05f; // margem pra evitar flutuação
+		float yCheque = posicao.y - epsilon;
+
+		int minX = Mat.floor(posicao.x - largura / 2);
+		int maxX = Mat.floor(posicao.x + largura / 2);
+		int y = Mat.floor(yCheque);
+		int minZ = Mat.floor(posicao.z - profundidade / 2);
+		int maxZ = Mat.floor(posicao.z + profundidade / 2);
 		
-		public void aoIniciar();
-		public void porFrame(float delta);
-		public void aoFim();
+		for(int x = minX; x <= maxX; x++) {
+			for(int z = minZ; z <= maxZ; z++) {
+				int id = Mundo.obterBlocoMundo(x, y, z);
+				if(id != 0) {
+					Bloco b = Bloco.numIds.get(id);
+					if(b != null && b.solido) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean temSuporte(float x, float z) {
+		// 1. configura uma hitbox temporaria na nova posição(x, posicao.y, z)
+		float yBase = posicao.y;
+		// usa blocoBox temporariamente pra a verificação, configurando na nova posição
+		blocoBox.set(
+			minVec.set(x - largura / 2, yBase, z - profundidade / 2), 
+			maxVec.set(x + largura / 2, yBase + altura, z + profundidade / 2)
+		);
+		// 2. define a area de busca: um pouco abaixo da base da hitbox
+		int minX = Mat.floor(blocoBox.min.x);
+		int maxX = Mat.floor(blocoBox.max.x);
+		// checa o bloco imediatamente abaixo da base(yBase - 0.1f)
+		int yCheque = Mat.floor(yBase - 0.1f); 
+		int minZ = Mat.floor(blocoBox.min.z);
+		int maxZ = Mat.floor(blocoBox.max.z);
+
+		for(int atualX = minX; atualX <= maxX; atualX++) {
+			for(int atualZ = minZ; atualZ <= maxZ; atualZ++) {
+				int id = Mundo.obterBlocoMundo(atualX, yCheque, atualZ);
+				if(id != 0) {
+					Bloco b = Bloco.numIds.get(id);
+					// se encontrar um bloco solido na camada de checagem, ha suporte
+					if(b != null && b.solido) return true;
+				}
+			}
+		}
+		// não encontrou suporte solido em nenhuma parte da area debaixo
+		return false;
 	}
 }

@@ -215,7 +215,18 @@ public class UI implements InputProcessor {
 				public void aoSoltar(int t, int t2, int p){ cima = false; sprite.setAlpha(0.9f); }
 			});
 		botoes.put("baixo", new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "baixo") {
-				public void aoTocar(int t, int t2, int p){ baixo = true; sprite.setAlpha(0.5f); }
+				public void aoTocar(int t, int t2, int p){
+					baixo = true; sprite.setAlpha(0.5f);
+					if(jogador.agachado) {
+						jogador.velo *= 2;
+						jogador.altura *= 1.2f;
+						jogador.agachado = false;
+					} else {
+						jogador.velo /= 2;
+						jogador.altura /= 1.2f;
+						jogador.agachado = true;
+					}
+				}
 				public void aoSoltar(int t, int t2, int p){ baixo = false; sprite.setAlpha(0.9f); }
 			});
 		botoes.put("diagDireita", new Botao(Texturas.texs.get("botao_ld"), 0, 0, botaoTam, botaoTam, "diagDireita") {
@@ -425,13 +436,13 @@ public class UI implements InputProcessor {
 
 			fonte.draw(sb, String.format(
 						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
-						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\n\n" +
+						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 						   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
 						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.5f",
 						   jogador.posicao.x, jogador.posicao.y, jogador.posicao.z,
 						   mundo.nome, 
 						   (jogador.modo == 0 ? "espectador" : jogador.modo == 1 ? "criativo" : "sobrevivencia"), 
-						   jogador.inv.slotSelecionado, jogador.item, jogador.noChao, jogador.naAgua,
+						   jogador.inv.slotSelecionado, jogador.item, jogador.noChao, jogador.naAgua, jogador.agachado, jogador.velo, jogador.altura,
 						   this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
 						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo), 
 					   50, Gdx.graphics.getHeight() - 100);
