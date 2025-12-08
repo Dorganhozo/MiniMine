@@ -16,6 +16,7 @@ import com.minimine.Cenas;
 import com.minimine.Inicio;
 import java.util.ArrayList;
 import java.util.List;
+import com.badlogic.gdx.Preferences;
 
 public class Config implements Screen, InputProcessor {
     public SpriteBatch sb;
@@ -23,7 +24,9 @@ public class Config implements Screen, InputProcessor {
     public BitmapFont fonteTexto;
     public List<Texto> textos;
     public List<Botao> botoes;
-    
+	
+    public Preferences prefs;
+	
     public Texto txtRaioValor;
     public Texto txtSensiValor;
     public Texto txtAproxValor;
@@ -37,7 +40,9 @@ public class Config implements Screen, InputProcessor {
         fonteTexto = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 35);
         textos = new ArrayList<>();
         botoes = new ArrayList<>();
-
+		
+		prefs = Gdx.app.getPreferences("MiniConfig");
+		
         attInterface();
 
         Gdx.input.setInputProcessor(this);
@@ -276,6 +281,12 @@ public class Config implements Screen, InputProcessor {
 		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 200, 80, "voltar") {
 				@Override
 				public void aoTocar(int tx, int ty, int p) {
+					prefs.putInteger("raioChunks", Mundo.RAIO_CHUNKS);
+					prefs.putInteger("pov", UI.pov);
+					prefs.putFloat("sensi", UI.sensi);
+					prefs.putFloat("aprox", UI.aprox);
+					prefs.putFloat("distancia", UI.distancia);
+					prefs.flush();
 					Inicio.defTela(Cenas.menu);
 				}
 				@Override

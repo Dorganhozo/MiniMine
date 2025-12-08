@@ -75,7 +75,7 @@ Cache no rúido Simplex 2D.
 Android 4 até Android 14.
 
 ## desempenho:
-FPS de 30 a 59 padrão testado com até 121 chunks ativas (raio de 5 por padrão).
+FPS de 30 a 59 padrão testado com até 280 chunks ativas (raio de 8).
 
 ## mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:

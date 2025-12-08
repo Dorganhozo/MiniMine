@@ -27,6 +27,7 @@ import com.minimine.utils.CorposCelestes;
 import com.minimine.utils.chunks.Chunk;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.Preferences;
 
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;
@@ -37,6 +38,7 @@ public class Menu implements Screen, InputProcessor {
 	
 	public static Jogador tela = new Jogador();
 	public static Mundo mundo = new Mundo();
+	public Preferences prefs;
 	
 	static {
 		PerspectiveCamera camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -52,7 +54,7 @@ public class Menu implements Screen, InputProcessor {
 	
 	@Override
 	public void show() {
-		
+		prefs = Gdx.app.getPreferences("MiniConfig");
 		textos = new ArrayList<>();
 		botoes = new ArrayList<>();
 		mundo.ciclo = true;
@@ -71,6 +73,17 @@ public class Menu implements Screen, InputProcessor {
 		attInterface();
 		
 		tela.att(0f);
+		
+		int pov = prefs.getInteger("pov", UI.pov);
+		float aprox = prefs.getFloat("aprox", UI.aprox);
+		float distancia = prefs.getFloat("distancia", UI.distancia);
+		float sensi = prefs.getFloat("sensi", UI.sensi);
+		int raio = prefs.getInteger("raioChunks", Mundo.RAIO_CHUNKS);
+		Mundo.RAIO_CHUNKS = raio;
+		UI.pov = pov;
+		UI.sensi = sensi;
+		UI.distancia = distancia;
+		UI.aprox = aprox;
 	}
 	
 	public void attInterface() {
