@@ -62,7 +62,8 @@ Otimização na atualização com variaveis locais (JIT).
 Proteção contra vazamentos de memória nativa pré calculando a quantidade de chunks.
 Cache de luz.
 Cache de chunks modificadas sem Mesh.
-Implementação do rúido Simplex 2D em C via JNI (beta, somente em ARM64).
+Implementação do rúido Simplex 2D, 3D em C via JNI (beta, somente em ARM64).
+Cache no rúido Simplex 2D.
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.

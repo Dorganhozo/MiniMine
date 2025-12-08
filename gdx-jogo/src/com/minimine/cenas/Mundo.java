@@ -34,6 +34,7 @@ import com.minimine.utils.chunks.Chave;
 import com.minimine.utils.chunks.ChunkMesh;
 import com.minimine.utils.blocos.Bloco;
 import com.minimine.utils.chunks.Chunk;
+import com.minimine.utils.ruidos.SimplexNoise3D;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -52,6 +53,7 @@ public class Mundo {
     public static int seed = 0, RAIO_CHUNKS = 5, RAIO_ANTES = 0;
     public static int chunksTotais = (RAIO_CHUNKS *2 + 1) * (RAIO_CHUNKS *2 + 1);
     public static SimplexNoise2D s2D;
+	public static SimplexNoise3D s3D;
 
     public static ShaderProgram shader;
     public static boolean carregado = false, ciclo = true, nuvens = true, mod = false;
@@ -121,16 +123,17 @@ public class Mundo {
         Bloco.blocos.add(new Bloco("agua", 4, true, false, false));
         Bloco.blocos.add(new Bloco("areia", 5));
         Bloco.blocos.add(new Bloco("tronco", 6, 7));
-        Bloco.blocos.add(new Bloco("folha", 8, true, false, false));
+        Bloco.blocos.add(new Bloco("folha", 8, true, true, false));
         Bloco.blocos.add(new Bloco("tabua_madeira", 9));
         Bloco.blocos.add(new Bloco("cacto", 10, 11));
-        Bloco.blocos.add(new Bloco("vidro", 12, true));
+        Bloco.blocos.add(new Bloco("vidro", 12, true, true, false));
         Bloco.blocos.add(new Bloco("tocha", 13, 13, 13, false, true, true, 15));
     }
 
     public void iniciar() {
         seed = seed == 0 ? Mat.floor((float)Math.random()*1000000) : seed;
         s2D = new SimplexNoise2D(seed);
+		s3D = new SimplexNoise3D(seed << 1);
 
         criarAtlas();
 
@@ -258,6 +261,7 @@ public class Mundo {
         atlasUVs.clear();
         exec.shutdown();
 		s2D.liberar();
+		s3D.liberar();
     }
 
     public static int obterBlocoMundo(int x, int y, int z) {

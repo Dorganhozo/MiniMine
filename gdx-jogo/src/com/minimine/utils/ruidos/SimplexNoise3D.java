@@ -1,8 +1,12 @@
 package com.minimine.utils.ruidos;
 
 import com.minimine.utils.Mat;
+import com.minimine.Inicio;
+import com.badlogic.gdx.Gdx;
 
 public class SimplexNoise3D {
+	public long ptr;
+	
     public static final float F3 = 1.0f / 3.0f;
     public static final float G3 = 1.0f / 6.0f;
 
@@ -16,33 +20,39 @@ public class SimplexNoise3D {
     public final int[] p;
 
     public SimplexNoise3D(int seed) {
-        int[] perm = new int[256];
-        for(int i = 0; i < 256; i++) perm[i] = i;
-        // logica de embaralhamento(fisher-yates + xorshift32)
-        int estado = seed;
-        if(estado == 0) estado = 0x9E3779B9;
+		if(Inicio.ehArm64) {
+			p = null;
+			iniciarC(seed);
+		} else {
+			int[] perm = new int[256];
+			for(int i = 0; i < 256; i++) perm[i] = i;
+			// logica de embaralhamento(fisher-yates + xorshift32)
+			int estado = seed;
+			if(estado == 0) estado = 0x9E3779B9;
 
-        for(int i = 255; i > 0; i--) {
-            // xorshift32 passo
-            int z = estado;
-            z ^= (z << 13);
-            z ^= (z >>> 17);
-            z ^= (z << 5);
-            estado = z;
-            long urnd = z & 0xFFFFFFFFL;
-            int j = (int) (urnd % (i + 1)); // em [0, i]
+			for(int i = 255; i > 0; i--) {
+				// xorshift32 passo
+				int z = estado;
+				z ^= (z << 13);
+				z ^= (z >>> 17);
+				z ^= (z << 5);
+				estado = z;
+				long urnd = z & 0xFFFFFFFFL;
+				int j = (int) (urnd % (i + 1)); // em [0, i]
 
-            int tmp = perm[i];
-            perm[i] = perm[j];
-            perm[j] = tmp;
-        }
-        this.p = new int[512];
-        for(int i = 0; i < 512; i++) {
-            this.p[i] = perm[i & 255];
-        }
+				int tmp = perm[i];
+				perm[i] = perm[j];
+				perm[j] = tmp;
+			}
+			this.p = new int[512];
+			for(int i = 0; i < 512; i++) {
+				this.p[i] = perm[i & 255];
+			}
+		}
     }
 
     public float ruido(float xin, float yin, float zin) {
+		if(Inicio.ehArm64) return ruidoC(ptr, xin, yin, zin);
         float s = (xin + yin + zin) * F3;
         int i = Mat.floor(xin + s);
         int j = Mat.floor(yin + s);
@@ -116,7 +126,8 @@ public class SimplexNoise3D {
     }
 
     // calcula o ruido fractal(FBM) 3D
-	public float ruidoFractal(float x, float y, float z, int octaves, float persis) {
+	public float ruidoFractal(float x, float y, float z, float escala, int octaves, float persis) {
+		if(Inicio.ehArm64) return ruidoFractalC(ptr, x, y, z, escala, octaves, persis);
         float total = 0f;
         float amplitude = 1f;
         float maxValor = 0f;
@@ -134,5 +145,29 @@ public class SimplexNoise3D {
             lz *= 2f;
         }
         return total / maxValor;
+    }
+	
+	public void liberar() {
+        if(ptr != 0) {
+            if(Inicio.ehArm64) liberarC(ptr);
+            ptr = 0;
+        }
+    }
+    @Override
+    protected void finalize() throws Throwable {
+        liberar();
+        super.finalize();
+    }
+    public static native long iniciarC(int seed);
+    public static native float ruidoC(long ptr, float x, float y, float z);
+    public static native float ruidoFractalC(long ptr, float x, float y, float z, float escala, int octaves, float persis);
+    public static native void liberarC(long ptr);
+	
+	static {
+        try {
+			System.loadLibrary("simplex-noise3d");
+		} catch(Exception e) {
+			Gdx.app.log("SimplexNoise3D", "Ruido Simplex Noise 3D não carregado: "+e);
+		}
     }
 }

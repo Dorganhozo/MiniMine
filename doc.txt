@@ -1,3 +1,12 @@
+/*
+* Documentação Oficial do MiniMine.
+* Versão v0.0.1.
+* Atualizada: 08/12/2025.
+* Por: Shiniga-OP.
+* Contribuidores da documentação: 
+* Green: https://youtube.com/@greenlevelcreatordev?si=q1HhyS115FbbPhOI
+* VDLN7: https://youtube.com/@violetbrasilofc?si=Ip8AkZdPnDDdFjGm
+*/
 basico:
 
 vá até a pasta /MiniMine/mods/
@@ -12,133 +21,130 @@ caso queira um loop de execução em tempo de jogo, crie um arquivo att.lua, que
 
 ele será um loop automatico do jogo, e tudo nele será executado diversas vezes até o app fechar.
 
-API publica:
+API publica: <retorno/tipo> <identificador> <parâmetro/explicação>
 
 jogador:
 
-jogador.posicao.x
-jogador.posicao.y
-jogador.posicao.z
-jogador.velo -- velocidade de movimento do jogador
-jogador.pulo -- forca do pulo
-jogador.GRAVIDADE
-jogador.modelo
-jogador.VELO_MAX_QUEDA -- velocidade maxima que o jogador atinge em queda
-jogador.blocoSele -- o tipo do bloco em id que o jogador tem selecionado
-jogador.modo -- 0 = espectador, 1 = criativo, 2 = sobeevivencia
-jogador.ALCANCE -- alcance de destruicao e criacao de blocos
-jogador.noChao -- booleano
-jogador.naAgua -- booleano
-jogador:criarModelo3D() -- carrega o modelo padrão do jogador
+float jogador.posicao.x
+float jogador.posicao.y
+float jogador.posicao.z
+float jogador.velo -- velocidade de movimento do jogador
+float jogador.pulo -- forca do pulo
+float jogador.GRAVIDADE
+ModelInstance jogador.modelo
+float jogador.VELO_MAX_QUEDA -- velocidade maxima que o jogador atinge em queda
+String jogador.blocoSele -- o tipo do bloco em id que o jogador tem selecionado
+int jogador.modo -- 0 = espectador, 1 = criativo, 2 = sobeevivencia
+int jogador.ALCANCE -- alcance de destruicao e criacao de blocos
+booelan jogador.noChao -- booleano
+booelan jogador.naAgua -- booleano
+void jogador:criarModelo3D() -- carrega o modelo padrão do jogador
 
 jogador.inv:
 
-jogador.inv.quantSlots -- quantidade de slots para itens
-jogador.inv.tamSlot -- tamanho padrão dos slots
-jogador.inv.hotbarSlots
-jogador.inv.slotSelecionado -- indice do slot atual
-jogador.inv.aberto -- abre ou fecha inventario
-jogador.inv:rmItem(int slotId, int quantidade) -- remove o item de um slot pela quantidade
-jogador.inv:addItem(int blocoId, int quantidade) -- adiciona um item pelo tipo e quantidade
-jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
+int jogador.inv.quantSlots -- quantidade de slots para itens
+float jogador.inv.tamSlot -- tamanho padrão dos slots
+Slot[] jogador.inv.hotbarSlots
+int jogador.inv.slotSelecionado -- indice do slot atual
+booelan jogador.inv.aberto -- abre ou fecha inventario
+void jogador.inv:rmItem(int slotId, int quantidade) -- remove o item de um slot pela quantidade
+void jogador.inv:addItem(int blocoId, int quantidade) -- adiciona um item pelo tipo e quantidade
+void jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
 
 mundo:
 
-mundo.nome -- nome do mundo atual
-mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
-mundo.seed -- Retorna uma seed do Mundo
-mundo.Y_CHUNK -- tamanho vertical das chuhks
-mundo.TAM_CHUNK -- tamanho horizontal das chunks
-mundo.nuvens -- booleana, desativa e ativa as nuvens no céu
-mundo.ciclo -- ativa ou desativa o ciclo diário incluindo o tick
-mundo:defBlocoMundo(x, y, z, int tipoDoBloco) -- define um bloco nas coordenadas globais
-mundo:obterBlocoMundo(x, y, z) -- obtem o tipo do bloco nas coordenadas globais
-mundo:addBloco(String nome, String texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
-mundo:addBloco(String nome, String texturaIdTopo, String texturaIdLados) -- variacao
-mundo:addBloco(nome, String texturaIdTopo, String texturaIdLados, String texturaIdBaixo) -- variacao
-mundo:addBloco(String nome, String texturaIdTopo, String texturaIdLados, Boolean ehTransparente) -- variacao se é transparente, true, senao, false
-mundo:addBloco(String nome, String texturaIdTopo, String texturaIdLados, Boolean ehTransparente, luz) -- variacao, nivel de luz de 0 a 15
+String mundo.nome -- nome do mundo atual
+int mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
+int mundo.seed -- Retorna uma seed do Mundo
+final int mundo.Y_CHUNK -- tamanho vertical das chuhks
+final int mundo.TAM_CHUNK -- tamanho horizontal das chunks
+booelan mundo.nuvens -- booleana, desativa e ativa as nuvens no céu
+boolean mundo.ciclo -- ativa ou desativa o ciclo diário incluindo o tick
+void mundo:defBlocoMundo(int x, y, z, String tipoDoBloco) -- define um bloco nas coordenadas globais
+int mundo:obterBlocoMundo(int x, y, z) -- obtem o tipo do bloco nas coordenadas globais
+Bloco mundo:addBloco(String nome, int texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
+Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados) -- variacao
+Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados, int texturaIdBaixo) -- variacao
+Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados, boolean ehTransparente) -- variacao se é transparente, true, senao, false
+Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados, boolean ehTransparente, int luz) -- variacao, nivel de luz de 0 a 15
 
 mundo.texturas:
 
-mundo.texturas:add(textura) -- adiciona uma textura, faça mundo.texturas(util:carregarTextura(caminho)) para adicionar uma, e depois chame mundo:iniciar() no final do script
+void mundo.texturas:add(textura) -- adiciona uma textura, faça mundo.texturas(util:carregarTextura(caminho)) para adicionar uma, e depois chame mundo:iniciar() no final do script
 
 mundo.chunks:
 
-mundo.chunks:size() -- obtem a quantidade de objetos chunk a serem renderizados
-mundo.chunks:get(chave) -- retorna um objeto chunk e senão existir, retorna nil
+int mundo.chunks:size() -- obtem a quantidade de objetos chunk a serem renderizados
+Chunk mundo.chunks:get(Chave chave) -- retorna um objeto chunk e senão existir, retorna nil
 
 mundo.chunksMod:
 
-mundo.chunksMod:size() -- obtem a quantidade de chunks modificadas pelo mundo
-mundo.chunksMod:get(chave) -- mesma coisa so que com chunks alteradas
-
-mundo.chaveReuso:
-
-mundo.chaveReuso:obtain() -- retorna um objeto chave que pode ser usado como como "local chave = mundo.chaveReuso:obtain() chave.x = x chave.z = z
-mundo.chaveReuso:free(chave) -- para não explodir a memoria, libere a chave apos o uso
+int mundo.chunksMod:size() -- obtem a quantidade de chunks modificadas pelo mundo
+Chunk mundo.chunksMod:get(chave) -- mesma coisa so que com chunks alteradas sem Mesh se não visivel
 
 mundo.s2D:
 
-mundo.s2D.ruido(x, y) -- devolve um ruido 2D comum simplex
-mundo.s2D.ruidoFractal(x, y, float escala, octaves, persistencia) -- devolve um ruido fractal 2D simplex
+float mundo.s2D.ruido(float x, y) -- devolve um ruido 2D comum simplex
+float mundo.s2D.ruidoFractal(float x, y, escala, octaves, persistencia) -- devolve um ruido fractal 2D simplex (max de 16 octaveis)
+float mundo.s3D.ruido(float x, y, z) -- devolve um ruido 3D comum simplex
+float mundo.s3D.ruidoFractal(float x, y, z, escala, octaves, persistencia) -- devolve um ruido fractal 3D simplex
 
 chunkutil:
 
-chunkutil:defBloco(localX, localY, localZ, tipoId, chunk) -- define um bloco de coords locais
-chunkutil:obterBloco(localX, localY, localZ, chunk)
-chunkutil:defLuz(localX, localY, localZ, nivel, chunk) -- define uma luz na chunk com um nivel luminosidade
-chunkutil:defLuz(localX, localY, localZ, chunk) -- retorna o nivel de luz na chunk
+void chunkutil:defBloco(int localX, localY, localZ, tipoId, Chunk chunk) -- define um bloco de coords locais
+void chunkutil:obterBloco(int localX, localY, localZ, Chunk chunk)
+void chunkutil:defLuz(int localX, localY, localZ, nivel, Chunk chunk) -- define uma luz na chunk com um nivel luminosidade
+void chunkutil:obterLuz(int localX, localY, localZ, Chunk chunk) -- retorna o nivel de luz na chunk
 
 bloco.numIds:
 
-bloco.numIds:get(0) -- retorna um objeto bloco baseado no seu ID dinamico de numero inteiro
+Bloco bloco.numIds:get(int id) -- retorna um objeto bloco baseado no seu ID dinamico de numero inteiro
 
 bloco.texIds:
 
-bloco.texIds:get(bloco) -- retorna um objeto Bloco baseado em seu ID imutavel de texto
+Bloco bloco.texIds:get(String nome) -- retorna um objeto Bloco baseado em seu ID imutavel de texto
 
 ui:
 
-ui.fps -- taxa de quadros atuais
-ui.botoesTam -- tamanho padrao dos botoes
+int ui.fps -- taxa de quadros atuais
+float ui.botoesTam -- tamanho padrao dos botoes
 
 -- controles do jogador
-ui.direita
-ui.esquerda
-ui.tras
-ui.frente
-ui.cima
-ui.baixo
+boolean ui.direita
+boolean ui.esquerda
+boolean ui.tras
+boolean ui.frente
+booleanui.cima
+boolean ui.baixo
 
-ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar) -- adiciona um botão e retorna seu objeto
-ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar, func_aoSoltar) -- variacao
-ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar, func_aoSoltar, func_aoAjustarATela(v, h)) -- variacao
-ui:rmBotao(nomeId) -- remove um botão da lista
-ui:subsBotao(nomeId, botaoObjeto) -- substitui um botão por outro objeto Botao
-ui:defTextoTam(escalaX, escalaY) -- define a escala do texto total
-ui:obterTextoTam() -- retorna um array de 2 elementos com X e Y da escala de texto
-ui:addTexto(texto, x, y) -- define e retorna um objeto Texto
-ui:addTexto(texto, x, y, func_aoAjustarATela(v, h)) -- variacao
-ui:subsTexto(nomeId, textoObj) -- substitui um texto pelo objeto
-ui:rmTexto(nomeId) -- remove um texto
-ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto)) -- cria um dialogo que executa uma função ao apertar enter
-ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto), func_cancelar) -- variação que executa uma função ao cancelar
+Botao ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar) -- adiciona um botão e retorna seu objeto
+Botao ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar, func_aoSoltar) -- variacao
+Botao ui:addBotao(texturaId, x, y, escalaX, escalaY, nome, func_aoTocar, func_aoSoltar, func_aoAjustarATela(v, h)) -- variacao
+void ui:rmBotao(nomeId) -- remove um botão da lista
+void ui:subsBotao(nomeId, botaoObjeto) -- substitui um botão por outro objeto Botao
+void ui:defTextoTam(escalaX, escalaY) -- define a escala do texto total
+float[] ui:obterTextoTam() -- retorna um array de 2 elementos com X e Y da escala de texto
+Texto ui:addTexto(texto, x, y) -- define e retorna um objeto Texto
+Texto ui:addTexto(texto, x, y, func_aoAjustarATela(v, h)) -- variacao
+void ui:subsTexto(nomeId, textoObj) -- substitui um texto pelo objeto
+void ui:rmTexto(nomeId) -- remove um texto
+void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto)) -- cria um dialogo que executa uma função ao apertar enter
+void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto), func_cancelar) -- variação que executa uma função ao cancelar
 
 ui.botoes:
 
-ui.botoes:get(nomeBotao) -- retorna o objeto nomeBotao
-ui.botoes:get(nomeBotao):defTextura(texturaId) -- define uma textura
+Botao ui.botoes:get(String nomeBotao) -- retorna o objeto nomeBotao
+void ui.botoes:get(String nomeBotao):defTextura(texturaId) -- define uma textura
 
 biomas:
 
-biomas:addBioma(function(String nome, status, raridade)
+biomas:addBioma(function(String nome, float[] status, raridade)
 -- definição de dados
 nome[0] = "bioma comum"
 status[0] = 0.1 -- temperatura
 status[1] = 0.5 -- umidade
 raridade[0] = 0.5
-end, function(localX, localZ, chunk)
+end, function(int localX, localZ, Chunk chunk)
 -- geracao de coluna
 local bloco = 1 -- grama
 chunkutil:defBloco(localX, 0, localZ, bloco, chunk) -- define um bloco na chunk
@@ -148,50 +154,50 @@ biomas:gerarArvore(localX, y, localZ, chunk) -- gera uma arvore dentro dos limit
 
 util:
 
-util:carregarTextura(nomeId, caminho) -- carrega uma textura e guarda ela com um ID, além de retornar o objeto Texture
-util:obterModeloGLTF(caminho) -- retorna um ModelInstance da LibGDX de um arquivo .gltf
-util:carregarFonte(caminho, tamanhoInteiro) -- retorna a fonte bitmap, ui.fonte = util:carregarFonte(...) para alterar a fonte
+Texture util:carregarTextura(nomeId, caminho) -- carrega uma textura e guarda ela com um ID, além de retornar o objeto Texture
+ModelInstance util:obterModeloGLTF(caminho) -- retorna um ModelInstance da LibGDX de um arquivo .gltf
+BitmapFont util:carregarFonte(caminho, tamanhoInteiro) -- retorna a fonte bitmap, ui.fonte = util:carregarFonte(...) para alterar a fonte
 
-nuvens.RAIO_VISIVEL -- distancia que as nuvens cobrem ao redor do jogador
-nuvens.NUM_NUVENS -- quantidade de nuvens reutilizaveis no mundo
+int nuvens.RAIO_VISIVEL -- distancia que as nuvens cobrem ao redor do jogador
+int nuvens.NUM_NUVENS -- quantidade de nuvens reutilizaveis no mundo
 
 ciclo:
 
-ciclo.tempo -- tempo do dia noite, fica sempre entre 1.0 e 0.0
-ciclo.tempo_velo -- velocidade que influencia o ciclo diario e a velocidade das nuvens
-ciclo:ehDia() -- retorna se é dia booleano
-ciclo:ehNoite() -- retorna se é noite booleano
-ciclo.obterFatorTrancisao()
+float ciclo.tempo -- tempo do dia noite, fica sempre entre 1.0 e 0.0
+float ciclo.tempo_velo -- velocidade que influencia o ciclo diario e a velocidade das nuvens
+boolean ciclo:ehDia() -- retorna se é dia booleano
+boolean ciclo:ehNoite() -- retorna se é noite booleano
+float ciclo.obterFatorTrancisao()
 
 texutil.texs:
 
-texutil.texs:size()
-texutil.texs:get(nome)
+int texutil.texs:size()
+Texture texutil.texs:get(String nome)
 
 audio:
 
-audio:addSom(nome, caminho) -- adiciona um som a lista e retorna um objeto Sound, use som:play() como na LibGDX
+Sound audio:addSom(String nome, caminho) -- adiciona um som a lista e retorna um objeto Sound, use som:play() como na LibGDX
 
 audio.sons:
 
-audio.sons:get(nome) -- retorna um objeto Sound
+Sound audio.sons:get(String nome) -- retorna um objeto Sound
 
 lua:
 
-lua:exec(codigoTexto) -- executa um codigo Lua em tempo de execução
-lua.v -- tamanho vertical da tela
-lua.h -- tamanho horizontal da tela
-lua.pacote -- caminho absoluto da pasta mods
+void lua:exec(String codigoTexto) -- executa um codigo Lua em tempo de execução
+int lua.v -- tamanho vertical da tela
+int lua.h -- tamanho horizontal da tela
+String lua.pacote -- caminho absoluto da pasta mods
 
 arquivos:
 
 -- esses metodos dependem do nome do objeto Mundo passado
-arquivos:sv(mundo, jogador) -- salva o mundo(pode lagar)
-arquivos:cr(mundo, jogador) -- carrega o mundo(pode lagar também)
-arquivos:ler(lua.pacote .. "arquivo.txt") -- retorna o conteudo em string
-arquivos:escrever(lua.pacote .. "arquivo.txt", "texto) -- escreve uma string no caminho ou cria um arquivo com esse conteudo
-arquivos:existe(lua.pacote .. "arquivo.txt") -- retorna booleano
-arquivos:listar(lua.pacote) -- retorna um objeto List<String> com os nomes de arquivos e pastas no caminho
+void arquivos:sv(mundo, jogador) -- salva o mundo(pode lagar)
+void arquivos:cr(mundo, jogador) -- carrega o mundo(pode lagar também)
+String arquivos:ler(lua.pacote .. "arquivo.txt") -- retorna o conteudo em string
+void arquivos:escrever(lua.pacote .. "arquivo.txt", String texto) -- escreve uma string no caminho ou cria um arquivo com esse conteudo
+boolean arquivos:existe(lua.pacote .. "arquivo.txt") -- retorna booleano
+List<String> arquivos:listar(lua.pacote) -- retorna um objeto List<String> com os nomes de arquivos e pastas no caminho
 
 mapeamento de IDs:
 

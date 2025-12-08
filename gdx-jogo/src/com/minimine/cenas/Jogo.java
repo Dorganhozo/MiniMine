@@ -116,6 +116,7 @@ public class Jogo implements Screen {
 		Gdx.gl.glClearColor(r, g, b, 1f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+		Gdx.gl.glEnable(GL20.GL_BLEND);
 		
 		if(pronto) mundo.att(delta, jogador);
 		
@@ -141,6 +142,7 @@ public class Jogo implements Screen {
 		if(pronto) LuaAPI.att(delta);
 		
 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+		
 		ui.att(delta, mundo);
     }
 
@@ -167,6 +169,7 @@ public class Jogo implements Screen {
 		}
 		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);
+		mundo.carregado = true;
 	}
 	@Override
 	public void pause() {
@@ -178,6 +181,7 @@ public class Jogo implements Screen {
 		}
 		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);
+		mundo.carregado = true;
 	}
 	@Override public void resume() {}
 }

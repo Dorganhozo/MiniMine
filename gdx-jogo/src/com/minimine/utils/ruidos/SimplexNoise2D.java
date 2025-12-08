@@ -140,9 +140,9 @@ public class SimplexNoise2D {
 
     static {
         try {
-			System.loadLibrary("simplexnoise");
+			System.loadLibrary("simplex-noise2d");
 		} catch(Exception e) {
-			Gdx.app.log("SimplexNoise2Dz", "Ruido Simplex Noise 2D não carregado: "+e);
+			Gdx.app.log("SimplexNoise2D", "Ruido Simplex Noise 2D não carregado: "+e);
 		}
     }
 }

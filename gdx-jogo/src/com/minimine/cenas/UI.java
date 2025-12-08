@@ -291,7 +291,7 @@ public class UI implements InputProcessor {
 						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
 						else jogador.item = "ar";
 						Logs.log("feito vidro");
-					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].nome.equals("folhas")) {
+					} else if(jogador.inv.itens[jogador.inv.slotSelecionado].nome.equals("folha")) {
 						jogador.inv.rmItem(jogador.inv.slotSelecionado, 1);
 						jogador.inv.addItem("tocha", 1);
 						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
