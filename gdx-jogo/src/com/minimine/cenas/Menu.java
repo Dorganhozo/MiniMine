@@ -52,6 +52,7 @@ public class Menu implements Screen, InputProcessor {
 	
 	@Override
 	public void show() {
+		
 		textos = new ArrayList<>();
 		botoes = new ArrayList<>();
 		mundo.ciclo = true;

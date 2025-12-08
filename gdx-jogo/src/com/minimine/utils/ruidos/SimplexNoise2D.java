@@ -1,5 +1,7 @@
 package com.minimine.utils.ruidos;
+
 import com.minimine.Inicio;
+import com.badlogic.gdx.Gdx;
 
 public class SimplexNoise2D {
     public long ptr;
@@ -139,6 +141,8 @@ public class SimplexNoise2D {
     static {
         try {
 			System.loadLibrary("simplexnoise");
-		} catch(Exception e) {}
+		} catch(Exception e) {
+			Gdx.app.log("SimplexNoise2Dz", "Ruido Simplex Noise 2D não carregado: "+e);
+		}
     }
 }

@@ -18,7 +18,8 @@ public class Inicio extends Game {
 	public static boolean telaNova = false;
 	public static Screen telaAtual;
 	public static JS js;
-
+	public static Logs log = new Logs();
+	
 	public Inicio(String externo, Debugador debugador, JS js) {
 		Inicio.externo = externo;
 		Inicio.js = js;
@@ -28,7 +29,7 @@ public class Inicio extends Game {
 
 	@Override
 	public void create() {
-		Gdx.app.setApplicationLogger(new Logs());
+		Gdx.app.setApplicationLogger(log);
 		defTela(Cenas.intro);
 	}
 

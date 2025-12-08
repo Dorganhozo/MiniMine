@@ -36,7 +36,8 @@ public class UI implements InputProcessor {
 	public static Map<CharSequence, Texto> textos = new HashMap<>();
     public static SpriteBatch sb;
     public static BitmapFont fonte;
-    
+    public static CharSequence otimizadorC = "desligado";
+	
     public static boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
 	public Sprite spriteMira;
 	public int pontoEsq = -1;
@@ -46,6 +47,9 @@ public class UI implements InputProcessor {
     public final Vector2 ultimaDir = new Vector2();
 
 	public static float sensi = 0.25f;
+	public static float aprox = 0.07f;
+	public static float distancia = 400f;
+	public static int pov = 120;
 	public static final HashMap<Integer, CharSequence> toques = new HashMap<>();
 	public static Runtime rt = Runtime.getRuntime();
 
@@ -60,11 +64,11 @@ public class UI implements InputProcessor {
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
 	
     public UI(Jogador jogador) {
-        camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 18f, 10f);
         camera.lookAt(0, 0, 0);
-        camera.near = 0.1f;
-        camera.far = 400f;
+        camera.near = aprox;
+        camera.far = distancia;
         camera.update();
 
 		sb = new SpriteBatch(); 
@@ -77,6 +81,7 @@ public class UI implements InputProcessor {
 		this.jogador.inv = new Inventario();
 		
 		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		otimizadorC = Inicio.ehArm64 ? "ativo" : "não suportado";
     }
 	
 	public boolean chatAberto = false;
@@ -450,9 +455,11 @@ public class UI implements InputProcessor {
 			fonte.draw(sb, String.format(
 						   "FPS: %d\n" +
 						   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n" +
+						   "Otimizador C: %s\n\n"+
 						   "Logs:\n%s",
 						   fps,
 						   Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
+						   otimizadorC,
 						   logsTexto), 
 					   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
 		}

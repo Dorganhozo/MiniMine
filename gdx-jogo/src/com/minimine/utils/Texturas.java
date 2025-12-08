@@ -10,6 +10,7 @@ public class Texturas {
 
 	static {
 		try {
+			// modelos:
 			texs.put("grama_topo", new Texture(Gdx.files.internal("blocos/grama_topo.png")));
 			texs.put("grama_lado", new Texture(Gdx.files.internal("blocos/grama_lado.png")));
 			texs.put("terra", new Texture(Gdx.files.internal("blocos/terra.png")));
@@ -24,7 +25,7 @@ public class Texturas {
 			texs.put("cacto_lado", new Texture(Gdx.files.internal("blocos/cacto_lado.png")));
 			texs.put("vidro", new Texture(Gdx.files.internal("blocos/vidro.png")));
 			texs.put("tocha", new Texture(Gdx.files.internal("blocos/tocha.png")));
-			
+			// interface
 			texs.put("botao_f", new Texture(Gdx.files.internal("ui/botao_f.png")));
 			texs.put("botao_t", new Texture(Gdx.files.internal("ui/botao_t.png")));
 			texs.put("botao_d", new Texture(Gdx.files.internal("ui/botao_d.png")));
@@ -38,6 +39,11 @@ public class Texturas {
 			texs.put("botao_ld", new Texture(Gdx.files.internal("ui/botao_ld.png")));
 			texs.put("botao_le", new Texture(Gdx.files.internal("ui/botao_le.png")));
 			texs.put("salvar", new Texture(Gdx.files.internal("ui/salvar.png")));
+			texs.put("botao_ativado", new Texture(Gdx.files.internal("ui/botao_ativado.png")));
+			texs.put("botao_desativado", new Texture(Gdx.files.internal("ui/botao_desativado.png")));
+			texs.put("botao_aviso", new Texture(Gdx.files.internal("ui/botao_aviso.png")));
+			texs.put("botao_servidor", new Texture(Gdx.files.internal("ui/servidor.png")));
+			texs.put("botao_cliente", new Texture(Gdx.files.internal("ui/cliente.png")));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: " + e);
 		}
