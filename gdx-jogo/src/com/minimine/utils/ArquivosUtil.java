@@ -237,6 +237,7 @@ public class ArquivosUtil {
         dos.writeInt(jogador.ALCANCE);
         dos.writeInt(jogador.inv != null ? jogador.inv.slotSelecionado : 0);
 		dos.writeFloat(jogador.velo);
+		dos.writeBoolean(jogador.agachado);
         dos.flush();
     }
 
@@ -313,6 +314,7 @@ public class ArquivosUtil {
         if(jogador.inv == null) jogador.inv = new Inventario();
         jogador.inv.slotSelecionado = dis.readInt();
 		jogador.velo = dis.readFloat();
+		jogador.agachado = dis.readBoolean();
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {

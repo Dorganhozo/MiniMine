@@ -84,10 +84,10 @@ public class Jogo implements Screen {
 		ambiente.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
 		ambiente.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
 		
-		AudioUtil.sons.put("rapaiz", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/rapaiz.mp3")));
-		AudioUtil.sons.put("uepa", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/uepa.mp3")));
-		AudioUtil.sons.put("pare", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/pare.mp3")));
-		AudioUtil.sons.put("iha", Gdx.audio.newSound(Gdx.files.internal("audio/blocos/iha.mp3")));
+		AudioUtil.sons.put("rapaiz", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/rapaiz.mp3")));
+		AudioUtil.sons.put("uepa", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/uepa.mp3")));
+		AudioUtil.sons.put("pare", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/pare.mp3")));
+		AudioUtil.sons.put("iha", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/iha.mp3")));
 		
 		pronto = true;
 		

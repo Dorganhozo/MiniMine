@@ -77,7 +77,7 @@ public class BiomasUtil {
 					// ruido de detalhe local
 					float detalhe = Mundo.s2D.ruidoFractal(px * 0.015f, pz * 0.015f, 2.0f, 2, 0.5f);
 					// ruido de escala intermediaria para morros
-					float relevo = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.03f, 0.5f, 3, 0.55f);
+					float relevo = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.03f, 0.5f, 2, 0.55f);
 					// continente controla a intensidade do relevo: regiões "oceanicas" ficam planas
 					float base = continente;
 					if(base < -0.25f) base = -0.25f; // evita profundidades exageradas
@@ -161,7 +161,7 @@ public class BiomasUtil {
 					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
 					CharSequence bloco = "ar";
 					// ruido continental: define onde ha oceanos e terra
-					float continente = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.0003f, 1.0f, 4, 0.5f);
+					float continente = Mundo.s2D.ruidoFractal(px * 0.003f, pz * 0.0003f, 1.0f, 2, 0.5f);
 					// ruido de detalhe local
 					float detalhe = Mundo.s2D.ruidoFractal(px * 0.015f, pz * 0.015f, 2.0f, 2, 0.5f);
 					// ruido de escala intermediaria para morros

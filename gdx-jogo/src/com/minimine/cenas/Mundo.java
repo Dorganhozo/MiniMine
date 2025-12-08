@@ -193,15 +193,19 @@ public class Mundo {
     // chamado em render:
     public void att(float delta, Jogador jogador) {
         if(shader == null) return;
-		chunksAtuais = chunks.size();
-        if(chunksAtuais >= chunksTotais) {
-            if(!carregado) carregado = true;
-        }
+		
+		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
+		
+		if(!carregado) {
+			Chunk c = chunks.get(0);
+
+			if(c != null && c.mesh != null) {
+				carregado = true;
+			}
+		}
 		if(RAIO_CHUNKS == RAIO_ANTES) {
 			chunksTotais = (RAIO_CHUNKS *2 + 1) * (RAIO_CHUNKS *2 + 1);
 		}
-        attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
-        
         if(nuvens) NuvensUtil.att(delta, jogador.posicao);
 		
         shader.begin();
@@ -253,6 +257,7 @@ public class Mundo {
         chunks.clear();
         atlasUVs.clear();
         exec.shutdown();
+		s2D.liberar();
     }
 
     public static int obterBlocoMundo(int x, int y, int z) {
@@ -428,6 +433,7 @@ public class Mundo {
 			int distZ = Mat.abs(chave.z - chunkZ);
 			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
 				Chunk chunk = e.getValue();
+				if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
 				if(chunk != null) {
 					if(chunk.mesh != null) praLiberar.add(chunk);
 				}

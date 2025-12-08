@@ -41,7 +41,7 @@ public class Jogador {
 	public CharSequence item = "ar";
 	public static int ALCANCE = 7;
 	public Inventario inv = new Inventario();
-
+	
 	public float yaw = 180f, tom = -20f;
 
 	public void criarModelo3D() {

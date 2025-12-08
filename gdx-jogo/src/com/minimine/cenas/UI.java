@@ -37,7 +37,7 @@ public class UI implements InputProcessor {
     public static SpriteBatch sb;
     public static BitmapFont fonte;
     
-    public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
+    public static boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
 	public Sprite spriteMira;
 	public int pontoEsq = -1;
     public int pontoDir = -1;
@@ -45,16 +45,16 @@ public class UI implements InputProcessor {
     public final Vector2 esqPos = new Vector2();
     public final Vector2 ultimaDir = new Vector2();
 
-	public float sensi = 0.25f;
+	public static float sensi = 0.25f;
 	public static final HashMap<Integer, CharSequence> toques = new HashMap<>();
 	public static Runtime rt = Runtime.getRuntime();
 
-	public float botaoTam = 140f;
-	public float espaco = 60f;
+	public static float botaoTam = 140f;
+	public static float espaco = 60f;
 
 	public static Jogador jogador;
 	public static boolean debug = false;
-	public int fps = 0;
+	public static int fps = 0;
 	public static Debugador debugador;
 	
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
@@ -420,8 +420,8 @@ public class UI implements InputProcessor {
 			float livre = rt.freeMemory() >> 20;
 			float total = rt.totalMemory() >> 20;
 			
-			float nativaLivre = debugador.getNativeHeapFreeSize() >> 20;
-			float nativaTotal = debugador.getNativeHeapSize() >> 20;
+			float nativaLivre = debugador.obterHeapLivre() >> 20;
+			float nativaTotal = debugador.obterHeapTotal() >> 20;
 			
 			fps = Gdx.graphics.getFramesPerSecond();
 			

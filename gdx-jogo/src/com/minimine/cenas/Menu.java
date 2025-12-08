@@ -67,6 +67,8 @@ public class Menu implements Screen, InputProcessor {
 		Gdx.gl.glCullFace(GL20.GL_BACK);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		
+		attInterface();
+		
 		tela.att(0f);
 	}
 	
@@ -94,7 +96,7 @@ public class Menu implements Screen, InputProcessor {
 		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irConfig") {
 				@Override
 				public void aoTocar(int tx, int ty, int p) {
-					Inicio.defTela(Cenas.jogo);
+					Inicio.defTela(Cenas.configuracoes);
 				}
 				@Override
 				public void aoAjustar(int v, int h) {
@@ -149,15 +151,22 @@ public class Menu implements Screen, InputProcessor {
 		UI.attCamera(tela.camera, tela.yaw, tela.tom);
 		sb.end();
 	}
+	
 	@Override
 	public void resize(int v, int h) {
 		Gdx.gl.glViewport(0, 0, v, h);
-		attInterface();
+
+		tela.camera.viewportWidth = v;
+		tela.camera.viewportHeight = h;
+		tela.camera.update();
+
+		sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);
+
 		for(Botao b : botoes) {
 			if(b != null) b.aoAjustar(v, h);
 		}
-		for(Texto b : textos) {
-			if(b != null) b.aoAjustar(v, h);
+		for(Texto t : textos) {
+			if(t != null) t.aoAjustar(v, h);
 		}
 	}
 	@Override

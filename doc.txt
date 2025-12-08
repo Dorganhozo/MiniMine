@@ -38,26 +38,26 @@ jogador.inv.tamSlot -- tamanho padrão dos slots
 jogador.inv.hotbarSlots
 jogador.inv.slotSelecionado -- indice do slot atual
 jogador.inv.aberto -- abre ou fecha inventario
-jogador.inv:rmItem(slotId, quantidade) -- remove o item de um slot pela quantidade
-jogador.inv:addItem(blocoId, quantidade) -- adiciona um item pelo tipo e quantidade
+jogador.inv:rmItem(int slotId, int quantidade) -- remove o item de um slot pela quantidade
+jogador.inv:addItem(int blocoId, int quantidade) -- adiciona um item pelo tipo e quantidade
 jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
 
 mundo:
 
 mundo.nome -- nome do mundo atual
 mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
-mundo.seed
+mundo.seed -- Retorna uma seed do Mundo
 mundo.Y_CHUNK -- tamanho vertical das chuhks
 mundo.TAM_CHUNK -- tamanho horizontal das chunks
 mundo.nuvens -- booleana, desativa e ativa as nuvens no céu
 mundo.ciclo -- ativa ou desativa o ciclo diário incluindo o tick
-mundo:defBlocoMundo(x, y, z, tipoDoBloco) -- define um bloco nas coordenadas globais
+mundo:defBlocoMundo(x, y, z, int tipoDoBloco) -- define um bloco nas coordenadas globais
 mundo:obterBlocoMundo(x, y, z) -- obtem o tipo do bloco nas coordenadas globais
-mundo:addBloco(nome, texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
-mundo:addBloco(nome, texturaIdTopo, texturaIdLados) -- variacao
-mundo:addBloco(nome, texturaIdTopo, texturaIdLados, texturaIdBaixo) -- variacao
-mundo:addBloco(nome, texturaIdTopo, texturaIdLados, ehTransparente) -- variacao se é transparente, true, senao, false
-mundo:addBloco(nome, texturaIdTopo, texturaIdLados, ehTransparente, luz) -- variacao, nivel de luz de 0 a 15
+mundo:addBloco(String nome, String texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
+mundo:addBloco(String nome, String texturaIdTopo, String texturaIdLados) -- variacao
+mundo:addBloco(nome, String texturaIdTopo, String texturaIdLados, String texturaIdBaixo) -- variacao
+mundo:addBloco(String nome, String texturaIdTopo, String texturaIdLados, Boolean ehTransparente) -- variacao se é transparente, true, senao, false
+mundo:addBloco(String nome, String texturaIdTopo, String texturaIdLados, Boolean ehTransparente, luz) -- variacao, nivel de luz de 0 a 15
 
 mundo.texturas:
 
@@ -81,7 +81,7 @@ mundo.chaveReuso:free(chave) -- para não explodir a memoria, libere a chave apo
 mundo.s2D:
 
 mundo.s2D.ruido(x, y) -- devolve um ruido 2D comum simplex
-mundo.s2D.ruidoFractal(x, y, escala, octaves, persistencia) -- devolve um ruido fractal 2D simplex
+mundo.s2D.ruidoFractal(x, y, float escala, octaves, persistencia) -- devolve um ruido fractal 2D simplex
 
 chunkutil:
 
@@ -132,7 +132,7 @@ ui.botoes:get(nomeBotao):defTextura(texturaId) -- define uma textura
 
 biomas:
 
-biomas:addBioma(function(nome, status, raridade)
+biomas:addBioma(function(String nome, status, raridade)
 -- definição de dados
 nome[0] = "bioma comum"
 status[0] = 0.1 -- temperatura

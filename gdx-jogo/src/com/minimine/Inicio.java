@@ -13,6 +13,7 @@ import com.minimine.cenas.Mundo;
 import com.minimine.utils.audio.AudioUtil;
 
 public class Inicio extends Game {
+	public static boolean ehArm64;
 	public static String externo;
 	public static boolean telaNova = false;
 	public static Screen telaAtual;
@@ -22,6 +23,7 @@ public class Inicio extends Game {
 		Inicio.externo = externo;
 		Inicio.js = js;
 		UI.debugador = debugador;
+		ehArm64 = debugador.ehArm64();
 	}
 
 	@Override

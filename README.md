@@ -53,7 +53,7 @@ folha = tocha
 
 ## otimizações:
 Geração em Thread separada com ExecutorService.
-Reuso de objetos Mesh.
+Reuso de objetos Chave parq chunks.
 Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling (incluindo por distância e direção de olhar).
@@ -61,7 +61,8 @@ Compressão baseada em paleta.
 Otimização na atualização com variaveis locais (JIT).
 Proteção contra vazamentos de memória nativa pré calculando a quantidade de chunks.
 Cache de luz.
-Seleção de atualização de emissores e luz solar para atualizar.
+Cache de chunks modificadas sem Mesh.
+Implementação do rúido Simplex 2D em C via JNI (beta, somente em ARM64).
 
 ## ruídos utilitários:
 1. Perlin Noise 2D.

@@ -18,6 +18,8 @@ import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.Logs;
 import com.minimine.utils.audio.AudioUtil;
+import com.minimine.Cenas;
+import com.minimine.utils.blocos.Bloco;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -47,6 +49,8 @@ public class LuaAPI {
 		globais.set("lua", CoerceJavaToLua.coerce(new LuaAPI()));
 		globais.set("arquivos", CoerceJavaToLua.coerce(new ArquivosUtil()));
 		globais.set("audio", CoerceJavaToLua.coerce(new AudioUtil()));
+		globais.set("cenas", CoerceJavaToLua.coerce(new Cenas()));
+		globais.set("bloco", CoerceJavaToLua.coerce(Bloco.blocos.get(0)));
 		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {

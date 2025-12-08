@@ -1,6 +1,7 @@
 package com.minimine;
 
 public interface Debugador {
-	long getNativeHeapFreeSize();
-	long getNativeHeapSize();
+	long obterHeapLivre();
+	long obterHeapTotal();
+	boolean ehArm64();
 }

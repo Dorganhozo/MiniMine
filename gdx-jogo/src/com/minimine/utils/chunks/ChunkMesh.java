@@ -11,7 +11,7 @@ public class ChunkMesh {
 	
 	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
 		ChunkLuz.attLuz(chunk);
-
+		
 		Chunk chunkXP, chunkXN, chunkZP, chunkZN;
 		c.x = chunk.x + 1; c.z = chunk.z;
 		chunkXP = Mundo.chunks.get(c);
