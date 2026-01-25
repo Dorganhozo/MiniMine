@@ -137,7 +137,7 @@ public class Menu implements Screen, InputProcessor {
 	
 	@Override
 	public void render(float delta) {
-		if(mundo.chunks.size() >= 9) mundo.ciclo = false;
+		mundo.ciclo = false;
 		float luz = DiaNoiteUtil.luz;
 		if(luz < 0.1f) luz = 0f;
 		if(luz > 1f) luz = 1f;

@@ -12,12 +12,14 @@ refeito com LibGDX.
 7. Debug visual.
 8. Sistema de construção.
 9. Hotbar.
-10. Mods por Lua/JavaScript no armazenamento externo. (beta)
+10. Mods por Lua no armazenamento externo. (beta)
 11. Sistema de ciclo noturno e diário.
 12. Nuvens.
 13. Salvamento dinamico de mundos binario.
 14. Aúdio (ainda temporario até aúdios gravados manualmente).
 15. Agachamento (evita cair de bordas dos blocos).
+16. Tela de menu e configurações padrão.
+17. Divisão de biomas.
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -96,3 +98,23 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 
 ## dispositivo usado para testes:
 Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.
+
+## Créditos:
+
+**Programação**:
+Shiniga-OP
+
+**Efeitos sonoros**:
+VDLN7
+
+**Pixel art**:
+Shiniga-OP
+
+**Teste da API de mods e documentação**:
+VDLN7
+Green
+
+**Canais:**:
+Shiniga-OP: https://youtube.com/@shiniga-op?si=A78wk-sm3EJvgavE
+VDLN7: https://youtube.com/@violetbrasilofc?si=Ip8AkZdPnDDdFjGm
+Green: https://youtube.com/@greenlevelcreatordev?si=q1HhyS115FbbPhOI

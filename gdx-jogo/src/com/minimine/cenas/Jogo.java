@@ -84,10 +84,15 @@ public class Jogo implements Screen {
 		ambiente.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
 		ambiente.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
 		
-		AudioUtil.sons.put("rapaiz", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/rapaiz.mp3")));
-		AudioUtil.sons.put("uepa", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/uepa.mp3")));
-		AudioUtil.sons.put("pare", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/pare.mp3")));
-		AudioUtil.sons.put("iha", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/iha.mp3")));
+		AudioUtil.sons.put("grama_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/grama_1.mp3")));
+		AudioUtil.sons.put("terra_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_1.mp3")));
+		AudioUtil.sons.put("terra_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_2.mp3")));
+		AudioUtil.sons.put("terra_3", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_3.mp3")));
+		AudioUtil.sons.put("pedra_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/pedra_1.mp3")));
+		AudioUtil.sons.put("pedra_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/pedra_2.mp3")));
+		AudioUtil.sons.put("madeira_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_1.mp3")));
+		AudioUtil.sons.put("madeira_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_2.mp3")));
+		AudioUtil.sons.put("madeira_3", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_3.mp3")));
 		
 		pronto = true;
 		
@@ -98,8 +103,7 @@ public class Jogo implements Screen {
 					if(mundo.ciclo) DiaNoiteUtil.att();
 				}
 			},
-			0,
-			120
+			0, 120
 		);
 	}
 

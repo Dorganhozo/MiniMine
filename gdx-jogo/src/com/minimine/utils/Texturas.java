@@ -15,7 +15,7 @@ public class Texturas {
 			texs.put("grama_lado", new Texture(Gdx.files.internal("blocos/grama_lado.png")));
 			texs.put("terra", new Texture(Gdx.files.internal("blocos/terra.png")));
 			texs.put("pedra", new Texture(Gdx.files.internal("blocos/pedra.png")));
-			texs.put("agua", new Texture(Gdx.files.internal("blocos/agua_fixa.png")));
+			texs.put("agua", new Texture(Gdx.files.internal("blocos/agua.png")));
 			texs.put("areia", new Texture(Gdx.files.internal("blocos/areia.png")));
 			texs.put("tronco_topo", new Texture(Gdx.files.internal("blocos/tronco_topo.png")));
 			texs.put("tronco_lado", new Texture(Gdx.files.internal("blocos/tronco_lado.png")));
@@ -25,7 +25,10 @@ public class Texturas {
 			texs.put("cacto_lado", new Texture(Gdx.files.internal("blocos/cacto_lado.png")));
 			texs.put("vidro", new Texture(Gdx.files.internal("blocos/vidro.png")));
 			texs.put("tocha", new Texture(Gdx.files.internal("blocos/tocha.png")));
-			// interface
+			// animações:
+			texs.put("agua_a1", new Texture(Gdx.files.internal("blocos/anims/agua_a1.png")));
+			texs.put("agua_a2", new Texture(Gdx.files.internal("blocos/anims/agua_a2.png")));
+			// interface:
 			texs.put("botao_f", new Texture(Gdx.files.internal("ui/botao_f.png")));
 			texs.put("botao_t", new Texture(Gdx.files.internal("ui/botao_t.png")));
 			texs.put("botao_d", new Texture(Gdx.files.internal("ui/botao_d.png")));

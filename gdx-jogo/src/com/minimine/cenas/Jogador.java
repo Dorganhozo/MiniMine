@@ -78,14 +78,10 @@ public class Jogador {
 			Bloco bloco = Bloco.numIds.get(Mundo.obterBlocoMundo(x, y, z));
 
 			if(bloco != null) {
-				if(Math.random() > 0.46) AudioUtil.sons.get("rapaiz").play();
-				else if(Math.random() > 0.45) AudioUtil.sons.get("pare").play();
-				else if(Math.random() > 0.7) AudioUtil.sons.get("uepa").play();
-				else AudioUtil.sons.get("iha").play();
-
 				if(item.equals("ar")) {
 					if(modo == 2) inv.addItem(bloco.nome, 1);
 					Mundo.defBlocoMundo(x, y, z, "ar");
+					Bloco.tocarSom(bloco.nome);
 				} else {
 					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
 					int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));
@@ -96,7 +92,8 @@ public class Jogador {
 						attHitbox();
 						if(blocoBox.intersects(hitbox)) return;
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, item);
-
+						Bloco.tocarSom(item);
+						
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
 					}
 				}

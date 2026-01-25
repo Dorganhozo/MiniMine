@@ -77,12 +77,13 @@ public class ChunkOtimiza {
 
 	public static boolean deveOcultarFace(Bloco blocoAtual, Bloco blocoAdjacente) {
 		if(blocoAdjacente == null) return false;
-		// normais se ocultam
-		if(blocoAtual.culling && blocoAdjacente.culling) return true;
 		// outros transparentes não se ocultam entre tipos diferentes
 		if(blocoAtual.transparente && blocoAdjacente.transparente) {
 			return blocoAtual.tipo == blocoAdjacente.tipo;
 		}
+		// normais se ocultam
+		if(blocoAtual.culling && blocoAdjacente.culling) return true;
+		
 		return false;
 	}
 }

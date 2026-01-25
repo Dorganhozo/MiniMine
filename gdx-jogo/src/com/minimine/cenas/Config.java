@@ -97,7 +97,7 @@ public class Config implements Screen, InputProcessor {
         botoes.add(new Botao(Texturas.texs.get("botao_d"), 0, 0, 80, 80, "aumentarRaio") {
 				@Override
 				public void aoTocar(int tx, int ty, int p) {
-					if(Mundo.RAIO_CHUNKS < 30) {
+					if(Mundo.RAIO_CHUNKS < 20) {
 						Mundo.RAIO_CHUNKS++;
 						txtRaioValor.texto = String.valueOf(Mundo.RAIO_CHUNKS);
 					}

@@ -25,9 +25,11 @@ public class LuaAPI {
 	public static Globals globais;
 	public static Jogo tela;
 	public static String att;
-	public static LuaFunction aoAjustar, ajuste;
+	public static LuaFunction aoAjustar, ajuste, porFrame, frame;
 	public static int v, h;
+	public static float delta;
 	public static String pacote;
+	public static boolean existeAtt = false;
 	
 	public static void iniciar(Jogo principal) {
 		pacote = Inicio.externo+"/MiniMine/mods/";
@@ -50,12 +52,17 @@ public class LuaAPI {
 		globais.set("arquivos", CoerceJavaToLua.coerce(new ArquivosUtil()));
 		globais.set("audio", CoerceJavaToLua.coerce(new AudioUtil()));
 		globais.set("cenas", CoerceJavaToLua.coerce(new Cenas()));
-		globais.set("bloco", CoerceJavaToLua.coerce(Bloco.blocos.get(0)));
+		globais.set("bloco", CoerceJavaToLua.coerce(new Bloco()));
 		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
-				ajuste = (LuaFunction) arg;
 				arg.call(LuaValue.valueOf(v), LuaValue.valueOf(h));
+				return LuaValue.NIL;
+			}
+		};
+		porFrame = new LuaFunction() {
+			public LuaValue call(LuaValue arg) {
+				arg.call(LuaValue.valueOf(delta));
 				return LuaValue.NIL;
 			}
 		};
@@ -76,6 +83,7 @@ public class LuaAPI {
 				}
 			});
 		globais.set("aoAjustar", aoAjustar);
+		globais.set("porFrame", porFrame);
 		File dir = new File(Inicio.externo+"/MiniMine/mods/");
 		if(!dir.exists()) {
 			dir.mkdirs();
@@ -87,11 +95,16 @@ public class LuaAPI {
 			script += ArquivosUtil.ler(Inicio.externo+"/MiniMine/mods/"+str[i]);
 		}
 		globais.load(script, "script").call();
-		att = ArquivosUtil.ler(Inicio.externo+"/MiniMine/mods/att.lua");
+		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mods/att.lua")) {
+			att = ArquivosUtil.ler(Inicio.externo+"/MiniMine/mods/att.lua");
+			existeAtt = true;
+		}
 	}
 	
-	public static void att(float delta) {
-		globais.load(att, "script").call();
+	public static void att(float delta1) {
+		if(existeAtt) globais.load(att, "script").call();
+		delta = delta1;
+		if(frame != null) porFrame.call(frame);
 	}
 	
 	public static void ajustar(int ve, int ho) {

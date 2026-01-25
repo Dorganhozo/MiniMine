@@ -3,12 +3,15 @@ package com.minimine.utils.blocos;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import com.minimine.utils.audio.AudioUtil;
+import com.badlogic.gdx.audio.Music;
 
 public class Bloco {
 	public static List<Bloco> blocos = new ArrayList<>();
 	public static HashMap<CharSequence, Bloco> texIds = new HashMap<>();
 	public static HashMap<Integer, Bloco> numIds = new HashMap<>();
-	
+	public static HashMap<String, String[]> sons = new HashMap<>();
+
 	public CharSequence nome;
 	public int tipo;
 	public int topo, lados, baixo;
@@ -37,6 +40,8 @@ public class Bloco {
 		numIds.put(this.tipo, this);
 		texIds.put(this.nome, this);
 	}
+	
+	public Bloco() {}
 
 	public int texturaId(int faceId) {
         switch(faceId) {
@@ -45,4 +50,25 @@ public class Bloco {
             default: return lados;
         }
     }
+	
+	public static void addSom(String bloco, String... sonoros) {
+		sons.put(bloco, sonoros);
+	}
+
+	public static void tocarSom(Object bloco) {
+		if(sons.containsKey(bloco)) {
+			String[] sonoros = sons.get(bloco);
+			for(int i = 0; i < sonoros.length; i++) {
+				if(Math.random() > 0.6) {
+					Music m = AudioUtil.sons.get(sonoros[i]);
+					m.play();
+					return;
+				}
+			}
+			Music m = AudioUtil.sons.get(sonoros[0]);
+			m.play();
+		} else {
+			tocarSom("pedra");
+		}
+	}
 }

@@ -307,7 +307,7 @@ public class UI implements InputProcessor {
 				public void aoTocar(int t, int t2, int p){
 					toques.put(p, "salvar");
 					sprite.setAlpha(0.5f);
-					Mundo.exec.submit(new Runnable() {
+					new Thread(new Runnable() {
 						@Override
 						public void run() {
 							ArquivosUtil.svMundo(Jogo.mundo, jogador);
@@ -319,7 +319,7 @@ public class UI implements InputProcessor {
 								}
 							});
 						}
-					});
+					}).start();
 				}
 				public void aoSoltar(int t, int t2, int p){}
 			});

@@ -7,7 +7,6 @@ public final class Chunk {
     public final byte[] luz = new byte[16*255*16/2];
     public volatile com.badlogic.gdx.graphics.Mesh mesh;
     public int x, z, maxIds = 8;
-	public int ultimaLuzCeu = -1;
     public int paletaTam = 0;    // quantas entradas existem
     public int paletaBits = 1; // bits para indice da paleta(1..8)
 	public int[] paleta = new int[1 << this.paletaBits]; // array de valores reais(ids de blocos)

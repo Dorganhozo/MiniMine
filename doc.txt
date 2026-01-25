@@ -61,7 +61,7 @@ final int mundo.TAM_CHUNK -- tamanho horizontal das chunks
 booelan mundo.nuvens -- booleana, desativa e ativa as nuvens no céu
 boolean mundo.ciclo -- ativa ou desativa o ciclo diário incluindo o tick
 void mundo:defBlocoMundo(int x, y, z, String tipoDoBloco) -- define um bloco nas coordenadas globais
-int mundo:obterBlocoMundo(int x, y, z) -- obtem o tipo do bloco nas coordenadas globais
+int mundo:obterBlocoMundo(int x, y, z) -- obtem o ID númerico do bloco nas coordenadas globais
 Bloco mundo:addBloco(String nome, int texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
 Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados) -- variacao
 Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados, int texturaIdBaixo) -- variacao
@@ -89,22 +89,28 @@ float mundo.s2D.ruidoFractal(float x, y, escala, octaves, persistencia) -- devol
 float mundo.s3D.ruido(float x, y, z) -- devolve um ruido 3D comum simplex
 float mundo.s3D.ruidoFractal(float x, y, z, escala, octaves, persistencia) -- devolve um ruido fractal 3D simplex
 
-chunkutil:
+ChunkUtil chunkutil:
 
 void chunkutil:defBloco(int localX, localY, localZ, tipoId, Chunk chunk) -- define um bloco de coords locais
-void chunkutil:obterBloco(int localX, localY, localZ, Chunk chunk)
+byte chunkutil:obterBloco(int localX, localY, localZ, Chunk chunk)
 void chunkutil:defLuz(int localX, localY, localZ, nivel, Chunk chunk) -- define uma luz na chunk com um nivel luminosidade
-void chunkutil:obterLuz(int localX, localY, localZ, Chunk chunk) -- retorna o nivel de luz na chunk
+int chunkutil:obterLuz(int localX, localY, localZ, Chunk chunk) -- retorna o nivel de luz na chunk
+boolean chunkutil:ehSolido(int x, y, z, Chunk chunk) -- retorna verdadeiro se for solido e falso senão
 
-bloco.numIds:
+Bloco bloco:
+
+void bloco:addSom(String bloco, String... sons) -- quando o bloco for quebrado ou colocado, reproduzirá um desses sons aleatóriamente definidos com audio:addSom(...)
+void bloco:tocarSom(String bloco) -- toca um dos sons do bloco definido aleatóriamente
+
+Map<Integer, Bloco> bloco.numIds:
 
 Bloco bloco.numIds:get(int id) -- retorna um objeto bloco baseado no seu ID dinamico de numero inteiro
 
-bloco.texIds:
+Map<String, Bloco> bloco.texIds:
 
 Bloco bloco.texIds:get(String nome) -- retorna um objeto Bloco baseado em seu ID imutavel de texto
 
-ui:
+UI ui:
 
 int ui.fps -- taxa de quadros atuais
 float ui.botoesTam -- tamanho padrao dos botoes
@@ -131,12 +137,18 @@ void ui:rmTexto(nomeId) -- remove um texto
 void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto)) -- cria um dialogo que executa uma função ao apertar enter
 void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto), func_cancelar) -- variação que executa uma função ao cancelar
 
-ui.botoes:
+Map<String, Botao> ui.botoes:
 
-Botao ui.botoes:get(String nomeBotao) -- retorna o objeto nomeBotao
+Botao ui.botoes:get(String nomeBotao) -- retorna o objeto Botao
 void ui.botoes:get(String nomeBotao):defTextura(texturaId) -- define uma textura
 
-biomas:
+Map<String, Texto> ui.textos:
+
+Texto ui.textos:get(String nomeTexto) -- retorna o objeto Texto
+String ui.textos:get(String nomeTexto).texto -- texto legivel
+
+
+BiomasUtil biomas:
 
 biomas:addBioma(function(String nome, float[] status, raridade)
 -- definição de dados
@@ -152,7 +164,7 @@ end)
 biomas:subsBioma(func_inicio, func_geracao, indice) -- substitui um bioma pelo indice
 biomas:gerarArvore(localX, y, localZ, chunk) -- gera uma arvore dentro dos limites da chunk
 
-util:
+Util util:
 
 Texture util:carregarTextura(nomeId, caminho) -- carrega uma textura e guarda ela com um ID, além de retornar o objeto Texture
 ModelInstance util:obterModeloGLTF(caminho) -- retorna um ModelInstance da LibGDX de um arquivo .gltf
@@ -161,7 +173,7 @@ BitmapFont util:carregarFonte(caminho, tamanhoInteiro) -- retorna a fonte bitmap
 int nuvens.RAIO_VISIVEL -- distancia que as nuvens cobrem ao redor do jogador
 int nuvens.NUM_NUVENS -- quantidade de nuvens reutilizaveis no mundo
 
-ciclo:
+DiaNoiteUtil ciclo:
 
 float ciclo.tempo -- tempo do dia noite, fica sempre entre 1.0 e 0.0
 float ciclo.tempo_velo -- velocidade que influencia o ciclo diario e a velocidade das nuvens
@@ -169,27 +181,27 @@ boolean ciclo:ehDia() -- retorna se é dia booleano
 boolean ciclo:ehNoite() -- retorna se é noite booleano
 float ciclo.obterFatorTrancisao()
 
-texutil.texs:
+Map<String, Texture> texutil.texs:
 
 int texutil.texs:size()
 Texture texutil.texs:get(String nome)
 
 audio:
 
-Sound audio:addSom(String nome, caminho) -- adiciona um som a lista e retorna um objeto Sound, use som:play() como na LibGDX
+Music audio:addSom(String nome, caminho) -- adiciona um som a lista e retorna um objeto Music, use som:play() como na LibGDX
 
-audio.sons:
+HashMap<String, Music> audio.sons:
 
-Sound audio.sons:get(String nome) -- retorna um objeto Sound
+Music audio.sons:get(String nome) -- retorna um objeto Music
 
-lua:
+LuaAPI lua:
 
 void lua:exec(String codigoTexto) -- executa um codigo Lua em tempo de execução
 int lua.v -- tamanho vertical da tela
 int lua.h -- tamanho horizontal da tela
 String lua.pacote -- caminho absoluto da pasta mods
 
-arquivos:
+ArquivosUtil arquivos:
 
 -- esses metodos dependem do nome do objeto Mundo passado
 void arquivos:sv(mundo, jogador) -- salva o mundo(pode lagar)
@@ -198,6 +210,16 @@ String arquivos:ler(lua.pacote .. "arquivo.txt") -- retorna o conteudo em string
 void arquivos:escrever(lua.pacote .. "arquivo.txt", String texto) -- escreve uma string no caminho ou cria um arquivo com esse conteudo
 boolean arquivos:existe(lua.pacote .. "arquivo.txt") -- retorna booleano
 List<String> arquivos:listar(lua.pacote) -- retorna um objeto List<String> com os nomes de arquivos e pastas no caminho
+
+## FUNÇÕES SOZINHAS ##
+
+porFrame(function(delta)
+   -- tudo aqui será executado a cada frame, só pode ter 1 chamada
+end)
+
+aoAjustar(function(v, h)
+   -- tudo aqui será executado quando a tela atualizar, com os valores Verticais e Horizontais
+end)
 
 mapeamento de IDs:
 
@@ -234,6 +256,11 @@ blocos:
 "vidro"
 "tocha"
 
+animações:
+
+"agua_a1"
+"agua_a2"
+
 interface:
 
 "botao_f"
@@ -269,7 +296,15 @@ indices de biomas padrão:
 
 IDs de aúdios:
 
-// nenhum permanente ainda...
+"grama_1"
+"terra_1"
+"terra_2"
+"terra_3"
+"pedra_1"
+"pedra_2"
+"madeira_1"
+"madeira_2"
+"madeira_3"
 
 sobre especificações:
 
