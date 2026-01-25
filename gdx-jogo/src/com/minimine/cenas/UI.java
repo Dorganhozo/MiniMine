@@ -443,13 +443,13 @@ public class UI implements InputProcessor {
 						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
 						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 						   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
-						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSeed: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.5f",
+						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSemente: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.5f",
 						   jogador.posicao.x, jogador.posicao.y, jogador.posicao.z,
 						   mundo.nome, 
 						   (jogador.modo == 0 ? "espectador" : jogador.modo == 1 ? "criativo" : "sobrevivencia"), 
 						   jogador.inv.slotSelecionado, jogador.item, jogador.noChao, jogador.naAgua, jogador.agachado, jogador.velo, jogador.altura,
 						   this.direita, this.esquerda, this.frente, this.tras, this.cima, this.baixo, this.acao,
-						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.seed, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo), 
+						   mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.semente, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo), 
 					   50, Gdx.graphics.getHeight() - 100);
 
 			fonte.draw(sb, String.format(

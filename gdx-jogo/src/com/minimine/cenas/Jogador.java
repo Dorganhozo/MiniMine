@@ -31,7 +31,7 @@ public class Jogador {
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 
 	public float largura = 0.6f, altura = 1.8f, profundidade = 0.6f;
-	public boolean noChao = true, naAgua = false, agachado = false;
+	public boolean noChao = true, naAgua = false, agachado = false, nasceu = false;
 	public BoundingBox hitbox = new BoundingBox();
 	public static final BoundingBox blocoBox = new BoundingBox();
 	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();

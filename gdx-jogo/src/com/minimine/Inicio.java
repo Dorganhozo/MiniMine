@@ -25,7 +25,6 @@ public class Inicio extends Game {
 		Inicio.js = js;
 		UI.debugador = debugador;
 		ehArm64 = debugador.ehArm64();
-		ehArm64 = false;
 	}
 
 	@Override

@@ -7,12 +7,11 @@ import com.minimine.utils.blocos.Bloco;
 import com.badlogic.gdx.graphics.Mesh;
 
 public class ChunkMesh {
-	public static Chave c = new Chave(0, 0);
-	
 	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
 		ChunkLuz.attLuz(chunk);
 		
 		Chunk chunkXP, chunkXN, chunkZP, chunkZN;
+		Chave c = new Chave(0, 0);
 		c.x = chunk.x + 1; c.z = chunk.z;
 		chunkXP = Mundo.chunks.get(c);
 		c.x = chunk.x - 1; c.z = chunk.z;

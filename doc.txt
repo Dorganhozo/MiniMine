@@ -55,7 +55,7 @@ mundo:
 
 String mundo.nome -- nome do mundo atual
 int mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
-int mundo.seed -- Retorna uma seed do Mundo
+int mundo.semente -- Retorna a semente do Mundo
 final int mundo.Y_CHUNK -- tamanho vertical das chuhks
 final int mundo.TAM_CHUNK -- tamanho horizontal das chunks
 booelan mundo.nuvens -- booleana, desativa e ativa as nuvens no céu

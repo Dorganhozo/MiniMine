@@ -332,9 +332,9 @@ public class BiomasUtil {
 	}
 
 	public static boolean dentroLimite(int x, int y, int z) {
-		return x >= 0 && x < Mundo.TAM_CHUNK &&
-			z >= 0 && z < Mundo.TAM_CHUNK &&
-			y >= 0 && y < Mundo.Y_CHUNK;
+		return x >= 0 && x < 16 &&
+			z >= 0 && z < 16 &&
+			y >= 0 && y < 16;
 	}
 
 	public static class Bioma {

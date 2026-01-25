@@ -149,15 +149,15 @@ public class MundoMenu implements Screen, InputProcessor {
 
 					Gdx.input.getTextInput(new Input.TextInputListener() {
 							@Override
-							public void input(String seedTxt) {
+							public void input(String sementeTxt) {
 								int seed;
 								try {
-									seed = Integer.parseInt(seedTxt.trim());
+									seed = Integer.parseInt(sementeTxt.trim());
 								} catch(Exception e) {
 									seed = (int)(Math.random() * 1000000);
 								}
 								Mundo.nome = nome;
-								Mundo.seed = seed;
+								Mundo.semente = seed;
 								
 								Inicio.defTela(Cenas.jogo);
 
@@ -167,9 +167,8 @@ public class MundoMenu implements Screen, InputProcessor {
 							}
 							@Override
 							public void canceled() {}
-						}, "Seed do Mundo", "", "Digite um número ou deixe vazio");
+						}, "Semente do Mundo", "", "Digite um número ou deixe vazio");
 				}
-
 				@Override
 				public void canceled() {}
 			}, "Nome do Mundo", "", "Digite o nome do mundo");
