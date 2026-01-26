@@ -28,7 +28,6 @@ import com.badlogic.gdx.Input;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.Inicio;
 import com.minimine.Logs;
-import android.webkit.JavascriptInterface;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -76,6 +75,7 @@ public class UI implements InputProcessor {
 		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 15);
 
         Gdx.input.setInputProcessor(this);
+        Gdx.input.setCursorCatched(true); // prende o mouse no meio da tela
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
@@ -109,40 +109,56 @@ public class UI implements InputProcessor {
 	}
 
 	@Override
-	public boolean touchDown(int telaX, int telaY, int p, int b) {
-		int y = Gdx.graphics.getHeight() - telaY;
+    public boolean touchDown(int telaX, int telaY, int p, int b) {
+        if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
+            if(b == Input.Buttons.LEFT) {
+                jogador.item = "ar";
+                jogador.interagirBloco();
+                if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+                else jogador.item = "ar";
+                return true;
+            }
+            if(b == Input.Buttons.RIGHT) {
+                if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+                else jogador.item = "ar";
+                acao = true;
+                jogador.interagirBloco();
+                return true;
+            }
+        }
+        int y = Gdx.graphics.getHeight() - telaY;
+        for(Botao e : botoes.values()) {
+            if(e.hitbox.contains(telaX, y)) {
+                e.aoTocar(telaX, y, p);
+                toques.put(p, e.nome);
+                return true;
+            }
+        }
+        jogador.inv.aoTocar(telaX, y, p);
+        if(telaX >= Gdx.graphics.getWidth() / 2 && pontoDir == -1) { 
+            pontoDir = p; 
+            ultimaDir.set(telaX, y); 
+        }
+        return true;
+    }
 
-		for(Botao e : botoes.values()) {
-			if(e.hitbox.contains(telaX, y)) {
-				e.aoTocar(telaX, y, p);
-				toques.put(p, e.nome);
-				return true; // botão pressionado não faz mais nada
-			}
-		}
-		jogador.inv.aoTocar(telaX, y, p);
-		if(telaX >= Gdx.graphics.getWidth() / 2 && pontoDir == -1) { 
-			pontoDir = p; 
-			ultimaDir.set(telaX, y); 
-		}
-		return true;
-	}
+    @Override
+    public boolean touchUp(int telaX, int telaY, int p, int b) {
+        if(b == Input.Buttons.RIGHT) acao = false;
 
-	@Override
-	public boolean touchUp(int telaX, int telaY, int p, int b) {
-		int y = Gdx.graphics.getHeight() - telaY;
-
-		CharSequence botao = toques.remove(p);
-		if(botao != null) {
-			for(Botao e : botoes.values()) {
-				if(botao.equals(e.nome)) {
-					e.aoSoltar(telaX, y, p);
-					break;
-				}
-			}
-		}
-		if(p == pontoDir) pontoDir = -1;
-		return true;
-	}
+        int y = Gdx.graphics.getHeight() - telaY;
+        CharSequence botao = toques.remove(p);
+        if(botao != null) {
+            for(Botao e : botoes.values()) {
+                if(botao.equals(e.nome)) {
+                    e.aoSoltar(telaX, y, p);
+                    break;
+                }
+            }
+        }
+        if(p == pontoDir) pontoDir = -1;
+        return true;
+    }
 
 	@Override
 	public boolean touchDragged(int telaX, int telaY, int p) {
@@ -626,13 +642,57 @@ public class UI implements InputProcessor {
 			}, titulo, padrao, msg);
 	}
 	
-	@JavascriptInterface
-	public static void debug(boolean modo) {
-		debug = modo;
-	}
-	@Override public boolean keyDown(int p){return false;}
+	@Override 
+    public boolean keyDown(int p) {
+        if(p == Input.Keys.W) frente = true;
+        if(p == Input.Keys.S) tras = true;
+        if(p == Input.Keys.A) esquerda = true;
+        if(p == Input.Keys.D) direita = true;
+        if(p == Input.Keys.SPACE) cima = true;
+        if(p == Input.Keys.SHIFT_LEFT) {
+            baixo = true;
+            if(jogador.agachado) {
+                jogador.velo *= 2;
+                jogador.altura *= 1.2f;
+                jogador.agachado = false;
+            } else {
+                jogador.velo /= 2;
+                jogador.altura /= 1.2f;
+                jogador.agachado = true;
+            }
+        }
+        if(p == Input.Keys.E) jogador.inv.alternar();
+        if(p == Input.Keys.T) abrirChat();
+        return true;
+    }
+
+    @Override 
+    public boolean keyUp(int p) {
+        if(p == Input.Keys.W) frente = false;
+        if(p == Input.Keys.S) tras = false;
+        if(p == Input.Keys.A) esquerda = false;
+        if(p == Input.Keys.D) direita = false;
+        if(p == Input.Keys.SPACE) cima = false;
+        if(p == Input.Keys.SHIFT_LEFT) baixo = false;
+        return true;
+    }
+
+    @Override 
+    public boolean mouseMoved(int p, int p1) {
+        float dx = Gdx.input.getDeltaX();
+        float dy = Gdx.input.getDeltaY();
+        jogador.yaw -= dx * sensi;
+        jogador.tom -= dy * sensi;
+        if(jogador.tom > 89f) jogador.tom = 89f;
+        if(jogador.tom < -89f) jogador.tom = -89f;
+        return true;
+    }
+
+    @Override 
+    public boolean scrolled(float p, float p1) {
+        if(p1 > 0) jogador.inv.slotSelecionado = (jogador.inv.slotSelecionado + 1) % jogador.inv.hotbarSlots;
+        else if(p1 < 0) jogador.inv.slotSelecionado = (jogador.inv.slotSelecionado - 1 + jogador.inv.hotbarSlots) % jogador.inv.hotbarSlots;
+        return true;
+    }
 	@Override public boolean keyTyped(char p){return false;}
-	@Override public boolean keyUp(int p){return false;}
-	@Override public boolean mouseMoved(int p, int p1){return false;}
-	@Override public boolean scrolled(float p, float p1){return false;}
 }

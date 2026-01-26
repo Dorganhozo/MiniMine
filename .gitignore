@@ -2,7 +2,7 @@
 /gdx-android/bin/
 /gdx-android/build/
 
-# Pastas de build do jogo
+# pastas de build do jogo
 /gdx-jogo/bin/
 /gdx-jogo/build/
 
@@ -10,6 +10,10 @@
 /build/
 /bin/
 /output/
+
+# pastas tmp
+/biblis-obrigatorias/
+/compilar-manual/
 
 # Ignore Gradle project-specific cache directory
 .gradle

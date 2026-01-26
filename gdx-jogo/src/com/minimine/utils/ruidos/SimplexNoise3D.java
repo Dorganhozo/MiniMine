@@ -22,6 +22,13 @@ public class SimplexNoise3D {
     public SimplexNoise3D(int seed) {
 		if(Inicio.ehArm64) {
 			p = null;
+
+            try {
+			System.loadLibrary("simplex-noise3d");
+		} catch(Exception e) {
+			Gdx.app.log("SimplexNoise3D", "Ruido Simplex Noise 3D não carregado: "+e);
+		}
+
 			iniciarC(seed);
 		} else {
 			int[] perm = new int[256];
@@ -162,12 +169,4 @@ public class SimplexNoise3D {
     public static native float ruidoC(long ptr, float x, float y, float z);
     public static native float ruidoFractalC(long ptr, float x, float y, float z, float escala, int octaves, float persis);
     public static native void liberarC(long ptr);
-	
-	static {
-        try {
-			System.loadLibrary("simplex-noise3d");
-		} catch(Exception e) {
-			Gdx.app.log("SimplexNoise3D", "Ruido Simplex Noise 3D não carregado: "+e);
-		}
-    }
 }
