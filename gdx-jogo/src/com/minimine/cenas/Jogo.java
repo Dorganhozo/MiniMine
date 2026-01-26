@@ -22,7 +22,6 @@ import com.minimine.mods.Util;
 import com.minimine.utils.BiomasUtil;
 import com.minimine.Logs;
 import com.minimine.JS;
-import com.minimine.MainActivity;
 import com.minimine.utils.audio.AudioUtil;
 import com.minimine.utils.chunks.Chunk;
 import com.badlogic.gdx.graphics.Mesh;

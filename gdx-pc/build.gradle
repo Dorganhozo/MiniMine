@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    google()
+    mavenCentral() // O comando precisa ser este para o sistema funcionar
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://jitpack.io" }
+}
+
+application {
+    mainClass = 'com.minimine.Iniciador'
+}
+
+dependencies {
+    implementation project(':gdx-jogo')
+
+    // Ajustado para 1.11.0 para coincidir com suas libs físicas
+    implementation "com.badlogicgames.gdx:gdx:1.11.0"
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:1.11.0"
+    implementation "com.badlogicgames.gdx:gdx-freetype:1.11.0"
+    
+    // Versão da biblioteca de modelos 3D compatível com a 1.11.0
+    implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.1.0"
+
+    // Arquivos nativos para execução em computadores
+    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.11.0:natives-desktop"
+    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.11.0:natives-desktop"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['../assets']
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.incremental = false
+}
+
+task rodar(type: JavaExec) {
+    mainClass = 'com.minimine.Iniciador'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+
+    workingDir = file('../assets').exists() ? file('../assets') : projectDir
+}

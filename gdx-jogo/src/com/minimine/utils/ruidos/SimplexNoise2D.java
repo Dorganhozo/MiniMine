@@ -20,6 +20,11 @@ public class SimplexNoise2D {
 		if(Inicio.ehArm64) {
 			perm512 = null;
 			permMod8 = null;
+
+            try {
+                System.loadLibrary("simplex-noise2d");
+            } catch (Throwable t) {}
+
 			ptr = iniciarC(seed);
 		} else {
 			int[] p = new int[256];
@@ -137,12 +142,4 @@ public class SimplexNoise2D {
     public static native float ruidoC(long ptr, float x, float y);
     public static native float ruidoFractalC(long ptr, float x, float z, float escala, int octaves, float persis);
     public static native void liberarC(long ptr);
-
-    static {
-        try {
-			System.loadLibrary("simplex-noise2d");
-		} catch(Exception e) {
-			Gdx.app.log("SimplexNoise2D", "Ruido Simplex Noise 2D não carregado: "+e);
-		}
-    }
 }

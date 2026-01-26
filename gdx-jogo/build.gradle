@@ -31,12 +31,10 @@ task limpezaSeletiva2(type: Delete) {
     delete 'build/generated'
 }
 
-tasks.withType(JavaCompile) {
-    outputs.upToDateWhen { false }
-    
+tasks.named('compileJava') {
+    dependsOn limpezaSeletiva2
     doFirst {
         println "recompilando módulo gdx-jogo..."
-        limpezaSeletiva2.execute()
     }
 }
 
