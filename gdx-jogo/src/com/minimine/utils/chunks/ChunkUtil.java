@@ -19,26 +19,23 @@ public class ChunkUtil {
     }
 	
 	public static Bloco obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
-		if(x >= 0 && x < Mundo.TAM_CHUNK && y >= 0 && y < Mundo.Y_CHUNK && z >= 0 && z < Mundo.TAM_CHUNK) {
-			int blocoId = obterBloco(x, y, z, chunk);
-			return blocoId == 0 ? null : Bloco.numIds.get(blocoId);
+		// caso esteja dentro da propria area
+		if(x >= 0 && x < 16 && z >= 0 && z < 16) {
+			if (y < 0 || y >= 255) return null;
+			int id = obterBloco(x, y, z, chunk);
+			return id == 0 ? null : Bloco.numIds.get(id);
 		}
+		// caso precise buscar na area vizinha
 		if(chunkAdj != null) {
-			if(y < 0 || y >= Mundo.Y_CHUNK) return null;
+			if(y < 0 || y >= 255) return null;
+			// ajusta as coordenadas pro espaço local da vizinha(0 a 15)
+			int adjX = (x < 0) ? 15 : (x > 15 ? 0 : x);
+			int adjZ = (z < 0) ? 15 : (z > 15 ? 0 : z);
 
-			int adjX = x;
-			int adjZ = z;
-
-			if(x < 0) adjX = Mundo.TAM_CHUNK - 1;
-			else if(x >= Mundo.TAM_CHUNK) adjX = 0;
-
-			if(z < 0) adjZ = Mundo.TAM_CHUNK - 1;
-			else if(z >= Mundo.TAM_CHUNK) adjZ = 0;
-
-			int blocoId = obterBloco(adjX, y, adjZ, chunkAdj);
-			return blocoId == 0 ? null : Bloco.numIds.get(blocoId);
+			int id = obterBloco(adjX, y, adjZ, chunkAdj);
+			return id == 0 ? null : Bloco.numIds.get(id);
 		}
-		return null;
+		return null; // tratado como ar se a area vizinha não existir
 	}
 
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
