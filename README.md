@@ -75,6 +75,7 @@ Cache no rúido Simplex 2D.
 
 ## compatibilidade:
 Android 4 até Android 14.
+Linux Mint.
 
 ## desempenho:
 FPS de 30 a 59 padrão testado com até 280 chunks ativas (raio de 8).
@@ -96,8 +97,9 @@ sem documentação ainda.
 
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
 
-## dispositivo usado para testes:
-Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.
+## dispositivos usados para testes:
+Celular: Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.
+Computador: dell optiPlex 780, intel core 2 quad memória: 4GB RAM(2x2GB DDR3) armazenamento: SSD 256GB + HD 500GB, video intel 4 series(Integrada), Linux Mint
 
 ## Créditos:
 
@@ -105,6 +107,7 @@ Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock
 Shiniga-OP
 
 **Efeitos sonoros**:
+Shiniga-OP
 VDLN7
 
 **Pixel art**:
