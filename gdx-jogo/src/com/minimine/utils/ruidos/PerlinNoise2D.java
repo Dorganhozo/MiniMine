@@ -31,9 +31,9 @@ public class PerlinNoise2D {
         }  
     }  
 
-    public static float ruido(float x, float z, int seed) {  
-        int X = (Mat.floor(x) + seed) & 255;  
-        int Z = (Mat.floor(z) + seed) & 255;  
+    public static float ruido(float x, float z, int semente) {  
+        int X = (Mat.floor(x) + semente) & 255;  
+        int Z = (Mat.floor(z) + semente) & 255;  
         float xf = x - Mat.floor(x);  
         float zf = z - Mat.floor(z);  
 
@@ -63,13 +63,13 @@ public class PerlinNoise2D {
         return g[0] * x + g[1] * y;  
     }  
 
-	public static float ruidoFractal(float x, float z, float escala, int seed, int octaves, float persis) {  
+	public static float ruidoFractal(float x, float z, float escala, int semente, int octaves, float persis) {  
 		float total = 0;  
 		float amplitude = 1;  
 		float maxValor = 0;  
 
 		for(int i = 0; i < octaves; i++) {  
-			total += ruido(x * escala, z * escala, seed + i) * amplitude;  
+			total += ruido(x * escala, z * escala, semente + i) * amplitude;  
 			maxValor += amplitude;  
 			amplitude *= persis;  
 			escala *= 2;  

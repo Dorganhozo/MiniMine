@@ -24,7 +24,7 @@ android {
             manifest.srcFile 'AndroidManifest.xml'
             res.srcDirs = ['res']
             java.srcDirs = ['src']
-            assets.srcDirs = ['assets']
+            assets.srcDirs = ['../assets']
             jniLibs.srcDirs = ['libs']
         }
     }
@@ -49,7 +49,7 @@ configurations.all {
 
 // tarefa personalizada pra limpar seletivamente
 task limpezaSele(type: Delete) {
-    description = 'Limpa apenas classes compiladas, preservando outras builds'
+    description = 'Limpa apenas classes compiladas, preservando outras compilações'
     delete 'build/classes'
     delete 'build/intermediates/classes'
     delete 'build/tmp'

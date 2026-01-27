@@ -16,21 +16,20 @@ public class SimplexNoise2D {
     public final short[] perm512;
     public final short[] permMod8;
 
-    public SimplexNoise2D(int seed) {
+    public SimplexNoise2D(int semente) {
 		if(Inicio.ehArm64) {
 			perm512 = null;
 			permMod8 = null;
 
             try {
                 System.loadLibrary("simplex-noise2d");
-            } catch (Throwable t) {}
-
-			ptr = iniciarC(seed);
+            } catch(Throwable t) {}
+			ptr = iniciarC(semente);
 		} else {
 			int[] p = new int[256];
 			for(int i = 0; i < 256; i++) p[i] = i;
 
-			int estado = seed;
+			int estado = semente;
 			if(estado == 0) estado = 0x9E3779B9;
 
 			for(int i = 255; i > 0; i--) {
@@ -138,7 +137,7 @@ public class SimplexNoise2D {
         liberar();
         super.finalize();
     }
-    public static native long iniciarC(int seed);
+    public static native long iniciarC(int semente);
     public static native float ruidoC(long ptr, float x, float y);
     public static native float ruidoFractalC(long ptr, float x, float z, float escala, int octaves, float persis);
     public static native void liberarC(long ptr);

@@ -34,11 +34,11 @@ public final class PerlinNoise3D {
         }
     }
 
-    public static float ruido(float x, float y, float z, int seed) {
+    public static float ruido(float x, float y, float z, int semente) {
         final int[] p = P; // local ref
-        int X = (Mat.floor(x) + seed) & 255;
-        int Y = (Mat.floor(y) + seed) & 255;
-        int Z = (Mat.floor(z) + seed) & 255;
+        int X = (Mat.floor(x) + semente) & 255;
+        int Y = (Mat.floor(y) + semente) & 255;
+        int Z = (Mat.floor(z) + semente) & 255;
 
         float xf = x - Mat.floor(x);
         float yf = y - Mat.floor(y);
@@ -94,7 +94,7 @@ public final class PerlinNoise3D {
         return t * t * t * (t * (t * 6f - 15f) + 10f);
     }
 
-    public static float ruidoFractal(float x, float y, float z, int seed, int octaves, float persis) {
+    public static float ruidoFractal(float x, float y, float z, int semente, int octaves, float persis) {
         float total = 0f;
         float amplitude = 1f;
         float maxValor = 0f;
@@ -102,7 +102,7 @@ public final class PerlinNoise3D {
         float ly = y;
         float lz = z;
         for(int i = 0; i < octaves; i++) {
-            total += ruido(lx, ly, lz, seed + i) * amplitude;
+            total += ruido(lx, ly, lz, semente + i) * amplitude;
             maxValor += amplitude;
             amplitude *= persis;
             lx *= 2f;

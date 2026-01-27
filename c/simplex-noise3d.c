@@ -33,7 +33,7 @@ static inline int floorRapido(float x) {
 // cria estado pra 3D:
 JNIEXPORT jlong JNICALL
 Java_com_minimine_utils_ruidos_SimplexNoise3D_iniciarC(
-    JNIEnv* amb, jclass classe, jint seed) {
+    JNIEnv* amb, jclass classe, jint semente) {
     
     RuidoDados* dados = (RuidoDados*)malloc(sizeof(RuidoDados));
     if(!dados) return 0;
@@ -43,7 +43,7 @@ Java_com_minimine_utils_ruidos_SimplexNoise3D_iniciarC(
         base[i] = (uint8_t)i;
     }
     // embaralha
-    uint32_t rng = (seed == 0) ? 0x9E3779B9 : (uint32_t)seed;
+    uint32_t rng = (semente == 0) ? 0x9E3779B9 : (uint32_t)semente;
     for(int i = 255; i > 0; i--) {
         uint32_t r = xorshift32(&rng);
         int j = (int)(r % (i + 1));

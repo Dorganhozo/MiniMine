@@ -19,22 +19,20 @@ public class SimplexNoise3D {
     // permutação:
     public final int[] p;
 
-    public SimplexNoise3D(int seed) {
+    public SimplexNoise3D(int semente) {
 		if(Inicio.ehArm64) {
 			p = null;
 
             try {
-			System.loadLibrary("simplex-noise3d");
-		} catch(Exception e) {
-			Gdx.app.log("SimplexNoise3D", "Ruido Simplex Noise 3D não carregado: "+e);
-		}
-
-			iniciarC(seed);
+                System.loadLibrary("simplex-noise3d");
+            } catch(Exception e) {}
+            
+			iniciarC(semente);
 		} else {
 			int[] perm = new int[256];
 			for(int i = 0; i < 256; i++) perm[i] = i;
 			// logica de embaralhamento(fisher-yates + xorshift32)
-			int estado = seed;
+			int estado = semente;
 			if(estado == 0) estado = 0x9E3779B9;
 
 			for(int i = 255; i > 0; i--) {
@@ -165,7 +163,7 @@ public class SimplexNoise3D {
         liberar();
         super.finalize();
     }
-    public static native long iniciarC(int seed);
+    public static native long iniciarC(int semente);
     public static native float ruidoC(long ptr, float x, float y, float z);
     public static native float ruidoFractalC(long ptr, float x, float y, float z, float escala, int octaves, float persis);
     public static native void liberarC(long ptr);

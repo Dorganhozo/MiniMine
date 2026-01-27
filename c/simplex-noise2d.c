@@ -90,7 +90,7 @@ static inline float simplexPrincipal(RuidoDados* dados, float xin, float yin) {
 
 JNIEXPORT jlong JNICALL
 Java_com_minimine_utils_ruidos_SimplexNoise2D_iniciarC(
-    JNIEnv* amb, jclass classe, jint seed) {
+    JNIEnv* amb, jclass classe, jint semente) {
     
     RuidoDados* dados = (RuidoDados*)malloc(sizeof(RuidoDados));
     if(!dados) return 0;
@@ -100,7 +100,7 @@ Java_com_minimine_utils_ruidos_SimplexNoise2D_iniciarC(
     for (int i = 0; i < 256; i++) {
         base[i] = i;
     }
-    uint32_t rng = seed ? seed : 0x9E3779B9;
+    uint32_t rng = semente ? semente : 0x9E3779B9;
     // usa LCG pra embaralhar(mais rápido que xorshift pra isso)
     for(int i = 255; i > 0; i--) {
         rng = rng * 1103515245 + 12345;
