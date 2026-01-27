@@ -98,8 +98,23 @@ sem documentação ainda.
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
 
 ## dispositivos usados para testes:
-Celular: Motorola G41, 4 GB de RAM, 128 GB de armazenamento. 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64. Android 12, OpenGL ES 3.2. Java VM ART 2.1.0.
-Computador: dell optiPlex 780, intel core 2 quad memória: 4GB RAM(2x2GB DDR3) armazenamento: SSD 256GB + HD 500GB, video intel 4 series(Integrada), Linux Mint
+Celular:
+* Modelo: Motorola G41.
+* Memória RAM: 4 GB.
+* Armazenamento: 128 GB.
+* Processador: 8 núcleos, velocidade clock 500 MHz - 2.00 GHz. ARM64.
+* OpenGL ES: 3.2.
+* JVM: Java VM ART 2.1.0.
+* Sistema Operacional: Android 12.
+
+Computador:
+* Placa Mãe: dell optiPlex 780.
+* Processador: intel core 2 quad.
+* Memória RAM: 4GB(2x2GB DDR3).
+* Armazenamento: SSD 256GB + HD 500GB.
+* Video: intel 4 series(Integrada).
+* OpenGL: 2.1.
+* Sistema Operaciobal: Linux Mint.
 
 ## Créditos:
 

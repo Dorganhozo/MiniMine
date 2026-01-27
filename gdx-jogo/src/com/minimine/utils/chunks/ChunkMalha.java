@@ -6,13 +6,13 @@ import com.minimine.cenas.Mundo;
 import com.minimine.utils.blocos.Bloco;
 import com.badlogic.gdx.graphics.Mesh;
 
-public class ChunkMesh {
-	public static void attMesh(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
+public class ChunkMalha {
+	public static void attMalha(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
 		ChunkLuz.attLuz(chunk);
 		
 		Chunk chunkXP, chunkXN, chunkZP, chunkZN;
-		Chave c = new Chave(0, 0);
-		c.x = chunk.x + 1; c.z = chunk.z;
+		Chave c = new Chave(chunk.x + 1, chunk.z);
+		
 		chunkXP = Mundo.chunks.get(c);
 		c.x = chunk.x - 1; c.z = chunk.z;
 		chunkXN = Mundo.chunks.get(c);

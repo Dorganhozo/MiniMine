@@ -209,8 +209,8 @@ public class Menu implements Screen, InputProcessor {
 	public void pause() {
 		mundo.carregado = false;
 		for(Chunk c : mundo.chunks.values()) {
-			if(c.mesh != null) c.mesh.dispose();
-			c.mesh = null;
+			if(c.malha != null) c.malha.dispose();
+			c.malha = null;
 		}
 		mundo.chunks.clear();
 	}

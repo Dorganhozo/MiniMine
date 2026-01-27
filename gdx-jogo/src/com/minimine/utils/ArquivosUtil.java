@@ -292,15 +292,16 @@ public class ArquivosUtil {
                 CharSequence id = dis.readUTF();
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
-            chunk.mesh = new Mesh(true, Mundo.maxVerts, Mundo.maxIndices, Mundo.atriburs);
-
+			chunk.malha = new Mesh(true, mundo.maxVerts, mundo.maxIndices, mundo.atriburs);
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Chave, Chunk>();
             if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Chave, Chunk>();
 
             mundo.chunksMod.put(new Chave(chunkX, chunkZ), chunk);
-            mundo.chunks.put(new Chave(chunkX, chunkZ), chunk);
-
+			mundo.chunks.put(new Chave(chunkX, chunkZ), chunk);
+            
             chunk.att = true;
+			chunk.dadosProntos = true;
+			mundo.estados.put(new Chave(chunkX, chunkZ), 1);
         }
     }
 

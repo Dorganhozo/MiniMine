@@ -3,6 +3,7 @@ package com.minimine.utils.blocos;
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.cenas.Mundo;
+import com.badlogic.gdx.graphics.Color;
 
 public class BlocoModelo {
     public static final float TAM = 1f; // tamanho
@@ -73,8 +74,8 @@ public class BlocoModelo {
         int g = (int)(nivelLuz * 255);
         int b = (int)(nivelLuz * 255);
         int a = 255;
-        int cor = (a << 24) | (b << 16) | (g << 8) | r;
-
+        float cor = Color.toFloatBits(r, g, b, a);
+		
         short vertConta = (short)(verts.tam / 6);
         // add vertices:
         for(int i = 0; i < 4; i++) {
@@ -89,7 +90,7 @@ public class BlocoModelo {
 
             verts.add(vx); verts.add(vy); verts.add(vz);
             verts.add(u); verts.add(v);
-            verts.add(Float.intBitsToFloat(cor));
+            verts.add(cor);
         }
         // add indices(triangulos)
         idc.add((short)(vertConta + 0));

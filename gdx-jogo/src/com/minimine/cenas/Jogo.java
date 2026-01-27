@@ -24,7 +24,6 @@ import com.minimine.Logs;
 import com.minimine.JS;
 import com.minimine.utils.audio.AudioUtil;
 import com.minimine.utils.chunks.Chunk;
-import com.badlogic.gdx.graphics.Mesh;
 
 public class Jogo implements Screen {
 	public UI ui;
@@ -167,8 +166,8 @@ public class Jogo implements Screen {
 	@Override public void hide() {
 		mundo.carregado = false;
 		for(Chunk c : mundo.chunks.values()) {
-			if(c.mesh != null) c.mesh.dispose();
-			c.mesh = null;
+			if(c.malha != null) c.malha.dispose();
+			c.malha = null;
 		}
 		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);
@@ -179,8 +178,8 @@ public class Jogo implements Screen {
 		LuaAPI.iniciar(this);	
 		mundo.carregado = false;
 		for(Chunk c : mundo.chunks.values()) {
-			if(c.mesh != null) c.mesh.dispose();
-			c.mesh = null;
+			if(c.malha != null) c.malha.dispose();
+			c.malha = null;
 		}
 		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);

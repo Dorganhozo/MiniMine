@@ -5,7 +5,7 @@ public final class Chunk {
     public int blocosPorInt = 32 / this.bitsPorBloco;; // = 32 / bitsPorBloco ou 32 / paletaBits
     public int[] blocos; // buffer com dados empacotados(indices de paleta ou ids diretos)
     public final byte[] luz = new byte[16*255*16/2];
-    public volatile com.badlogic.gdx.graphics.Mesh mesh;
+    public volatile com.badlogic.gdx.graphics.Mesh malha;
     public int x, z, maxIds = 8;
     public int paletaTam = 0;    // quantas entradas existem
     public int paletaBits = 1; // bits para indice da paleta(1..8)

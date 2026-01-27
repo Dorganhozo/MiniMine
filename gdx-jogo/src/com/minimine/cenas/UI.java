@@ -135,10 +135,10 @@ public class UI implements InputProcessor {
             }
         }
         jogador.inv.aoTocar(telaX, y, p);
-        if(telaX >= Gdx.graphics.getWidth() / 2 && pontoDir == -1) { 
-            pontoDir = p; 
-            ultimaDir.set(telaX, y); 
-        }
+        if(pontoDir == -1) { 
+			pontoDir = p; 
+			ultimaDir.set(telaX, y); 
+		}
         return true;
     }
 

@@ -30,7 +30,7 @@ import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.CorposCelestes;
 import com.minimine.utils.chunks.Chave;
-import com.minimine.utils.chunks.ChunkMesh;
+import com.minimine.utils.chunks.ChunkMalha;
 import com.minimine.utils.blocos.Bloco;
 import com.minimine.utils.chunks.Chunk;
 import com.minimine.utils.ruidos.SimplexNoise3D;
@@ -97,7 +97,7 @@ public class Mundo {
 	"uniform float u_luzCeu;\n" +
 	"void main() {\n" +
 	"vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
-	"if(texCor.a < 0.1) discard;\n" +
+	"if(texCor.a < 0.5) discard;\n" +
 	// a luz final é o maximo entre a luz do bloco e a luz do céu
 	"float luzFinal = max(v_cor.r, u_luzCeu);\n" + 
 	"gl_FragColor = texCor * vec4(luzFinal, luzFinal, luzFinal, 1.0);\n" +
@@ -235,7 +235,7 @@ public class Mundo {
 
         for(final Chunk chunk : chunks.values()) {
             if(frustrum(chunk, jogador)) {
-                if(chunk.mesh != null) chunk.mesh.render(shader, GL20.GL_TRIANGLES);
+                if(chunk.malha != null) chunk.malha.render(shader, GL20.GL_TRIANGLES);
             }
         }
         shader.end();
@@ -264,9 +264,9 @@ public class Mundo {
     public static void liberar() {
 		atlasGeral.dispose();
         for(Chunk chunk : chunks.values()) {
-            if(chunk.mesh != null) {
-                chunk.mesh.dispose();
-				chunk.mesh = null;
+            if(chunk.malha != null) {
+                chunk.malha.dispose();
+				chunk.malha = null;
             }
         }
 		chunks.clear();
@@ -304,8 +304,10 @@ public class Mundo {
 		chaveTmp.x = chunkX; chaveTmp.z = chunkZ;
 
         Chunk chunk = chunks.get(chaveTmp);
-        if(chunk == null) return;
-
+        if(chunk == null) {
+			Gdx.app.log("Mundo", "chunk null na posição X: "+chunkX+", Z: "+chunkZ);
+			return;
+		}
         int localX = x & 0xF;
         int localZ = z & 0xF;
 
@@ -401,7 +403,7 @@ public class Mundo {
 			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
 				if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
 				if(chunk != null) {
-					if(chunk.mesh != null) praLiberar.add(chunk);
+					if(chunk.malha != null) praLiberar.add(chunk);
 				}
 				praRemover.add(chave);
 			} else if(chunk.att && !chunk.fazendo) {
@@ -415,9 +417,9 @@ public class Mundo {
 					@Override
 					public void run() {
 						for(Chunk c : praLiberar) {
-							if(c.mesh != null) {
-								c.mesh.dispose();
-								c.mesh = null;
+							if(c.malha != null) {
+								c.malha.dispose();
+								c.malha = null;
 							}
 						}
 						for(Chave k : praRemover) chunks.remove(k);
@@ -428,22 +430,24 @@ public class Mundo {
 	
 	public void tentarGerarChunk(int x, int z) {
 		final Chave chave = new Chave(x, z);
-		Chunk chunk = chunks.get(chave);
+		// 1. tenta pegar do mapa de modificadas ou do mapa geral
+		Chunk chunk = chunksMod.get(chave);
+		if(chunk == null) chunk = chunks.get(chave);
 
-		// se a chunk nem existe, cria a estrutura basica e geramos os dados primeiro
+		// 2. se não existe em lugar nenhum, cria do zero(geração procedural)
 		if(chunk == null) {
 			chunk = new Chunk();
 			chunk.x = x; chunk.z = z;
 			ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
 			chunks.put(chave, chunk);
 			estados.put(chave, 0);
-
 			gerarDados(chave);
 			return; 
 		}
-		// se os dados já existem(estado 1), verifica se os vizinhos também estão prontos
-		// so então manda gerar a malha(estado 2)
-		if(estados.getOrDefault(chave, 0) == 1 && !chunk.fazendo) {
+		// 3. se ela existe(veio do disco ou ja foi gerada) e ta no estado 1, 
+		// gera a malha assim que os vizinhos permitirem
+		int estadoAtual = estados.getOrDefault(chave, 0);
+		if(estadoAtual == 1 && !chunk.fazendo) {
 			if(vizinhosProntos(x, z)) {
 				gerarMalha(chave);
 			}
@@ -488,19 +492,19 @@ public class Mundo {
 					final ShortArrayUtil idcGeral = new ShortArrayUtil();
 
 					// com os vizinhos no estado 1, as faces das bordas serão calculadas corretamente
-					ChunkMesh.attMesh(chunk, vertsGeral, idcGeral);
+					ChunkMalha.attMalha(chunk, vertsGeral, idcGeral);
 
 					Gdx.app.postRunnable(new Runnable() {
 							@Override
 							public void run() {
-								if(chunk.mesh == null) {
-									chunk.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
+								if(chunk.malha == null) {
+									chunk.malha = new Mesh(true, maxVerts, maxIndices, atriburs);
 								}
-								chunk.mesh.setVertices(vertsGeral.praArray());
-								chunk.mesh.setIndices(idcGeral.praArray());
+								chunk.malha.setVertices(vertsGeral.praArray());
+								chunk.malha.setIndices(idcGeral.praArray());
 
 								matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
-								chunk.mesh.transform(matrizTmp);
+								chunk.malha.transform(matrizTmp);
 
 								chunk.fazendo = false;
 								chunk.att = false;
@@ -528,21 +532,21 @@ public class Mundo {
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
 					final ShortArrayUtil idcGeral = new ShortArrayUtil();
 
-					// agora a attMesh pode checar os vizinhos com segurança
-					ChunkMesh.attMesh(chunk, vertsGeral, idcGeral);
+					// agora a attmalha pode checar os vizinhos com segurança
+					ChunkMalha.attMalha(chunk, vertsGeral, idcGeral);
 
 					Gdx.app.postRunnable(new Runnable() {
 							@Override
 							public void run() {
-								if(chunk.mesh != null) {
-									chunk.mesh.dispose();
+								if(chunk.malha != null) {
+									chunk.malha.dispose();
 								}
-								chunk.mesh = new Mesh(true, maxVerts, maxIndices, atriburs);
-								chunk.mesh.setVertices(vertsGeral.praArray());
-								chunk.mesh.setIndices(idcGeral.praArray());
+								chunk.malha = new Mesh(true, maxVerts, maxIndices, atriburs);
+								chunk.malha.setVertices(vertsGeral.praArray());
+								chunk.malha.setIndices(idcGeral.praArray());
 
 								matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
-								chunk.mesh.transform(matrizTmp);
+								chunk.malha.transform(matrizTmp);
 
 								chunk.fazendo = false;
 								chunk.att = false;
