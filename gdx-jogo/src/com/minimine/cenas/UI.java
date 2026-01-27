@@ -166,7 +166,7 @@ public class UI implements InputProcessor {
 
         jogador.inv.aoArrastar(telaX, y, p);
 
-		if(p == pontoDir) {
+		if(p == pontoDir && !jogador.inv.aberto) {
 			float dx = telaX - ultimaDir.x;
 			float dy = y - ultimaDir.y;
 			jogador.yaw -= dx * sensi;
@@ -213,7 +213,7 @@ public class UI implements InputProcessor {
 		if(!botoes.isEmpty()) return;
 
 		spriteMira = new Sprite(Texturas.texs.get("mira"));
-		spriteMira.setSize(50f, 50f);
+		spriteMira.setSize(40f, 40f);
 
 		botoes.put("direita", new Botao(Texturas.texs.get("botao_d"), 0, 0, botaoTam, botaoTam, "direita") {
 				public void aoTocar(int t, int t2, int p){ direita = true; sprite.setAlpha(0.5f); }
@@ -343,11 +343,14 @@ public class UI implements InputProcessor {
 
 	public void configDpad(int v, int h) {
 		criarBotoesPadrao();
-
+		float escala = Gdx.graphics.getWidth() / 1280f;
+		botaoTam = 80f * escala;
+		
 		final float centroX = espaco + botaoTam * 1.5f;
 		final float centroY = espaco + botaoTam * 1.5f;
 
-		for(Botao b : botoes.values()) {
+		if(Gdx.app.getType() != com.badlogic.gdx.Application.ApplicationType.Desktop) {
+			for(Botao b : botoes.values()) {
 			if(b.nome.equals("direita")) {
 				b.sprite.setAlpha(0.9f);
 				b.sprite.setPosition(centroX + espaco, centroY - botaoTam/2);
@@ -391,6 +394,7 @@ public class UI implements InputProcessor {
 				b.sprite.setPosition((v - botaoTam)-botaoTam, h - botaoTam);
 			}
 			b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
+		}
 		}
 		spriteMira.setPosition(v / 2 - spriteMira.getWidth() / 2, h / 2 - spriteMira.getHeight() / 2);
 		spriteMira.setAlpha(0.9f);
@@ -661,7 +665,14 @@ public class UI implements InputProcessor {
                 jogador.agachado = true;
             }
         }
-        if(p == Input.Keys.E) jogador.inv.alternar();
+        if(p == Input.Keys.E) {
+			if(jogador.inv.aberto) {
+				Gdx.input.setCursorCatched(true); 
+			} else {
+				Gdx.input.setCursorCatched(false); 
+			}
+			jogador.inv.alternar();
+		}
         if(p == Input.Keys.T) abrirChat();
         return true;
     }
@@ -679,12 +690,14 @@ public class UI implements InputProcessor {
 
     @Override 
     public boolean mouseMoved(int p, int p1) {
-        float dx = Gdx.input.getDeltaX();
-        float dy = Gdx.input.getDeltaY();
-        jogador.yaw -= dx * sensi;
-        jogador.tom -= dy * sensi;
-        if(jogador.tom > 89f) jogador.tom = 89f;
-        if(jogador.tom < -89f) jogador.tom = -89f;
+		if(!jogador.inv.aberto) {
+			float dx = Gdx.input.getDeltaX();
+			float dy = Gdx.input.getDeltaY();
+			jogador.yaw -= dx * sensi;
+			jogador.tom -= dy * sensi;
+			if(jogador.tom > 89f) jogador.tom = 89f;
+			if(jogador.tom < -89f) jogador.tom = -89f;
+		}
         return true;
     }
 

@@ -2,6 +2,7 @@ package com.minimine;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.badlogic.gdx.Gdx;
 
 public class Iniciador {
     public static void main (String[] arg) {
@@ -15,9 +16,11 @@ public class Iniciador {
             @Override public long obterHeapTotal() { return Runtime.getRuntime().totalMemory(); }
         };
 
+        Gdx.files = new com.badlogic.gdx.backends.lwjgl3.Lwjgl3Files();
+
         try {
-            new Lwjgl3Application(new Inicio("/home/shiniga/", debug, null), config);
-        } catch (Exception e) {
+            new Lwjgl3Application(new Inicio(Gdx.files.getExternalStoragePath(), debug, null), config);
+        } catch(Exception e) {
             e.printStackTrace();
         }
     }
