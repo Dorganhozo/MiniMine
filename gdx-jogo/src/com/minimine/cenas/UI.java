@@ -347,7 +347,8 @@ public class UI implements InputProcessor {
 		final float centroX = espaco + botaoTam * 1.5f;
 		final float centroY = espaco + botaoTam * 1.5f;
 
-		for(Botao b : botoes.values()) {
+		if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
+			for(Botao b : botoes.values()) {
 			if(b.nome.equals("direita")) {
 				b.sprite.setAlpha(0.9f);
 				b.sprite.setPosition(centroX + espaco, centroY - botaoTam/2);
@@ -391,6 +392,7 @@ public class UI implements InputProcessor {
 				b.sprite.setPosition((v - botaoTam)-botaoTam, h - botaoTam);
 			}
 			b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
+		}
 		}
 		spriteMira.setPosition(v / 2 - spriteMira.getWidth() / 2, h / 2 - spriteMira.getHeight() / 2);
 		spriteMira.setAlpha(0.9f);
