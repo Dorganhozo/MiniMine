@@ -89,16 +89,30 @@ public class Menu implements Screen, InputProcessor {
 	public void attInterface() {
 		textos.clear();
 		botoes.clear();
-		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irJogo") {
+
+		float dpi = Gdx.graphics.getDensity();
+		float escala = dpi * 0.75f;
+
+		float larguraBotao = 260 * escala;
+		float alturaBotao = 130 * escala;
+
+		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, larguraBotao * 2, alturaBotao, "irJogo") {
 				@Override
 				public void aoTocar(int tx, int ty, int p) {
 					Inicio.defTela(Cenas.selecao);
 				}
 				@Override
 				public void aoAjustar(int v, int h) {
-					defPos((v - tamX) / 2, (h - tamY) / 2);
+					float dpiAtual = Gdx.graphics.getDensity();
+					float escalaAtual = dpiAtual * 0.75f;
+					float novaLargura = 260 * escalaAtual * 2;
+					float novaAltura = 130 * escalaAtual;
+					tamX = novaLargura;
+					tamY = novaAltura;
+					defPos((v - novaLargura) / 2, (h - novaAltura) / 2);
 				}
 			});
+
 		textos.add(new Texto("Um Jogador", 0, 0) {
 				@Override
 				public void aoAjustar(int v, int h) {
@@ -107,16 +121,24 @@ public class Menu implements Screen, InputProcessor {
 					y = h / 2f;
 				}
 			});
-		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, 260*2, 130, "irConfig") {
+
+		botoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, larguraBotao * 2, alturaBotao, "irConfig") {
 				@Override
 				public void aoTocar(int tx, int ty, int p) {
 					Inicio.defTela(Cenas.configuracoes);
 				}
 				@Override
 				public void aoAjustar(int v, int h) {
-					defPos((v - tamX) / 2f, (h - tamY) / 3f);
+					float dpiAtual = Gdx.graphics.getDensity();
+					float escalaAtual = dpiAtual * 0.75f;
+					float novaLargura = 260 * escalaAtual * 2;
+					float novaAltura = 130 * escalaAtual;
+					tamX = novaLargura;
+					tamY = novaAltura;
+					defPos((v - novaLargura) / 2f, (h - novaAltura) / 3f);
 				}
 			});
+
 		textos.add(new Texto("Configurações", 0, 0) {
 				@Override
 				public void aoAjustar(int v, int h) {
@@ -125,12 +147,13 @@ public class Menu implements Screen, InputProcessor {
 					y = h / 2.95f;
 				}
 			});
+
 		textos.add(new Texto("MiniMine", 0, 0) {
 				@Override
 				public void aoAjustar(int v, int h) {
 					GlyphLayout l = new GlyphLayout(fonte, texto);
 					x = (v - l.width) / 2f;
-					y = h - 200;
+					y = h - (75 * Gdx.graphics.getDensity());
 				}
 			});
 	}

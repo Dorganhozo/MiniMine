@@ -52,7 +52,7 @@ public class UI implements InputProcessor {
 	public static final HashMap<Integer, CharSequence> toques = new HashMap<>();
 	public static Runtime rt = Runtime.getRuntime();
 
-	public static float botaoTam = 140f;
+	public static float botaoTam = 70f;
 	public static float espaco = 60f;
 
 	public static Jogador jogador;
@@ -214,28 +214,32 @@ public class UI implements InputProcessor {
 
 		spriteMira = new Sprite(Texturas.texs.get("mira"));
 		spriteMira.setSize(40f, 40f);
+		
+		float densidade = Gdx.graphics.getDensity();
+		float tam = botaoTam * densidade;
+		tam = MathUtils.clamp(tam, 50f, 150f);
 
-		botoes.put("direita", new Botao(Texturas.texs.get("botao_d"), 0, 0, botaoTam, botaoTam, "direita") {
+		botoes.put("direita", new Botao(Texturas.texs.get("botao_d"), 0, 0, tam, tam, "direita") {
 				public void aoTocar(int t, int t2, int p){ direita = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ direita = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("esquerda", new Botao(Texturas.texs.get("botao_e"), 0, 0, botaoTam, botaoTam, "esquerda") {
+		botoes.put("esquerda", new Botao(Texturas.texs.get("botao_e"), 0, 0, tam, tam, "esquerda") {
 				public void aoTocar(int t, int t2, int p){ esquerda = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ esquerda = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("frente", new Botao(Texturas.texs.get("botao_f"), 0, 0, botaoTam, botaoTam, "frente") {
+		botoes.put("frente", new Botao(Texturas.texs.get("botao_f"), 0, 0, tam, tam, "frente") {
 				public void aoTocar(int t, int t2, int p){ frente = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ frente = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("tras", new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "tras") {
+		botoes.put("tras", new Botao(Texturas.texs.get("botao_t"), 0, 0, tam, tam, "tras") {
 				public void aoTocar(int t, int t2, int p){ tras = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ tras = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("cima", new Botao(Texturas.texs.get("botao_f"), 0, 0, botaoTam, botaoTam, "cima") {
+		botoes.put("cima", new Botao(Texturas.texs.get("botao_f"), 0, 0, tam, tam, "cima") {
 				public void aoTocar(int t, int t2, int p){ cima = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ cima = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("baixo", new Botao(Texturas.texs.get("botao_t"), 0, 0, botaoTam, botaoTam, "baixo") {
+		botoes.put("baixo", new Botao(Texturas.texs.get("botao_t"), 0, 0, tam, tam, "baixo") {
 				public void aoTocar(int t, int t2, int p){
 					baixo = true; sprite.setAlpha(0.5f);
 					if(jogador.agachado) {
@@ -250,15 +254,15 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar(int t, int t2, int p){ baixo = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("diagDireita", new Botao(Texturas.texs.get("botao_ld"), 0, 0, botaoTam, botaoTam, "diagDireita") {
+		botoes.put("diagDireita", new Botao(Texturas.texs.get("botao_ld"), 0, 0, tam, tam, "diagDireita") {
 				public void aoTocar(int t, int t2, int p){ frente = true; direita = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ frente = false; direita = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("diagEsquerda", new Botao(Texturas.texs.get("botao_le"), 0, 0, botaoTam, botaoTam, "diagEsquerda") {
+		botoes.put("diagEsquerda", new Botao(Texturas.texs.get("botao_le"), 0, 0, tam, tam, "diagEsquerda") {
 				public void aoTocar(int t, int t2, int p){ frente = true; esquerda = true; sprite.setAlpha(0.5f); }
 				public void aoSoltar(int t, int t2, int p){ frente = false; esquerda = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, botaoTam, botaoTam, "acao") {
+		botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, tam, tam, "acao") {
 				public void aoTocar(int t, int t2, int p){
 					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
 					else jogador.item = "ar";
@@ -271,7 +275,7 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar(int t, int t2, int p){ acao = false; sprite.setAlpha(0.9f); }
 			});
-		botoes.put("ataque", new Botao(Texturas.texs.get("ataque"), 0, 0, botaoTam, botaoTam, "ataque") {
+		botoes.put("ataque", new Botao(Texturas.texs.get("ataque"), 0, 0, tam, tam, "ataque") {
 				public void aoTocar(int t, int t2, int p){
 					jogador.item = "ar";
 					jogador.interagirBloco();
@@ -343,44 +347,48 @@ public class UI implements InputProcessor {
 
 	public void configDpad(int v, int h) {
 		criarBotoesPadrao();
-		float escala = Gdx.graphics.getWidth() / 1280f;
-		botaoTam = 80f * escala;
 		
-		final float centroX = espaco + botaoTam * 1.5f;
-		final float centroY = espaco + botaoTam * 1.5f;
+		float densidade = Gdx.graphics.getDensity();
+		
+		float tam = botaoTam * densidade;
+
+		tam = MathUtils.clamp(tam, 50f, 150f);
+		
+		final float centroX = espaco + tam * 1.5f;
+		final float centroY = espaco + tam * 1.5f;
 
 		if(Gdx.app.getType() != com.badlogic.gdx.Application.ApplicationType.Desktop) {
 			for(Botao b : botoes.values()) {
 			if(b.nome.equals("direita")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX + espaco, centroY - botaoTam/2);
+				b.sprite.setPosition(centroX + espaco, centroY - tam/2);
 			} else if(b.nome.equals("esquerda")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - botaoTam - espaco, centroY - botaoTam/2);
+				b.sprite.setPosition(centroX - tam - espaco, centroY - tam/2);
 			} else if(b.nome.equals("frente")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - botaoTam/2, centroY + espaco);
+				b.sprite.setPosition(centroX - tam/2, centroY + espaco);
 			} else if(b.nome.equals("tras")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - botaoTam/2, centroY - botaoTam - espaco);
+				b.sprite.setPosition(centroX - tam/2, centroY - tam - espaco);
 			} else if(b.nome.equals("cima")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - botaoTam*1.5f, centroY + espaco);
+				b.sprite.setPosition(v - tam*1.5f, centroY + espaco);
 			} else if(b.nome.equals("baixo")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - botaoTam*1.5f, centroY - botaoTam - espaco);
+				b.sprite.setPosition(v - tam*1.5f, centroY - tam - espaco);
 			} else if(b.nome.equals("diagDireita")) {
 				b.sprite.setAlpha(0.9f);
 				b.sprite.setPosition(centroX + espaco, centroY + espaco);
 			} else if(b.nome.equals("diagEsquerda")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - botaoTam - espaco, centroY + espaco);
+				b.sprite.setPosition(centroX - tam - espaco, centroY + espaco);
 			} else if(b.nome.equals("acao")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - botaoTam*1.5f, centroY*2 + espaco);
+				b.sprite.setPosition(v - tam*1.5f, centroY*2 + espaco);
 			} else if(b.nome.equals("ataque")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - botaoTam*2.5f, centroY*2 + espaco);
+				b.sprite.setPosition(v - tam*2.5f, centroY*2 + espaco);
 			} else if(b.nome.equals("inv")) {
 				b.sprite.setAlpha(0.9f);
 				int hotbarX = v / 2 - (jogador.inv.hotbarSlots * jogador.inv.tamSlot) / 2;
@@ -388,10 +396,10 @@ public class UI implements InputProcessor {
 				b.sprite.setPosition(invX, jogador.inv.hotbarY);
 			} else if(b.nome.equals("receita")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - botaoTam, h - botaoTam);
+				b.sprite.setPosition(v - tam, h - tam);
 			} else if(b.nome.equals("salvar")) {
 				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition((v - botaoTam)-botaoTam, h - botaoTam);
+				b.sprite.setPosition((v - tam)-tam, h - tam);
 			}
 			b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
 		}

@@ -159,7 +159,7 @@ public class MundoMenu implements Screen, InputProcessor {
 								Mundo.nome = nome;
 								Mundo.semente = semente;
 								
-								IniScio.defTela(Cenas.jogo);
+								Inicio.defTela(Cenas.jogo);
 
 								carregarMundos();
 								criarInterface();
