@@ -62,7 +62,7 @@ public class Menu implements Screen, InputProcessor {
 		
 		mundo.iniciar();
 		
-		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 30);
 		Gdx.input.setInputProcessor(this);
 		
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
