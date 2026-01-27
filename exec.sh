@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew gdx-pc:rodar
+./gradlew gdx-pc:rodar -t

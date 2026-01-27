@@ -29,7 +29,7 @@ public class Inicio extends Game {
 
 	@Override
 	public void create() {
-		Gdx.app.setApplicationLogger(log);
+		if(Gdx.app.getType() != com.badlogic.gdx.Application.ApplicationType.Desktop) Gdx.app.setApplicationLogger(log);
 		defTela(Cenas.intro);
 	}
 

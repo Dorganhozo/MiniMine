@@ -150,16 +150,16 @@ public class MundoMenu implements Screen, InputProcessor {
 					Gdx.input.getTextInput(new Input.TextInputListener() {
 							@Override
 							public void input(String sementeTxt) {
-								int seed;
+								int semente;
 								try {
-									seed = Integer.parseInt(sementeTxt.trim());
+									semente = Integer.parseInt(sementeTxt.trim());
 								} catch(Exception e) {
-									seed = (int)(Math.random() * 1000000);
+									semente = (int)(Math.random() * 1000000);
 								}
 								Mundo.nome = nome;
-								Mundo.semente = seed;
+								Mundo.semente = semente;
 								
-								Inicio.defTela(Cenas.jogo);
+								IniScio.defTela(Cenas.jogo);
 
 								carregarMundos();
 								criarInterface();
