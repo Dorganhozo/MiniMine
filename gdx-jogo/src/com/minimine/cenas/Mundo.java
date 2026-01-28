@@ -505,6 +505,7 @@ public class Mundo {
 
 	public static void gerarMalha(final Chave chave) {
 		final Chunk chunk = chunks.get(chave);
+        if (chunk == null) return;
 		chunk.fazendo = true;
 
 		exec.submit(new Runnable() {
