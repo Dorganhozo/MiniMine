@@ -9,36 +9,43 @@ public class Logs implements ApplicationLogger {
 	@Override
 	public void debug(String string, String string1) {
 		logs += string + ": " + string1 + "\n";
+		System.out.println(string + ": " + string1 + "\n");
 	}
 
 	@Override
 	public void debug(String string, String string1, Throwable throwable) {
 		logs += string + ": " + string1 + throwable.getMessage() + "\n";
+		System.out.println(string + ": " + string1 + throwable.getMessage() + "\n");
 	}
 
 	@Override
 	public void error(String string, String string1) {
 		logs += string + ": " + string1 + "\n";
+		System.out.println(string + ": " + string1 + "\n");
 	}
 
 	@Override
 	public void error(String string, String string1, Throwable throwable) {
 		logs += string + ": " + string1 + throwable.getMessage() + "\n";
+		System.out.println(string + ": " + string1 + throwable.getMessage() + "\n");
 	}
 
 	public static void log(String msg) {
 		logs += msg + "\n";
+		System.out.println(msg + "\n");
 		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 
 	@Override
 	public void log(String string, String string1) {
 		logs += string + ": " + string1 + "\n";
+		System.out.println(string + ": " + string1 + "\n");
 		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 
 	@Override
 	public void log(String string, String string1, Throwable throwable) {
 		logs += string + ": " + string1 + throwable.getMessage() + "\n";
+		System.out.println(string + ": " + string1 + throwable.getMessage() + "\n");
 	}
 }
