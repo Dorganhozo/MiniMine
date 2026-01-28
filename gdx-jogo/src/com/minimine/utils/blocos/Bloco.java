@@ -16,6 +16,7 @@ public class Bloco {
 	public int tipo;
 	public int topo, lados, baixo;
 	public int luz;
+	public int brilho; // de 0-15
 	public boolean transparente;
 	public boolean solido;
 	public boolean culling;

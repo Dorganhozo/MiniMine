@@ -681,6 +681,13 @@ public class UI implements InputProcessor {
 			}
 			jogador.inv.alternar();
 		}
+		if(p == Input.Keys.F1) {
+			if(debug) {
+				debug = false; 
+			} else {
+				debug = true;
+			}
+		}
         if(p == Input.Keys.T) abrirChat();
         return true;
     }
