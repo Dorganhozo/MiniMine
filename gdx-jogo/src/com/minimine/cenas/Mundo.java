@@ -530,7 +530,8 @@ public class Mundo {
 								if(chunk.malha == null) {
 									chunk.malha = new Mesh(true, maxVerts, maxIndices, atriburs);
 								}
-								chunk.malha.setVertices(vertsGeral.praArray());
+								try {
+									chunk.malha.setVertices(vertsGeral.praArray());
 								chunk.malha.setIndices(idcFinal);
 
 								matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
@@ -539,6 +540,8 @@ public class Mundo {
 								chunk.fazendo = false;
 								chunk.att = false;
 								estados.put(chave, 2);
+								} catch(Exception e) {}
+								
 							}
 						});
 				}
