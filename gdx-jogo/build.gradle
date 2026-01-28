@@ -21,21 +21,3 @@ configurations.all {
         cacheDynamicVersionsFor 0, 'seconds'
     }
 }
-
-task limpezaSeletiva2(type: Delete) {
-    description = 'limpa arquivos compilados do módulo principal'
-    delete fileTree('build/classes') {
-        include '**/*.class'
-    }
-    delete 'build/tmp'
-    delete 'build/generated'
-}
-
-tasks.named('compileJava') {
-    dependsOn limpezaSeletiva2
-    doFirst {
-        println "recompilando módulo gdx-jogo..."
-    }
-}
-
-tasks.clean.dependsOn limpezaSeletiva2

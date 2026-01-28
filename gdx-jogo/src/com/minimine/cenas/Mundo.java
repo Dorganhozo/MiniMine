@@ -34,7 +34,7 @@ import com.minimine.utils.chunks.ChunkMalha;
 import com.minimine.utils.blocos.Bloco;
 import com.minimine.utils.chunks.Chunk;
 import com.minimine.utils.ruidos.SimplexNoise3D;
-import com.minimine.utils.ruidos.SimplexNoise2D;
+import com.minimine.utils.ruidos.Simplex2D;
 import com.minimine.utils.graficos.Animacoes2D;
 
 public class Mundo {
@@ -55,7 +55,7 @@ public class Mundo {
     public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK;
     public static int semente = 0, RAIO_CHUNKS = 5;
 
-    public static SimplexNoise2D s2D;
+    public static Simplex2D s2D;
 	public static SimplexNoise3D s3D;
 
     public static ShaderProgram shader;
@@ -145,7 +145,7 @@ public class Mundo {
 
     public void iniciar() {
         semente = semente == 0 ? Mat.floor((float)Math.random()*1000000) : semente;
-        s2D = new SimplexNoise2D(semente);
+        s2D = new Simplex2D(semente);
 		s3D = new SimplexNoise3D(semente >> 1);
 
         criarAtlas();
@@ -289,7 +289,7 @@ public class Mundo {
         atlasUVs.clear();
 		estados.clear();
         exec.shutdown();
-		s2D.liberar();
+		// s2D.liberar();
 		s3D.liberar();
 		Animacoes2D.liberar();
     }

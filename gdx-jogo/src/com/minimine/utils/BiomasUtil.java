@@ -13,10 +13,10 @@ public class BiomasUtil {
 	public static List<Bioma> biomas = new ArrayList<>();
 	
 	public static void escolher(int lx, int lz, Chunk chunk) {
-		float v = (Mundo.s2D.ruidoFractal(
-			(chunk.x * Mundo.TAM_CHUNK + lx) * 0.0005f,
-			(chunk.z * Mundo.TAM_CHUNK + lz) * 0.0005f,
-			1.0f, 4, 0.5f) + 1f) * 0.5f;
+		double v = (Mundo.s2D.ruidoFractal(
+			(chunk.x * Mundo.TAM_CHUNK + lx) * 0.0005,
+			(chunk.z * Mundo.TAM_CHUNK + lz) * 0.0005,
+			4, 1.0, 0.5) + 1) * 0.5;
 
 		float somaPesos = 0f;
 		for(int i = 0; i < BiomasUtil.biomas.size(); i++) {
@@ -46,93 +46,62 @@ public class BiomasUtil {
 					status[1] = 0.4f;
 					raridade[0] = 0.3f;
 				}
-				
+
 				@Override
 				public void gerarColuna(int lx, int lz, Chunk chunk) {
 					int px = chunk.x * Mundo.TAM_CHUNK + lx;
 					int pz = chunk.z * Mundo.TAM_CHUNK + lz;
-
 					int nivelMar = 60;
 
-					// === 1. CALCULO DA ALTURA DO TERRENO(2D) ===
+					// === 1. CALCULO DA ALTURA DO TERRENO (2D) ===
+					// Usando double para precisão e compatibilidade com Simplex2D
+					double dx = px * 0.002;
+					double dz = pz * 0.002;
 
-					// ruido base(continentes grandes e suaves)
-					float base = Mundo.s2D.ruidoFractal(px * 0.002f, pz * 0.002f, 1.0f, 3, 0.5f);
+					// Ruído base: define a elevação geral
+					double base = Mundo.s2D.ruidoFractal(dx, dz, 3, 0.5, 2.0); //
 
-					// ruido de rio(caminhos sinuosos)
-					// usavalor absoluto pra criar vales em "V"
-					float ruidoRio = Mundo.s2D.ruidoFractal(px * 0.004f, pz * 0.004f, 1.0f, 2, 0.5f);
-					ruidoRio = Mat.abs(ruidoRio); 
+					// Ruído de montanha: Exponencial para criar picos escarpados
+					double ruidoMontanha = Mundo.s2D.ruidoFractal(px * 0.01, pz * 0.01, 4, 0.5, 2.0);
+					double montanhas = Math.pow(Math.max(0, ruidoMontanha), 3.0) * 60;
 
-					// ruido de montanha(picos)
-					float ruidoMontanha = Mundo.s2D.ruidoFractal(px * 0.01f, pz * 0.01f, 1.0f, 3, 0.5f);
+					// Ruído de rio: Valor absoluto cria vales em "V"
+					double ruidoRio = Math.abs(Mundo.s2D.ruidoFractal(px * 0.005, pz * 0.005, 2, 0.5, 2.0));
 
-					// calculo final da altura(Y)
-					float ySolo = 70; // altura media(acima do mar)
+					// Cálculo final da altura Y
+					double ySolo = 70 + (base * 20) + montanhas;
 
-					// adiciona relevo base
-					ySolo += base * 20; 
-
-					// aplica montanhas(mais altas, mas raras)
-					if(ruidoMontanha > 0.2f) {
-						ySolo += (ruidoMontanha - 0.2f) * 60; // sobe ate 60 blocos a mais
+					// Se o valor do rio for baixo, cavamos o canal
+					if (ruidoRio < 0.1) {
+						ySolo -= (0.1 - ruidoRio) * 100.0;
 					}
-					// se o valor do rio for baixo(perto de 0), cavamos fundo ate chegar na agua
-					// quanto mais perto de 0, mais fundo é o rio
-					float profundidadeRio = 0;
-					if(ruidoRio < 0.15f) {
-						// inverte quanto menor o ruido, maior a profundidade
-						profundidadeRio = (0.15f - ruidoRio) * 150.0f; 
-					}
-					ySolo -= profundidadeRio; // subtrai altura pra criar o canal
 
-					// limites do mundo
-					int altura = (int) ySolo;
-					if(altura >= Mundo.Y_CHUNK) altura = Mundo.Y_CHUNK - 1;
-					if(altura < 1) altura = 1;
+					int altura = (int) Math.max(1, Math.min(Mundo.Y_CHUNK - 1, ySolo)); //
 
-					// === 2. PREENCHIMENTO DOS BLOCOS(3D) ===
-					for(int y = 0; y <= Math.max(altura, nivelMar); y++) {
+					// === 2. PREENCHIMENTO DOS BLOCOS (3D) ===
+					for (int y = 0; y <= Math.max(altura, nivelMar); y++) {
 						String bloco = "ar";
 
-						// verifica se estamos no solo solido
-						if(y <= altura) {
-							bloco = "pedra"; // padrão pedra
+						if (y <= altura) {
+							bloco = "pedra";
 
-							// camada de terra/grama no topo
-							if(y == altura) {
-								// se estiver abaixo ou no nivel do mar, é areia ou terra
-								if(y <= nivelMar + 2) bloco = "areia"; 
-								else bloco = "grama";
-							} else if(y > altura - 4) {
-								if(y <= nivelMar + 2) bloco = "areia"; // areia afunda um pouco
-								else bloco = "terra";
+							if (y == altura) {
+								bloco = (y <= nivelMar + 2) ? "areia" : "grama";
+							} else if (y > altura - 4) {
+								bloco = (y <= nivelMar + 2) ? "areia" : "terra";
 							}
 
-							// === CAVERNAS ===
-							// se o valor for maior que 0.4, é um buraco(ar)
-							// não cava se estiver muito baixo(fundo do mundo) ou na superficie exata(pra não furar o chão toda hora)
-							if(y > 5 && y < altura - 2) { 
-								// frequencia 0.02 cria cavernas largas(queijo suiço)
-								// frequencia 0.05 cria túneis estreitos(minhoca)
-								float densidadeCaverna = Mundo.s3D.ruido(px * 0.03f, y * 0.04f, pz * 0.03f);
-
-								// buracos extras menores pra detalhe
-								float detalheCaverna = Mundo.s3D.ruido(px * 0.1f, y * 0.1f, pz * 0.1f) * 0.2f;
-
-								if(densidadeCaverna + detalheCaverna > 0.35f) {
-									bloco = "ar"; // a caverna come a pedra
-								}
+							// === CAVERNAS 3D ===
+							if (y > 5 && y < altura - 2) {
+								// SimplexNoise3D usa float
+								float densidade = Mundo.s3D.ruido(px * 0.03f, y * 0.04f, pz * 0.03f);
+								if (densidade > 0.4f) bloco = "ar";
 							}
-						}
-						// === 3. AGUA E LAGO ===
-						// se o bloco acabou sendo "ar"(porque o rio cavou ou a caverna comeu)
-						// e a altura atual é menor que o nivel do mar, enche de agua
-						if(bloco.equals("ar") && y <= nivelMar) {
+						} else if (y <= nivelMar) {
 							bloco = "agua";
 						}
-						// coloca o bloco no mundo
-						if(!bloco.equals("ar")) {
+
+						if (!bloco.equals("ar")) {
 							ChunkUtil.defBloco(lx, y, lz, bloco, chunk);
 						}
 					}
