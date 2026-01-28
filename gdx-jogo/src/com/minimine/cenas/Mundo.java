@@ -88,20 +88,25 @@ public class Mundo {
     "}";
 
 	public static String frag =
-	"#ifdef GL_ES\n" +
-	"precision mediump float;\n" +
-	"#endif\n" +
-	"varying vec2 v_texCoord;\n" +
-	"varying vec4 v_cor;\n" +
-	"uniform sampler2D u_textura;\n" +
-	"uniform float u_luzCeu;\n" +
-	"void main() {\n" +
-	"vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
-	"if(texCor.a < 0.5) discard;\n" +
-	// a luz final é o maximo entre a luz do bloco e a luz do céu
-	"float luzFinal = max(v_cor.r, u_luzCeu);\n" + 
-	"gl_FragColor = texCor * vec4(luzFinal, luzFinal, luzFinal, 1.0);\n" +
-	"}";
+    "#ifdef GL_ES\n" +
+    "precision mediump float;\n" +
+    "#endif\n" +
+    "varying vec2 v_texCoord;\n" +
+    "varying vec4 v_cor;\n" + 
+    "uniform sampler2D u_textura;\n" +
+    "uniform float u_luzCeu;\n" + 
+    "void main() {\n" +
+    "   vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
+    "   if(texCor.a < 0.5) discard;\n" +
+    // v_cor.r = Luz da Tocha (0.0 a 1.0)\n" +
+    // v_cor.g = Luz do Sol (0.0 a 1.0)\n" +
+    // v_cor.b = multiplicador de face(falso AO pra profundidade)
+    "   float solDinamico = v_cor.g * u_luzCeu;\n" + 
+    "   float brilhoBruto = max(v_cor.r, solDinamico);\n" +
+    // aplica o multiplicador da face e uma luz minima de ambiente(0.1)
+    "   float iluminacaoFinal = (brilhoBruto * v_cor.b) + 0.1;\n" +
+    "   gl_FragColor = vec4(texCor.rgb * iluminacaoFinal, texCor.a);\n" +
+    "}";
 
     public static Matrix4 matrizTmp = new Matrix4();
 	public static Chave chaveTmp = new Chave(0, 0);
@@ -229,6 +234,9 @@ public class Mundo {
         shader.setUniformMatrix("u_projPos", jogador.camera.combined);
 
         shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz); 
+		shader.setUniformf("u_alturaSol", DiaNoiteUtil.obterFatorTransicao());
+		
+		DiaNoiteUtil.aplicarShader(shader);
 
 		atlasGeral.bind(0);
         shader.setUniformi("u_textura", 0);

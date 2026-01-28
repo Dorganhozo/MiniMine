@@ -4,19 +4,30 @@ import com.minimine.utils.blocos.Bloco;
 import com.minimine.cenas.Mundo;
 
 public class ChunkUtil {
-	public static byte obterLuz(int x, int y, int z, Chunk chunk) {
-        int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
-        return (byte)((chunk.luz[idc >> 1] >> ((idc & 1) << 2)) & 15);
-    }
+	public static byte obterLuzCompleta(int x, int y, int z, Chunk chunk) {
+		int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
+		return chunk.luz[idc];
+	}
 
-    public static void defLuz(int x, int y, int z, byte valor, Chunk chunk) {
-        int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
-        int byteIdc = idc >> 1;
-        int shift = (idc & 1) << 2;
-        chunk.luz[byteIdc] = (byte)(
-            (chunk.luz[byteIdc] & ~(15 << shift)) | 
-            ((valor & 15) << shift));
-    }
+	public static byte obterLuzBloco(int x, int y, int z, Chunk chunk) {
+		int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
+		return (byte)(chunk.luz[idc] & 15);
+	}
+
+	public static byte obterLuzCeu(int x, int y, int z, Chunk chunk) {
+		int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
+		return (byte)((chunk.luz[idc] >> 4) & 15);
+	}
+
+	public static void defLuzBloco(int x, int y, int z, byte valor, Chunk chunk) {
+		int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
+		chunk.luz[idc] = (byte)((chunk.luz[idc] & 0xF0) | (valor & 15));
+	}
+
+	public static void defLuzCeu(int x, int y, int z, byte valor, Chunk chunk) {
+		int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
+		chunk.luz[idc] = (byte)((chunk.luz[idc] & 0x0F) | ((valor & 15) << 4));
+	}
 	
 	public static Bloco obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
 		// caso esteja dentro da propria area
