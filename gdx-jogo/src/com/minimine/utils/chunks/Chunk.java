@@ -15,4 +15,6 @@ public final class Chunk {
 	public volatile boolean att = false;
 	public volatile boolean luzSuja = true;
 	public volatile boolean dadosProntos = false;
+	public int contaSolida = 0;
+    public int contaTransp = 0;
 }

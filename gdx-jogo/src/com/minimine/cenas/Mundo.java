@@ -232,13 +232,27 @@ public class Mundo {
 
 		atlasGeral.bind(0);
         shader.setUniformi("u_textura", 0);
-
+		
+		// 1. solidos:
         for(final Chunk chunk : chunks.values()) {
-            if(frustrum(chunk, jogador)) {
-                if(chunk.malha != null) chunk.malha.render(shader, GL20.GL_TRIANGLES);
-            }
-        }
-        shader.end();
+			if(frustrum(chunk, jogador) && chunk.malha != null && chunk.contaSolida > 0) {
+				// renderiza apenas do indice 0 até o final dos solidos
+				chunk.malha.render(shader, GL20.GL_TRIANGLES, 0, chunk.contaSolida);
+			}
+		}
+		// 2: transparentes:
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+		for(final Chunk chunk : chunks.values()) {
+			if(frustrum(chunk, jogador) && chunk.malha != null && chunk.contaTransp > 0) {
+				// renderiza começando de onde o solido parou
+				chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
+			}
+		}
+		Gdx.gl.glDisable(GL20.GL_BLEND);
+
+		shader.end();
         if(nuvens) NuvensUtil.att(jogador.camera.combined);
         if(ciclo) {
 			CorposCelestes.att(jogador.camera.combined, jogador.posicao);
@@ -459,7 +473,7 @@ public class Mundo {
 			for(int z = cz - 1; z <= cz + 1; z++) {
 				if(x == cx && z == cz) continue;
 				Chave vizinha = new Chave(x, z);
-				// Se a vizinha não tem estado ou ainda está no estado 0 (sem dados)
+				// se a vizinha não tem estado ou ainda ta no estado 0(sem dados)
 				if(estados.getOrDefault(vizinha, 0) < 1) return false;
 			}
 		}
@@ -476,7 +490,7 @@ public class Mundo {
 							BiomasUtil.escolher(lx, lz, chunk);
 						}
 					}
-					estados.put(chave, 1); // Agora está pronta para que as vizinhas gerem malha
+					estados.put(chave, 1); // agora ta pronta pra que as vizinhas gerem malha
 				}
 			});
 	}
@@ -489,10 +503,18 @@ public class Mundo {
 				@Override
 				public void run() {
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
-					final ShortArrayUtil idcGeral = new ShortArrayUtil();
+					final ShortArrayUtil idcSolidos = new ShortArrayUtil();
+					final ShortArrayUtil idcTransp = new ShortArrayUtil();
 
-					// com os vizinhos no estado 1, as faces das bordas serão calculadas corretamente
-					ChunkMalha.attMalha(chunk, vertsGeral, idcGeral);
+					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
+
+					// junta os indices: primeiro solidos depois transparentes
+					final short[] idcFinal = new short[idcSolidos.tam + idcTransp.tam];
+					System.arraycopy(idcSolidos.praArray(), 0, idcFinal, 0, idcSolidos.tam);
+					System.arraycopy(idcTransp.praArray(), 0, idcFinal, idcSolidos.tam, idcTransp.tam);
+
+					chunk.contaSolida = idcSolidos.tam;
+					chunk.contaTransp = idcTransp.tam;
 
 					Gdx.app.postRunnable(new Runnable() {
 							@Override
@@ -501,14 +523,14 @@ public class Mundo {
 									chunk.malha = new Mesh(true, maxVerts, maxIndices, atriburs);
 								}
 								chunk.malha.setVertices(vertsGeral.praArray());
-								chunk.malha.setIndices(idcGeral.praArray());
+								chunk.malha.setIndices(idcFinal);
 
 								matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
 								chunk.malha.transform(matrizTmp);
 
 								chunk.fazendo = false;
 								chunk.att = false;
-								estados.put(chave, 2); // malha concluida
+								estados.put(chave, 2);
 							}
 						});
 				}
@@ -530,10 +552,11 @@ public class Mundo {
 
 					// 2: gera a malha
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
-					final ShortArrayUtil idcGeral = new ShortArrayUtil();
+					final ShortArrayUtil idcSolido = new ShortArrayUtil();
+					final ShortArrayUtil idcTransp = new ShortArrayUtil();
 
 					// agora a attmalha pode checar os vizinhos com segurança
-					ChunkMalha.attMalha(chunk, vertsGeral, idcGeral);
+					ChunkMalha.attMalha(chunk, vertsGeral, idcSolido, idcTransp);
 
 					Gdx.app.postRunnable(new Runnable() {
 							@Override
@@ -543,7 +566,7 @@ public class Mundo {
 								}
 								chunk.malha = new Mesh(true, maxVerts, maxIndices, atriburs);
 								chunk.malha.setVertices(vertsGeral.praArray());
-								chunk.malha.setIndices(idcGeral.praArray());
+								chunk.malha.setIndices(idcSolido.praArray());
 
 								matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
 								chunk.malha.transform(matrizTmp);

@@ -4,38 +4,44 @@ import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.cenas.Mundo;
 import com.minimine.utils.blocos.Bloco;
-import com.badlogic.gdx.graphics.Mesh;
 
 public class ChunkMalha {
-	public static void attMalha(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcGeral) {
-		ChunkLuz.attLuz(chunk);
-		
-		Chunk chunkXP, chunkXN, chunkZP, chunkZN;
-		Chave c = new Chave(chunk.x + 1, chunk.z);
-		
-		chunkXP = Mundo.chunks.get(c);
-		c.x = chunk.x - 1; c.z = chunk.z;
-		chunkXN = Mundo.chunks.get(c);
-		c.x = chunk.x; c.z = chunk.z + 1;
-		chunkZP = Mundo.chunks.get(c);
-		c.x = chunk.x; c.z = chunk.z - 1;
-		chunkZN = Mundo.chunks.get(c);
+    public static void attMalha(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+        ChunkLuz.attLuz(chunk);
 
-		for(int idc = 0; idc < Mundo.CHUNK_AREA * Mundo.Y_CHUNK; idc++) {
-			int x = idc & 0xF;
-			int z = (idc >> 4) & 0xF;
-			int y = idc >> 8;
+        Chunk chunkXP, chunkXN, chunkZP, chunkZN;
+        Chave c = new Chave(chunk.x + 1, chunk.z);
+        chunkXP = Mundo.chunks.get(c);
+        c.x = chunk.x - 1; c.z = chunk.z;
+        chunkXN = Mundo.chunks.get(c);
+        c.x = chunk.x; c.z = chunk.z + 1;
+        chunkZP = Mundo.chunks.get(c);
+        c.x = chunk.x; c.z = chunk.z - 1;
+        chunkZN = Mundo.chunks.get(c);
 
-			int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
-			if(blocoId == 0) continue;
+        for(int idc = 0; idc < Mundo.CHUNK_AREA * Mundo.Y_CHUNK; idc++) {
+            int x = idc & 0xF;
+            int z = (idc >> 4) & 0xF;
+            int y = idc >> 8;
 
-			Bloco blocoTipo = Bloco.numIds.get(blocoId);
-			if(blocoTipo == null) continue;
+            int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
+            if(blocoId == 0) continue;
 
-			ChunkOtimiza.lidarFacesDoBloco(
-				x, y, z, blocoTipo,
-				chunk, chunkXP, chunkXN, chunkZP, chunkZN,
-				vertsGeral, idcGeral);
-		}
-	}
+            Bloco blocoTipo = Bloco.numIds.get(blocoId);
+            if(blocoTipo == null) continue;
+
+            // se o bloco for transparente vai pra lista transparente
+            if(blocoTipo.transparente) {
+                ChunkOtimiza.lidarFacesDoBloco(
+                    x, y, z, blocoTipo,
+                    chunk, chunkXP, chunkXN, chunkZP, chunkZN,
+                    vertsGeral, idcTransp);
+            } else {
+                ChunkOtimiza.lidarFacesDoBloco(
+                    x, y, z, blocoTipo,
+                    chunk, chunkXP, chunkXN, chunkZP, chunkZN,
+                    vertsGeral, idcSolidos);
+            }
+        }
+    }
 }
