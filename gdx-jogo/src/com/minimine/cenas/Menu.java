@@ -62,7 +62,7 @@ public class Menu implements Screen, InputProcessor {
 		
 		mundo.iniciar();
 		
-		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
+		fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 30);
 		Gdx.input.setInputProcessor(this);
 		
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
@@ -208,10 +208,12 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override
 	public void dispose() {
-		sb.dispose();
-		fonte.dispose();	
-		mundo.liberar();
-		CorposCelestes.liberar();
+		try {
+			sb.dispose();
+			fonte.dispose();	
+			mundo.liberar();
+			CorposCelestes.liberar();
+		} catch(Exception e) {}
 	}
 	@Override
 	public boolean touchDown(int telaX, int telaY, int p, int b) {
@@ -225,17 +227,22 @@ public class Menu implements Screen, InputProcessor {
 	}
 	@Override
 	public void hide() {
-		mundo.liberar();
-		CorposCelestes.liberar();
+		try {
+			mundo.liberar();
+			CorposCelestes.liberar();
+		} catch(Exception e) {}
+		
 	}
 	@Override
 	public void pause() {
-		mundo.carregado = false;
+		try {
+			mundo.carregado = false;
 		for(Chunk c : mundo.chunks.values()) {
 			if(c.malha != null) c.malha.dispose();
 			c.malha = null;
 		}
 		mundo.chunks.clear();
+		} catch(Exception e) {}
 	}
 	@Override public void resume() {}
 	@Override public boolean touchDragged(int p, int p1, int p2) {return false;}
