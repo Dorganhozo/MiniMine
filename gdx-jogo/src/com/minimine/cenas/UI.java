@@ -108,15 +108,7 @@ public class UI implements InputProcessor {
 				@Override
 				public void aoDigitar(char p) {}
 			});
-		Gdx.input.getTextInput(new Input.TextInputListener() {
-			@Override
-				public void input(String texto) {
-					
-				}
-				public void canceled() {
-					chatAberto = false;
-				}
-			}, "Chat", "", "Digite e envie");
+		dialogos.put("chat", dialogo);
 	}
 
 	@Override
