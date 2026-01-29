@@ -28,11 +28,13 @@ import com.badlogic.gdx.Input;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.Inicio;
 import com.minimine.Logs;
+import com.minimine.ui.Dialogo;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
 	public static Map<CharSequence, Botao> botoes = new HashMap<>();
 	public static Map<CharSequence, Texto> textos = new HashMap<>();
+	public static Map<CharSequence, Dialogo> dialogos = new HashMap<>();
     public static SpriteBatch sb;
     public static BitmapFont fonte;
     public static CharSequence otimizadorC = "desligado";
@@ -91,16 +93,25 @@ public class UI implements InputProcessor {
 	public void abrirChat() {
 		if(chatAberto) return;
 		chatAberto = true;
-
+		
+		final Dialogo dialogo = new Dialogo();
+		dialogo.abrir("chat", new Dialogo.Acao() {
+				@Override
+				public void aoConfirmar() {
+					if(dialogo.texto != null && dialogo.texto.length() > 0) {
+						ultimaMensagem = dialogo.texto;
+						mensagens.add("> " + dialogo.texto);
+						Gdx.app.log("CHAT", dialogo.texto);
+					}
+					chatAberto = false;
+				}
+				@Override
+				public void aoDigitar(char p) {}
+			});
 		Gdx.input.getTextInput(new Input.TextInputListener() {
 			@Override
 				public void input(String texto) {
-					if(texto != null && texto.length() > 0) {
-						ultimaMensagem = texto;
-						mensagens.add("> " + texto);
-						Gdx.app.log("CHAT", texto);
-					}
-					chatAberto = false;
+					
 				}
 				public void canceled() {
 					chatAberto = false;
@@ -448,6 +459,9 @@ public class UI implements InputProcessor {
 		for(Texto e : textos.values()) {
 			e.porFrame(delta, sb, fonte);
 		}
+		for(Dialogo e : dialogos.values()) {
+			e.porFrame(delta, sb, fonte);
+		}
 		this.jogador.inv.att();
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
@@ -643,15 +657,18 @@ public class UI implements InputProcessor {
 	}
 	
 	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2) {
-		Gdx.input.getTextInput(new Input.TextInputListener() {
-				@Override
-				public void input(String texto) {
-					if(func != null) func.call(LuaValue.valueOf(texto));
-				}
-				public void canceled() {
-					if(func2 != null) func2.call();
-				}
-			}, titulo, padrao, msg);
+		final Dialogo dialogo = new Dialogo();
+		dialogo.abrir(titulo, new Dialogo.Acao() {
+			@Override
+			public void aoConfirmar() {
+				if(func != null) func.call(LuaValue.valueOf(dialogo.texto));
+				UI.dialogos.remove(dialogo.texto);
+			}
+			@Override
+			public void aoDigitar(char p) {}
+		});
+		dialogo.texto = msg;
+		dialogos.put(titulo, dialogo);
 	}
 	
 	@Override 
@@ -722,5 +739,11 @@ public class UI implements InputProcessor {
         else if(p1 < 0) jogador.inv.slotSelecionado = (jogador.inv.slotSelecionado - 1 + jogador.inv.hotbarSlots) % jogador.inv.hotbarSlots;
         return true;
     }
-	@Override public boolean keyTyped(char p){return false;}
+	@Override
+	public boolean keyTyped(char p) {
+		for(Dialogo d : dialogos.values()) {
+			d.digitando(p);
+		}
+		return false;
+	}
 }

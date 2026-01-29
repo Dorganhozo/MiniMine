@@ -21,53 +21,52 @@ public class ChunkLuz {
 		final int area = Mundo.CHUNK_AREA;
 		final int totalBlocos = area * Mundo.Y_CHUNK;
 
+		// reutiliza arrays
 		final byte[] luzTemp = new byte[totalBlocos];
-		int[] filaLuz = new int[totalBlocos * 2];
+		int[] filaLuz = new int[totalBlocos]; 
 		int inicioFila = 0;
 		int fimFila = 0;
 
-		// passo 1: luz solar
+		// 1. otimização de varredura
+		// inverte a ordem pra Y ser o laço interno mais rapido melhora o acesso a memória
 		for(int x = 0; x < 16; x++) {
 			for(int z = 0; z < 16; z++) {
 				int luzSolarAtual = 15;
+				int posXZ = x + (z << 4);
+
 				for(int y = Y_MAX; y >= 0; y--) {
-					int idc = x + (z << 4) + (y * area);
+					int idc = posXZ + (y << 8);
+
 					int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
 					Bloco b = Bloco.numIds.get(blocoId);
 
-					// se não for ar e não for transparente, o sol pra aqui
 					if(b != null && !b.transparente) luzSolarAtual = 0;
 
-					// mascaras pra garantir que o byte não corrompa os bits
-					luzTemp[idc] = (byte) ((luzSolarAtual << 4) & 0xF0);
+					luzTemp[idc] = (byte) (luzSolarAtual << 4);
 
-					if(luzSolarAtual > 0) filaLuz[fimFila++] = idc;
-
-					// pasao 2: fontes de luz
+					if(luzSolarAtual > 0) {
+						filaLuz[fimFila++] = idc;
+					}
 					if(b != null && b.luz > 0) {
-						// mescla preservando os bits do sol
-						int luzAtual = (luzTemp[idc] & 0xFF);
-						luzTemp[idc] = (byte) (luzAtual | (b.luz & 0x0F));
-
-						// se for tocha no escuro, entra na fila
+						luzTemp[idc] |= (byte) (b.luz & 0x0F);
+						// so adiciona se o sol ja não preencheu esse lugar
 						if(luzSolarAtual <= 0) filaLuz[fimFila++] = idc;
 					}
 				}
 			}
 		}
-		// passo 3: espalhamento de luz
+		// 2. espalhamento com extração de coordenadas
 		while(inicioFila < fimFila) {
 			int idcAtual = filaLuz[inicioFila++];
-			// & 0xFF transforma o byte "assinado" em int "limpo"(0-255)
-			int luzTotal = luzTemp[idcAtual] & 0xFF; 
+			int luzTotal = luzTemp[idcAtual] & 0xFF;
 
-			int lb = luzTotal & 0x0F; // brilho
-			int ls = (luzTotal >> 4) & 0x0F; // Sol
+			// extração de X, Z, Y sem usar divisão (/) ou resto (%)
+			int cx = idcAtual & 0xF;
+			int cz = (idcAtual >> 4) & 0xF;
+			int cy = idcAtual >> 8;
 
-			int cy = idcAtual / area;
-			int resto = idcAtual % area;
-			int cz = resto >> 4;
-			int cx = resto & 0xF;
+			int lb = luzTotal & 0x0F;
+			int ls = luzTotal >> 4;
 
 			for(int i = 0; i < 6; i++) {
 				int nx = cx + POS_X[i];
@@ -75,29 +74,19 @@ public class ChunkLuz {
 				int nz = cz + POS_Z[i];
 
 				if(nx >= 0 && nx < 16 && ny >= 0 && ny < Mundo.Y_CHUNK && nz >= 0 && nz < 16) {
-					int idcVizinho = nx + (nz << 4) + (ny * area);
-
-					// pega a luz do vizinho(usando & 0xFF pra não dar erro de sinal)
+					int idcVizinho = nx + (nz << 4) + (ny << 8);
 					int luzVizinha = luzTemp[idcVizinho] & 0xFF;
+
 					int lbV = luzVizinha & 0x0F;
-					int lsV = (luzVizinha >> 4) & 0x0F;
+					int lsV = luzVizinha >> 4;
 
 					boolean mudou = false;
+					if(lbV < lb - 1 && lb > 0) { lbV = lb - 1; mudou = true; }
+					if(lsV < ls - 1 && ls > 0) { lsV = ls - 1; mudou = true; }
 
-					// se o vizinho recebe luz mais forte do que ja tem
-					if(lbV < lb - 1 && lb > 1) {
-						lbV = lb - 1;
-						mudou = true;
-					}
-					if(lsV < ls - 1 && ls > 1) {
-						lsV = ls - 1;
-						mudou = true;
-					}
 					if(mudou) {
-						// grava a nova luz no vizinho
-						luzTemp[idcVizinho] = (byte) (((lsV << 4) & 0xF0) | (lbV & 0x0F));
+						luzTemp[idcVizinho] = (byte) ((lsV << 4) | lbV);
 
-						// a luz so continua se espalhando se o vizinho for transparente
 						int blocoIdV = ChunkUtil.obterBloco(nx, ny, nz, chunk);
 						Bloco bV = Bloco.numIds.get(blocoIdV);
 
@@ -108,12 +97,4 @@ public class ChunkLuz {
 		}
 		System.arraycopy(luzTemp, 0, chunk.luz, 0, totalBlocos);
 	}
-    
-    public static float[] obterLuzesNormais(int x, int y, int z, Chunk chunk) {
-        byte luzTotal = ChunkUtil.obterLuzCompleta(x, y, z, chunk);
-        return new float[] {
-            (luzTotal & 0x0F) / 15f, // luz bloco(0.0 a 1.0)
-            ((luzTotal >> 4) & 0x0F) / 15f // luz Sol(0.0 a 1.0)
-        };
-    }
 }

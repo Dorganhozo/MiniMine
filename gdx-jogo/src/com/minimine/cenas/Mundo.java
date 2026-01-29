@@ -36,6 +36,8 @@ import com.minimine.utils.chunks.Chunk;
 import com.minimine.utils.ruidos.SimplexNoise3D;
 import com.minimine.utils.ruidos.Simplex2D;
 import com.minimine.utils.graficos.Animacoes2D;
+import java.util.stream.IntStream;
+import java.util.function.IntConsumer;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -359,6 +361,40 @@ public class Mundo {
         }
         chunksMod.put(new Chave(chunkX, chunkZ), chunk);
     }
+	
+	public static void defLuzMundo(int x, int y, int z, byte novaLuz) {
+		if(y < 0 || y >= Y_CHUNK) return;
+
+		// localiza a chunk alvo pelas coordenadas globais
+		Mundo.chaveTmp.x = x >> 4;
+		Mundo.chaveTmp.z = z >> 4;
+		Chunk alvo = chunks.get(chaveTmp);
+
+		if(alvo != null) {
+			int lx = x & 0xF;
+			int lz = z & 0xF;
+			int idc = lx + (lz << 4) + (y << 8);
+			alvo.luz[idc] = novaLuz;
+			alvo.luzSuja = true; // marca pra reconstruir a malha
+			alvo.att = true;
+		}
+	}
+	
+	public static byte obterLuzMundo(int x, int y, int z) {
+		if(y < 0 || y >= Y_CHUNK) return 0;
+
+		chaveTmp.x = x >> 4;
+		chaveTmp.z = z >> 4;
+		Chunk chunk = chunks.get(chaveTmp);
+
+		if(chunk == null) return 0;
+
+		int localX = x & 0xF;
+		int localZ = z & 0xF;
+		int idc = localX + (localZ << 4) + (y << 8);
+
+		return chunk.luz[idc];
+	}
     // GERAÇÃO DE DADOS:
     public boolean deveAttChunk(int chunkX, int chunkZ, int x, int z) {
         int distX = Mat.abs(chunkX - x);
@@ -490,6 +526,7 @@ public class Mundo {
 	
 	public static void gerarDados(final Chave chave) {
 		final Chunk chunk = chunks.get(chave);
+		
 		exec.submit(new Runnable() {
 				@Override
 				public void run() {
@@ -505,7 +542,7 @@ public class Mundo {
 
 	public static void gerarMalha(final Chave chave) {
 		final Chunk chunk = chunks.get(chave);
-        if (chunk == null) return;
+        if(chunk == null) return;
 		chunk.fazendo = true;
 
 		exec.submit(new Runnable() {
@@ -542,7 +579,6 @@ public class Mundo {
 								chunk.att = false;
 								estados.put(chave, 2);
 								} catch(Exception e) {}
-								
 							}
 						});
 				}

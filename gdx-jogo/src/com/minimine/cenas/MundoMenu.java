@@ -18,6 +18,7 @@ import java.util.List;
 import com.minimine.utils.InterUtil;
 import com.minimine.utils.ArquivosUtil;
 import com.badlogic.gdx.Input;
+import com.minimine.ui.Dialogo;
 
 public class MundoMenu implements Screen, InputProcessor {
     public SpriteBatch sb;
@@ -28,6 +29,7 @@ public class MundoMenu implements Screen, InputProcessor {
     public boolean recarregarInterface = false;
     public long tempoInicio = 0L;
     public Botao botaoApertado = null;
+	public Dialogo dialogo;
     
     @Override
     public void show() {
@@ -35,7 +37,7 @@ public class MundoMenu implements Screen, InputProcessor {
         sb = new SpriteBatch();
         fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 50);
         Gdx.input.setInputProcessor(this);
-
+		dialogo = new Dialogo();
         carregarMundos();
         criarInterface();
     }
@@ -140,38 +142,31 @@ public class MundoMenu implements Screen, InputProcessor {
     }
 
 	public void criarNovoMundo() {
-		Gdx.input.getTextInput(new Input.TextInputListener() {
+		// primeiro dialogo: pede o Nome
+		dialogo.abrir("Nome do Mundo", new Dialogo.Acao() {
+			@Override public void aoDigitar(char x) {}
 				@Override
-				public void input(final String nomeDigitado) {
-					if(nomeDigitado == null || nomeDigitado.trim().isEmpty()) return;
-
-					final String nome = nomeDigitado.trim();
-
-					Gdx.input.getTextInput(new Input.TextInputListener() {
+				public void aoConfirmar() {
+					if(dialogo.texto.trim().isEmpty()) return;
+					Mundo.nome = dialogo.texto;
+					
+					// segundo dialogo: pede a Semente
+					dialogo.abrir("Semente", new Dialogo.Acao() {
+							@Override public void aoDigitar(char x) {}
 							@Override
-							public void input(String sementeTxt) {
+							public void aoConfirmar() {
 								int semente;
 								try {
-									semente = Integer.parseInt(sementeTxt.trim());
+									semente = Integer.parseInt(dialogo.texto.trim());
 								} catch(Exception e) {
 									semente = (int)(Math.random() * 1000000);
 								}
-								Mundo.nome = nome;
 								Mundo.semente = semente;
-								
 								Inicio.defTela(Cenas.jogo);
-
-								carregarMundos();
-								criarInterface();
-								recarregarInterface = false;
 							}
-							@Override
-							public void canceled() {}
-						}, "Semente do Mundo", "", "Digite um número ou deixe vazio");
+						});
 				}
-				@Override
-				public void canceled() {}
-			}, "Nome do Mundo", "", "Digite o nome do mundo");
+			});
 	}
 
     @Override
@@ -192,6 +187,7 @@ public class MundoMenu implements Screen, InputProcessor {
         for(Texto t : textos) {
             t.porFrame(delta, sb, fonte);
         }
+		if(dialogo.visivel) dialogo.porFrame(delta, sb, fonte);
         sb.end();
     }
 
@@ -227,7 +223,14 @@ public class MundoMenu implements Screen, InputProcessor {
     @Override public void pause(){}
     @Override public void resume(){}
     @Override public boolean keyDown(int p){return false;}
-    @Override public boolean keyTyped(char p){return false;}
+    @Override 
+	public boolean keyTyped(char caractere) { 
+		if(dialogo.visivel) {
+			dialogo.digitando(caractere);
+			return true;
+		}
+		return false; 
+	}
     @Override public boolean keyUp(int p){return false;}
     @Override public boolean mouseMoved(int p, int p1){return false;}
     @Override public boolean scrolled(float p, float p1){return false;}
