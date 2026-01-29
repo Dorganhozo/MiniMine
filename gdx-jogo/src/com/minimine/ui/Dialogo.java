@@ -27,6 +27,7 @@ public class Dialogo extends InterUtil.Objeto {
 		this.acao = acao;
 		
 		Gdx.input.setOnscreenKeyboardVisible(true); 
+        Gdx.input.setCursorCatched(false);
     }
 
     // recebe as letras digitadas no teclado
@@ -40,6 +41,7 @@ public class Dialogo extends InterUtil.Objeto {
             }
         } else if(letra == '\n' || letra == '\r') {
 			visivel = false;
+            Gdx.input.setCursorCatched(true);
 			if(acao != null) acao.aoConfirmar();
 		} else if(texto.length() < limite) {
             texto += letra;
