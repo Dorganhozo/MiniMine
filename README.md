@@ -4,7 +4,7 @@ refeito com LibGDX.
 
 ## já feito:
 1. Gerenciamento de chunks dinâmico.
-2. Geração de terreno com Simplex noise 2D manual.
+2. Geração de terreno com Ruido Simplex 2D e 3D pras cavernas, manual.
 3. Colisão.
 4. Gravidade.
 5. Iluminação por vértices.
@@ -20,6 +20,7 @@ refeito com LibGDX.
 15. Agachamento (evita cair de bordas dos blocos).
 16. Tela de menu e configurações padrão.
 17. Divisão de biomas.
+18. Água animada via *Gdx.gl.glTexSubImage2D(...)*.
 
 ## modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -68,17 +69,18 @@ Implementação do rúido Simplex 2D, 3D em C via JNI (beta, somente em ARM64).
 Cache no rúido Simplex 2D.
 
 ## ruídos utilitários:
-1. Perlin Noise 2D.
-2. Perlin Noise 3D.
-3. Simplex Noise 2D.
-4. Simplex Noise 3D.
+1. PerlinNoise2D.java.
+2. PerlinNoise3D.java
+3. SimplexNoise2D.java.
+4. SimplexNoise3D.java
+5. Simplex2D.java. (atual)
 
 ## compatibilidade:
 Android 4 até Android 14.
 Linux Mint.
 
 ## desempenho:
-FPS de 30 a 59 padrão testado com até 280 chunks ativas (raio de 8).
+FPS de 30 a 42 padrão testado com até 280 chunks ativas (raio de 8).
 
 ## mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -120,6 +122,7 @@ Computador:
 
 **Programação**:
 Shiniga-OP
+Green
 
 **Efeitos sonoros**:
 Shiniga-OP

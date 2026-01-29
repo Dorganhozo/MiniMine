@@ -59,6 +59,7 @@ public class UI implements InputProcessor {
 
 	public static Jogador jogador;
 	public static boolean debug = false;
+	public static boolean modoTexto = false;
 	public static int fps = 0;
 	public static Debugador debugador;
 	
@@ -93,7 +94,7 @@ public class UI implements InputProcessor {
 	public void abrirChat() {
 		if(chatAberto) return;
 		chatAberto = true;
-		
+		modoTexto = true;
 		final Dialogo dialogo = new Dialogo();
 		dialogo.abrir("chat", new Dialogo.Acao() {
 				@Override
@@ -108,19 +109,12 @@ public class UI implements InputProcessor {
 				@Override
 				public void aoDigitar(char p) {}
 			});
-		Gdx.input.getTextInput(new Input.TextInputListener() {
-			@Override
-				public void input(String texto) {
-					
-				}
-				public void canceled() {
-					chatAberto = false;
-				}
-			}, "Chat", "", "Digite e envie");
+		dialogos.put("chat", dialogo);
 	}
 
 	@Override
     public boolean touchDown(int telaX, int telaY, int p, int b) {
+		if(modoTexto) return true;
         if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
             if(b == Input.Buttons.LEFT) {
                 jogador.item = "ar";
@@ -155,6 +149,7 @@ public class UI implements InputProcessor {
 
     @Override
     public boolean touchUp(int telaX, int telaY, int p, int b) {
+		if(modoTexto) return true;
         if(b == Input.Buttons.RIGHT) acao = false;
 
         int y = Gdx.graphics.getHeight() - telaY;
@@ -173,6 +168,7 @@ public class UI implements InputProcessor {
 
 	@Override
 	public boolean touchDragged(int telaX, int telaY, int p) {
+		if(modoTexto) return true;
 		int y = Gdx.graphics.getHeight() - telaY;
 
         jogador.inv.aoArrastar(telaX, y, p);
@@ -657,6 +653,7 @@ public class UI implements InputProcessor {
 	}
 	
 	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2) {
+		modoTexto = true;
 		final Dialogo dialogo = new Dialogo();
 		dialogo.abrir(titulo, new Dialogo.Acao() {
 			@Override
@@ -673,6 +670,7 @@ public class UI implements InputProcessor {
 	
 	@Override 
     public boolean keyDown(int p) {
+		if(modoTexto) return true;
         if(p == Input.Keys.W) frente = true;
         if(p == Input.Keys.S) tras = true;
         if(p == Input.Keys.A) esquerda = true;
@@ -711,6 +709,7 @@ public class UI implements InputProcessor {
 
     @Override 
     public boolean keyUp(int p) {
+		if(modoTexto) return true;
         if(p == Input.Keys.W) frente = false;
         if(p == Input.Keys.S) tras = false;
         if(p == Input.Keys.A) esquerda = false;
@@ -722,6 +721,7 @@ public class UI implements InputProcessor {
 
     @Override 
     public boolean mouseMoved(int p, int p1) {
+		if(modoTexto) return true;
 		if(!jogador.inv.aberto) {
 			float dx = Gdx.input.getDeltaX();
 			float dy = Gdx.input.getDeltaY();
@@ -742,6 +742,7 @@ public class UI implements InputProcessor {
 	@Override
 	public boolean keyTyped(char p) {
 		for(Dialogo d : dialogos.values()) {
+			if(p == '\n' || p == '\r') modoTexto = false;
 			d.digitando(p);
 		}
 		return false;
