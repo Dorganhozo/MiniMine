@@ -145,7 +145,10 @@ public class MundoMenu implements Screen, InputProcessor {
 		// primeiro dialogo: pede o Nome
 		dialogo.abrir("Nome do Mundo", new Dialogo.Acao() {
 			@Override public void aoDigitar(char x) {}
-			@Override public void aoFechar() {}
+			    @Override 
+                public void aoFechar() {
+                    Gdx.input.setCursorCatched(false);
+                }
 				@Override
 				public void aoConfirmar() {
 					if(dialogo.texto.trim().isEmpty()) return;

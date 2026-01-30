@@ -105,6 +105,7 @@ public class UI implements InputProcessor {
 						Gdx.app.log("CHAT", dialogo.texto);
 					}
 					chatAberto = false;
+					Gdx.input.setCursorCatched(true);
 				}
 				@Override
 				public void aoDigitar(char p) {}
@@ -112,6 +113,7 @@ public class UI implements InputProcessor {
 				public void aoFechar() {
 					chatAberto = false;
 					modoTexto = false;
+					Gdx.input.setCursorCatched(true);
 				}
 			});
 	}
@@ -655,10 +657,12 @@ public class UI implements InputProcessor {
 				@Override
 				public void aoConfirmar() {
 					if(func != null) func.call(LuaValue.valueOf(dialogo.texto));
+					Gdx.input.setCursorCatched(true);
 				}
 				@Override
 				public void aoFechar() {
 					if(func2 != null) func2.call();
+					Gdx.input.setCursorCatched(true);
 				}
 				@Override
 				public void aoDigitar(char p) {
