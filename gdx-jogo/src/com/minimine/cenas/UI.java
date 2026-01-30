@@ -34,7 +34,7 @@ public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
 	public static Map<CharSequence, Botao> botoes = new HashMap<>();
 	public static Map<CharSequence, Texto> textos = new HashMap<>();
-	public static Map<CharSequence, Dialogo> dialogos = new HashMap<>();
+	public static Dialogo dialogo = new Dialogo();
     public static SpriteBatch sb;
     public static BitmapFont fonte;
     public static CharSequence otimizadorC = "desligado";
@@ -95,7 +95,7 @@ public class UI implements InputProcessor {
 		if(chatAberto) return;
 		chatAberto = true;
 		modoTexto = true;
-		final Dialogo dialogo = new Dialogo();
+		
 		dialogo.abrir("chat", new Dialogo.Acao() {
 				@Override
 				public void aoConfirmar() {
@@ -108,12 +108,23 @@ public class UI implements InputProcessor {
 				}
 				@Override
 				public void aoDigitar(char p) {}
+				@Override
+				public void aoFechar() {
+					chatAberto = false;
+					modoTexto = false;
+				}
 			});
-		dialogos.put("chat", dialogo);
 	}
 
 	@Override
     public boolean touchDown(int telaX, int telaY, int p, int b) {
+		int y = Gdx.graphics.getHeight() - telaY;
+		
+		if(dialogo.visivel) {
+			dialogo.verificarToque(telaX, y);
+			if(!dialogo.visivel) modoTexto = false; // se fechou ao clicar fora, sai do modo texto
+			return true;
+		}
 		if(modoTexto) return true;
         if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
             if(b == Input.Buttons.LEFT) {
@@ -131,7 +142,6 @@ public class UI implements InputProcessor {
                 return true;
             }
         }
-        int y = Gdx.graphics.getHeight() - telaY;
         for(Botao e : botoes.values()) {
             if(e.hitbox.contains(telaX, y)) {
                 e.aoTocar(telaX, y, p);
@@ -334,6 +344,7 @@ public class UI implements InputProcessor {
 				public void aoTocar(int t, int t2, int p){
 					toques.put(p, "salvar");
 					sprite.setAlpha(0.5f);
+					
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
@@ -366,50 +377,50 @@ public class UI implements InputProcessor {
 
 		if(Gdx.app.getType() != com.badlogic.gdx.Application.ApplicationType.Desktop) {
 			for(Botao b : botoes.values()) {
-			if(b.nome.equals("direita")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX + espaco, centroY - tam/2);
-			} else if(b.nome.equals("esquerda")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - tam - espaco, centroY - tam/2);
-			} else if(b.nome.equals("frente")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - tam/2, centroY + espaco);
-			} else if(b.nome.equals("tras")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - tam/2, centroY - tam - espaco);
-			} else if(b.nome.equals("cima")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - tam*1.5f, centroY + espaco);
-			} else if(b.nome.equals("baixo")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - tam*1.5f, centroY - tam - espaco);
-			} else if(b.nome.equals("diagDireita")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX + espaco, centroY + espaco);
-			} else if(b.nome.equals("diagEsquerda")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(centroX - tam - espaco, centroY + espaco);
-			} else if(b.nome.equals("acao")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - tam*1.5f, centroY*2 + espaco);
-			} else if(b.nome.equals("ataque")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - tam*2.5f, centroY*2 + espaco);
-			} else if(b.nome.equals("inv")) {
-				b.sprite.setAlpha(0.9f);
-				int hotbarX = v / 2 - (jogador.inv.hotbarSlots * jogador.inv.tamSlot) / 2;
-				int invX = hotbarX + ((jogador.inv.hotbarSlots) * jogador.inv.tamSlot);
-				b.sprite.setPosition(invX, jogador.inv.hotbarY);
-			} else if(b.nome.equals("receita")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition(v - tam, h - tam);
-			} else if(b.nome.equals("salvar")) {
-				b.sprite.setAlpha(0.9f);
-				b.sprite.setPosition((v - tam)-tam, h - tam);
+				if(b.nome.equals("direita")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(centroX + espaco, centroY - tam/2);
+				} else if(b.nome.equals("esquerda")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(centroX - tam - espaco, centroY - tam/2);
+				} else if(b.nome.equals("frente")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(centroX - tam/2, centroY + espaco);
+				} else if(b.nome.equals("tras")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(centroX - tam/2, centroY - tam - espaco);
+				} else if(b.nome.equals("cima")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(v - tam*1.5f, centroY + espaco);
+				} else if(b.nome.equals("baixo")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(v - tam*1.5f, centroY - tam - espaco);
+				} else if(b.nome.equals("diagDireita")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(centroX + espaco, centroY + espaco);
+				} else if(b.nome.equals("diagEsquerda")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(centroX - tam - espaco, centroY + espaco);
+				} else if(b.nome.equals("acao")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(v - tam*1.5f, centroY*2 + espaco);
+				} else if(b.nome.equals("ataque")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(v - tam*2.5f, centroY*2 + espaco);
+				} else if(b.nome.equals("inv")) {
+					b.sprite.setAlpha(0.9f);
+					int hotbarX = v / 2 - (jogador.inv.hotbarSlots * jogador.inv.tamSlot) / 2;
+					int invX = hotbarX + ((jogador.inv.hotbarSlots) * jogador.inv.tamSlot);
+					b.sprite.setPosition(invX, jogador.inv.hotbarY);
+				} else if(b.nome.equals("receita")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition(v - tam, h - tam);
+				} else if(b.nome.equals("salvar")) {
+					b.sprite.setAlpha(0.9f);
+					b.sprite.setPosition((v - tam)-tam, h - tam);
+				}
+				b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
 			}
-			b.hitbox.setPosition(b.sprite.getX(), b.sprite.getY());
-		}
 		}
 		spriteMira.setPosition(v / 2 - spriteMira.getWidth() / 2, h / 2 - spriteMira.getHeight() / 2);
 		spriteMira.setAlpha(0.9f);
@@ -455,9 +466,8 @@ public class UI implements InputProcessor {
 		for(Texto e : textos.values()) {
 			e.porFrame(delta, sb, fonte);
 		}
-		for(Dialogo e : dialogos.values()) {
-			e.porFrame(delta, sb, fonte);
-		}
+		dialogo.porFrame(delta, sb, fonte);
+		
 		this.jogador.inv.att();
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
@@ -557,14 +567,6 @@ public class UI implements InputProcessor {
 		return textos.get(nome);
 	}
 	
-	public void subsTexto(String nome, Texto textoObj) {
-		textos.replace(nome, textoObj);
-	}
-	
-	public void rmTexto(String nome) {
-		textos.remove(nome);
-	}
-	
 	public void defTextoTam(int escalaX, int escalaY) {
 		fonte.getData().setScale(escalaX, escalaY);
 	}
@@ -572,14 +574,6 @@ public class UI implements InputProcessor {
 	public float[] obterTextoTam(int escalaX, int escalaY) {
 		BitmapFont.BitmapFontData f = fonte.getData();
 		return new float[]{f.scaleX, f.scaleY};
-	}
-	
-	public void rmBotao(String nome) {
-		botoes.remove(nome);
-	}
-	
-	public void subsBotao(String nome, Botao botaoObj) {
-		botoes.replace(nome, botaoObj);
 	}
 	
 	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func) {
@@ -645,27 +639,33 @@ public class UI implements InputProcessor {
 	}
 	
 	public static void abrirDialogo(String titulo) {
-		abrirDialogo(titulo, "", "", null, null);
+		abrirDialogo(titulo, "", "", null, null, null);
 	}
-	
 	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func) {
-		abrirDialogo(titulo, padrao, msg, func, null);
+		abrirDialogo(titulo, padrao, msg, func, null, null);
+	}
+	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2) {
+		abrirDialogo(titulo, padrao, msg, func, func2, null);
 	}
 	
-	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2) {
+	public static void abrirDialogo(final String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2, final LuaFunction func3) {
 		modoTexto = true;
-		final Dialogo dialogo = new Dialogo();
+		
 		dialogo.abrir(titulo, new Dialogo.Acao() {
-			@Override
-			public void aoConfirmar() {
-				if(func != null) func.call(LuaValue.valueOf(dialogo.texto));
-				UI.dialogos.remove(dialogo.texto);
-			}
-			@Override
-			public void aoDigitar(char p) {}
-		});
-		dialogo.texto = msg;
-		dialogos.put(titulo, dialogo);
+				@Override
+				public void aoConfirmar() {
+					if(func != null) func.call(LuaValue.valueOf(dialogo.texto));
+				}
+				@Override
+				public void aoFechar() {
+					if(func2 != null) func2.call();
+				}
+				@Override
+				public void aoDigitar(char p) {
+					if(func3 != null) func3.call(LuaValue.valueOf(p));
+				}
+			});
+		dialogo.texto = padrao;
 	}
 	
 	@Override 
@@ -741,10 +741,8 @@ public class UI implements InputProcessor {
     }
 	@Override
 	public boolean keyTyped(char p) {
-		for(Dialogo d : dialogos.values()) {
-			if(p == '\n' || p == '\r') modoTexto = false;
-			d.digitando(p);
-		}
+		if(p == '\n' || p == '\r') modoTexto = false;
+		dialogo.digitando(p);
 		return false;
 	}
 }

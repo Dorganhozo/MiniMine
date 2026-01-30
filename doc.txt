@@ -23,7 +23,7 @@ ele será um loop automatico do jogo, e tudo nele será executado diversas vezes
 
 API publica: <retorno/tipo> <identificador> <parâmetro/explicação>
 
-jogador:
+Jogador jogador:
 
 float jogador.posicao.x
 float jogador.posicao.y
@@ -51,7 +51,7 @@ void jogador.inv:rmItem(int slotId, int quantidade) -- remove o item de um slot 
 void jogador.inv:addItem(int blocoId, int quantidade) -- adiciona um item pelo tipo e quantidade
 void jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jogador
 
-mundo:
+Mundo mundo:
 
 String mundo.nome -- nome do mundo atual
 int mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
@@ -62,6 +62,8 @@ booelan mundo.nuvens -- booleana, desativa e ativa as nuvens no céu
 boolean mundo.ciclo -- ativa ou desativa o ciclo diário incluindo o tick
 void mundo:defBlocoMundo(int x, y, z, String tipoDoBloco) -- define um bloco nas coordenadas globais
 int mundo:obterBlocoMundo(int x, y, z) -- obtem o ID númerico do bloco nas coordenadas globais
+void mundo:defLuzMundo(int x, y, z, byte novaLuz) -- define um nivel de luz nas coordenadas globais
+byte mundo:obterLuzMundo(int x, y, z) -- obtem o nivel de luz nas coordenadas globais
 Bloco mundo:addBloco(String nome, int texturaIdTopo) --  retorna o objeto e cria uma textura de um blocos com todas as faces da mesma textura, o nome precisa ser o mesmo da textura a ser usada no inventario
 Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados) -- variacao
 Bloco mundo:addBloco(String nome, int texturaIdTopo, int texturaIdLados, int texturaIdBaixo) -- variacao
@@ -134,8 +136,10 @@ Texto ui:addTexto(texto, x, y) -- define e retorna um objeto Texto
 Texto ui:addTexto(texto, x, y, func_aoAjustarATela(v, h)) -- variacao
 void ui:subsTexto(nomeId, textoObj) -- substitui um texto pelo objeto
 void ui:rmTexto(nomeId) -- remove um texto
+void ui:abrirDialogo(titulo) -- cria um dialogo com um nome (só um dialogo pode ser exibido por vez, um dialogo termina ao apertar "enter")
 void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto)) -- cria um dialogo que executa uma função ao apertar enter
 void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto), func_cancelar) -- variação que executa uma função ao cancelar
+void ui:abrirDialogo(titulo, textoPadrao, mensagemTemporaria, func_enter(texto), func_cancelar, func_digitando(letra)) -- variação que executa uma função ao digitar enviando o caractere sendo digitado atualmente
 
 Map<String, Botao> ui.botoes:
 

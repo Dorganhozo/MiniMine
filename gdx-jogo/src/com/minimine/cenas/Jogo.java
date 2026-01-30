@@ -26,11 +26,10 @@ import com.minimine.utils.audio.AudioUtil;
 import com.minimine.utils.chunks.Chunk;
 
 public class Jogo implements Screen {
-	public UI ui;
 	public static Mundo mundo = new Mundo();
-	public Jogador jogador = new Jogador();
+	public static Jogador jogador = new Jogador();
+	public static UI ui;
 	public Net net;
-	public static boolean pronto = false;
 	public Environment ambiente;
 	public ModelBatch mb;
 	public List<Jogador> jgs = new ArrayList<>();
@@ -39,7 +38,6 @@ public class Jogo implements Screen {
 	public void show() {
 		mundo.ciclo = true;
 		ui = new UI(jogador);
-		
 		// net = new Net(Net.SERVIDOR_MODO);
 		
 		LuaAPI.iniciar(this);
@@ -92,8 +90,6 @@ public class Jogo implements Screen {
 		AudioUtil.sons.put("madeira_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_2.mp3")));
 		AudioUtil.sons.put("madeira_3", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_3.mp3")));
 		
-		pronto = true;
-		
 		new java.util.Timer().schedule(
 			new java.util.TimerTask() {
 				@Override
@@ -120,7 +116,7 @@ public class Jogo implements Screen {
 		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		
-		if(pronto) mundo.att(delta, jogador);
+		mundo.att(delta, jogador);
 		
 		if(jgs.size() >= 1) {
 			for(Jogador jo : jgs) {
@@ -140,12 +136,23 @@ public class Jogo implements Screen {
 			}
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 		}
-		if(mundo.carregado) jogador.att(delta);
-		if(pronto) LuaAPI.att(delta);
-		
+		if(mundo.carregado) {
+			if(!jogador.nasceu) {
+				// tenta encontrar o chão, se o obterBlocoMundo retornar algo diferente de 0, 
+				// significa que os dados daquela parte do mapa já chegaram.
+				int yTeste = Mundo.obterAlturaChao((int)jogador.posicao.x, (int)jogador.posicao.z);
+				if(yTeste > 1) { // se encontrou algo acima do fundo do mundo
+					jogador.posicao.y = yTeste;
+					jogador.nasceu = true;
+					Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
+				} else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
+			}
+			jogador.att(delta);
+		}
 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 		
 		ui.att(delta, mundo);
+		if(mundo.carregado) LuaAPI.att(delta);
     }
 
     @Override
@@ -153,6 +160,7 @@ public class Jogo implements Screen {
 		mundo.carregado = false;
 		mundo.liberar();
 		net.liberar();
+		ui.liberar();
 		CorposCelestes.liberar();
     }
 	
@@ -163,7 +171,8 @@ public class Jogo implements Screen {
 		LuaAPI.ajustar(v, h);
 	}
 
-	@Override public void hide() {
+	@Override
+	public void hide() {
 		mundo.carregado = false;
 		for(Chunk c : mundo.chunks.values()) {
 			if(c.malha != null) c.malha.dispose();

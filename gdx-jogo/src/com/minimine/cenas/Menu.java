@@ -40,9 +40,10 @@ public class Menu implements Screen, InputProcessor {
 	public static Mundo mundo = new Mundo();
 	public Preferences prefs;
 	
-	static {
+	@Override
+	public void show() {
 		PerspectiveCamera camera = new PerspectiveCamera(120, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.position.set(10f, 18f, 10f);
+        // camera.position.set(10f, 18f, 10f);
         camera.lookAt(0, 0, 0);
         camera.near = 0.1f;
         camera.far = 400f;
@@ -50,10 +51,7 @@ public class Menu implements Screen, InputProcessor {
 
 		tela.camera = camera;
 		tela.modo = 0;
-	}
-	
-	@Override
-	public void show() {
+		
 		prefs = Gdx.app.getPreferences("MiniConfig");
 		textos = new ArrayList<>();
 		botoes = new ArrayList<>();

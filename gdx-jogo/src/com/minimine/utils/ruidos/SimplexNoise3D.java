@@ -19,7 +19,7 @@ public class SimplexNoise3D {
     // permutação:
     public final int[] p;
 
-    public SimplexNoise3D(int semente) {
+    public SimplexNoise3D(long semente) {
 		if(Inicio.ehArm64) {
 			p = null;
 
@@ -32,12 +32,12 @@ public class SimplexNoise3D {
 			int[] perm = new int[256];
 			for(int i = 0; i < 256; i++) perm[i] = i;
 			// logica de embaralhamento(fisher-yates + xorshift32)
-			int estado = semente;
+			long estado = semente;
 			if(estado == 0) estado = 0x9E3779B9;
 
 			for(int i = 255; i > 0; i--) {
 				// xorshift32 passo
-				int z = estado;
+				long z = estado;
 				z ^= (z << 13);
 				z ^= (z >>> 17);
 				z ^= (z << 5);
@@ -163,7 +163,7 @@ public class SimplexNoise3D {
         liberar();
         super.finalize();
     }
-    public static native long iniciarC(int semente);
+    public static native long iniciarC(long semente);
     public static native float ruidoC(long ptr, float x, float y, float z);
     public static native float ruidoFractalC(long ptr, float x, float y, float z, float escala, int octaves, float persis);
     public static native void liberarC(long ptr);

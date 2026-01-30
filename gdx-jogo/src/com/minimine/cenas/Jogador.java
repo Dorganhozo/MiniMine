@@ -238,6 +238,13 @@ public class Jogador {
 		return false;
 	}
 	
+	public void nascerNoTopo() {
+		int chaoY = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
+		this.posicao.y = chaoY;
+		this.velocidade.y = 0; // zera a queda
+		this.nasceu = true;
+	}
+	
 	public boolean temSuporte(float x, float z) {
 		// 1. configura uma hitbox temporaria na nova posição(x, posicao.y, z)
 		float yBase = posicao.y;

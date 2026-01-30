@@ -145,6 +145,7 @@ public class MundoMenu implements Screen, InputProcessor {
 		// primeiro dialogo: pede o Nome
 		dialogo.abrir("Nome do Mundo", new Dialogo.Acao() {
 			@Override public void aoDigitar(char x) {}
+			@Override public void aoFechar() {}
 				@Override
 				public void aoConfirmar() {
 					if(dialogo.texto.trim().isEmpty()) return;
@@ -152,6 +153,7 @@ public class MundoMenu implements Screen, InputProcessor {
 					
 					// segundo dialogo: pede a Semente
 					dialogo.abrir("Semente", new Dialogo.Acao() {
+						@Override public void aoFechar() {}
 							@Override public void aoDigitar(char x) {}
 							@Override
 							public void aoConfirmar() {
@@ -159,7 +161,7 @@ public class MundoMenu implements Screen, InputProcessor {
 								try {
 									semente = Integer.parseInt(dialogo.texto.trim());
 								} catch(Exception e) {
-									semente = (int)(Math.random() * 1000000);
+									semente = 0;
 								}
 								Mundo.semente = semente;
 								Inicio.defTela(Cenas.jogo);
@@ -206,7 +208,11 @@ public class MundoMenu implements Screen, InputProcessor {
     @Override
     public boolean touchDown(int telaX, int telaY, int p, int b) {
         int y = Gdx.graphics.getHeight() - telaY;
-
+		
+		if(dialogo.visivel) {
+			dialogo.verificarToque(telaX, y);
+			return true; // bloqueia outros cliques se o dialogo estiver aberto
+		}
         List<Botao> botoesCopia = this.botoes;
 
         for(Botao bt : botoesCopia) {

@@ -55,7 +55,8 @@ public class Mundo {
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
     public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK;
-    public static int semente = 0, RAIO_CHUNKS = 5;
+    public static long semente = 0L;
+	public static int RAIO_CHUNKS = 5;
 
     public static Simplex2D s2D;
 	public static SimplexNoise3D s3D;
@@ -151,7 +152,7 @@ public class Mundo {
     }
 
     public void iniciar() {
-        semente = semente == 0 ? Mat.floor((float)Math.random()*1000000) : semente;
+        semente = semente == 0 ? System.currentTimeMillis() : semente;
         s2D = new Simplex2D(semente);
 		s3D = new SimplexNoise3D(semente >> 1);
 
@@ -226,7 +227,10 @@ public class Mundo {
         if(shader == null) return;
 
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
-
+		
+		if(!carregado && chunks.size() >= 1) {
+			carregado = true;
+		}
         if(nuvens) NuvensUtil.att(delta, jogador.posicao);
 
         shader.begin();
@@ -268,7 +272,6 @@ public class Mundo {
 			CorposCelestes.att(jogador.camera.combined, jogador.posicao);
 			// ciclo de dia e noite:
 			if(tick > 0.03f) {
-
 				tick = 0;
 			}
 		}
@@ -394,6 +397,17 @@ public class Mundo {
 		int idc = localX + (localZ << 4) + (y << 8);
 
 		return chunk.luz[idc];
+	}
+	
+	public static int obterAlturaChao(int x, int z) {
+		// começa do topo do mundo(Y_CHUNK - 1) e desce
+		for(int y = Y_CHUNK - 1; y > 0; y--) {
+			int blocoId = obterBlocoMundo(x, y, z);
+			if(blocoId != 0) {
+				return y + 1; // retorna a posição logo acima do bloco encontrado
+			}
+		}
+		return 80; // caso de segurança: se o mundo estiver vazio, nasce no 80
 	}
     // GERAÇÃO DE DADOS:
     public boolean deveAttChunk(int chunkX, int chunkZ, int x, int z) {

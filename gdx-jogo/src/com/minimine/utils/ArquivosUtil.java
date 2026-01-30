@@ -187,7 +187,7 @@ public class ArquivosUtil {
 	// gravadores e leitores de binarios:
     public static void gravarMundo(DataOutputStream dos, Mundo mundo) throws IOException {
         // seed
-        dos.writeInt(mundo.semente);
+        dos.writeLong(mundo.semente);
         // quantos chunks salvos
         dos.writeInt(mundo.chunksMod.size());
         for(Map.Entry<Chave, Chunk> e : mundo.chunksMod.entrySet()) {
@@ -238,6 +238,7 @@ public class ArquivosUtil {
         dos.writeInt(jogador.inv != null ? jogador.inv.slotSelecionado : 0);
 		dos.writeFloat(jogador.velo);
 		dos.writeBoolean(jogador.agachado);
+		dos.writeBoolean(jogador.nasceu);
         dos.flush();
     }
 
@@ -272,7 +273,7 @@ public class ArquivosUtil {
 	
 	// leitores
     public static void lerMundo(DataInputStream dis, Mundo mundo) throws IOException {
-        mundo.semente = dis.readInt();
+        mundo.semente = dis.readLong();
         int totalChunks = dis.readInt();
 
         for(int i = 0; i < totalChunks; i++) {
@@ -316,6 +317,7 @@ public class ArquivosUtil {
         jogador.inv.slotSelecionado = dis.readInt();
 		jogador.velo = dis.readFloat();
 		jogador.agachado = dis.readBoolean();
+		jogador.nasceu = dis.readBoolean();
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {
