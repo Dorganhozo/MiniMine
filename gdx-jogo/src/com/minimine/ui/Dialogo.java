@@ -14,7 +14,7 @@ public class Dialogo extends InterUtil.Objeto {
     public boolean visivel = false;
     public GlyphLayout layout;
     public Acao acao;
-    public int limite = 20;
+    public int limite = 30;
     public Rectangle hitbox;
 
     public Dialogo() {
@@ -36,7 +36,6 @@ public class Dialogo extends InterUtil.Objeto {
     public void fechar() {
         this.visivel = false;
         Gdx.input.setOnscreenKeyboardVisible(false);
-        Gdx.input.setCursorCatched(true);
         if(acao != null) acao.aoFechar();
     }
 
@@ -56,7 +55,6 @@ public class Dialogo extends InterUtil.Objeto {
 
     public void confirmar() {
         visivel = false;
-        Gdx.input.setCursorCatched(true);
         Gdx.input.setOnscreenKeyboardVisible(false);
         if(acao != null) acao.aoConfirmar();
     }

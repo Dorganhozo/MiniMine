@@ -13,7 +13,7 @@ java {
 
 repositories {
     google()
-    mavenCentral() // O comando precisa ser este para o sistema funcionar
+    mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     maven { url "https://jitpack.io" }
 }
@@ -25,15 +25,14 @@ application {
 dependencies {
     implementation project(':gdx-jogo')
 
-    // Ajustado para 1.11.0 para coincidir com suas libs físicas
+    // motor principal e motor de janelas(versão 2)
     implementation "com.badlogicgames.gdx:gdx:1.11.0"
-    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:1.11.0"
-    implementation "com.badlogicgames.gdx:gdx-freetype:1.11.0"
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.11.0"
     
-    // Versão da biblioteca de modelos 3D compatível com a 1.11.0
+    implementation "com.badlogicgames.gdx:gdx-freetype:1.11.0"
     implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.1.0"
 
-    // Arquivos nativos para execução em computadores
+    // arquivos de sistema
     runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.11.0:natives-desktop"
     runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.11.0:natives-desktop"
 }
