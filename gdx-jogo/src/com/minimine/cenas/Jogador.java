@@ -22,7 +22,7 @@ import com.minimine.utils.Texturas;
 import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
 import com.minimine.utils.blocos.Bloco;
-import com.minimine.utils.audio.AudioUtil;
+import com.minimine.audio.Audio;
 
 public class Jogador {
 	public ModelInstance modelo;
@@ -47,16 +47,6 @@ public class Jogador {
 	public void criarModelo3D() {
 		SceneAsset asset = new GLTFLoader().load(Gdx.files.internal("modelos/jogador.gltf"));
 		this.modelo = new ModelInstance(asset.scene.model);
-	}
-
-	public Jogador() {
-		if(modo != 2) {
-			// itens iniciais:
-			inv.itens[0] = new Inventario.Item("grama", Texturas.texs.get("grama_lado"), 1);
-			inv.itens[1] = new Inventario.Item("terra", Texturas.texs.get("terra"), 1);
-			inv.itens[2] = new Inventario.Item("pedra", Texturas.texs.get("pedra"), 1);
-			inv.itens[3] = new Inventario.Item("agua", Texturas.texs.get("agua"), 1);
-		}
 	}
 
 	public void interagirBloco() {

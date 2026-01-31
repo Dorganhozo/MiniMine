@@ -36,4 +36,8 @@ public class Util {
 	public static Sprite criarSprite(String textura) {
 		return new Sprite(Texturas.texs.get(textura));
 	}
+	
+	public static float floatPraBits(float r, float g, float b, float alfa) {
+		return com.badlogic.gdx.graphics.Color.toFloatBits(r, g, b, alfa);
+	}
 }

@@ -1,26 +1,14 @@
 package com.minimine.cenas;
-
+// java
 import java.util.Map;
 import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
-import com.minimine.utils.chunks.ChunkUtil;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.Iterator;
 import java.util.concurrent.Executors;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.utils.Pool;
+// utils
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.utils.BiomasUtil;
@@ -29,15 +17,30 @@ import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Texturas;
 import com.minimine.utils.CorposCelestes;
-import com.minimine.utils.chunks.Chave;
-import com.minimine.utils.chunks.ChunkMalha;
-import com.minimine.utils.blocos.Bloco;
-import com.minimine.utils.chunks.Chunk;
+// libgdx
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+// ruidos
 import com.minimine.utils.ruidos.SimplexNoise3D;
 import com.minimine.utils.ruidos.Simplex2D;
-import com.minimine.utils.graficos.Animacoes2D;
-import java.util.stream.IntStream;
-import java.util.function.IntConsumer;
+// chunks
+import com.minimine.utils.chunks.ChunkMalha;
+import com.minimine.utils.chunks.ChunkUtil;
+import com.minimine.utils.chunks.Chunk;
+import com.minimine.utils.chunks.Chave;
+import com.minimine.utils.blocos.Bloco;
+// graficos
+import com.minimine.graficos.Animacoes2D;
+import com.minimine.graficos.EmissorParticulas;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -99,17 +102,24 @@ public class Mundo {
     "uniform sampler2D u_textura;\n" +
     "uniform float u_luzCeu;\n" + 
     "void main() {\n" +
-    "   vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
-    "   if(texCor.a < 0.5) discard;\n" +
     // v_cor.r = Luz da Tocha (0.0 a 1.0)\n" +
     // v_cor.g = Luz do Sol (0.0 a 1.0)\n" +
     // v_cor.b = multiplicador de face(falso AO pra profundidade)
-    "   float solDinamico = v_cor.g * u_luzCeu;\n" + 
-    "   float brilhoBruto = max(v_cor.r, solDinamico);\n" +
-    // aplica o multiplicador da face e uma luz minima de ambiente(0.1)
-    "   float iluminacaoFinal = (brilhoBruto * v_cor.b) + 0.1;\n" +
-    "   gl_FragColor = vec4(texCor.rgb * iluminacaoFinal, texCor.a);\n" +
-    "}";
+	"   float solDinamico = v_cor.g * u_luzCeu;\n" + 
+	"   float brilhoBruto = max(v_cor.r, solDinamico);\n" +
+	"   float iluminacaoFinal = brilhoBruto * v_cor.b;\n" +
+	// transparencia:
+	"   vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
+    "   if(texCor.a < 0.5) discard;\n" +
+	// neblina baseada na distancia
+	"   float dist = length(gl_FragCoord.z / gl_FragCoord.w);\n" +
+	"   float inicio = 16.0;\n" + // começa a 1 chunk de distância
+	"   float fim = 64.0;\n" + // termina no limite de 5 * 16
+	"   float fator = clamp((dist - inicio) / (fim - inicio), 0.0, 1.0);\n" +
+	// cor da neblina mudando com o céu
+	"   vec3 corNevoa = vec3(0.4, 0.6, 0.9) * u_luzCeu;\n" + 
+	"   gl_FragColor = vec4(mix(texCor.rgb * iluminacaoFinal, corNevoa, fator), texCor.a);\n" +
+	"}";
 
     public static Matrix4 matrizTmp = new Matrix4();
 	public static Chave chaveTmp = new Chave(0, 0);
@@ -129,7 +139,7 @@ public class Mundo {
         texturas.add(Texturas.texs.get("cacto_lado"));
         texturas.add(Texturas.texs.get("vidro"));
         texturas.add(Texturas.texs.get("tocha"));
-		
+
         Bloco.blocos.add(null);
         Bloco.blocos.add(new Bloco("grama", 0, 1, 2));
         Bloco.blocos.add(new Bloco("terra", 2));
@@ -166,6 +176,7 @@ public class Mundo {
 		Animacoes2D.add(4, framesAgua, 3f); // 8 fps
 
 		Animacoes2D.config();
+		EmissorParticulas.iniciar();
 
         ShaderProgram.pedantic = false;
         if(!mod) shader = new ShaderProgram(vert, frag);
@@ -227,7 +238,7 @@ public class Mundo {
         if(shader == null) return;
 
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
-		
+
 		if(!carregado && chunks.size() >= 1) {
 			carregado = true;
 		}
@@ -241,11 +252,12 @@ public class Mundo {
 
         shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz); 
 		shader.setUniformf("u_alturaSol", DiaNoiteUtil.obterFatorTransicao());
-		
+
 		DiaNoiteUtil.aplicarShader(shader);
 
 		atlasGeral.bind(0);
         shader.setUniformi("u_textura", 0);
+		Gdx.gl.glDisable(GL20.GL_BLEND);
 		
 		// 1. solidos:
         for(final Chunk chunk : chunks.values()) {
@@ -254,17 +266,16 @@ public class Mundo {
 				chunk.malha.render(shader, GL20.GL_TRIANGLES, 0, chunk.contaSolida);
 			}
 		}
-		// 2: transparentes:
+		// 2. transparentes:
 		Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-
+		
 		for(final Chunk chunk : chunks.values()) {
 			if(frustrum(chunk, jogador) && chunk.malha != null && chunk.contaTransp > 0) {
 				// renderiza começando de onde o solido parou
 				chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
 			}
 		}
-		Gdx.gl.glDisable(GL20.GL_BLEND);
+		EmissorParticulas.att(shader, delta, jogador);
 
 		shader.end();
         if(nuvens) NuvensUtil.att(jogador.camera.combined);
@@ -278,15 +289,21 @@ public class Mundo {
     }
 
     public boolean frustrum(Chunk chunk, Jogador jogador) {
-        float globalX = chunk.x << 4;
-        float globalZ = chunk.z << 4;
+		float globalX = chunk.x << 4;
+		float globalZ = chunk.z << 4;
 
-        float dis = Vector2.dst(globalX, globalZ, jogador.posicao.x, jogador.posicao.z);
+		// dist2(distancia ao quadrado)
+		float distAoQuadrado = Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z);
 
-        if(!(dis < ((RAIO_CHUNKS << 4)))) return false;
+		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
+		// (RAIO * 16) * (RAIO * 16)
+		float raioEmPixels = RAIO_CHUNKS << 4;
+		float raioLimite = raioEmPixels * raioEmPixels;
 
-        return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
-    }
+		if(!(distAoQuadrado < raioLimite)) return false;
+
+		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
+	}
     // chamado em dispose:
     public static void liberar() {
 		atlasGeral.dispose();
@@ -337,7 +354,17 @@ public class Mundo {
 		}
         int localX = x & 0xF;
         int localZ = z & 0xF;
-
+		
+		int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
+		if(blocoAntigoId != 0 && (bloco == null || bloco.equals("ar"))) {
+			// pega a luz atual do mundo pro fragmento não ficar preto
+			byte luz = obterLuzMundo(x, y, z);
+			float lb = (luz & 0x0F) / 15f;
+			float ls = ((luz >> 4) & 0x0F) / 15f;
+			// usa a cor compactada compativel com seu shader
+			float corFragmento = com.badlogic.gdx.graphics.Color.toFloatBits(lb, ls, 1.0f, 1.0f);
+			EmissorParticulas.criar(x, y, z, corFragmento);
+		}
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 		chunk.luzSuja = true;
         chunk.att = true;
@@ -364,7 +391,7 @@ public class Mundo {
         }
         chunksMod.put(new Chave(chunkX, chunkZ), chunk);
     }
-	
+
 	public static void defLuzMundo(int x, int y, int z, byte novaLuz) {
 		if(y < 0 || y >= Y_CHUNK) return;
 
@@ -382,7 +409,7 @@ public class Mundo {
 			alvo.att = true;
 		}
 	}
-	
+
 	public static byte obterLuzMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0;
 
@@ -398,7 +425,7 @@ public class Mundo {
 
 		return chunk.luz[idc];
 	}
-	
+
 	public static int obterAlturaChao(int x, int z) {
 		// começa do topo do mundo(Y_CHUNK - 1) e desce
 		for(int y = Y_CHUNK - 1; y > 0; y--) {
@@ -471,7 +498,7 @@ public class Mundo {
 			int distX = Mat.abs(chave.x - chunkX);
 			int distZ = Mat.abs(chave.z - chunkZ);
 			Chunk chunk = e.getValue();
-			
+
 			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
 				if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
 				if(chunk != null) {
@@ -499,7 +526,7 @@ public class Mundo {
 				});
 		}
 	}
-	
+
 	public void tentarGerarChunk(int x, int z) {
 		final Chave chave = new Chave(x, z);
 		// 1. tenta pegar do mapa de modificadas ou do mapa geral
@@ -537,10 +564,10 @@ public class Mundo {
 		}
 		return true;
 	}
-	
+
 	public static void gerarDados(final Chave chave) {
 		final Chunk chunk = chunks.get(chave);
-		
+
 		exec.submit(new Runnable() {
 				@Override
 				public void run() {
@@ -584,21 +611,21 @@ public class Mundo {
 								}
 								try {
 									chunk.malha.setVertices(vertsGeral.praArray());
-								chunk.malha.setIndices(idcFinal);
+									chunk.malha.setIndices(idcFinal);
 
-								matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
-								chunk.malha.transform(matrizTmp);
+									matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
+									chunk.malha.transform(matrizTmp);
 
-								chunk.fazendo = false;
-								chunk.att = false;
-								estados.put(chave, 2);
+									chunk.fazendo = false;
+									chunk.att = false;
+									estados.put(chave, 2);
 								} catch(Exception e) {}
 							}
 						});
 				}
 			});
 	}
-	
+
 	public static void gerarChunk(final Chave chave) {
 		final Chunk chunk = chunks.get(chave);
 		chunk.x = chave.x;
@@ -640,7 +667,7 @@ public class Mundo {
 				}
 			});
 	}
-	
+
 	public static void prepararDadosVizinhos(int cx, int cz) {
 		// define um raio de vizinhos necessarios(pelo menos as 4 direções)
 		for(int x = cx - 1; x <= cx + 1; x++) {

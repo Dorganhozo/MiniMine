@@ -1,4 +1,4 @@
-package com.minimine.utils.graficos;
+package com.minimine.graficos;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -42,7 +42,7 @@ public class Animacoes2D {
             }
         }
     }
-	
+
 	public static void config() {
 		int tam = conta.size();
 		animacoes = new InfoAnimacao[tam];
@@ -92,7 +92,7 @@ public class Animacoes2D {
         InfoAnimacao anim = new InfoAnimacao(idTextura, frames.length, fps, largura, altura);
 
         for(int i = 0; i < frames.length; i++) anim.frames[i] = carregarPixmap(frames[i]);
-        
+
         conta.add(anim);
     }
 

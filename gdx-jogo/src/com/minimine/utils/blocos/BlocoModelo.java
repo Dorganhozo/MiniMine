@@ -64,54 +64,58 @@ public class BlocoModelo {
 
     public static void addFace(int faceId, int atlasId, float x, float y, float z, 
 	float luzBloco, float luzSol, FloatArrayUtil verts, ShortArrayUtil idc) {
+
 		float[] atlasCoords = Mundo.atlasUVs.get(atlasId);
 		if(atlasCoords == null) return;
 
-		float u_min = atlasCoords[0];
-		float v_min = atlasCoords[1];
-		float u_max = atlasCoords[2];
-		float v_max = atlasCoords[3];
+		final float uMin = atlasCoords[0];
+		final float vMin = atlasCoords[1];
+		final float uMax = atlasCoords[2];
+		final float vMax = atlasCoords[3];
 
-		// aplica sombra por face(falso AO)
-		// usa o multiplicador da face pra os lados ficarem mais escuros que o topo
+		// pre-calculo da cor pra evitar chamar Color.toFloatBits
 		float multFace = ChunkLuz.FACE_LUZ[faceId];
-
-		// compressão nos canais de cor
-		// R: luz de bloco
-		// G: luz do ceu(exposição solar)
-		// B: 1.0
 		int r = (int)(luzBloco * multFace * 255);
 		int g = (int)(luzSol * multFace * 255);
 		int b = (int)(multFace * 255); 
-		int a = 255;
+		float corFinal = Color.toFloatBits(r, g, b, 255);
 
-		// converte pra o float que o OpenGL entende como cor(ABGR)
-		float corEmpacotada = Color.toFloatBits(r, g, b, a);
+		short indiceBase = (short)(verts.tam / 6);
 
-		short vertConta = (short)(verts.tam / 6); // 6 é o passo(x, y, z, u, v, cor)
+		// vertice 0
+		float[] v0 = FACE_VERTICES[faceId][0];
+		float[] uv0 = FACE_UVS[faceId][0];
+		verts.add(x + v0[0]); verts.add(y + v0[1]); verts.add(z + v0[2]);
+		verts.add(uMin + uv0[0] * (uMax - uMin)); verts.add(vMin + uv0[1] * (vMax - vMin));
+		verts.add(corFinal);
 
-		for(int i = 0; i < 4; i++) {
-			float[] vert = FACE_VERTICES[faceId][i];
-			float[] uv = FACE_UVS[faceId][i];
+		// vertice 1
+		float[] v1 = FACE_VERTICES[faceId][1];
+		float[] uv1 = FACE_UVS[faceId][1];
+		verts.add(x + v1[0]); verts.add(y + v1[1]); verts.add(z + v1[2]);
+		verts.add(uMin + uv1[0] * (uMax - uMin)); verts.add(vMin + uv1[1] * (vMax - vMin));
+		verts.add(corFinal);
 
-			// posição
-			verts.add(x + vert[0]); 
-			verts.add(y + vert[1]); 
-			verts.add(z + vert[2]);
+		// vertice 2
+		float[] v2 = FACE_VERTICES[faceId][2];
+		float[] uv2 = FACE_UVS[faceId][2];
+		verts.add(x + v2[0]); verts.add(y + v2[1]); verts.add(z + v2[2]);
+		verts.add(uMin + uv2[0] * (uMax - uMin)); verts.add(vMin + uv2[1] * (vMax - vMin));
+		verts.add(corFinal);
 
-			// textura
-			verts.add(u_min + uv[0] * (u_max - u_min));
-			verts.add(v_min + uv[1] * (v_max - v_min));
+		// vertice 3
+		float[] v3 = FACE_VERTICES[faceId][3];
+		float[] uv3 = FACE_UVS[faceId][3];
+		verts.add(x + v3[0]); verts.add(y + v3[1]); verts.add(z + v3[2]);
+		verts.add(uMin + uv3[0] * (uMax - uMin)); verts.add(vMin + uv3[1] * (vMax - vMin));
+		verts.add(corFinal);
 
-			// cor(contendo os dois canais de luz)
-			verts.add(corEmpacotada);
-		}
-		// indices(triangulos)
-		idc.add((short)(vertConta + 0));
-		idc.add((short)(vertConta + 1));
-		idc.add((short)(vertConta + 2));
-		idc.add((short)(vertConta + 2));
-		idc.add((short)(vertConta + 3));
-		idc.add((short)(vertConta + 0));
+		// indices(ordem dos triangulos)
+		idc.add(indiceBase);
+		idc.add((short)(indiceBase + 1));
+		idc.add((short)(indiceBase + 2));
+		idc.add((short)(indiceBase + 2));
+		idc.add((short)(indiceBase + 3));
+		idc.add(indiceBase);
 	}
 }

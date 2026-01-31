@@ -4,7 +4,6 @@ import com.minimine.cenas.Mundo;
 import com.minimine.utils.blocos.Bloco;
 
 public class ChunkLuz {
-    public static float LUZ_AMBIENTE = 0.25f;
     public static final float[] FACE_LUZ = {1.0f, 0.4f, 0.7f, 0.7f, 0.8f, 0.8f};
     public static final int Y_MAX = Mundo.Y_CHUNK - 1;
     public static final int[] POS_X = {1, -1, 0, 0, 0, 0};

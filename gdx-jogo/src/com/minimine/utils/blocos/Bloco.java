@@ -3,7 +3,7 @@ package com.minimine.utils.blocos;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
-import com.minimine.utils.audio.AudioUtil;
+import com.minimine.audio.Audio;
 import com.badlogic.gdx.audio.Music;
 
 public class Bloco {
@@ -60,12 +60,12 @@ public class Bloco {
 			String[] sonoros = sons.get(bloco);
 			for(int i = 0; i < sonoros.length; i++) {
 				if(Math.random() > 0.6) {
-					Music m = AudioUtil.sons.get(sonoros[i]);
+					Music m = Audio.sons.get(sonoros[i]);
 					m.play();
 					return;
 				}
 			}
-			Music m = AudioUtil.sons.get(sonoros[0]);
+			Music m = Audio.sons.get(sonoros[0]);
 			m.play();
 		} else {
 			tocarSom("pedra");

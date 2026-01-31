@@ -17,9 +17,10 @@ import com.minimine.utils.Texturas;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.Logs;
-import com.minimine.utils.audio.AudioUtil;
+import com.minimine.audio.Audio;
 import com.minimine.Cenas;
 import com.minimine.utils.blocos.Bloco;
+import com.minimine.graficos.EmissorParticulas;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -50,9 +51,10 @@ public class LuaAPI {
 		globais.set("gdx", CoerceJavaToLua.coerce(new Gdx()));
 		globais.set("lua", CoerceJavaToLua.coerce(new LuaAPI()));
 		globais.set("arquivos", CoerceJavaToLua.coerce(new ArquivosUtil()));
-		globais.set("audio", CoerceJavaToLua.coerce(new AudioUtil()));
+		globais.set("audio", CoerceJavaToLua.coerce(new Audio()));
 		globais.set("cenas", CoerceJavaToLua.coerce(new Cenas()));
 		globais.set("bloco", CoerceJavaToLua.coerce(new Bloco()));
+		globais.set("particulas", CoerceJavaToLua.coerce(new EmissorParticulas()));
 		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
@@ -63,6 +65,7 @@ public class LuaAPI {
 		porFrame = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
 				arg.call(LuaValue.valueOf(delta));
+				frame = (LuaFunction) arg;
 				return LuaValue.NIL;
 			}
 		};

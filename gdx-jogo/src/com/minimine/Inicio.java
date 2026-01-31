@@ -10,7 +10,7 @@ import com.minimine.cenas.UI;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.CorposCelestes;
 import com.minimine.cenas.Mundo;
-import com.minimine.utils.audio.AudioUtil;
+import com.minimine.audio.Audio;
 
 public class Inicio extends Game {
 	public static boolean ehArm64;
@@ -59,7 +59,7 @@ public class Inicio extends Game {
 			UI.liberar();
 			NuvensUtil.liberar();
 			CorposCelestes.liberar();
-			AudioUtil.liberar();
+			Audio.liberar();
 		} catch(Exception e) {
 			Gdx.app.log("Inicio", "[ERRO] ao liberar: "+e);
 		}
