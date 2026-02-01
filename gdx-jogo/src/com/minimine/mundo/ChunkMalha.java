@@ -1,10 +1,9 @@
-package com.minimine.utils.chunks;
+package com.minimine.mundo;
 
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
-import com.minimine.cenas.Mundo;
-import com.minimine.utils.blocos.Bloco;
-import com.minimine.utils.blocos.BlocoModelo;
+import com.minimine.mundo.blocos.Bloco;
+import com.minimine.mundo.blocos.BlocoModelo;
 
 public class ChunkMalha {
     public static void attMalha(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {

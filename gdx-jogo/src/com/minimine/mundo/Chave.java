@@ -1,4 +1,4 @@
-package com.minimine.utils.chunks;
+package com.minimine.mundo;
 
 public class Chave {
 	public int x, z;

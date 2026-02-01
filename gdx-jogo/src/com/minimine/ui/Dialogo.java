@@ -1,7 +1,6 @@
 package com.minimine.ui;
 
-import com.minimine.utils.InterUtil;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;

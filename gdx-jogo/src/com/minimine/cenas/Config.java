@@ -10,13 +10,15 @@ import com.badlogic.gdx.InputProcessor;
 import com.minimine.ui.Botao;
 import com.minimine.ui.Texto;
 import com.minimine.ui.EstanteVertical;
-import com.minimine.utils.Texturas;
-import com.minimine.utils.InterUtil;
+import com.minimine.graficos.Texturas;
+import com.minimine.ui.InterUtil;
 import com.minimine.Cenas;
 import com.minimine.Inicio;
 import java.util.ArrayList;
 import java.util.List;
 import com.badlogic.gdx.Preferences;
+import com.minimine.mundo.Mundo;
+import com.minimine.ui.UI;
 
 public class Config implements Screen, InputProcessor {
     public SpriteBatch sb;

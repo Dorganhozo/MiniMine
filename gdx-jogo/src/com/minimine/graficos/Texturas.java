@@ -1,4 +1,4 @@
-package com.minimine.utils;
+package com.minimine.graficos;
 
 import java.util.HashMap;
 import com.badlogic.gdx.graphics.Texture;

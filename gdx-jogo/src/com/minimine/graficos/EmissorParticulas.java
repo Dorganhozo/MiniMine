@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.Mundo;
 import com.minimine.cenas.Jogador;
 
 public class EmissorParticulas {

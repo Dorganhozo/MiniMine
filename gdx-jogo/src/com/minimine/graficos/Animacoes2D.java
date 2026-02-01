@@ -7,7 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import java.util.Map;
 import java.util.HashMap;
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.Mundo;
 import com.minimine.Inicio;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,19 +111,19 @@ public class Animacoes2D {
     }
 
     public static void attAtlas(InfoAnimacao anim) {
-        if(Mundo.atlasGeral == null) return;
+        if(Render.atlasGeral == null) return;
 
         Pixmap frameAtual = anim.frames[anim.frameAtual];
-        float[] uvs = Mundo.atlasUVs.get(anim.idTextura);
+        float[] uvs = Render.atlasUVs.get(anim.idTextura);
         if(uvs == null) return;
 
-        int atlasLargura = Mundo.atlasGeral.getWidth();
-        int atlasAltura = Mundo.atlasGeral.getHeight();
+        int atlasLargura = Render.atlasGeral.getWidth();
+        int atlasAltura = Render.atlasGeral.getHeight();
 
         int x = (int)(uvs[0] * atlasLargura);
         int y = (int)(uvs[1] * atlasAltura);
 
-        Mundo.atlasGeral.bind();
+        Render.atlasGeral.bind();
 
         Gdx.gl.glTexSubImage2D(
             GL20.GL_TEXTURE_2D,

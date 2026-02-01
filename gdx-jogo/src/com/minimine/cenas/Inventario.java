@@ -4,11 +4,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.math.Vector2;
-import com.minimine.utils.chunks.ChunkUtil;
+import com.minimine.mundo.ChunkUtil;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.minimine.utils.blocos.Bloco;
+import com.minimine.mundo.blocos.Bloco;
+import com.minimine.ui.UI;
 
 public class Inventario {
     public int quantSlots = 25;

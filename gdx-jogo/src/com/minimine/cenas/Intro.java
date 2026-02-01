@@ -1,7 +1,7 @@
 package com.minimine.cenas;
 
-import com.minimine.utils.Texturas;
-import com.minimine.utils.InterUtil;
+import com.minimine.graficos.Texturas;
+import com.minimine.ui.InterUtil;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -24,6 +24,7 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.minimine.Cenas;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.Inicio;
+import com.minimine.ui.UI;
 
 public class Intro implements Screen {
 	public PerspectiveCamera camera;

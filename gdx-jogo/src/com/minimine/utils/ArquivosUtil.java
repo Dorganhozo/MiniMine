@@ -1,6 +1,6 @@
 package com.minimine.utils;
 
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.Mundo;
 import java.io.File;
 import com.minimine.Inicio;
 import java.io.FileOutputStream;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.io.DataOutputStream;
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
-import com.minimine.cenas.UI;
+import com.minimine.ui.UI;
 import java.io.InputStream;
 import java.io.DataInputStream;
 import java.io.BufferedInputStream;
@@ -31,12 +31,14 @@ import java.util.zip.ZipInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import com.minimine.utils.chunks.Chave;
+import com.minimine.mundo.Chave;
 import java.util.concurrent.ConcurrentHashMap;
-import com.minimine.utils.chunks.Chunk;
-import com.minimine.utils.chunks.ChunkUtil;
-import com.minimine.utils.blocos.Bloco;
+import com.minimine.mundo.Chunk;
+import com.minimine.mundo.ChunkUtil;
+import com.minimine.mundo.blocos.Bloco;
 import com.badlogic.gdx.graphics.Mesh;
+import com.minimine.graficos.Texturas;
+import com.minimine.cenas.Jogo;
 
 public class ArquivosUtil {
     public static final String VERSAO = "v0.0.1";
@@ -293,7 +295,7 @@ public class ArquivosUtil {
                 CharSequence id = dis.readUTF();
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
-			chunk.malha = new Mesh(true, mundo.maxVerts, mundo.maxIndices, mundo.atriburs);
+			chunk.malha = new Mesh(true, Jogo.render.maxVerts, Jogo.render.maxIndices, Jogo.render.atriburs);
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Chave, Chunk>();
             if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Chave, Chunk>();
 

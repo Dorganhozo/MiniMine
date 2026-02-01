@@ -1,4 +1,4 @@
-package com.minimine.utils.chunks;
+package com.minimine.mundo;
 
 public final class Chunk {
     public int bitsPorBloco = 4; // 1..8 (modo direto)

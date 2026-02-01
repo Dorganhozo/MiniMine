@@ -1,4 +1,4 @@
-package com.minimine.cenas;
+package com.minimine.ui;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -15,20 +15,21 @@ import com.badlogic.gdx.InputProcessor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import com.minimine.utils.Texturas;
-import com.minimine.ui.Botao;
+import com.minimine.graficos.Texturas;
 import com.minimine.Debugador;
 import org.luaj.vm2.LuaFunction;
 import java.util.Map;
-import com.minimine.ui.Texto;
 import org.luaj.vm2.LuaValue;
 import com.minimine.utils.DiaNoiteUtil;
-import com.minimine.utils.InterUtil;
+import com.minimine.ui.InterUtil;
 import com.badlogic.gdx.Input;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.Inicio;
 import com.minimine.Logs;
-import com.minimine.ui.Dialogo;
+import com.minimine.mundo.Mundo;
+import com.minimine.cenas.Jogador;
+import com.minimine.cenas.Inventario;
+import com.minimine.cenas.Jogo;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -38,7 +39,7 @@ public class UI implements InputProcessor {
     public static SpriteBatch sb;
     public static BitmapFont fonte;
     public static CharSequence otimizadorC = "desligado";
-	
+
     public static boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
 	public Sprite spriteMira;
 	public int pontoEsq = -1;
@@ -62,9 +63,9 @@ public class UI implements InputProcessor {
 	public static boolean modoTexto = false;
 	public static int fps = 0;
 	public static Debugador debugador;
-	
+
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
-	
+
     public UI(Jogador jogador) {
 		camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 18f, 10f);
@@ -82,11 +83,11 @@ public class UI implements InputProcessor {
 		this.jogador = jogador;
 		this.jogador.camera = camera;
 		this.jogador.inv = new Inventario();
-		
+
 		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		otimizadorC = Inicio.ehArm64 ? "ativo" : "não suportado";
     }
-	
+
 	public boolean chatAberto = false;
 	public String ultimaMensagem = "";
 	public List<String> mensagens = new ArrayList<String>();
@@ -95,7 +96,7 @@ public class UI implements InputProcessor {
 		if(chatAberto) return;
 		chatAberto = true;
 		modoTexto = true;
-		
+
 		dialogo.abrir("chat", new Dialogo.Acao() {
 				@Override
 				public void aoConfirmar() {
@@ -121,7 +122,7 @@ public class UI implements InputProcessor {
 	@Override
     public boolean touchDown(int telaX, int telaY, int p, int b) {
 		int y = Gdx.graphics.getHeight() - telaY;
-		
+
 		if(dialogo.visivel) {
 			dialogo.verificarToque(telaX, y);
 			if(!dialogo.visivel) modoTexto = false; // se fechou ao clicar fora, sai do modo texto
@@ -233,7 +234,7 @@ public class UI implements InputProcessor {
 
 		spriteMira = new Sprite(Texturas.texs.get("mira"));
 		spriteMira.setSize(40f, 40f);
-		
+
 		float densidade = Gdx.graphics.getDensity();
 		float tam = botaoTam * densidade;
 		tam = MathUtils.clamp(tam, 50f, 150f);
@@ -346,20 +347,20 @@ public class UI implements InputProcessor {
 				public void aoTocar(int t, int t2, int p){
 					toques.put(p, "salvar");
 					sprite.setAlpha(0.5f);
-					
+
 					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							ArquivosUtil.svMundo(Jogo.mundo, jogador);
-							Gdx.app.postRunnable(new Runnable() {
-								@Override
-								public void run() {
-									abrirDialogo("seu jogo foi salvo");
-									sprite.setAlpha(0.9f);
-								}
-							});
-						}
-					}).start();
+							@Override
+							public void run() {
+								ArquivosUtil.svMundo(Jogo.mundo, jogador);
+								Gdx.app.postRunnable(new Runnable() {
+										@Override
+										public void run() {
+											abrirDialogo("seu jogo foi salvo");
+											sprite.setAlpha(0.9f);
+										}
+									});
+							}
+						}).start();
 				}
 				public void aoSoltar(int t, int t2, int p){}
 			});
@@ -367,13 +368,13 @@ public class UI implements InputProcessor {
 
 	public void configDpad(int v, int h) {
 		criarBotoesPadrao();
-		
+
 		float densidade = Gdx.graphics.getDensity();
-		
+
 		float tam = botaoTam * densidade;
 
 		tam = MathUtils.clamp(tam, 50f, 150f);
-		
+
 		final float centroX = espaco + tam * 1.5f;
 		final float centroY = espaco + tam * 1.5f;
 
@@ -459,9 +460,9 @@ public class UI implements InputProcessor {
 
 		camera.update();
 		sb.begin();
-		
+
 		spriteMira.draw(sb);
-		
+
 		for(Botao e : botoes.values()) {
 			e.porFrame(delta, sb, fonte);
 		}
@@ -469,20 +470,20 @@ public class UI implements InputProcessor {
 			e.porFrame(delta, sb, fonte);
 		}
 		dialogo.porFrame(delta, sb, fonte);
-		
+
 		this.jogador.inv.att();
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
 			float total = rt.totalMemory() >> 20;
-			
+
 			float nativaLivre = debugador.obterHeapLivre() >> 20;
 			float nativaTotal = debugador.obterHeapTotal() >> 20;
-			
+
 			fps = Gdx.graphics.getFramesPerSecond();
-			
+
 			String[] logsArr = Logs.logs.split("\n");
 			StringBuilder construtorLogs = new StringBuilder();
-			
+
 			int inicio = Math.max(0, logsArr.length - 15);
 			for(int i = inicio; i < logsArr.length; i++) {
 				construtorLogs.append(logsArr[i]).append("\n");
@@ -533,13 +534,13 @@ public class UI implements InputProcessor {
 			if(b != null) b.aoAjustar(v, h);
 		}
 		configDpad(v, h);
-		
+
         camera.viewportWidth = v;
         camera.viewportHeight = h;
         camera.update();
 
 		jogador.inv.aoAjustar(v, h);
-        
+
         sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);
     }
 
@@ -550,15 +551,15 @@ public class UI implements InputProcessor {
         sb.dispose();
         fonte.dispose();
     }
-	
+
 	public Texto addTexto(String nome, String texto, int x, int y) {
 		textos.put(nome, new Texto(texto, x, y) {
 				@Override
 				public void aoAjustar(int v, int h) {}
-		});
+			});
 		return textos.get(nome);
 	}
-	
+
 	public Texto addTexto(String nome, String texto, int x, int y, final LuaFunction func) {
 		textos.put(nome, new Texto(texto, x, y) {
 				@Override
@@ -568,16 +569,16 @@ public class UI implements InputProcessor {
 			});
 		return textos.get(nome);
 	}
-	
+
 	public void defTextoTam(int escalaX, int escalaY) {
 		fonte.getData().setScale(escalaX, escalaY);
 	}
-	
+
 	public float[] obterTextoTam(int escalaX, int escalaY) {
 		BitmapFont.BitmapFontData f = fonte.getData();
 		return new float[]{f.scaleX, f.scaleY};
 	}
-	
+
 	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func) {
 		botoes.put(nome, new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
 				@Override
@@ -589,7 +590,7 @@ public class UI implements InputProcessor {
 			});
 		return botoes.get(nome);
 	}
-	
+
 	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2) {
 		botoes.put(nome, new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
 				@Override
@@ -603,7 +604,7 @@ public class UI implements InputProcessor {
 			});
 		return botoes.get(nome);
 	}
-	
+
 	public Botao addBotao(String textura, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2, final LuaFunction func3) {
 		botoes.put(nome, new Botao(Texturas.texs.get(textura), x, y, escalaX, escalaY, nome) {
 				@Override
@@ -621,7 +622,7 @@ public class UI implements InputProcessor {
 			});
 		return botoes.get(nome);
 	}
-	
+
 	public Botao addBotao(Sprite sprite, float x, float y, float escalaX, float escalaY, String nome, final LuaFunction func, final LuaFunction func2, final LuaFunction func3) {
 		botoes.put(nome, new Botao(sprite, x, y, escalaX, escalaY, nome) {
 				@Override
@@ -639,7 +640,7 @@ public class UI implements InputProcessor {
 			});
 		return botoes.get(nome);
 	}
-	
+
 	public static void abrirDialogo(String titulo) {
 		abrirDialogo(titulo, "", "", null, null, null);
 	}
@@ -649,10 +650,10 @@ public class UI implements InputProcessor {
 	public static void abrirDialogo(String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2) {
 		abrirDialogo(titulo, padrao, msg, func, func2, null);
 	}
-	
+
 	public static void abrirDialogo(final String titulo, String padrao, String msg, final LuaFunction func, final LuaFunction func2, final LuaFunction func3) {
 		modoTexto = true;
-		
+
 		dialogo.abrir(titulo, new Dialogo.Acao() {
 				@Override
 				public void aoConfirmar() {
@@ -671,7 +672,7 @@ public class UI implements InputProcessor {
 			});
 		dialogo.texto = padrao;
 	}
-	
+
 	@Override 
     public boolean keyDown(int p) {
 		if(modoTexto) return true;
@@ -729,7 +730,7 @@ public class UI implements InputProcessor {
 
 		int y = Gdx.graphics.getHeight() - p1;
 		jogador.inv.aoArrastar(p, y, -1);
-		
+
 		if(!jogador.inv.aberto) {
 			float dx = Gdx.input.getDeltaX();
 			float dy = Gdx.input.getDeltaY();

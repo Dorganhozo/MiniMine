@@ -3,11 +3,9 @@ package com.minimine.ui;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
-import com.minimine.cenas.UI;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.minimine.utils.InterUtil;
 
 public class Botao extends InterUtil.Objeto {
 	public Sprite sprite;

@@ -4,12 +4,12 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.minimine.cenas.Menu;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.Gdx;
-import com.minimine.cenas.UI;
+import com.minimine.ui.UI;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.CorposCelestes;
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.Mundo;
 import com.minimine.audio.Audio;
 
 public class Inicio extends Game {

@@ -1,7 +1,6 @@
-package com.minimine.utils.chunks;
+package com.minimine.mundo;
 
-import com.minimine.utils.blocos.Bloco;
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.blocos.Bloco;
 
 public class ChunkUtil {
 	public static byte obterLuzCompleta(int x, int y, int z, Chunk chunk) {

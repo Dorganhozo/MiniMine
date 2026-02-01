@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Gdx;
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.Mundo;
 
 public class NuvensUtil {
     public static Mesh meshNuvens;

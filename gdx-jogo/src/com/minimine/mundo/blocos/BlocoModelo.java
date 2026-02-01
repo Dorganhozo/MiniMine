@@ -1,10 +1,10 @@
-package com.minimine.utils.blocos;
+package com.minimine.mundo.blocos;
 
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
-import com.minimine.cenas.Mundo;
 import com.badlogic.gdx.graphics.Color;
-import com.minimine.utils.chunks.ChunkLuz;
+import com.minimine.mundo.ChunkLuz;
+import com.minimine.graficos.Render;
 
 public class BlocoModelo {
     public static final float TAM = 1f; // tamanho
@@ -65,7 +65,7 @@ public class BlocoModelo {
     public static void addFace(int faceId, int atlasId, float x, float y, float z, 
 	float luzBloco, float luzSol, FloatArrayUtil verts, ShortArrayUtil idc) {
 
-		float[] atlasCoords = Mundo.atlasUVs.get(atlasId);
+		float[] atlasCoords = Render.atlasUVs.get(atlasId);
 		if(atlasCoords == null) return;
 
 		final float uMin = atlasCoords[0];

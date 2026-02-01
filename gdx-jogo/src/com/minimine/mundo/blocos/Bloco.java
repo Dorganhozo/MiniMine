@@ -1,4 +1,4 @@
-package com.minimine.utils.blocos;
+package com.minimine.mundo.blocos;
 
 import java.util.List;
 import java.util.ArrayList;

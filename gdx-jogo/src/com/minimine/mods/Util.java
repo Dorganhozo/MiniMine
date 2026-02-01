@@ -6,11 +6,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.minimine.cenas.Jogo;
 import com.minimine.Inicio;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.Texture;
-import com.minimine.utils.blocos.Bloco;
-import com.minimine.utils.chunks.ChunkUtil;
-import com.minimine.utils.InterUtil;
+import com.minimine.mundo.blocos.Bloco;
+import com.minimine.mundo.ChunkUtil;
+import com.minimine.ui.InterUtil;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 

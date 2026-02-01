@@ -10,15 +10,16 @@ import com.minimine.ui.Botao;
 import com.minimine.ui.Texto;
 import com.minimine.Inicio;
 import com.minimine.Cenas;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import com.minimine.utils.InterUtil;
+import com.minimine.ui.InterUtil;
 import com.minimine.utils.ArquivosUtil;
 import com.badlogic.gdx.Input;
 import com.minimine.ui.Dialogo;
+import com.minimine.mundo.Mundo;
 
 public class MundoMenu implements Screen, InputProcessor {
     public SpriteBatch sb;

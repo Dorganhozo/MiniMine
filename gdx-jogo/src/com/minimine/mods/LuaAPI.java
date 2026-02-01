@@ -11,15 +11,15 @@ import org.luaj.vm2.LuaFunction;
 import java.io.File;
 import java.io.IOException;
 import com.minimine.utils.ArquivosUtil;
-import com.minimine.utils.BiomasUtil;
-import com.minimine.utils.chunks.ChunkUtil;
-import com.minimine.utils.Texturas;
+import com.minimine.mundo.Biomas;
+import com.minimine.mundo.ChunkUtil;
+import com.minimine.graficos.Texturas;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.Logs;
 import com.minimine.audio.Audio;
 import com.minimine.Cenas;
-import com.minimine.utils.blocos.Bloco;
+import com.minimine.mundo.blocos.Bloco;
 import com.minimine.graficos.EmissorParticulas;
 
 public class LuaAPI {
@@ -40,10 +40,10 @@ public class LuaAPI {
 		globais = JsePlatform.standardGlobals();
 		
 		globais.set("mundo", CoerceJavaToLua.coerce(tela.mundo));
-		globais.set("jogador", CoerceJavaToLua.coerce(tela.ui.jogador));
-		globais.set("ui", CoerceJavaToLua.coerce(tela.ui));
+		globais.set("jogador", CoerceJavaToLua.coerce(tela.render.ui.jogador));
+		globais.set("ui", CoerceJavaToLua.coerce(tela.render.ui));
 		globais.set("util", CoerceJavaToLua.coerce(new Util()));
-		globais.set("biomas", CoerceJavaToLua.coerce(new BiomasUtil()));
+		globais.set("biomas", CoerceJavaToLua.coerce(new Biomas()));
 		globais.set("chunkutil", CoerceJavaToLua.coerce(new ChunkUtil()));
 		globais.set("texutil", CoerceJavaToLua.coerce(new Texturas()));
 		globais.set("nuvens", CoerceJavaToLua.coerce(new NuvensUtil()));

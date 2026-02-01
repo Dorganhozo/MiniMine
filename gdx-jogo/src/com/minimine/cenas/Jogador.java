@@ -18,11 +18,12 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.utils.JsonReader;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
-import com.minimine.utils.blocos.Bloco;
+import com.minimine.mundo.blocos.Bloco;
 import com.minimine.audio.Audio;
+import com.minimine.mundo.Mundo;
 
 public class Jogador {
 	public ModelInstance modelo;

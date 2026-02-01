@@ -152,7 +152,7 @@ Texto ui.textos:get(String nomeTexto) -- retorna o objeto Texto
 String ui.textos:get(String nomeTexto).texto -- texto legivel
 
 
-BiomasUtil biomas:
+Biomas biomas:
 
 biomas:addBioma(function(String nome, float[] status, raridade)
 -- definição de dados

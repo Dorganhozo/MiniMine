@@ -1,7 +1,6 @@
-package com.minimine.utils.chunks;
+package com.minimine.mundo;
 
-import com.minimine.cenas.Mundo;
-import com.minimine.utils.blocos.Bloco;
+import com.minimine.mundo.blocos.Bloco;
 
 public class ChunkLuz {
     public static final float[] FACE_LUZ = {1.0f, 0.4f, 0.7f, 0.7f, 0.8f, 0.8f};

@@ -10,50 +10,41 @@ import java.util.ArrayList;
 import com.minimine.mods.LuaAPI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.minimine.utils.chunks.ChunkUtil;
+import com.minimine.mundo.ChunkUtil;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.minimine.utils.CorposCelestes;
 import com.minimine.Inicio;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.minimine.mods.Util;
-import com.minimine.utils.BiomasUtil;
 import com.minimine.Logs;
 import com.minimine.audio.Audio;
-import com.minimine.utils.chunks.Chunk;
+import com.minimine.mundo.Chunk;
+import com.minimine.mundo.Mundo;
+import com.minimine.ui.UI;
+import com.minimine.graficos.Render;
 
 public class Jogo implements Screen {
 	public static Mundo mundo = new Mundo();
 	public static Jogador jogador = new Jogador();
-	public static UI ui;
+	public static Render render;
+	
 	public Net net;
-	public Environment ambiente;
-	public ModelBatch mb;
-	public List<Jogador> jgs = new ArrayList<>();
 	
     @Override
 	public void show() {
 		mundo.ciclo = true;
-		ui = new UI(jogador);
+		render = new Render(jogador, mundo);
+		
 		// net = new Net(Net.SERVIDOR_MODO);
 		
 		LuaAPI.iniciar(this);
 		
-		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
+		render.mundo.iniciar();
 		
-		mundo.iniciar();
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		Gdx.gl.glCullFace(GL20.GL_BACK);
-		Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-		
-		mb = new ModelBatch();
-		ambiente = new Environment();
-		ambiente.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.8f, 0.8f, 1f));
-		ambiente.add(new DirectionalLight().set(1f, 1f, 1f, -1f, -0.8f, -0.2f));
+		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+render.mundo.nome+".mini")) ArquivosUtil.crMundo(render.mundo, jogador);
 		
 		Audio.sons.put("grama_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/grama_1.mp3")));
 		Audio.sons.put("terra_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_1.mp3")));
@@ -78,70 +69,21 @@ public class Jogo implements Screen {
 
     @Override
 	public void render(float delta) {
-		float fator = DiaNoiteUtil.obterFatorTransicao();
-		float[] corNoite = {0.05f, 0.05f, 0.15f};
-		float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
-
-		float r = corNoite[0] * (1f - fator) + corDia[0] * fator;
-		float g = corNoite[1] * (1f - fator) + corDia[1] * fator;
-		float b = corNoite[2] * (1f - fator) + corDia[2] * fator;
-
-		Gdx.gl.glClearColor(r, g, b, 1f);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-		Gdx.gl.glEnable(GL20.GL_BLEND);
-		
-		mundo.att(delta, jogador);
-		
-		if(jgs.size() >= 1) {
-			for(Jogador jo : jgs) {
-				mb.begin(ui.camera);
-				if(jo.modelo == null) jo.criarModelo3D();
-
-				jo.modelo.transform.setToTranslation(
-					jo.camera.position.x + jo.camera.direction.x * 0.5f + 0.3f,
-					jo.camera.position.y + jo.camera.direction.y * 0.5f + 1.2f, 
-					jo.camera.position.z + jo.camera.direction.z * 0.5f + 0.3f
-				);
-				jo.modelo.transform.rotate(0, 1, 0, -jogador.yaw);
-				jo.modelo.transform.rotate(1, 0, 0, -jogador.tom);
-
-				mb.render(jo.modelo, ambiente);
-				mb.end();
-			}
-			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		}
-		if(mundo.carregado) {
-			if(!jogador.nasceu) {
-				// tenta encontrar o chão, se o obterBlocoMundo retornar algo diferente de 0, 
-				// significa que os dados daquela parte do mapa ja chegaram
-				int yTeste = Mundo.obterAlturaChao((int)jogador.posicao.x, (int)jogador.posicao.z);
-				if(yTeste > 1) { // se encontrou algo acima do fundo do mundo
-					jogador.posicao.y = yTeste;
-					jogador.nasceu = true;
-					Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
-				} else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
-			}
-			jogador.att(delta);
-		}
-		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-		
-		ui.att(delta, mundo);
+		render.att(delta);
 		if(mundo.carregado) LuaAPI.att(delta);
     }
 
     @Override
     public void dispose() {
 		mundo.carregado = false;
-		mundo.liberar();
+		render.liberar();
 		net.liberar();
-		ui.liberar();
 		CorposCelestes.liberar();
     }
 	
 	@Override
 	public void resize(int v, int h) {
-		ui.ajustar(v, h);
+		render.ui.ajustar(v, h);
 		Gdx.gl.glViewport(0, 0, v, h);
 		LuaAPI.ajustar(v, h);
 	}

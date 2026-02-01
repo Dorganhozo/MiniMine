@@ -2,7 +2,7 @@ package com.minimine.utils;
 
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
-import com.minimine.cenas.Mundo;
+import com.minimine.mundo.Mundo;
 
 public class DiaNoiteUtil {
     public static float tempo = 0.0f;

@@ -16,18 +16,20 @@ import com.minimine.ui.Texto;
 import com.minimine.Cenas;
 import com.minimine.Inicio;
 import com.badlogic.gdx.graphics.GL20;
-import com.minimine.utils.Texturas;
+import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.minimine.utils.ArquivosUtil;
-import com.minimine.utils.chunks.ChunkUtil;
+import com.minimine.mundo.ChunkUtil;
 import com.minimine.utils.DiaNoiteUtil;
-import com.minimine.utils.InterUtil;
+import com.minimine.ui.InterUtil;
 import com.minimine.utils.CorposCelestes;
-import com.minimine.utils.chunks.Chunk;
+import com.minimine.mundo.Chunk;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.Preferences;
+import com.minimine.mundo.Mundo;
+import com.minimine.ui.UI;
 
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;

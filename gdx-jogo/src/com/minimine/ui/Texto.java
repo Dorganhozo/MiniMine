@@ -1,9 +1,7 @@
 package com.minimine.ui;
 
-import com.minimine.cenas.UI;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.minimine.utils.InterUtil;
 
 public class Texto extends InterUtil.Objeto {
 	public String texto;

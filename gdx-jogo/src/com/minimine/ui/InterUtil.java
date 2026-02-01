@@ -1,4 +1,4 @@
-package com.minimine.utils;
+package com.minimine.ui;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.Gdx;
 import com.minimine.Inicio;
-import com.minimine.ui.Botao;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -19,19 +18,19 @@ public class InterUtil {
 		sb = new SpriteBatch();
 		fonte = carregarFonte("ui/fontes/pixel.ttf", tamTexto);
 	}
-	
+
 	public void att(float delta) {
 		for(Objeto b : objetos.values()) {
 			if(b != null) b.porFrame(delta, sb, fonte);
 		}
 	}
-	
+
 	public void ajustar(int v, int h) {
 		for(Objeto b : objetos.values()) {
 			if(b != null) b.aoAjustar(v, h);
 		}
 	}
-	
+
 	public void liberar() {
 		sb.dispose();
 		fonte.dispose();
@@ -40,7 +39,7 @@ public class InterUtil {
 		}
 		objetos.clear();
 	}
-	
+
 	public static BitmapFont carregarFonte(String caminho, int tamanho) {
 		FreeTypeFontGenerator gerador = new FreeTypeFontGenerator(caminho.equals("ui/fontes/pixel.ttf") ? Gdx.files.internal(caminho) : Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho));
 		FreeTypeFontGenerator.FreeTypeFontParameter args = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -50,10 +49,10 @@ public class InterUtil {
 		gerador.dispose();
 		return fonte;
 	}
-	
+
 	public static class Objeto {
 		public String nome;
-		
+
 		public Objeto(String nome) {
 			this.nome = nome;
 		}
