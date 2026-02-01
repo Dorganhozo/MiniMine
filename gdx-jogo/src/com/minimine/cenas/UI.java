@@ -128,7 +128,7 @@ public class UI implements InputProcessor {
 			return true;
 		}
 		if(modoTexto) return true;
-        if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
+        if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop && !jogador.inv.aberto) {
             if(b == Input.Buttons.LEFT) {
                 jogador.item = "ar";
                 jogador.interagirBloco();
@@ -726,6 +726,10 @@ public class UI implements InputProcessor {
     @Override 
     public boolean mouseMoved(int p, int p1) {
 		if(modoTexto) return true;
+
+		int y = Gdx.graphics.getHeight() - p1;
+		jogador.inv.aoArrastar(p, y, -1);
+		
 		if(!jogador.inv.aberto) {
 			float dx = Gdx.input.getDeltaX();
 			float dy = Gdx.input.getDeltaY();
