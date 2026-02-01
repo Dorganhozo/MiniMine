@@ -7,6 +7,6 @@
 	<classpathentry kind="output" path="bin/classes"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" exported="true" path="/gdx-jogo/libs/gdx-1.11.0.jar" />
-	<classpathentry kind="lib" exported="true" path="libs/gdx-backend-android-1.11.0.jar" />
+	<classpathentry kind="lib" exported="true" path="/gdx-jogo/libs/gdx-1.10.0.jar" />
+	<classpathentry kind="lib" exported="true" path="libs/gdx-backend-android-1.10.0.jar" />
 </classpath>
