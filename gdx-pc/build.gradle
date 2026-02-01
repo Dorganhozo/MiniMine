@@ -23,15 +23,15 @@ dependencies {
     implementation project(':gdx-jogo')
 
     // motor principal e motor de janelas(versão 2)
-    implementation "com.badlogicgames.gdx:gdx:1.11.0"
-    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.11.0"
+    implementation "com.badlogicgames.gdx:gdx:1.10.0"
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.10.0"
     
-    implementation "com.badlogicgames.gdx:gdx-freetype:1.11.0"
+    implementation "com.badlogicgames.gdx:gdx-freetype:1.10.0"
     implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.1.0"
 
     // arquivos de sistema
-    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.11.0:natives-desktop"
-    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.11.0:natives-desktop"
+    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.10.0:natives-desktop"
+    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.10.0:natives-desktop"
 }
 
 sourceSets {
