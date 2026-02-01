@@ -22,18 +22,16 @@ application {
 dependencies {
     implementation project(':gdx-jogo')
 
-    implementation "com.badlogicgames.gdx:gdx:1.10.0"
-    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.10.0"
-    implementation "com.badlogicgames.gdx:gdx-freetype:1.10.0"
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.9.14"
     implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.1.0"
 
     // nativos padrão
-    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.10.0:natives-desktop"
-    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.10.0:natives-desktop"
+    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.9.14:natives-desktop"
+    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.9.14:natives-desktop"
 
     // força o download dos binaSrios para 32 bits(x86)
-    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.10.0:natives-x86"
-    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.10.0:natives-x86"
+    runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.9.14:natives-x86"
+    runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.9.14:natives-x86"
 }
 
 sourceSets {
