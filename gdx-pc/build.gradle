@@ -59,7 +59,7 @@ task rodar(type: JavaExec) {
 }
 
 jar {
-    archiveFileName = "MiniMine.jar"
+    archiveFileName = "minimine.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes 'Main-Class': 'com.minimine.Iniciador'
