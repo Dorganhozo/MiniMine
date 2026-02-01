@@ -21,7 +21,6 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.minimine.mods.Util;
 import com.minimine.utils.BiomasUtil;
 import com.minimine.Logs;
-import com.minimine.JS;
 import com.minimine.audio.Audio;
 import com.minimine.utils.chunks.Chunk;
 
@@ -41,32 +40,7 @@ public class Jogo implements Screen {
 		// net = new Net(Net.SERVIDOR_MODO);
 		
 		LuaAPI.iniciar(this);
-		/*
-		try {
-			MainActivity.ISSO.runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					Inicio.js.config();
-					Inicio.js.API(mundo, "Mundo");
-					Inicio.js.API(ui.jogador, "Jogador");
-					Inicio.js.API(ui, "Ui");
-					Inicio.js.API(new Util(), "Util");
-					Inicio.js.API(new BiomasUtil(), "Biomas");
-					Inicio.js.API(new ChunkUtil(), "ChunkUtil");
-					Inicio.js.API(new Texturas(), "TexUtil");
-					Inicio.js.API(new NuvensUtil(), "Nuvens");
-					Inicio.js.API(new DiaNoiteUtil(), "Ciclo");
-					Inicio.js.API(new Gdx(), "Gdx");
-					Inicio.js.API(new LuaAPI(), "Lua");
-					Inicio.js.API(new ArquivosUtil(), "Arquivos");
-
-					Inicio.js.iniciar(Inicio.externo+"/MiniMine/mods/arquivos.html");
-				}
-			});
-		} catch(Exception e) {
-			Logs.log("JAVASCRIPT API: [ERRO]: "+e.getMessage());
-		}
-		*/
+		
 		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		
 		mundo.iniciar();
@@ -140,7 +114,7 @@ public class Jogo implements Screen {
 		if(mundo.carregado) {
 			if(!jogador.nasceu) {
 				// tenta encontrar o chão, se o obterBlocoMundo retornar algo diferente de 0, 
-				// significa que os dados daquela parte do mapa já chegaram.
+				// significa que os dados daquela parte do mapa ja chegaram
 				int yTeste = Mundo.obterAlturaChao((int)jogador.posicao.x, (int)jogador.posicao.z);
 				if(yTeste > 1) { // se encontrou algo acima do fundo do mundo
 					jogador.posicao.y = yTeste;

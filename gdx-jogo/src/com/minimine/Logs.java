@@ -10,24 +10,28 @@ public class Logs implements ApplicationLogger {
 	public void debug(String string, String string1) {
 		logs += string + ": " + string1 + "\n";
 		System.out.println(string + ": " + string1 + "\n");
+		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 
 	@Override
 	public void debug(String string, String string1, Throwable throwable) {
 		logs += string + ": " + string1 + throwable.getMessage() + "\n";
 		System.out.println(string + ": " + string1 + throwable.getMessage() + "\n");
+		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 
 	@Override
 	public void error(String string, String string1) {
 		logs += string + ": " + string1 + "\n";
-		System.out.println(string + ": " + string1 + "\n");
+		System.err.println(string + ": " + string1 + "\n");
+		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 
 	@Override
 	public void error(String string, String string1, Throwable throwable) {
 		logs += string + ": " + string1 + throwable.getMessage() + "\n";
-		System.out.println(string + ": " + string1 + throwable.getMessage() + "\n");
+		System.err.println(string + ": " + string1 + throwable.getMessage() + "\n");
+		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 
 	public static void log(String msg) {
@@ -47,5 +51,6 @@ public class Logs implements ApplicationLogger {
 	public void log(String string, String string1, Throwable throwable) {
 		logs += string + ": " + string1 + throwable.getMessage() + "\n";
 		System.out.println(string + ": " + string1 + throwable.getMessage() + "\n");
+		ArquivosUtil.escrever(Inicio.externo+"/MiniMine/debug/logs.txt", logs);
 	}
 }

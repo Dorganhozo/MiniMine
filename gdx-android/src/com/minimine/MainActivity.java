@@ -7,6 +7,7 @@ import android.app.Activity;
 
 public class MainActivity extends AndroidApplication {
 	public static Activity ISSO;
+	
     @Override
     public void onCreate(Bundle s) {
         super.onCreate(s);
@@ -16,6 +17,6 @@ public class MainActivity extends AndroidApplication {
         
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         
-        initialize(new Inicio(Sistema.externo, new DebugadorDoAndroid(), null), cfg);
+        initialize(new Inicio(Sistema.externo, new DebugadorDoAndroid()), cfg);
     }
 }

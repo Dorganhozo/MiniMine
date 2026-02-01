@@ -17,12 +17,10 @@ public class Inicio extends Game {
 	public static String externo;
 	public static boolean telaNova = false;
 	public static Screen telaAtual;
-	public static JS js;
 	public static Logs log = new Logs();
 	
-	public Inicio(String externo, Debugador debugador, JS js) {
+	public Inicio(String externo, Debugador debugador) {
 		Inicio.externo = externo;
-		Inicio.js = js;
 		UI.debugador = debugador;
 		ehArm64 = debugador.ehArm64();
 		ehArm64 = false;
