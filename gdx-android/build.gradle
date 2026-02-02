@@ -1,3 +1,13 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
 apply plugin: 'com.android.application'
 
 android {
@@ -13,7 +23,7 @@ android {
     }
     
     buildTypes {
-        release {                 
+        release {                  
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -41,32 +51,29 @@ dependencies {
     implementation fileTree(dir: '../gdx-jogo/libs', include: ['*.jar']) 
 }
 
-// desabilita cache para forçar recompilação sempre
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
     resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
 }
 
-// tarefa personalizada pra limpar seletivamente
 task limpezaSele(type: Delete) {
     description = 'Limpa apenas classes compiladas, preservando outras compilações'
     delete 'build/classes'
     delete 'build/intermediates/classes'
     delete 'build/tmp'
 }
-// força recompilação completa sempre que assets ou src mudarem
+
 tasks.whenTaskAdded { task ->
     if(task.name.contains('Compile') || task.name.contains('JavaPreCompile')) {
         task.outputs.upToDateWhen { false }
     }
 }
-// gancho pra sempre recompilar quando assets mudam
+
 android.applicationVariants.all { variant ->
     variant.mergeAssets.doFirst {
-        println "Assets modificados - forçando recompilação completa..."
+        println "Assets modificados - forcando recompilacao completa..."
         file('build/classes').deleteDir()
     }
 }
 
-// torna a tarefa limpezaSele disponivel antes da recompilação
 tasks.clean.dependsOn limpezaSele
