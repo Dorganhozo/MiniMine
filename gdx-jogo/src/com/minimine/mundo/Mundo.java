@@ -30,15 +30,15 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 // ruidos
-import com.minimine.utils.ruidos.SimplexNoise3D;
+import com.minimine.utils.ruidos.Simplex3D;
 import com.minimine.utils.ruidos.Simplex2D;
 // blocos
 import com.minimine.mundo.blocos.Bloco;
 // graficos
+import com.minimine.graficos.Render;
 import com.minimine.graficos.Animacoes2D;
 import com.minimine.graficos.EmissorParticulas;
 import com.minimine.cenas.Jogador;
-import com.minimine.graficos.Render;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -58,7 +58,7 @@ public class Mundo {
 	public static int RAIO_CHUNKS = 5;
 
     public static Simplex2D s2D;
-	public static SimplexNoise3D s3D;
+	public static Simplex3D s3D;
 
     public static boolean carregado = false, ciclo = true, nuvens = true;
     public static boolean debugColisao = false;
@@ -108,9 +108,9 @@ public class Mundo {
     }
 
     public void iniciar() {
-        semente = semente == 0 ? System.currentTimeMillis() : semente;
+        semente = semente == 0 ? (System.currentTimeMillis() >> 1) : semente;
         s2D = new Simplex2D(semente);
-		s3D = new SimplexNoise3D(semente >> 1);
+		s3D = new Simplex3D(semente >> 1);
 
         if(exec == null || exec.isShutdown()) {
 			exec = Executors.newFixedThreadPool(8);
@@ -161,8 +161,6 @@ public class Mundo {
         chunks.clear();
 		estados.clear();
         exec.shutdown();
-		// s2D.liberar();
-		s3D.liberar();
 		Animacoes2D.liberar();
     }
 
@@ -413,11 +411,7 @@ public class Mundo {
 		exec.submit(new Runnable() {
 				@Override
 				public void run() {
-					for(int lx = 0; lx < TAM_CHUNK; lx++) {
-						for(int lz = 0; lz < TAM_CHUNK; lz++) {
-							Biomas.escolher(lx, lz, chunk);
-						}
-					}
+					Biomas.escolher(chunk);
 					estados.put(chave, 1); // agora ta pronta pra que as vizinhas gerem malha
 				}
 			});
@@ -526,11 +520,7 @@ public class Mundo {
 				}
 				// se os blocos ainda não foram gerados(biomas não escolhidos)
 				if(!v.dadosProntos) {
-					for(int lx = 0; lx < TAM_CHUNK; lx++) {
-						for(int lz = 0; lz < TAM_CHUNK; lz++) {
-							Biomas.escolher(lx, lz, v);
-						}
-					}
+					Biomas.escolher(v);
 					v.dadosProntos = true;
 				}
 			}
