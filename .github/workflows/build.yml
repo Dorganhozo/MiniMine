@@ -1,0 +1,51 @@
+name: CI - Build MiniMine
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Permite rodar manualmente pelo painel do GitHub
+
+jobs:
+  build:
+    name: Build Multiplataforma
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Validar Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Dar permissão ao Gradlew
+        run: chmod +x gradlew
+
+      # --- BUILD DESKTOP (Windows/Linux/Mac) ---
+      - name: Build Desktop JAR
+        run: ./gradlew lwjgl3:dist
+
+      # --- BUILD ANDROID ---
+      - name: Build Android APK
+        run: ./gradlew android:assembleDebug
+
+      # --- UPLOAD DOS ARTEFATOS ---
+      - name: Upload Desktop Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMine-Desktop
+          path: lwjgl3/build/libs/*.jar
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMine-Android-Debug
+          path: android/build/outputs/apk/debug/*.apk
