@@ -17,7 +17,7 @@ android {
     defaultConfig {
         applicationId "com.minimine"
         minSdkVersion 23
-        targetSdkVersion 26
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
     }
@@ -25,6 +25,7 @@ android {
     buildTypes {
         release {                  
             minifyEnabled false
+	    shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
