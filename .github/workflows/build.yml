@@ -1,4 +1,4 @@
-name: CI - Build MiniMine
+name: CI - Compilação MiniMine
 
 on:
   push:
@@ -9,11 +9,11 @@ on:
 
 jobs:
   build:
-    name: Build Multiplataforma
+    name: Compilação Multiplataforma
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do código
+      - name: Checagem do código
         uses: actions/checkout@v4
 
       - name: Configurar JDK 17
@@ -30,19 +30,67 @@ jobs:
       - name: Dar permissão ao Gradlew
         run: chmod +x gradlew
 
-      - name: Build Desktop
-        run: ./gradlew gdx-pc:build
+      - name: Compilação PC
+        run: ./gradlew gdx-pc:rodar
 
-      - name: Build Android
+      - name: Compilação Android
         run: ./gradlew gdx-android:assembleDebug
 
-      - name: Upload Desktop Artifact
+      - name: name: CI - Compilação MiniMine
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilação Multiplataforma
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checagem do código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Dar permissão ao Gradlew
+        run: chmod +x gradlew
+
+      - name: Compilação PC
+        run: ./gradlew gdx-pc:rodar
+
+      - name: Compilação Android
+        run: ./gradlew gdx-android:assembleDebug
+
+      - name: PC artefato
         uses: actions/upload-artifact@v4
         with:
-          name: MiniMine-Desktop
+          name: MiniMine-PCS
           path: gdx-pc/build/libs/*.jar
 
-      - name: Upload Android APK
+      - name: Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMine-Android
+          path: gdx-android/build/outputs/apk/debug/*.apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMine-PCS
+          path: gdx-pc/build/libs/*.jar
+
+      - name: Android APK
         uses: actions/upload-artifact@v4
         with:
           name: MiniMine-Android
