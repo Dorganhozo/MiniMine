@@ -1,4 +1,4 @@
-name: CI - Compilação MiniMine
+name: CI - Compilacao MiniMine
 
 on:
   push:
@@ -9,45 +9,7 @@ on:
 
 jobs:
   build:
-    name: Compilação Multiplataforma
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checagem do código
-        uses: actions/checkout@v4
-
-      - name: Configurar JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Gradle 8.7
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
-
-      - name: Dar permissão ao Gradlew
-        run: chmod +x gradlew
-
-      - name: Compilação PC
-        run: ./gradlew gdx-pc:rodar
-
-      - name: Compilação Android
-        run: ./gradlew gdx-android:assembleDebug
-
-      - name: name: CI - Compilação MiniMine
-
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    name: Compilação Multiplataforma
+    name: Compilacao Multiplataforma
     runs-on: ubuntu-latest
 
     steps:
@@ -72,6 +34,44 @@ jobs:
         run: ./gradlew gdx-pc:rodar
 
       - name: Compilação Android
+        run: ./gradlew gdx-android:assembleDebug
+
+      - name: name: CI - Compilacaoo MiniMine
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilacao Multiplataforma
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checagem do código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Dar permissão ao Gradlew
+        run: chmod +x gradlew
+
+      - name: Compilacao PC
+        run: ./gradlew gdx-pc:rodar
+
+      - name: Compilacao Android
         run: ./gradlew gdx-android:assembleDebug
 
       - name: PC artefato
