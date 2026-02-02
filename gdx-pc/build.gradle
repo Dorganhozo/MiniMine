@@ -21,41 +21,24 @@ application {
 
 dependencies {
     implementation project(':gdx-jogo')
-
     implementation "com.badlogicgames.gdx:gdx-backend-lwjgl:1.9.14"
     implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.1.0"
-
-    // nativos padrão
     runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.9.14:natives-desktop"
     runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.9.14:natives-desktop"
-
-    // força o download dos binaSrios para 32 bits(x86)
     runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.9.14:natives-x86"
     runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.9.14:natives-x86"
 }
 
 sourceSets {
     main {
-        java {
-            srcDirs = ['src']
-        }
-        resources {
-            srcDirs = ['../assets']
-        }
+        java { srcDirs = ['src'] }
+        resources { srcDirs = ['../assets'] }
     }
 }
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
     options.incremental = false
-}
-
-task rodar(type: JavaExec) {
-    mainClass = 'com.minimine.Iniciador'
-    classpath = sourceSets.main.runtimeClasspath
-    standardInput = System.in
-
-    workingDir = file('../assets').exists() ? file('../assets') : projectDir
 }
 
 jar {
@@ -65,9 +48,9 @@ jar {
         attributes 'Main-Class': 'com.minimine.Iniciador'
     }
     from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { 
+            it.exists() && !it.path.contains("gdx-jogo/build") ? (it.isDirectory() ? it : zipTree(it)) : null 
+        }.findAll { it != null }
     }
-    with copySpec {
-        from 'assets'
-    }
+    from project(':gdx-jogo').sourceSets.main.output
 }
