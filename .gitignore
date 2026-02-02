@@ -20,3 +20,10 @@
 
 # Ignore Gradle build output directory
 build
+
+#Ignore local.properties
+local.properties
+
+#Ignore logs e .temp do assets
+assets/*.log
+assets/.temp/
