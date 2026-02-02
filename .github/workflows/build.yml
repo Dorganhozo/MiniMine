@@ -26,7 +26,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compilacao Geral
-        run: ./gradlew assemble --no-daemon -Pandroid.suppressUnsupportedCompileSdk=34 -Pcom.android.tools.build.gradle.overrideVersionCheck=true
+        run: ./gradlew assemble --no-daemon --no-configuration-cache -Pandroid.suppressUnsupportedCompileSdk=34 -Pcom.android.tools.build.gradle.overrideVersionCheck=true
 
       - name: Guardar Artefatos
         uses: actions/upload-artifact@v4
