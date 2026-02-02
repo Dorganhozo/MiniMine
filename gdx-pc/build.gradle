@@ -41,6 +41,13 @@ tasks.withType(JavaCompile) {
     options.incremental = false
 }
 
+task rodar(type: JavaExec) {
+    mainClass = 'com.minimine.Iniciador'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = file('../assets').exists() ? file('../assets') : projectDir
+}
+
 jar {
     archiveFileName = "minimine.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

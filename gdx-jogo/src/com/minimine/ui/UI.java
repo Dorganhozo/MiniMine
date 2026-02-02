@@ -709,6 +709,13 @@ public class UI implements InputProcessor {
 			}
 		}
         if(p == Input.Keys.T) abrirChat();
+		if(p == Input.Keys.P) {
+			if(Mundo.debugColisao) {
+				Mundo.debugColisao = false;
+			} else {
+				Mundo.debugColisao = true;
+			}
+		}
         return true;
     }
 
