@@ -62,9 +62,10 @@ tasks.whenTaskAdded { task ->
 }
 // gancho pra sempre recompilar quando assets mudam
 android.applicationVariants.all { variant ->
+    def buildDir = file('build/classes')
     variant.mergeAssets.doFirst {
         println "Assets modificados - forçando recompilação completa..."
-        file('build/classes').deleteDir()
+        buildDir.deleteDir()
     }
 }
 

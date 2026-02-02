@@ -29,7 +29,7 @@ dependencies {
     runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.9.14:natives-desktop"
     runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.9.14:natives-desktop"
 
-    // força o download dos binaSrios para 32 bits(x86)
+    // força o download dos binarios para 32 bits(x86)
     runtimeOnly "com.badlogicgames.gdx:gdx-platform:1.9.14:natives-x86"
     runtimeOnly "com.badlogicgames.gdx:gdx-freetype-platform:1.9.14:natives-x86"
 }
