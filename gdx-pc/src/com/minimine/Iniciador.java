@@ -10,8 +10,8 @@ public class Iniciador {
         config.title = "MiniMine";
         config.width = 1280;
         config.height = 720;
-        config.vSyncEnabled = false; // Desativa VSync
-        config.foregroundFPS = 0; // 0 = Ilimitado
+        config.vSyncEnabled = false; // desativa VSync
+        config.foregroundFPS = 0; // 0 = ilimitado
         config.backgroundFPS = 0;
 
         Debugador debug = new Debugador() {
@@ -19,8 +19,6 @@ public class Iniciador {
             @Override public long obterHeapLivre() { return Runtime.getRuntime().freeMemory(); }
             @Override public long obterHeapTotal() { return Runtime.getRuntime().totalMemory(); }
         };
-
-        // Removido o '3' daqui para compatibilidade
         Gdx.files = new com.badlogic.gdx.backends.lwjgl.LwjglFiles();
 
         try {

@@ -44,7 +44,7 @@ public class Render {
 	public static String vert = 
     "attribute vec3 a_pos;\n" +
     "attribute vec2 a_texCoord;\n" +
-    "attribute vec4 a_atlasCoords;\n" + // Novo atributo: limites do atlas (uMin, vMin, uMax, vMax)
+    "attribute vec4 a_atlasCoords;\n" + // limites do atlas(uMin, vMin, uMax, vMax)
     "attribute vec4 a_cor;\n" +
     "uniform mat4 u_projPos;\n" +
     "varying vec2 v_texCoord;\n" +
@@ -74,9 +74,9 @@ public class Render {
 	"   float brilhoBruto = max(v_cor.r, solDinamico);\n" +
 	"   float iluminacaoFinal = brilhoBruto * v_cor.b;\n" +
     // Calculo de tiling dentro do atlas
-    "   vec2 uvSize = v_atlasCoords.zw - v_atlasCoords.xy;\n" + // tamanho da regiao no atlas
+    "   vec2 uvTam = v_atlasCoords.zw - v_atlasCoords.xy;\n" + // tamanho da regiao no atlas
     "   vec2 localUV = fract(v_texCoord);\n" + // repete 0..1
-    "   vec2 finalUV = v_atlasCoords.xy + localUV * uvSize;\n" +
+    "   vec2 finalUV = v_atlasCoords.xy + localUV * uvTam;\n" +
     
 	"   vec4 texCor = texture2D(u_textura, finalUV);\n" +
     "   if(texCor.a < 0.5) discard;\n" +
@@ -121,7 +121,7 @@ public class Render {
         if(mundo.ciclo) CorposCelestes.iniciar();
 	}
 	
-	public static com.badlogic.gdx.graphics.glutils.ShapeRenderer debugShapes;
+	public static com.badlogic.gdx.graphics.glutils.ShapeRenderer debugCaixas;
 
 	public void att(float delta) {
 		float fator = DiaNoiteUtil.obterFatorTransicao();
@@ -194,17 +194,17 @@ public class Render {
 
         // DEBUG DE COLISAO
         if(Mundo.debugColisao) {
-            if(debugShapes == null) debugShapes = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
-            debugShapes.setProjectionMatrix(ui.jogador.camera.combined);
-            debugShapes.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line);
+            if(debugCaixas == null) debugCaixas = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
+            debugCaixas.setProjectionMatrix(ui.jogador.camera.combined);
+            debugCaixas.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line);
             
-            // Blocos proximos (Greedy Meshing)
-            debugShapes.setColor(1, 0, 0, 1);
+            // blocos proximos(O Guloso)
+            debugCaixas.setColor(1, 0, 0, 1);
             int px = (int)ui.jogador.posicao.x;
             int py = (int)ui.jogador.posicao.y;
             int pz = (int)ui.jogador.posicao.z;
             
-            // Itera chunks ao redor para desenhar as caixas de debug
+            // itera chunks ao redor pra desenhar as caixas de debug
             int chunkX = px >> 4;
             int chunkZ = pz >> 4;
             
@@ -218,7 +218,7 @@ public class Render {
                         
                         synchronized(c.debugRects) {
                             for(com.badlogic.gdx.math.collision.BoundingBox bb : c.debugRects) {
-                                // Verifica distancia simples pra nao desenhar tudo
+                                // verifica distancia simples pra nao desenhar tudo
                                 float globalX = offX + bb.min.x;
                                 float globalY = bb.min.y;
                                 float globalZ = offZ + bb.min.z;
@@ -228,20 +228,20 @@ public class Render {
                                 float w = bb.max.x - bb.min.x;
                                 float h = bb.max.y - bb.min.y;
                                 float d = bb.max.z - bb.min.z;
-                                debugShapes.box(globalX, globalY, globalZ, w, h, d);
+                                debugCaixas.box(globalX, globalY, globalZ, w, h, d);
                             }
                         }
                     }
                 }
             }
 
-            // Jogador (caixa simples de exemplo)
-            debugShapes.setColor(0, 1, 0, 1);
+            // jogador(caixa simples de exemplo)
+            debugCaixas.setColor(0, 1, 0, 1);
             float jw = 0.6f;
             float jh = 1.8f;
-            debugShapes.box(ui.jogador.posicao.x - jw/2, ui.jogador.posicao.y, ui.jogador.posicao.z + jw/2, jw, jh, jw);
+            debugCaixas.box(ui.jogador.posicao.x - jw/2, ui.jogador.posicao.y, ui.jogador.posicao.z + jw/2, jw, jh, jw);
 
-            debugShapes.end();
+            debugCaixas.end();
         }
 	}
 	

@@ -127,6 +127,7 @@ Computador:
 **Programação**:
 Shiniga-OP
 Green
+Xaniim
 
 **Efeitos sonoros**:
 Shiniga-OP
