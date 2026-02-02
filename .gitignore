@@ -21,9 +21,12 @@
 # Ignore Gradle build output directory
 build
 
-#Ignore local.properties
+# Ignore local.properties
 local.properties
 
-#Ignore logs e .temp do assets
+# Ignore logs e .temp do assets
 assets/*.log
 assets/.temp/
+
+# Ignore .temp do gdx-pc
+gdx-pc/.temp
