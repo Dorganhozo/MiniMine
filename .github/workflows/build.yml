@@ -16,34 +16,25 @@ jobs:
       - name: Checagem do código
         uses: actions/checkout@v4
 
-      - name: Configurar JDK 17
+      - name: Configurar Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Configurar Ferramenta de Construcao (Gradle)
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.7'
-
-      - name: Dar permissao ao Gradlew
+      - name: Dar permissao
         run: chmod +x gradlew
 
-      - name: Gerar Executavel PC
-        run: ./gradlew gdx-pc:jar
+      - name: Compilacao PC
+        run: ./gradlew gdx-pc:jar --no-daemon
 
-      - name: Gerar Pacote Android
-        run: ./gradlew gdx-android:assembleDebug
+      - name: Compilacao Android
+        run: ./gradlew gdx-android:assembleDebug --no-daemon -Pandroid.suppressUnsupportedCompileSdk=34
 
-      - name: Guardar Artefato PC
+      - name: Guardar Artefatos
         uses: actions/upload-artifact@v4
         with:
-          name: MiniMine-Arquivos-PC
-          path: gdx-pc/build/libs/*.jar
-
-      - name: Guardar Artefato Android
-        uses: actions/upload-artifact@v4
-        with:
-          name: MiniMine-Arquivo-Android
-          path: gdx-android/build/outputs/apk/debug/*.apk
+          name: MiniMine-Pacotes
+          path: |
+            gdx-pc/build/libs/*.jar
+            gdx-android/build/outputs/apk/debug/*.apk
