@@ -57,7 +57,6 @@ configurations.all {
 }
 
 task limpezaSele(type: Delete) {
-    description = 'Limpa apenas classes compiladas, preservando outras compilações'
     delete 'build/classes'
     delete 'build/intermediates/classes'
     delete 'build/tmp'
@@ -66,13 +65,6 @@ task limpezaSele(type: Delete) {
 tasks.whenTaskAdded { task ->
     if(task.name.contains('Compile') || task.name.contains('JavaPreCompile')) {
         task.outputs.upToDateWhen { false }
-    }
-}
-
-android.applicationVariants.all { variant ->
-    variant.mergeAssets.doFirst {
-        println "Assets modificados - forcando recompilacao completa..."
-        file('build/classes').deleteDir()
     }
 }
 
