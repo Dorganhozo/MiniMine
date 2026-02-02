@@ -61,6 +61,7 @@ public class Mundo {
 	public static SimplexNoise3D s3D;
 
     public static boolean carregado = false, ciclo = true, nuvens = true;
+    public static boolean debugColisao = false;
     public static float tick = 0.2f;
 
     public static ExecutorService exec;

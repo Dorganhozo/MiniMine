@@ -442,10 +442,10 @@ public class UI implements InputProcessor {
 		jogador.velocidade.z = 0;
 		if(jogador.modo != 2) jogador.velocidade.y = 0;
 
-		if(this.frente) jogador.velocidade.add(frenteV.scl(jogador.velo));
-		if(this.tras)  jogador.velocidade.sub(frenteV.scl(jogador.velo));
-		if(this.esquerda) jogador.velocidade.add(direitaV.scl(jogador.velo));
-		if(this.direita) jogador.velocidade.sub(direitaV.scl(jogador.velo));
+		if(this.frente) jogador.velocidade.add(frenteV.cpy().scl(jogador.velo));
+		if(this.tras)  jogador.velocidade.sub(frenteV.cpy().scl(jogador.velo));
+		if(this.esquerda) jogador.velocidade.add(direitaV.cpy().scl(jogador.velo));
+		if(this.direita) jogador.velocidade.sub(direitaV.cpy().scl(jogador.velo));
 		if(this.cima) {
 			if(jogador.modo != 2 || jogador.noChao || jogador.naAgua) {
 				jogador.velocidade.y = jogador.pulo; // pulo
@@ -701,7 +701,7 @@ public class UI implements InputProcessor {
 			}
 			jogador.inv.alternar();
 		}
-		if(p == Input.Keys.F1) {
+        if(p == Input.Keys.F1) {
 			if(debug) {
 				debug = false; 
 			} else {

@@ -7,7 +7,7 @@ public class Chave {
 	@Override
 	public boolean equals(Object o) {
 		if(this == o) return true;
-		if(!(o instanceof Chave)) return true;
+		if(!(o instanceof Chave)) return false;
 		Chave chave = (Chave) o;
 		return  x == chave.x && z == chave.z;
 	}

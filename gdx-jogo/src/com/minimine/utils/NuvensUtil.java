@@ -142,7 +142,7 @@ public class NuvensUtil {
             int base = i * 4;
 
             // movimento continuo em direção fixa(pra OESTE -X)
-            nuvensPos[base] -= VELOCIDADE;
+            nuvensPos[base] -= VELOCIDADE * delta * 60f;
             // verifica se saiu do raio visivel em relação do jogador
             float distanciaX = nuvensPos[base] - pos.x;
             float distanciaZ = nuvensPos[base + 2] - pos.z;
