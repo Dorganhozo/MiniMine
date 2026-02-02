@@ -21,7 +21,7 @@ public class Iniciador {
         Gdx.files = new com.badlogic.gdx.backends.lwjgl.LwjglFiles();
 
         try {
-            new LwjglApplication(new Inicio(Gdx.files.getExternalStoragePath(), debug, null), config);
+            new LwjglApplication(new Inicio(Gdx.files.getExternalStoragePath(), debug), config);
         } catch(Exception e) {
             e.printStackTrace();
         }
