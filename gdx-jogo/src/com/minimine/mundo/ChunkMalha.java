@@ -6,178 +6,271 @@ import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.blocos.BlocoModelo;
 
 public class ChunkMalha {
-    public static void attMalha(Chunk chunk, FloatArrayUtil vertsGeral, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+    public static void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+        synchronized(chunk.debugRects) {
+            chunk.debugRects.clear();
+        }
         ChunkLuz.attLuz(chunk);
 
-        Chunk chunkXP, chunkXN, chunkZP, chunkZN;
-        Chave c = new Chave(chunk.x + 1, chunk.z);
-        chunkXP = Mundo.chunks.get(c);
-        c.x = chunk.x - 1; c.z = chunk.z;
-        chunkXN = Mundo.chunks.get(c);
-        c.x = chunk.x; c.z = chunk.z + 1;
-        chunkZP = Mundo.chunks.get(c);
-        c.x = chunk.x; c.z = chunk.z - 1;
-        chunkZN = Mundo.chunks.get(c);
+        Chunk cXP, cXN, cZP, cZN;
+        Chave chave = new Chave(chunk.x + 1, chunk.z);
+        cXP = Mundo.chunks.get(chave);
+        chave.x = chunk.x - 1; chave.z = chunk.z;
+        cXN = Mundo.chunks.get(chave);
+        chave.x = chunk.x; chave.z = chunk.z + 1;
+        cZP = Mundo.chunks.get(chave);
+        chave.x = chunk.x; chave.z = chunk.z - 1;
+        cZN = Mundo.chunks.get(chave);
 
-        for(int idc = 0; idc < Mundo.CHUNK_AREA * Mundo.Y_CHUNK; idc++) {
-            int x = idc & 0xF;
-            int z = (idc >> 4) & 0xF;
-            int y = idc >> 8;
+        // --- Greedy Meshing Visual (Gera Malha de Renderização) ---
+        
+        // 1. Eixo Y (Faces Cima/Baixo)
+        int[] mask = new int[16 * 16];
+        for (boolean cima : new boolean[]{true, false}) { // Passada para Cima, depois Baixo
+            for (int y = 0; y < Mundo.Y_CHUNK; y++) {
+                int n = 0;
+                for (int z = 0; z < 16; z++) {
+                    for (int x = 0; x < 16; x++) {
+                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        int val = 0;
+                        if (id != 0) {
+                            Bloco b = Bloco.numIds.get(id);
+                            if (b != null) {
+                                int ny = cima ? y + 1 : y - 1;
+                                int vizId = 0;
+                                if (ny >= 0 && ny < Mundo.Y_CHUNK) {
+                                    vizId = ChunkUtil.obterBloco(x, ny, z, chunk);
+                                } else { 
+                                    vizId = 0;
+                                }
+                                Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                                
+                                if (deveRenderFace(b, bViz)) {
+                                    byte luz = ChunkUtil.obterLuzCompleta(x, (ny < 0 || ny >= Mundo.Y_CHUNK) ? y : ny, z, chunk);
+                                    val = (id << 8) | (luz & 0xFF);
+                                }
+                            }
+                        }
+                        mask[n++] = val;
+                    }
+                }
+                meshingPlano(mask, 16, 16, y, cima ? 0 : 1, chunk, verts, idcSolidos, idcTransp);
+            }
+        }
 
-            int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
-            if(blocoId == 0) continue;
+        // 2. Eixo X (Faces Leste/Oeste)
+        mask = new int[16 * Mundo.Y_CHUNK];
+        for (boolean leste : new boolean[]{true, false}) {
+            for (int x = 0; x < 16; x++) {
+                int n = 0;
+                for (int y = 0; y < Mundo.Y_CHUNK; y++) {
+                    for (int z = 0; z < 16; z++) {
+                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        int val = 0;
+                        if (id != 0) {
+                            Bloco b = Bloco.numIds.get(id);
+                            if (b != null) {
+                                int nx = leste ? x + 1 : x - 1;
+                                int vizId = 0;
+                                Chunk tC = chunk;
+                                int tx = nx;
+                                
+                                if (nx >= 16) { tC = cXP; tx = 0; }
+                                else if (nx < 0) { tC = cXN; tx = 15; }
+                                
+                                if (tC != null) vizId = ChunkUtil.obterBloco(tx, y, z, tC);
+                                
+                                Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                                if (deveRenderFace(b, bViz)) {
+                                    byte luz = (tC != null) ? ChunkUtil.obterLuzCompleta(tx, y, z, tC) : 15;
+                                    val = (id << 8) | (luz & 0xFF);
+                                }
+                            }
+                        }
+                        mask[n++] = val;
+                    }
+                }
+                meshingPlano(mask, 16, Mundo.Y_CHUNK, x, leste ? 2 : 3, chunk, verts, idcSolidos, idcTransp);
+            }
+        }
 
-            Bloco blocoTipo = Bloco.numIds.get(blocoId);
-            if(blocoTipo == null) continue;
+        // 3. Eixo Z (Faces Sul/Norte)
+        for (boolean sul : new boolean[]{true, false}) {
+            for (int z = 0; z < 16; z++) {
+                int n = 0;
+                for (int y = 0; y < Mundo.Y_CHUNK; y++) {
+                    for (int x = 0; x < 16; x++) {
+                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        int val = 0;
+                        if (id != 0) {
+                            Bloco b = Bloco.numIds.get(id);
+                            if (b != null) {
+                                int nz = sul ? z + 1 : z - 1;
+                                int vizId = 0;
+                                Chunk tC = chunk;
+                                int tz = nz;
+                                
+                                if (nz >= 16) { tC = cZP; tz = 0; }
+                                else if (nz < 0) { tC = cZN; tz = 15; }
+                                
+                                if (tC != null) vizId = ChunkUtil.obterBloco(x, y, tz, tC);
+                                
+                                Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                                if (deveRenderFace(b, bViz)) {
+                                    byte luz = (tC != null) ? ChunkUtil.obterLuzCompleta(x, y, tz, tC) : 15;
+                                    val = (id << 8) | (luz & 0xFF);
+                                }
+                            }
+                        }
+                        mask[n++] = val;
+                    }
+                }
+                meshingPlano(mask, 16, Mundo.Y_CHUNK, z, sul ? 4 : 5, chunk, verts, idcSolidos, idcTransp);
+            }
+        }
 
-            // se o bloco for transparente vai pra lista transparente
-            if(blocoTipo.transparente) {
-                lidarFacesDoBloco(
-                    x, y, z, blocoTipo,
-                    chunk, chunkXP, chunkXN, chunkZP, chunkZN,
-                    vertsGeral, idcTransp);
-            } else {
-                lidarFacesDoBloco(
-                    x, y, z, blocoTipo,
-                    chunk, chunkXP, chunkXN, chunkZP, chunkZN,
-                    vertsGeral, idcSolidos);
+        // --- Geração de Debug de Colisão (Greedy Physics - Independente da Malha Visual) ---
+        // Foca apenas em geometria sólida para gerar retangulos unificados de colisão
+        synchronized(chunk.debugRects) {
+            chunk.debugRects.clear();
+            
+            // Vamos iterar por camadas Y e tentar mesclar retangulos XZ de blocos solidos.
+            for(int y = 0; y < Mundo.Y_CHUNK; y++) {
+                // Mascara booleana de solidos nesta camada
+                int[] solidMask = new int[16*16];
+                int n = 0;
+                for(int z = 0; z < 16; z++) {
+                    for(int x = 0; x < 16; x++) {
+                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        boolean solido = false;
+                        if(id != 0) {
+                             Bloco b = Bloco.numIds.get(id);
+                             if(b != null && b.solido) solido = true;
+                        }
+                        solidMask[n++] = solido ? 1 : 0;
+                    }
+                }
+                
+                // Greedy 2D Simples na camada (apenas XZ)
+                n = 0; // reset index for greedy loop
+                // NOTA: O loop abaixo percorre Z (outer) e X (inner) - correspondendo à ordem de preenchimento da mask acima
+                for(int j = 0; j < 16; j++) { // Z
+                     for(int i = 0; i < 16; ) { // X
+                         if(solidMask[j * 16 + i] == 1) { // Usa indice calculado (j*16 + i) para seguranca
+                             int idx = j * 16 + i;
+                             
+                             // Determinar largura (W) no eixo X
+                             int w = 1; 
+                             while(i + w < 16 && solidMask[j * 16 + (i + w)] == 1) w++;
+                             
+                             // Determinar altura (H) no eixo Z
+                             int h = 1; 
+                             boolean continua = true;
+                             while(j + h < 16 && continua) {
+                                 for(int k = 0; k < w; k++) {
+                                     if(solidMask[(j + h) * 16 + (i + k)] != 1) {
+                                         continua = false;
+                                         break;
+                                     }
+                                 }
+                                 if(continua) h++;
+                             }
+                             
+                             // Limpa a área encontrada na máscara para não processar de novo
+                             for (int l = 0; l < h; l++) {
+                                for (int k = 0; k < w; k++) {
+                                    solidMask[(j + l) * 16 + (i + k)] = 0;
+                                }
+                            }
+                            
+                            // Adiciona caixa de colisao altura 1 (y ate y+1)
+                            chunk.debugRects.add(new com.badlogic.gdx.math.collision.BoundingBox(
+                                new com.badlogic.gdx.math.Vector3(i, y, j),
+                                new com.badlogic.gdx.math.Vector3(i + w, y + 1, j + h)
+                            ));
+                            
+                            i += w;
+                         } else {
+                             i++;
+                         }
+                     }
+                }
             }
         }
     }
-	
-	public static void lidarFacesDoBloco(
-		int x, int y, int z, Bloco bloco,
-		Chunk c, Chunk cXP, Chunk cXN, Chunk cZP, Chunk cZN,
-		FloatArrayUtil verts, ShortArrayUtil idc) {
 
-		int vizId;
-		byte luzTotal;
-		float lb, ls;
-		Bloco bViz;
+    private static void meshingPlano(int[] mask, int largura, int altura, 
+                                     int profundidade, int faceId, Chunk chunk,
+                                     FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+        
+        int n = 0;
+        for (int j = 0; j < altura; j++) {
+            for (int i = 0; i < largura; ) {
+                int val = mask[n];
+                if (val != 0) {
+                    // Encontrou inicio de face
+                    int w = 1;
+                    while (i + w < largura && mask[n + w] == val) {
+                        w++;
+                    }
 
-		// face 0: cima(Y + 1)
-		int ny = y + 1;
-		if(ny >= Mundo.Y_CHUNK) {
-			// limite do mundo(céu), sempre desenha
-			BlocoModelo.addFace(0, bloco.texturaId(0), x, y, z, 1.0f, 1.0f, verts, idc);
-		} else {
-			// ta dentro do mesmo chunk(Y não muda chunk vizinho horizontal)
-			vizId = ChunkUtil.obterBloco(x, ny, z, c);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                    int h = 1;
+                    boolean continua = true;
+                    while (j + h < altura && continua) {
+                        for (int k = 0; k < w; k++) {
+                            if (mask[n + k + h * largura] != val) {
+                                continua = false;
+                                break;
+                            }
+                        }
+                        if (continua) h++;
+                    }
 
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x, ny, z, c);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(0, bloco.texturaId(0), x, y, z, lb, ls, verts, idc);
-			}
-		}
-		// face 1: baixo(Y - 1)
-		ny = y - 1;
-		if(ny < 0) {
-			// desenha com luz zero ou ambiente
-			BlocoModelo.addFace(1, bloco.texturaId(1), x, y, z, 0.0f, 0.0f, verts, idc);
-		} else {
-			vizId = ChunkUtil.obterBloco(x, ny, z, c);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                    // Limpar mascara
+                    for (int l = 0; l < h; l++) {
+                        for (int k = 0; k < w; k++) {
+                            mask[n + k + l * largura] = 0;
+                        }
+                    }
 
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x, ny, z, c);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(1, bloco.texturaId(1), x, y, z, lb, ls, verts, idc);
-			}
-		}
-		// face 2: leste(X + 1)
-		// se x < 15, vizinho ta em C; se x == 15, vizinho ta em cXP na posição 0
-		if(x < 15) {
-			vizId = ChunkUtil.obterBloco(x + 1, y, z, c);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x + 1, y, z, c);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(2, bloco.texturaId(2), x, y, z, lb, ls, verts, idc);
-			}
-		} else if(cXP != null) {
-			// Borda: Lê do vizinho cXP na coordenada 0
-			vizId = ChunkUtil.obterBloco(0, y, z, cXP);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(0, y, z, cXP);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(2, bloco.texturaId(2), x, y, z, lb, ls, verts, idc);
-			}
-		}
-		// face 3: oeste(X - 1)
-		// se x > 0, vizinho ta em C; se x == 0, vizinho ta em cXN na posição 15
-		if(x > 0) {
-			vizId = ChunkUtil.obterBloco(x - 1, y, z, c);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x - 1, y, z, c);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(3, bloco.texturaId(3), x, y, z, lb, ls, verts, idc);
-			}
-		} else if(cXN != null) {
-			// borda: le do vizinho cXN na coordenada 15
-			vizId = ChunkUtil.obterBloco(15, y, z, cXN);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(15, y, z, cXN);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(3, bloco.texturaId(3), x, y, z, lb, ls, verts, idc);
-			}
-		}
-		// face 4: sul(Z + 1)
-		// se z < 15, vizinho tá em C; se z == 15, vizinho ta em cZP na posição 0
-		if(z < 15) {
-			vizId = ChunkUtil.obterBloco(x, y, z + 1, c);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x, y, z + 1, c);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(4, bloco.texturaId(4), x, y, z, lb, ls, verts, idc);
-			}
-		} else if(cZP != null) {
-			// borda: le do vizinho cZP na coordenada 0
-			vizId = ChunkUtil.obterBloco(x, y, 0, cZP);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x, y, 0, cZP);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(4, bloco.texturaId(4), x, y, z, lb, ls, verts, idc);
-			}
-		}
-		// face 5: norte(Z - 1)
-		// se z > 0, vizinho tá em C; se z == 0, vizinho tá em cZN na posição 15
-		if(z > 0) {
-			vizId = ChunkUtil.obterBloco(x, y, z - 1, c);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x, y, z - 1, c);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(5, bloco.texturaId(5), x, y, z, lb, ls, verts, idc);
-			}
-		} else if(cZN != null) {
-			// borda: le do vizinho cZN na coordenada 15
-			vizId = ChunkUtil.obterBloco(x, y, 15, cZN);
-			bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-			if(deveRenderFace(bloco, bViz)) {
-				luzTotal = ChunkUtil.obterLuzCompleta(x, y, 15, cZN);
-				lb = (luzTotal & 0x0F) / 15f;
-				ls = ((luzTotal >> 4) & 0x0F) / 15f;
-				BlocoModelo.addFace(5, bloco.texturaId(5), x, y, z, lb, ls, verts, idc);
-			}
-		}
-	}
+                    // Dados da face
+                    int id = val >> 8;
+                    int luzTotal = val & 0xFF;
+                    float lb = (luzTotal & 0x0F) / 15f;
+                    float ls = ((luzTotal >> 4) & 0x0F) / 15f;
+                    
+                    Bloco b = Bloco.numIds.get(id);
+                    float x = 0, y = 0, z = 0;
+                    float fw = 0, fh = 0;
+                    
+                    switch(faceId) {
+                        case 0: case 1: // Y
+                            x = i; z = j; y = profundidade;
+                            fw = w; fh = h; 
+                            break;
+                        case 2: case 3: // X
+                            z = i; y = j; x = profundidade;
+                            fw = w; fh = h;
+                            break;
+                        case 4: case 5: // Z
+                            x = i; y = j; z = profundidade;
+                            fw = w; fh = h;
+                            break;
+                    }
 
+                    ShortArrayUtil lista = b.transparente ? idcTransp : idcSolidos;
+                    BlocoModelo.addFace(faceId, b.texturaId(faceId), x, y, z, fw, fh, lb, ls, verts, lista);
+
+                    i += w;
+                    n += w;
+                } else {
+                    i++;
+                    n++;
+                }
+            }
+        }
+    }
+    
     public static boolean deveRenderFace(Bloco atual, Bloco vizinho) {
         if(vizinho == null) return true;
         if(atual.tipo == vizinho.tipo) return false;

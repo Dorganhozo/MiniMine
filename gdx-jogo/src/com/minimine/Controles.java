@@ -158,7 +158,14 @@ public class Controles implements InputProcessor {
 					  camera.position.z + camera.direction.z);
     }
 
-	@Override public boolean keyDown(int c) { return false; }
+	@Override 
+    public boolean keyDown(int c) { 
+        if(c == com.badlogic.gdx.Input.Keys.P) {
+            com.minimine.mundo.Mundo.debugColisao = !com.minimine.mundo.Mundo.debugColisao;
+            return true;
+        }
+        return false; 
+    }
     @Override public boolean keyUp(int c) { return false; }
     @Override public boolean keyTyped(char c) { return false; }
     @Override public boolean mouseMoved(int tx, int ty) { return false; }

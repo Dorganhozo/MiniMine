@@ -3,6 +3,7 @@ package com.minimine.graficos;
 import com.minimine.ui.UI;
 import com.minimine.cenas.Jogador;
 import com.minimine.mundo.Mundo;
+import com.minimine.mundo.Chave;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.minimine.utils.DiaNoiteUtil;
@@ -36,20 +37,24 @@ public class Render {
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
         new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
         new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
+        new VertexAttribute(VertexAttributes.Usage.Generic, 4, "a_atlasCoords"),
         new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
     };
 	
 	public static String vert = 
     "attribute vec3 a_pos;\n" +
     "attribute vec2 a_texCoord;\n" +
+    "attribute vec4 a_atlasCoords;\n" + // Novo atributo: limites do atlas (uMin, vMin, uMax, vMax)
     "attribute vec4 a_cor;\n" +
     "uniform mat4 u_projPos;\n" +
     "varying vec2 v_texCoord;\n" +
+    "varying vec4 v_atlasCoords;\n" +
     "varying vec4 v_cor;\n" +
     "void main() {\n" +
-	"v_texCoord = a_texCoord;\n" +
-	"v_cor = a_cor;\n" +
-	"gl_Position = u_projPos * vec4(a_pos, 1.0);\n" +
+	"   v_texCoord = a_texCoord;\n" +
+    "   v_atlasCoords = a_atlasCoords;\n" +
+	"   v_cor = a_cor;\n" +
+	"   gl_Position = u_projPos * vec4(a_pos, 1.0);\n" +
     "}";
 
 	public static String frag =
@@ -57,6 +62,7 @@ public class Render {
     "precision mediump float;\n" +
     "#endif\n" +
     "varying vec2 v_texCoord;\n" +
+    "varying vec4 v_atlasCoords;\n" + 
     "varying vec4 v_cor;\n" + 
     "uniform sampler2D u_textura;\n" +
     "uniform float u_luzCeu;\n" + 
@@ -67,13 +73,17 @@ public class Render {
 	"   float solDinamico = v_cor.g * u_luzCeu;\n" + 
 	"   float brilhoBruto = max(v_cor.r, solDinamico);\n" +
 	"   float iluminacaoFinal = brilhoBruto * v_cor.b;\n" +
-	// transparencia:
-	"   vec4 texCor = texture2D(u_textura, v_texCoord);\n" +
+    // Calculo de tiling dentro do atlas
+    "   vec2 uvSize = v_atlasCoords.zw - v_atlasCoords.xy;\n" + // tamanho da regiao no atlas
+    "   vec2 localUV = fract(v_texCoord);\n" + // repete 0..1
+    "   vec2 finalUV = v_atlasCoords.xy + localUV * uvSize;\n" +
+    
+	"   vec4 texCor = texture2D(u_textura, finalUV);\n" +
     "   if(texCor.a < 0.5) discard;\n" +
 	// neblina baseada na distancia
 	"   float dist = length(gl_FragCoord.z / gl_FragCoord.w);\n" +
-	"   float inicio = 16.0;\n" + // começa a 1 chunk de distância
-	"   float fim = 64.0;\n" + // termina no limite de 5 * 16
+	"   float inicio = 16.0;\n" + 
+	"   float fim = 64.0;\n" + 
 	"   float fator = clamp((dist - inicio) / (fim - inicio), 0.0, 1.0);\n" +
 	// cor da neblina mudando com o céu
 	"   vec3 corNevoa = vec3(0.4, 0.6, 0.9) * u_luzCeu;\n" + 
@@ -111,6 +121,8 @@ public class Render {
         if(mundo.ciclo) CorposCelestes.iniciar();
 	}
 	
+	public static com.badlogic.gdx.graphics.glutils.ShapeRenderer debugShapes;
+
 	public void att(float delta) {
 		float fator = DiaNoiteUtil.obterFatorTransicao();
 		float[] corNoite = {0.05f, 0.05f, 0.15f};
@@ -179,6 +191,58 @@ public class Render {
 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 
 		ui.att(delta, mundo);
+
+        // DEBUG DE COLISAO
+        if(Mundo.debugColisao) {
+            if(debugShapes == null) debugShapes = new com.badlogic.gdx.graphics.glutils.ShapeRenderer();
+            debugShapes.setProjectionMatrix(ui.jogador.camera.combined);
+            debugShapes.begin(com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line);
+            
+            // Blocos proximos (Greedy Meshing)
+            debugShapes.setColor(1, 0, 0, 1);
+            int px = (int)ui.jogador.posicao.x;
+            int py = (int)ui.jogador.posicao.y;
+            int pz = (int)ui.jogador.posicao.z;
+            
+            // Itera chunks ao redor para desenhar as caixas de debug
+            int chunkX = px >> 4;
+            int chunkZ = pz >> 4;
+            
+            for(int cx = chunkX - 1; cx <= chunkX + 1; cx++) {
+                for(int cz = chunkZ - 1; cz <= chunkZ + 1; cz++) {
+                    Chave ch = new Chave(cx, cz);
+                    Chunk c = mundo.chunks.get(ch);
+                    if(c != null && c.debugRects != null) {
+                        float offX = c.x << 4;
+                        float offZ = c.z << 4;
+                        
+                        synchronized(c.debugRects) {
+                            for(com.badlogic.gdx.math.collision.BoundingBox bb : c.debugRects) {
+                                // Verifica distancia simples pra nao desenhar tudo
+                                float globalX = offX + bb.min.x;
+                                float globalY = bb.min.y;
+                                float globalZ = offZ + bb.min.z;
+                                
+                                if(Math.abs(globalX - px) > 20 || Math.abs(globalY - py) > 20 || Math.abs(globalZ - pz) > 20) continue;
+
+                                float w = bb.max.x - bb.min.x;
+                                float h = bb.max.y - bb.min.y;
+                                float d = bb.max.z - bb.min.z;
+                                debugShapes.box(globalX, globalY, globalZ, w, h, d);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Jogador (caixa simples de exemplo)
+            debugShapes.setColor(0, 1, 0, 1);
+            float jw = 0.6f;
+            float jh = 1.8f;
+            debugShapes.box(ui.jogador.posicao.x - jw/2, ui.jogador.posicao.y, ui.jogador.posicao.z + jw/2, jw, jh, jw);
+
+            debugShapes.end();
+        }
 	}
 	
 	public void criarAtlas() {

@@ -62,8 +62,8 @@ public class BlocoModelo {
         {{0,1}, {0,0}, {1,0}, {1,1}}  // -Z
     };
 
-    public static void addFace(int faceId, int atlasId, float x, float y, float z, 
-	float luzBloco, float luzSol, FloatArrayUtil verts, ShortArrayUtil idc) {
+    	public static void addFace(int faceId, int atlasId, float x, float y, float z, 
+	float w, float h, float luzBloco, float luzSol, FloatArrayUtil verts, ShortArrayUtil idc) {
 
 		float[] atlasCoords = Render.atlasUVs.get(atlasId);
 		if(atlasCoords == null) return;
@@ -80,35 +80,52 @@ public class BlocoModelo {
 		int b = (int)(multFace * 255); 
 		float corFinal = Color.toFloatBits(r, g, b, 255);
 
-		short indiceBase = (short)(verts.tam / 6);
+		short indiceBase = (short)(verts.tam / 10); // Agora sao 10 floats por vertice
 
-		// vertice 0
-		float[] v0 = FACE_VERTICES[faceId][0];
-		float[] uv0 = FACE_UVS[faceId][0];
-		verts.add(x + v0[0]); verts.add(y + v0[1]); verts.add(z + v0[2]);
-		verts.add(uMin + uv0[0] * (uMax - uMin)); verts.add(vMin + uv0[1] * (vMax - vMin));
-		verts.add(corFinal);
+        // Define escalas baseadas na face
+        float sx = 1f, sy = 1f, sz = 1f; // escalas de posicao
+        float uw = 1f, vh = 1f; // escalas de UV
 
-		// vertice 1
-		float[] v1 = FACE_VERTICES[faceId][1];
-		float[] uv1 = FACE_UVS[faceId][1];
-		verts.add(x + v1[0]); verts.add(y + v1[1]); verts.add(z + v1[2]);
-		verts.add(uMin + uv1[0] * (uMax - uMin)); verts.add(vMin + uv1[1] * (vMax - vMin));
-		verts.add(corFinal);
+        // Mapeamento:
+        // Topo/Baixo (Faces 0, 1): w -> X, h -> Z
+        // Lados X (Faces 2, 3): w -> Z, h -> Y
+        // Lados Z (Faces 4, 5): w -> X, h -> Y
+        
+        switch(faceId) {
+            case 0: case 1: sx = w; sz = h; uw = w; vh = h; break;
+            case 2: case 3: sz = w; sy = h; uw = w; vh = h; break; // Check orientation
+            case 4: case 5: sx = w; sy = h; uw = w; vh = h; break;
+        }
 
-		// vertice 2
-		float[] v2 = FACE_VERTICES[faceId][2];
-		float[] uv2 = FACE_UVS[faceId][2];
-		verts.add(x + v2[0]); verts.add(y + v2[1]); verts.add(z + v2[2]);
-		verts.add(uMin + uv2[0] * (uMax - uMin)); verts.add(vMin + uv2[1] * (vMax - vMin));
-		verts.add(corFinal);
+        // Loop pelos 4 vertices
+        for(int i = 0; i < 4; i++) {
+            float[] v = FACE_VERTICES[faceId][i];
+            float[] uv = FACE_UVS[faceId][i];
 
-		// vertice 3
-		float[] v3 = FACE_VERTICES[faceId][3];
-		float[] uv3 = FACE_UVS[faceId][3];
-		verts.add(x + v3[0]); verts.add(y + v3[1]); verts.add(z + v3[2]);
-		verts.add(uMin + uv3[0] * (uMax - uMin)); verts.add(vMin + uv3[1] * (vMax - vMin));
-		verts.add(corFinal);
+            // Posicao
+            // Logica: Se o componente for TAM (1.0), multiplicamos pela escala daquela dimensao?
+            // Nao exatamente. Faces deslocadas (ex: Topo Y=1) devem manter Y=1, nao Y=h.
+            // Porem, faces "planas" tem 0 ou 1 nas coordenadas variaveis.
+            // Ex: Topo varia X e Z. Y é fixo em 1.
+            // Se v[0] (X) for 1, deve virar w. Se 0, vira 0. -> v[0] * sx da certo?
+            // E o eixo fixo? Y=1. sy=1 (default). v[1]*sy = 1*1 = 1. Correto.
+            // Entao basta multiplicar.
+            
+            verts.add(x + v[0] * sx);
+            verts.add(y + v[1] * sy);
+            verts.add(z + v[2] * sz);
+
+            // UV Local (para tiling)
+            // Multiplicamos o 0..1 original pelo tamanho (w ou h)
+            verts.add(uv[0] * uw); 
+            verts.add(uv[1] * vh);
+
+            // Atlas Limits (uMin, vMin, uMax, vMax)
+            verts.add(uMin); verts.add(vMin); verts.add(uMax); verts.add(vMax);
+
+            // Cor
+            verts.add(corFinal);
+        }
 
 		// indices(ordem dos triangulos)
 		idc.add(indiceBase);

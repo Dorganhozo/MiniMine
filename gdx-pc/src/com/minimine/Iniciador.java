@@ -10,6 +10,9 @@ public class Iniciador {
         config.title = "MiniMine";
         config.width = 1280;
         config.height = 720;
+        config.vSyncEnabled = false; // Desativa VSync
+        config.foregroundFPS = 0; // 0 = Ilimitado
+        config.backgroundFPS = 0;
 
         Debugador debug = new Debugador() {
             @Override public boolean ehArm64() { return false; }

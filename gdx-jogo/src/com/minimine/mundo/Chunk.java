@@ -17,4 +17,5 @@ public final class Chunk {
 	public volatile boolean dadosProntos = false;
 	public int contaSolida = 0;
     public int contaTransp = 0;
+    public java.util.List<com.badlogic.gdx.math.collision.BoundingBox> debugRects = new java.util.ArrayList<>();
 }
