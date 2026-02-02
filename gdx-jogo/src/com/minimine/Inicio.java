@@ -29,6 +29,7 @@ public class Inicio extends Game {
 	@Override
 	public void create() {
 		Gdx.app.setApplicationLogger(log);
+        Gdx.graphics.setVSync(false);
 		defTela(Cenas.intro);
 	}
 
