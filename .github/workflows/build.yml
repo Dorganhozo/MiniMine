@@ -5,7 +5,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Permite rodar manualmente pelo painel do GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,31 +21,29 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'gradle'
 
-      - name: Validar Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v3
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
 
       - name: Dar permissão ao Gradlew
         run: chmod +x gradlew
 
-      # --- BUILD DESKTOP (Windows/Linux/Mac) ---
-      - name: Build Desktop JAR
-        run: ./gradlew lwjgl3:dist
+      - name: Build Desktop
+        run: ./gradlew gdx-pc:build
 
-      # --- BUILD ANDROID ---
-      - name: Build Android APK
-        run: ./gradlew android:assembleDebug
+      - name: Build Android
+        run: ./gradlew gdx-android:assembleDebug
 
-      # --- UPLOAD DOS ARTEFATOS ---
       - name: Upload Desktop Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MiniMine-Desktop
-          path: lwjgl3/build/libs/*.jar
+          path: gdx-pc/build/libs/*.jar
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: MiniMine-Android-Debug
-          path: android/build/outputs/apk/debug/*.apk
+          name: MiniMine-Android
+          path: gdx-android/build/outputs/apk/debug/*.apk
