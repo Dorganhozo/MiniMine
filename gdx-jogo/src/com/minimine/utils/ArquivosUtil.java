@@ -39,6 +39,8 @@ import com.minimine.mundo.blocos.Bloco;
 import com.badlogic.gdx.graphics.Mesh;
 import com.minimine.graficos.Texturas;
 import com.minimine.cenas.Jogo;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class ArquivosUtil {
     public static final String VERSAO = "v0.0.1";
@@ -47,9 +49,9 @@ public class ArquivosUtil {
     public static void svMundo(Mundo mundo, Jogador jogador) {
         File pasta = new File(Inicio.externo + "/MiniMine/mundos");
         if(!pasta.exists()) pasta.mkdirs();
-
-        File destino = new File(pasta, mundo.nome + ".mini");
-        File tmp = new File(pasta, mundo.nome + ".mini.tmp");
+		
+        File destino = new File(pasta, URLEncoder.encode(mundo.nome, StandardCharsets.UTF_8) + ".mini");
+        File tmp = new File(pasta, URLEncoder.encode(mundo.nome, StandardCharsets.UTF_8) + ".mini.tmp");
 
         try {
             // escreve em arquivo temporario
