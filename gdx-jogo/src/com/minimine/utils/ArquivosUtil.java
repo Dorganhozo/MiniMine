@@ -360,7 +360,8 @@ public class ArquivosUtil {
 		}
     }
 
-    public static void criar(String caminho) {    
+    public static void criar(String caminho) {   
+        caminho = caminho.replace("/", File.separator);
 		int ultimoPasso = caminho.lastIndexOf(File.separator);    
 		if(ultimoPasso > 0) {    
 			String dirCaminho = caminho.substring(0, ultimoPasso);    
@@ -370,11 +371,12 @@ public class ArquivosUtil {
 		try {    
 			if(!arquivo.exists()) arquivo.createNewFile();    
 		} catch(Exception e) {    
-			Gdx.app.log("ArquivosUtil", "[ERRO]: criando "+e.getMessage()+" \""+caminho+"\"");    
+			Gdx.app.log("ArquivosUtil", "[ERRO]: criando "+e.getMessage()+File.separator+caminho+File.separator);    
 		}    
 	}    
 
 	public static String ler(String caminho) {    
+        caminho = caminho.replace("/", File.separator);
 		StringBuilder sb = new StringBuilder();    
 		FileReader fr = null;    
 
@@ -399,7 +401,8 @@ public class ArquivosUtil {
 		return sb.toString();    
 	}    
 
-	public static void escrever(String caminho, String texto) {    
+	public static void escrever(String caminho, String texto) {
+        caminho = caminho.replace("/", File.separator);
 		criar(caminho);    
 		FileWriter escritor = null;    
 		try {    
@@ -418,6 +421,7 @@ public class ArquivosUtil {
 	}    
 
 	public static void delete(String caminho) {    
+        caminho = caminho.replace("/", File.separator);
 		File arquivo = new File(caminho);    
 
 		if(!arquivo.exists()) return;    
@@ -439,6 +443,7 @@ public class ArquivosUtil {
 	}    
 
 	public static List<String> listar(String caminho) {
+        caminho = caminho.replace("/", File.separator);
 		List<String> lista = new ArrayList<>();
 		File dir = new File(caminho);    
 		if(!dir.exists() || dir.isFile()) return null;
@@ -455,6 +460,7 @@ public class ArquivosUtil {
 	}    
 
 	public static void listarAbs(String caminho, List<String> lista) {    
+        caminho = caminho.replace("/", File.separator);
 		File dir = new File(caminho);    
 		if(!dir.exists() || dir.isFile()) return;    
 
@@ -468,12 +474,14 @@ public class ArquivosUtil {
 		}    
 	}    
 
-	public static boolean existe(String caminho) {    
+	public static boolean existe(String caminho) {   
+        caminho = caminho.replace("/", File.separator); 
 		File arquivo = new File(caminho);    
 		return arquivo.exists();    
 	}    
 
 	public static void criarDir(String caminho) {    
+        caminho = caminho.replace("/", File.separator);
 		if(!existe(caminho)) {    
 			File arquivo = new File(caminho);    
 			arquivo.mkdirs();    
