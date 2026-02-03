@@ -368,7 +368,7 @@ public class ArquivosUtil {
 		try {    
 			if(!arquivo.exists()) arquivo.createNewFile();    
 		} catch(Exception e) {    
-			Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());    
+			Gdx.app.log("ArquivosUtil", "[ERRO]: criando "+e.getMessage()+" \""+caminho+"\"");    
 		}    
 	}    
 
@@ -390,7 +390,7 @@ public class ArquivosUtil {
 				try {    
 					fr.close();    
 				} catch(Exception e) {    
-					Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());
+					Gdx.app.log("ArquivosUtil", "[ERRO]: lendo "+e.getMessage()+" \""+caminho+"\"");
 				}    
 			}    
 		}    
@@ -410,7 +410,7 @@ public class ArquivosUtil {
 			try {    
 				if(escritor != null) escritor.close();    
 			} catch(Exception e) {    
-				Gdx.app.log("ArquivosUtil", "[ERRO]: "+e.getMessage());    
+				Gdx.app.log("ArquivosUtil", "[ERRO]: escrevendo "+e.getMessage()+" caminho \""+caminho+"\"");    
 			}    
 		}    
 	}    
