@@ -116,7 +116,7 @@ Celular:
 * OpenGL ES: 3.2.
 * JVM: Java VM ART 2.1.0.
 * Sistema Operacional: Android 12 64-bit.
-* FPS padrão: 30-59.
+* FPS padrão: 29-59.
 
 Computador:
 * Placa Mãe: dell optiPlex 780.
@@ -126,7 +126,7 @@ Computador:
 * Video: intel 4 series(Integrada).
 * OpenGL: 2.1.
 * Sistema Operaciobal: Linux Mint 64-bit.
-* FPS padrão: 40-64.
+* FPS padrão: 50-100.
 
 # Comandos de teclado
 
