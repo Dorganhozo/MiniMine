@@ -30,6 +30,7 @@ import com.minimine.mundo.Mundo;
 import com.minimine.cenas.Jogador;
 import com.minimine.cenas.Inventario;
 import com.minimine.cenas.Jogo;
+import com.minimine.mods.LuaAPI;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -65,6 +66,8 @@ public class UI implements InputProcessor {
 	public static Debugador debugador;
 
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
+	public static EstanteVertical menuOpcoes;
+	public static boolean menuAberto = false;
 
     public UI(Jogador jogador) {
 		camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -129,6 +132,18 @@ public class UI implements InputProcessor {
 			return true;
 		}
 		if(modoTexto) return true;
+		
+		if(menuAberto) {
+			for(InterUtil.Objeto objeto : menuOpcoes.filhos) {
+				if(objeto instanceof Botao) {
+					Botao bo = (Botao) objeto;
+					if(bo.hitbox.contains(telaX, y)) {
+						bo.aoTocar(telaX, y, p);
+						return true;
+					}
+				}
+			}
+		}
         if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop && !jogador.inv.aberto) {
             if(b == Input.Buttons.LEFT) {
                 jogador.item = "ar";
@@ -238,84 +253,86 @@ public class UI implements InputProcessor {
 		float densidade = Gdx.graphics.getDensity();
 		float tam = botaoTam * densidade;
 		tam = MathUtils.clamp(tam, 50f, 150f);
-
-		botoes.put("direita", new Botao(Texturas.texs.get("botao_d"), 0, 0, tam, tam, "direita") {
-				public void aoTocar(int t, int t2, int p){ direita = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ direita = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("esquerda", new Botao(Texturas.texs.get("botao_e"), 0, 0, tam, tam, "esquerda") {
-				public void aoTocar(int t, int t2, int p){ esquerda = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ esquerda = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("frente", new Botao(Texturas.texs.get("botao_f"), 0, 0, tam, tam, "frente") {
-				public void aoTocar(int t, int t2, int p){ frente = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ frente = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("tras", new Botao(Texturas.texs.get("botao_t"), 0, 0, tam, tam, "tras") {
-				public void aoTocar(int t, int t2, int p){ tras = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ tras = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("cima", new Botao(Texturas.texs.get("botao_f"), 0, 0, tam, tam, "cima") {
-				public void aoTocar(int t, int t2, int p){ cima = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ cima = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("baixo", new Botao(Texturas.texs.get("botao_t"), 0, 0, tam, tam, "baixo") {
-				public void aoTocar(int t, int t2, int p){
-					baixo = true; sprite.setAlpha(0.5f);
-					if(jogador.agachado) {
-						jogador.velo *= 2;
-						jogador.altura *= 1.2f;
-						jogador.agachado = false;
-					} else {
-						jogador.velo /= 2;
-						jogador.altura /= 1.2f;
-						jogador.agachado = true;
+		
+		if(Gdx.app.getType() != com.badlogic.gdx.Application.ApplicationType.Desktop) {
+			botoes.put("direita", new Botao(Texturas.texs.get("botao_d"), 0, 0, tam, tam, "direita") {
+					public void aoTocar(int t, int t2, int p){ direita = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ direita = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("esquerda", new Botao(Texturas.texs.get("botao_e"), 0, 0, tam, tam, "esquerda") {
+					public void aoTocar(int t, int t2, int p){ esquerda = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ esquerda = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("frente", new Botao(Texturas.texs.get("botao_f"), 0, 0, tam, tam, "frente") {
+					public void aoTocar(int t, int t2, int p){ frente = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ frente = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("tras", new Botao(Texturas.texs.get("botao_t"), 0, 0, tam, tam, "tras") {
+					public void aoTocar(int t, int t2, int p){ tras = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ tras = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("cima", new Botao(Texturas.texs.get("botao_f"), 0, 0, tam, tam, "cima") {
+					public void aoTocar(int t, int t2, int p){ cima = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ cima = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("baixo", new Botao(Texturas.texs.get("botao_t"), 0, 0, tam, tam, "baixo") {
+					public void aoTocar(int t, int t2, int p){
+						baixo = true; sprite.setAlpha(0.5f);
+						if(jogador.agachado) {
+							jogador.velo *= 2;
+							jogador.altura *= 1.2f;
+							jogador.agachado = false;
+						} else {
+							jogador.velo /= 2;
+							jogador.altura /= 1.2f;
+							jogador.agachado = true;
+						}
 					}
-				}
-				public void aoSoltar(int t, int t2, int p){ baixo = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("diagDireita", new Botao(Texturas.texs.get("botao_ld"), 0, 0, tam, tam, "diagDireita") {
-				public void aoTocar(int t, int t2, int p){ frente = true; direita = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ frente = false; direita = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("diagEsquerda", new Botao(Texturas.texs.get("botao_le"), 0, 0, tam, tam, "diagEsquerda") {
-				public void aoTocar(int t, int t2, int p){ frente = true; esquerda = true; sprite.setAlpha(0.5f); }
-				public void aoSoltar(int t, int t2, int p){ frente = false; esquerda = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, tam, tam, "acao") {
-				public void aoTocar(int t, int t2, int p){
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
-					else jogador.item = "ar";
-					acao = true;
-					jogador.interagirBloco();
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
-					else jogador.item = "ar";
-					toques.put(p, "acao");
-					sprite.setAlpha(0.5f);
-				}
-				public void aoSoltar(int t, int t2, int p){ acao = false; sprite.setAlpha(0.9f); }
-			});
-		botoes.put("ataque", new Botao(Texturas.texs.get("ataque"), 0, 0, tam, tam, "ataque") {
-				public void aoTocar(int t, int t2, int p){
-					jogador.item = "ar";
-					jogador.interagirBloco();
-					toques.put(p, "ataque");
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
-					else jogador.item = "ar";
-					sprite.setAlpha(0.5f);
-				}
-				public void aoSoltar(int t, int t2, int p){ acao = false; sprite.setAlpha(0.9f);}
-			});
-		botoes.put("inv", new Botao(Texturas.texs.get("clique"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "inv") {
-				public void aoTocar(int t, int t2, int p){
-					if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
-					else jogador.item = "ar";
-					jogador.inv.alternar();
-					toques.put(p, "inv");
-					sprite.setAlpha(0.5f);
-				}
-				public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
-			});
+					public void aoSoltar(int t, int t2, int p){ baixo = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("diagDireita", new Botao(Texturas.texs.get("botao_ld"), 0, 0, tam, tam, "diagDireita") {
+					public void aoTocar(int t, int t2, int p){ frente = true; direita = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ frente = false; direita = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("diagEsquerda", new Botao(Texturas.texs.get("botao_le"), 0, 0, tam, tam, "diagEsquerda") {
+					public void aoTocar(int t, int t2, int p){ frente = true; esquerda = true; sprite.setAlpha(0.5f); }
+					public void aoSoltar(int t, int t2, int p){ frente = false; esquerda = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, tam, tam, "acao") {
+					public void aoTocar(int t, int t2, int p){
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
+						acao = true;
+						jogador.interagirBloco();
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
+						toques.put(p, "acao");
+						sprite.setAlpha(0.5f);
+					}
+					public void aoSoltar(int t, int t2, int p){ acao = false; sprite.setAlpha(0.9f); }
+				});
+			botoes.put("ataque", new Botao(Texturas.texs.get("ataque"), 0, 0, tam, tam, "ataque") {
+					public void aoTocar(int t, int t2, int p){
+						jogador.item = "ar";
+						jogador.interagirBloco();
+						toques.put(p, "ataque");
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
+						sprite.setAlpha(0.5f);
+					}
+					public void aoSoltar(int t, int t2, int p){ acao = false; sprite.setAlpha(0.9f);}
+				});
+			botoes.put("inv", new Botao(Texturas.texs.get("clique"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "inv") {
+					public void aoTocar(int t, int t2, int p){
+						if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+						else jogador.item = "ar";
+						jogador.inv.alternar();
+						toques.put(p, "inv");
+						sprite.setAlpha(0.5f);
+					}
+					public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
+				});
+		}
 		botoes.put("receita", new Botao(Texturas.texs.get("receita"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "receita") {
 				public void aoTocar(int t, int t2, int p){
 					if(jogador.inv.itens[jogador.inv.slotSelecionado] == null) return;
@@ -343,26 +360,50 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
 			});
-		botoes.put("salvar", new Botao(Texturas.texs.get("salvar"), 0, 0, jogador.inv.tamSlot, jogador.inv.tamSlot, "salvar") {
-				public void aoTocar(int t, int t2, int p){
-					toques.put(p, "salvar");
-					sprite.setAlpha(0.5f);
+		botoes.put("menu_principal", new Botao(Texturas.texs.get("receita"), 0, 0, tam, tam, "menu_principal") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					menuAberto = !menuAberto;
+					toques.put(p, "menu_principal");
+				}
+				@Override
+				public void aoSoltar(int t, int t2, int p) {}
+			});
+		menuOpcoes = new EstanteVertical("menuOpcoes", 0, 0, 15f);
 
-					new Thread(new Runnable() {
+		menuOpcoes.add(new Botao(Texturas.texs.get("salvar"), 0, 0, tam, tam, "botao_salvar") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					Thread threadSalvar = new Thread(new Runnable() {
 							@Override
 							public void run() {
 								ArquivosUtil.svMundo(Jogo.mundo, jogador);
 								Gdx.app.postRunnable(new Runnable() {
 										@Override
 										public void run() {
-											abrirDialogo("seu jogo foi salvo");
-											sprite.setAlpha(0.9f);
+											abrirDialogo("Jogo salvo com sucesso!");
 										}
 									});
 							}
-						}).start();
+						});
+					threadSalvar.start();
+					menuAberto = false;
 				}
-				public void aoSoltar(int t, int t2, int p){}
+			});
+		menuOpcoes.add(new Botao(Texturas.texs.get("botao_opcao"), 0, 0, tam, tam, "botao_reiniciar_lua") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					Logs.log("Sistema Lua reiniciado");
+					LuaAPI.iniciar();
+					menuAberto = false;
+				}
+			});
+		menuOpcoes.add(new Botao(Texturas.texs.get("botao_d"), 0, 0, tam, tam, "botao_voltar_menu") {
+				@Override
+				public void aoTocar(int t, int t2, int p) {
+					ArquivosUtil.svMundo(Jogo.mundo, jogador);
+					menuAberto = false;
+				}
 			});
 	}
 
@@ -470,7 +511,9 @@ public class UI implements InputProcessor {
 			e.porFrame(delta, sb, fonte);
 		}
 		dialogo.porFrame(delta, sb, fonte);
-
+		
+		if(menuAberto) menuOpcoes.porFrame(delta, sb, fonte);
+		
 		this.jogador.inv.att();
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;

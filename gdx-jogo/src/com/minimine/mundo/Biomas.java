@@ -20,8 +20,10 @@ public class Biomas {
                 int mundoX = chunkX + x;
                 int mundoZ = chunkZ + z;
 
-                int altura = gerador.calcularAltura(mundoX, mundoZ);
-                TipoBioma bioma = gerador.determinarBioma(mundoX, mundoZ, altura);
+                // recebe altura e bioma em uma unica chamada otimizada
+                int[] dados = gerador.calcularDadosColuna(mundoX, mundoZ);
+                int altura = dados[0];
+                TipoBioma bioma = TipoBioma.values()[dados[1]];
 
                 gerarColuna(chunk, x, z, altura, bioma, mundoX, mundoZ);
             }

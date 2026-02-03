@@ -24,7 +24,6 @@ import com.minimine.graficos.EmissorParticulas;
 
 public class LuaAPI {
 	public static Globals globais;
-	public static Jogo tela;
 	public static String att;
 	public static LuaFunction aoAjustar, ajuste, porFrame, frame;
 	public static int v, h;
@@ -32,16 +31,16 @@ public class LuaAPI {
 	public static String pacote;
 	public static boolean existeAtt = false;
 	
-	public static void iniciar(Jogo principal) {
+	public static void iniciar() {
 		pacote = Inicio.externo+"/MiniMine/mods/";
-		tela = principal;
+		
 		String script = "";
 		
 		globais = JsePlatform.standardGlobals();
 		
-		globais.set("mundo", CoerceJavaToLua.coerce(tela.mundo));
-		globais.set("jogador", CoerceJavaToLua.coerce(tela.render.ui.jogador));
-		globais.set("ui", CoerceJavaToLua.coerce(tela.render.ui));
+		globais.set("mundo", CoerceJavaToLua.coerce(Jogo.mundo));
+		globais.set("jogador", CoerceJavaToLua.coerce(Jogo.render.ui.jogador));
+		globais.set("ui", CoerceJavaToLua.coerce(Jogo.render.ui));
 		globais.set("util", CoerceJavaToLua.coerce(new Util()));
 		globais.set("biomas", CoerceJavaToLua.coerce(new Biomas()));
 		globais.set("chunkutil", CoerceJavaToLua.coerce(new ChunkUtil()));
@@ -81,7 +80,7 @@ public class LuaAPI {
 				public LuaValue call() {
 					ajuste = null;
 					att = "";
-					iniciar(tela);
+					iniciar();
 					return LuaValue.NIL;
 				}
 			});

@@ -22,6 +22,7 @@ refeito com LibGDX.
 17. Divisão de biomas.
 18. Água animada via *Gdx.gl.glTexSubImage2D(...)*.
 19. Névoa no horizonte.
+20. Motor de geração. (beta)
 
 ## Modos de jogo:
 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -55,9 +56,14 @@ tronco = tabuas_madeira
 areia = vidro
 folha = tocha
 
+## Geração feita:
+
+Dominio de Deformação.
+Erosão Hidraulica.
+
 ## Otimizações:
 Geração em Thread separada com ExecutorService.
-Reuso de objetos Chave parq chunks.
+Chaves do tipo *long* para obtenção de chunks.
 Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
 Frustrum culling.
@@ -65,6 +71,7 @@ Compressão baseada em paleta.
 Otimização na atualização com variaveis locais (JIT).
 Cache de chunks modificadas sem Malha.
 O Guloso (Greedy Mesh).
+Pré-computação de erosão.
 
 ## Ruídos utilitários:
 1. PerlinNoise2D.java
@@ -73,7 +80,7 @@ O Guloso (Greedy Mesh).
 4. SimplexNoise3D.java
 5. Simplex2D.java (atual)
 6. Simplex3D.java (atual)
-7. RidgeNoise.java 
+7. RidgeNoise2D.java 
 
 ## compatibilidade:
 * Android 4 até Android 14.
@@ -81,7 +88,7 @@ O Guloso (Greedy Mesh).
 * windows (sem testes concretos)
 
 ## Desempenho:
-FPS de 30 a 55 padrão testado com até 280 chunks ativas (raio de 5).
+FPS de 30 a 55 padrão testado com até 111 chunks ativas (raio de 5).
 
 ## Mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -109,7 +116,7 @@ Celular:
 * OpenGL ES: 3.2.
 * JVM: Java VM ART 2.1.0.
 * Sistema Operacional: Android 12 64-bit.
-* FPS padrão: 30-42.
+* FPS padrão: 30-59.
 
 Computador:
 * Placa Mãe: dell optiPlex 780.
@@ -119,7 +126,7 @@ Computador:
 * Video: intel 4 series(Integrada).
 * OpenGL: 2.1.
 * Sistema Operaciobal: Linux Mint 64-bit.
-* FPS padrão: 30-40.
+* FPS padrão: 40-64.
 
 # Comandos de teclado
 

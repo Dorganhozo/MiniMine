@@ -192,14 +192,13 @@ public class ArquivosUtil {
         dos.writeLong(mundo.semente);
         // quantos chunks salvos
         dos.writeInt(mundo.chunksMod.size());
-        for(Map.Entry<Chave, Chunk> e : mundo.chunksMod.entrySet()) {
-            Chave chave = e.getKey();
+        for(Map.Entry<Long, Chunk> e : mundo.chunksMod.entrySet()) {
+            long chave = e.getKey();
             Chunk chunk = e.getValue();
             int cx = Mundo.TAM_CHUNK;
             int cy = Mundo.Y_CHUNK;
             int cz = Mundo.TAM_CHUNK;
-            dos.writeInt(chave.x);
-            dos.writeInt(chave.z);
+            dos.writeLong(chave);
             int totalNaoAr = 0;
             for(int x = 0; x < cx; x++) {
                 for(int y = 0; y < cy; y++) {
@@ -296,15 +295,15 @@ public class ArquivosUtil {
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
 			chunk.malha = new Mesh(true, Jogo.render.maxVerts, Jogo.render.maxIndices, Jogo.render.atriburs);
-            if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Chave, Chunk>();
-            if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Chave, Chunk>();
+            if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Long, Chunk>();
+            if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Long, Chunk>();
 
-            mundo.chunksMod.put(new Chave(chunkX, chunkZ), chunk);
-			mundo.chunks.put(new Chave(chunkX, chunkZ), chunk);
+            mundo.chunksMod.put(Chave.calcularChave(chunkX, chunkZ), chunk);
+			mundo.chunks.put(Chave.calcularChave(chunkX, chunkZ), chunk);
             
             chunk.att = true;
 			chunk.dadosProntos = true;
-			mundo.estados.put(new Chave(chunkX, chunkZ), 1);
+			mundo.estados.put(Chave.calcularChave(chunkX, chunkZ), 1);
         }
     }
 

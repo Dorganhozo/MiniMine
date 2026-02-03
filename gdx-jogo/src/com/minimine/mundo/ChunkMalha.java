@@ -13,14 +13,10 @@ public class ChunkMalha {
         ChunkLuz.attLuz(chunk);
 
         Chunk cXP, cXN, cZP, cZN;
-        Chave chave = new Chave(chunk.x + 1, chunk.z);
-        cXP = Mundo.chunks.get(chave);
-        chave.x = chunk.x - 1; chave.z = chunk.z;
-        cXN = Mundo.chunks.get(chave);
-        chave.x = chunk.x; chave.z = chunk.z + 1;
-        cZP = Mundo.chunks.get(chave);
-        chave.x = chunk.x; chave.z = chunk.z - 1;
-        cZN = Mundo.chunks.get(chave);
+        cXP = Mundo.chunks.get(Chave.calcularChave(chunk.x + 1, chunk.z));
+        cXN = Mundo.chunks.get(Chave.calcularChave(chunk.x - 1, chunk.z));
+        cZP = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z + 1));
+        cZN = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z - 1));
 
         // === gera malha de renderização(O Guloso) ===
         

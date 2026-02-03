@@ -1,10 +1,9 @@
 package com.minimine.mundo.geracao;
 
 import com.minimine.utils.ruidos.Simplex2D;
-
-/**
+/*
  * simulação de erosão hidraulica usando particulas de água
- * baseia- em papeis de geração procedural(olsen, mei, etc)
+ * baseia em papeis de geração procedural(olsen, mei, etc)
  */
 public class ErosaoHidraulica {
     public final Simplex2D ruido;
@@ -19,11 +18,11 @@ public class ErosaoHidraulica {
     public static final double GRAVIDADE = 4.0;
     public static final double INERCIA = 0.05;
 
-    public ErosaoHidraulica(long semente, int tamanhoMapa, double escala) {
+    public ErosaoHidraulica(long semente, int tamMapa, double escala) {
         this.ruido = new Simplex2D(semente);
-        this.tamMapa = tamanhoMapa;
+        this.tamMapa = tamMapa;
         this.escala = escala;
-        this.campoErosao = new double[tamanhoMapa][tamanhoMapa];
+        this.campoErosao = new double[tamMapa][tamMapa];
     }
     // simula gotas de chuva que erodem o terreno
     public void simularGotas(int numGotas, DominioDeformacao dominio) {

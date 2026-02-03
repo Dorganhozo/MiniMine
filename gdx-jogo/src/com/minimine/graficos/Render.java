@@ -210,7 +210,7 @@ public class Render {
             
             for(int cx = chunkX - 1; cx <= chunkX + 1; cx++) {
                 for(int cz = chunkZ - 1; cz <= chunkZ + 1; cz++) {
-                    Chave ch = new Chave(cx, cz);
+                    long ch = Chave.calcularChave(cx, cz);
                     Chunk c = mundo.chunks.get(ch);
                     if(c != null && c.debugRects != null) {
                         float offX = c.x << 4;

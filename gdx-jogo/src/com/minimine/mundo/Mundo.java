@@ -45,12 +45,12 @@ public class Mundo {
 	
     public static final List<Object> texturas = new ArrayList<>();
 	public static final List<Chunk> praLiberar = new ArrayList<>();
-	public static final List<Chave> praRemover = new ArrayList<>();
+	public static final List<Long> praRemover = new ArrayList<>();
     
-    public static Map<Chave, Chunk> chunks = new ConcurrentHashMap<>();
-    public static Map<Chave, Chunk> chunksMod = new ConcurrentHashMap<>();
+    public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
+    public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
 	// Estados: 0 = Vazia, 1 = Dados Prontos, 2 = Malha Pronta
-	public static final Map<Chave, Integer> estados = new ConcurrentHashMap<>();
+	public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
     public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK;
@@ -65,11 +65,9 @@ public class Mundo {
     public static float tick = 0.2f;
 
     public static ExecutorService exec;
-    public static Iterator<Map.Entry<Chave, Chunk>> iterator;
-
+    
     public static Matrix4 matrizTmp = new Matrix4();
-	public static Chave chaveTmp = new Chave(0, 0);
-
+	
     static {
         texturas.add(Texturas.texs.get("grama_topo"));
         texturas.add(Texturas.texs.get("grama_lado"));
@@ -169,9 +167,7 @@ public class Mundo {
     public static int obterBlocoMundo(int x, int y, int z) {
         if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
 
-		chaveTmp.x = x >> 4;
-		chaveTmp.z = z >> 4;
-        Chunk chunk = chunks.get(chaveTmp);
+        Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
 
         if(chunk == null) return 0;
 
@@ -186,10 +182,10 @@ public class Mundo {
 
         final int chunkX = x >> 4;
         final int chunkZ = z >> 4;
-
-		chaveTmp.x = chunkX; chaveTmp.z = chunkZ;
-
-        Chunk chunk = chunks.get(chaveTmp);
+		
+		final long chave = Chave.calcularChave(chunkX, chunkZ);
+		
+        Chunk chunk = chunks.get(chave);
         if(chunk == null) {
 			Gdx.app.log("Mundo", "chunk null na posição X: "+chunkX+", Z: "+chunkZ);
 			return;
@@ -212,35 +208,29 @@ public class Mundo {
         chunk.att = true;
         // chunks perto pra atualizar se o bloco for na borda
         if(localX == 0) {
-            chaveTmp.x = chunkX - 1; chaveTmp.z = chunkZ;
-            Chunk chunkAdj = chunks.get(chaveTmp);
+            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localX == TAM_CHUNK - 1) {
-            chaveTmp.x = chunkX + 1; chaveTmp.z = chunkZ;
-            Chunk chunkAdj = chunks.get(chaveTmp);
+            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localZ == 0) {
-            chaveTmp.x = chunkX; chaveTmp.z = chunkZ - 1;
-            Chunk chunkAdj = chunks.get(chaveTmp);
+            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localZ == TAM_CHUNK - 1) {
-            chaveTmp.x = chunkX; chaveTmp.z = chunkZ + 1;
-            Chunk chunkAdj = chunks.get(chaveTmp);
+            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
             if(chunkAdj != null) chunkAdj.att = true;
         }
-        chunksMod.put(new Chave(chunkX, chunkZ), chunk);
+        chunksMod.put(chave, chunk);
     }
 
 	public static void defLuzMundo(int x, int y, int z, byte novaLuz) {
 		if(y < 0 || y >= Y_CHUNK) return;
 
 		// localiza a chunk alvo pelas coordenadas globais
-		Mundo.chaveTmp.x = x >> 4;
-		Mundo.chaveTmp.z = z >> 4;
-		Chunk alvo = chunks.get(chaveTmp);
+		Chunk alvo = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
 
 		if(alvo != null) {
 			int lx = x & 0xF;
@@ -255,9 +245,7 @@ public class Mundo {
 	public static byte obterLuzMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0;
 
-		chaveTmp.x = x >> 4;
-		chaveTmp.z = z >> 4;
-		Chunk chunk = chunks.get(chaveTmp);
+		Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
 
 		if(chunk == null) return 0;
 
@@ -335,10 +323,10 @@ public class Mundo {
 		praLiberar.clear();
 		praRemover.clear();
 
-		for(Map.Entry<Chave, Chunk> e : chunks.entrySet()) {
-			Chave chave = e.getKey();
-			int distX = Mat.abs(chave.x - chunkX);
-			int distZ = Mat.abs(chave.z - chunkZ);
+		for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
+			long chave = e.getKey();
+			int distX = Mat.abs(Chave.x(chave) - chunkX);
+			int distZ = Mat.abs(Chave.z(chave) - chunkZ);
 			Chunk chunk = e.getValue();
 
 			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
@@ -349,7 +337,7 @@ public class Mundo {
 				praRemover.add(chave);
 			} else if(chunk.att && !chunk.fazendo) {
 				if(vizinhosProntos(chunk.x, chunk.z)) {
-					gerarMalha(new Chave(chunk.x, chunk.z));
+					gerarMalha(chave);
 				}
 			}
 		}
@@ -363,43 +351,44 @@ public class Mundo {
 								c.malha = null;
 							}
 						}
-						for(Chave k : praRemover) chunks.remove(k);
+						for(long k : praRemover) chunks.remove(k);
 					}
 				});
 		}
 	}
 
 	public void tentarGerarChunk(int x, int z) {
-		final Chave chave = new Chave(x, z);
-		// 1. tenta pegar do mapa de modificadas ou do mapa geral
-		Chunk chunk = chunksMod.get(chave);
-		if(chunk == null) chunk = chunks.get(chave);
-
-		// 2. se não existe em lugar nenhum, cria do zero(geração procedural)
-		if(chunk == null) {
-			chunk = new Chunk();
-			chunk.x = x; chunk.z = z;
-			ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
-			chunks.put(chave, chunk);
-			estados.put(chave, 0);
-			gerarDados(chave);
-			return; 
-		}
-		// 3. se ela existe(veio do disco ou ja foi gerada) e ta no estado 1, 
-		// gera a malha assim que os vizinhos permitirem
-		int estadoAtual = estados.getOrDefault(chave, 0);
-		if(estadoAtual == 1 && !chunk.fazendo) {
-			if(vizinhosProntos(x, z)) {
-				gerarMalha(chave);
+		final long chave = Chave.calcularChave(x, z);
+		// 1. verifica se ja ta carregada no mapa ativo
+		if(chunks.containsKey(chave)) {
+			// se ja existe e precisa de malha, gera
+			int estado = estados.getOrDefault(chave, 0);
+			if(estado == 1 && !chunks.get(chave).fazendo) {
+				if(vizinhosProntos(x, z)) gerarMalha(chave);
 			}
+			return;
 		}
+		// 2. se não ta no ativo, verifica se ela existe no chunksMod de modificadas
+		Chunk modificado = chunksMod.get(chave);
+		if(modificado != null) {
+			chunks.put(chave, modificado);
+			estados.put(chave, 1); // marca como pronta para malha
+			return;
+		}
+		// 3. so se for realmente nova, gera do zero
+		Chunk novo = new Chunk();
+		novo.x = x; novo.z = z;
+		ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(novo.maxIds), novo);
+		chunks.put(chave, novo);
+		estados.put(chave, 0);
+		gerarDados(chave);
 	}
 	// verifica se as 8 vizinhas ao redor ja tem dados de blocos
 	public boolean vizinhosProntos(int cx, int cz) {
 		for(int x = cx - 1; x <= cx + 1; x++) {
 			for(int z = cz - 1; z <= cz + 1; z++) {
 				if(x == cx && z == cz) continue;
-				Chave vizinha = new Chave(x, z);
+				long vizinha = Chave.calcularChave(x, z);
 				// se a vizinha não tem estado ou ainda ta no estado 0(sem dados)
 				if(estados.getOrDefault(vizinha, 0) < 1) return false;
 			}
@@ -407,7 +396,7 @@ public class Mundo {
 		return true;
 	}
 
-	public static void gerarDados(final Chave chave) {
+	public static void gerarDados(final long chave) {
 		final Chunk chunk = chunks.get(chave);
 
 		exec.submit(new Runnable() {
@@ -419,7 +408,7 @@ public class Mundo {
 			});
 	}
 
-	public static void gerarMalha(final Chave chave) {
+	public static void gerarMalha(final long chave) {
 		final Chunk chunk = chunks.get(chave);
         if(chunk == null) return;
 		chunk.fazendo = true;
@@ -464,10 +453,10 @@ public class Mundo {
 			});
 	}
 
-	public static void gerarChunk(final Chave chave) {
+	public static void gerarChunk(final long chave) {
 		final Chunk chunk = chunks.get(chave);
-		chunk.x = chave.x;
-		chunk.z = chave.z;
+		chunk.x = Chave.x(chave);
+		chunk.z = Chave.z(chave);
 		chunk.fazendo = true;
 
 		exec.submit(new Runnable() {
@@ -475,7 +464,7 @@ public class Mundo {
 				public void run() {
 					// 1: gera apenas os dados dos blocos(se ainda não existirem)
 					// garante que a chunk central e suas 4 vizinhas diretas tenham dados
-					prepararDadosVizinhos(chave.x, chave.z);
+					prepararDadosVizinhos(chunk.x, chunk.z);
 
 					// 2: gera a malha
 					final FloatArrayUtil vertsGeral = new FloatArrayUtil();
@@ -510,7 +499,7 @@ public class Mundo {
 		// define um raio de vizinhos necessarios(pelo menos as 4 direções)
 		for(int x = cx - 1; x <= cx + 1; x++) {
 			for(int z = cz - 1; z <= cz + 1; z++) {
-				Chave vizinhaChave = new Chave(x, z);
+				long vizinhaChave = Chave.calcularChave(x, z);
 				Chunk v = chunks.get(vizinhaChave);
 
 				// se a chunk vizinha não existe, cria ela apenas com dados(sem malha ainda)

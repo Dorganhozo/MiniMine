@@ -54,6 +54,7 @@ void jogador.inv:selecionarSlot(indice, jogador) -- seleciona um slot para o jog
 Mundo mundo:
 
 String mundo.nome -- nome do mundo atual
+boolean mundo.debugColisao -- ativa/desativa o debug do guloso
 int mundo.RAIO_CHUNKS -- chunks × raio = chunks ativas
 int mundo.semente -- Retorna a semente do Mundo
 final int mundo.Y_CHUNK -- tamanho vertical das chuhks
@@ -77,7 +78,7 @@ void mundo.texturas:add(textura) -- adiciona uma textura, faça mundo.texturas(u
 mundo.chunks:
 
 int mundo.chunks:size() -- obtem a quantidade de objetos chunk a serem renderizados
-Chunk mundo.chunks:get(Chave chave) -- retorna um objeto chunk e senão existir, retorna nil
+Chunk mundo.chunks:get(long chave) -- retorna um objeto chunk e senão existir, retorna nil
 
 mundo.chunksMod:
 
@@ -90,6 +91,11 @@ float mundo.s2D.ruido(float x, y) -- devolve um ruido 2D comum simplex
 float mundo.s2D.ruidoFractal(float x, y, escala, octaves, persistencia) -- devolve um ruido fractal 2D simplex (max de 16 octaveis)
 float mundo.s3D.ruido(float x, y, z) -- devolve um ruido 3D comum simplex
 float mundo.s3D.ruidoFractal(float x, y, z, escala, octaves, persistencia) -- devolve um ruido fractal 3D simplex
+
+Chave chave:
+chave.calcularChave(int x, z) -- retorna um long com a chave da chunk nessas coordenadas globais
+chave.x(long chave) -- extrai a coordenada global X da chave
+chave.z(long chave) -- extrai a coordenada gloval Z da chave
 
 ChunkUtil chunkutil:
 
@@ -150,7 +156,6 @@ Map<String, Texto> ui.textos:
 
 Texto ui.textos:get(String nomeTexto) -- retorna o objeto Texto
 String ui.textos:get(String nomeTexto).texto -- texto legivel
-
 
 Biomas biomas:
 
@@ -216,6 +221,9 @@ boolean arquivos:existe(lua.pacote .. "arquivo.txt") -- retorna booleano
 List<String> arquivos:listar(lua.pacote) -- retorna um objeto List<String> com os nomes de arquivos e pastas no caminho
 
 ## FUNÇÕES SOZINHAS ##
+
+log(String mensagem) -- exibe uma mensagem no console e grava no arquivo de debug
+log(String autor, mensagem) -- exibe uma mensagem destacando que foi um autor quem mandou a mensagem
 
 porFrame(function(delta)
    -- tudo aqui será executado a cada frame, só pode ter 1 chamada

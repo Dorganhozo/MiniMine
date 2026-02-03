@@ -37,15 +37,14 @@ public class Jogo implements Screen {
     @Override
 	public void show() {
 		mundo.ciclo = true;
-		render = new Render(jogador, mundo);
 		
 		// net = new Net(Net.SERVIDOR_MODO);
 		
-		LuaAPI.iniciar(this);
-		
+		render = new Render(jogador, mundo);
+		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		render.mundo.iniciar();
 		
-		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+render.mundo.nome+".mini")) ArquivosUtil.crMundo(render.mundo, jogador);
+		LuaAPI.iniciar();
 		
 		Audio.sons.put("grama_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/grama_1.mp3")));
 		Audio.sons.put("terra_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_1.mp3")));
@@ -102,7 +101,7 @@ public class Jogo implements Screen {
 	}
 	@Override
 	public void pause() {
-		LuaAPI.iniciar(this);	
+		LuaAPI.iniciar();	
 		mundo.carregado = false;
 		for(Chunk c : mundo.chunks.values()) {
 			if(c.malha != null) c.malha.dispose();

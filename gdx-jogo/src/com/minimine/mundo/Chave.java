@@ -1,18 +1,15 @@
 package com.minimine.mundo;
 
 public class Chave {
-	public int x, z;
-	public Chave(int x, int z) {this.x = x; this.z = z;}
-	
-	@Override
-	public boolean equals(Object o) {
-		if(this == o) return true;
-		if(!(o instanceof Chave)) return false;
-		Chave chave = (Chave) o;
-		return  x == chave.x && z == chave.z;
+	public static long calcularChave(int x, int z) {
+		return ((long)x << 32) | (z & 0xFFFFFFFFL);
 	}
-	@Override
-	public int hashCode() {
-		return (x * 31) ^ z;
+
+	public static int x(long chave) {
+		return (int)(chave >> 32);
+	}
+
+	public static int z(long chave) {
+		return (int)chave;
 	}
 }

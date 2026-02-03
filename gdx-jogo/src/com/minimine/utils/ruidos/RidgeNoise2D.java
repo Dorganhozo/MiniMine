@@ -1,18 +1,13 @@
 package com.minimine.utils.ruidos;
-
 /**
- * Ridge noise para criar cordilheiras e cadeias montanhosas realistas.
- * Usa valor absoluto do ruído para criar "cristas".
+ * ridge noise pra criar cordilheiras e cadeias montanhosas realistas
+ * usa valor absoluto do ruído para criar "cristas"
  */
-public class RidgeNoise extends Simplex2D {
-    
-    public RidgeNoise(long semente) {
+public class RidgeNoise2D extends Simplex2D {
+    public RidgeNoise2D(long semente) {
         super(semente);
     }
-
-    /**
-     * Ridge noise fractal - cria cordilheiras naturais.
-     */
+    // ridge noise fractal, cria cordilheiras naturais
     public double ridgeFractal(double x, double z, int oitavas, double lacunaridade, double ganho) {
         double amplitude = 0.5;
         double frequencia = 1.0;
@@ -20,10 +15,10 @@ public class RidgeNoise extends Simplex2D {
         double pesoAcumulado = 0.0;
         double peso = 1.0;
 
-        for (int i = 0; i < oitavas; i++) {
+        for(int i = 0; i < oitavas; i++) {
             double n = ruido(x * frequencia, z * frequencia);
 
-            // transforma em ridge (crista)
+            // transforma em ridge(crista)
             n = Math.abs(n);
             n = 1.0 - n;
             n = n * n;  // intensifica picos
@@ -39,23 +34,20 @@ public class RidgeNoise extends Simplex2D {
             amplitude *= ganho;
             frequencia *= lacunaridade;
         }
-
         return resultado / pesoAcumulado;
     }
 
-    /**
-     * Ridge bilateral - cria vales entre montanhas.
-     */
+    // ridge bilateral, cria vales entre montanhas
     public double ridgeBilateral(double x, double z, int oitavas, double lacunaridade, double ganho) {
         double amplitude = 0.5;
         double frequencia = 1.0;
         double resultado = 0.0;
         double pesoAcumulado = 0.0;
 
-        for (int i = 0; i < oitavas; i++) {
+        for(int i = 0; i < oitavas; i++) {
             double n = ruido(x * frequencia, z * frequencia);
 
-            // bilateral ridge - vale no meio, cristas nos lados
+            // bilateral ridge, vale no meio, cristas nos lados
             n = Math.abs(n) * 2.0 - 1.0;
             n = n * n * Math.signum(n);
 
@@ -65,10 +57,8 @@ public class RidgeNoise extends Simplex2D {
             amplitude *= ganho;
             frequencia *= lacunaridade;
         }
-
         return resultado / pesoAcumulado;
     }
-
     // textura rochosa complexa
     public double swiss(double x, double z, int oitavas, double lacunaridade, double ganho, double warp) {
         double amplitude = 1.0;
@@ -94,13 +84,9 @@ public class RidgeNoise extends Simplex2D {
             x *= lacunaridade;
             z *= lacunaridade;
         }
-
         return resultado;
     }
-
-    /**
-     * Jordan turbulence - turbulência geológica.
-     */
+    // turbulencia geologica
     public double jordan(double x, double z, int oitavas, double lacunaridade, double ganho0, double ganho) {
         double amplitude = ganho0;
         double frequencia = 1.0;
@@ -110,7 +96,7 @@ public class RidgeNoise extends Simplex2D {
         double dx2 = 0.0;
         double dz2 = 0.0;
 
-        for (int i = 0; i < oitavas; i++) {
+        for(int i = 0; i < oitavas; i++) {
             double n = ruido(x, z);
             double n1x = ruido(x + 0.01, z);
             double n1z = ruido(x, z + 0.01);
@@ -132,8 +118,6 @@ public class RidgeNoise extends Simplex2D {
             x *= lacunaridade;
             z *= lacunaridade;
         }
-
         return resultado;
     }
 }
-

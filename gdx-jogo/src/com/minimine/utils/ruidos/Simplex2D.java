@@ -1,7 +1,7 @@
 package com.minimine.utils.ruidos;
 
 public class Simplex2D {
-    public final short[] permutacao = new short[512];
+    public final int[] permutacao = new int[512];
     
     // constantes matematicas de inclinação do espaço(Simplex)
     public static final double F2 = 0.5 * (Math.sqrt(3.0) - 1.0);
@@ -14,12 +14,12 @@ public class Simplex2D {
 
     // usa um misturador de bits(hash) pra garantir determinismo sem travas
     public Simplex2D(long semente) {
-        short[] p = new short[256];
-        for (short i = 0; i < 256; i++) p[i] = i;
+        int[] p = new int[256];
+        for(short i = 0; i < 256; i++) p[i] = i;
 
         for(int i = 255; i > 0; i--) {
             int j = espalhar(i, semente) & 255;
-            short temp = p[i];
+            int temp = p[i];
             p[i] = p[j];
             p[j] = temp;
         }
@@ -37,7 +37,7 @@ public class Simplex2D {
         h ^= h >>> 33;
         h *= 0xc4ceb9fe1a85ec53L;
         h ^= h >>> 33;
-        return (int) h;
+        return (int)h;
     }
 
     public double ruidoFractal(double x, double y, int oitavas, double persistencia, double lacunaridade) {
