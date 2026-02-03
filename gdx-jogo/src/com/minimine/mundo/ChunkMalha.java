@@ -22,7 +22,7 @@ public class ChunkMalha {
         chave.x = chunk.x; chave.z = chunk.z - 1;
         cZN = Mundo.chunks.get(chave);
 
-        // === gera malha de renderização(O Guloso)===
+        // === gera malha de renderização(O Guloso) ===
         
         // 1. eixo Y(faces cima/baixo)
         int[] mascara = new int[16 * 16];
@@ -147,14 +147,12 @@ public class ChunkMalha {
                         mascaraSolida[n++] = solido ? 1 : 0;
                     }
                 }
-                // greedy 2D simples na camada(so XZ)
+                // guloso 2D simples na camada(so XZ)
                 n = 0; // reinicia o indice
                 // o loop abaixo percorre Z e X, correspondendo a ordem de preenchimento da mascara acima
                 for(int j = 0; j < 16; j++) { // Z
                      for(int i = 0; i < 16; ) { // X
                          if(mascaraSolida[j * 16 + i] == 1) { // usa indice calculado(j*16 + i) pra seguranca
-                             int idx = j * 16 + i;
-                             
                              // determinar largura(V) no eixo X
                              int v = 1; 
                              while(i + v < 16 && mascaraSolida[j * 16 + (i + v)] == 1) v++;
@@ -210,12 +208,12 @@ public class ChunkMalha {
                     boolean continua = true;
                     while(j + h < altura && continua) {
                         for(int k = 0; k < v; k++) {
-                            if (mascara[n + k + h * largura] != val) {
+                            if(mascara[n + k + h * largura] != val) {
                                 continua = false;
                                 break;
                             }
                         }
-                        if (continua) h++;
+                        if(continua) h++;
                     }
                     // limpar mascara
                     for(int l = 0; l < h; l++) {

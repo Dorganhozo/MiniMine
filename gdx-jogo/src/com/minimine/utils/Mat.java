@@ -13,6 +13,11 @@ public final class Mat {
         int xi = (int) x;
         return x < xi ? xi - 1 : xi;
     }
+	// mapeia um valor de um intervalo para outro (-1..1 para 0..100)
+    public static double mapear(double valor, double minOrigem, double maxOrigem, double minDestino, double maxDestino) {
+        return minDestino + (valor - minOrigem) * (maxDestino - minDestino) / (maxOrigem - minOrigem);
+    }
+
 	// pros ruidos:
 	public static float dot(int[] g, float x, float y) {
         return g[0] * x + g[1] * y;

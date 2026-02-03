@@ -11,25 +11,22 @@ import com.badlogic.gdx.Gdx;
 import com.minimine.mundo.Mundo;
 
 public class NuvensUtil {
-    public static Mesh meshNuvens;
-    public static ShaderProgram shaderNuvens;
+    public static Mesh malha;
+    public static ShaderProgram shader;
     public static float tempo = 0f;
     public static float[] nuvensPos; // [x, y, z, tam] pra cada nuvem
     public static final int NUM_NUVENS = 100;
     public static final float RAIO_VISIVEL = 150f;
-    public static final float VELOCIDADE = 0.2f;
+	public static float ALTURA_NUVENS = 150;
+    public static final float VELO = 0.2f;
 	
     public static Vector3 centro= new Vector3();
     public static boolean primeiraVez = true;
 	
-	public static boolean mod = false;
-	
     public static String vert = 
     "attribute vec3 a_pos;\n" +
     "uniform mat4 u_projPos;\n" +
-    "varying float v_altura;\n" +
     "void main() {\n" +
-    "  v_altura = a_pos.y;\n" +
     "  gl_Position = u_projPos * vec4(a_pos, 1.0);\n" +
     "}";
 
@@ -37,9 +34,8 @@ public class NuvensUtil {
     "#ifdef GL_ES\n" +
     "precision mediump float;\n" +
     "#endif\n" +
-    "varying float v_altura;\n" +
     "void main() {\n" +
-    "  vec3 cor = mix(vec3(1.0, 1.0, 1.0), vec3(0.9, 0.9, 0.95), v_altura * 0.05);\n" +
+    "  vec3 cor = vec3(1.0, 1.0, 1.0);\n" +
     "  gl_FragColor = vec4(cor, 0.8);\n" +
     "}";
 	
@@ -47,11 +43,9 @@ public class NuvensUtil {
 
     public static void iniciar() {
         nuvensPos = new float[NUM_NUVENS * 4];
-        if(!mod) shaderNuvens = new ShaderProgram(vert, frag);
+        shader = new ShaderProgram(vert, frag);
 
-        if(!shaderNuvens.isCompiled()) {
-            Gdx.app.log("Shader", "[ERRO]: " + shaderNuvens.getLog());
-        }
+        if(!shader.isCompiled()) Gdx.app.log("Shader", "[ERRO]: " + shader.getLog());
     }
 
     public static void gerarNuvem(int idc, Vector3 centro) {
@@ -61,7 +55,7 @@ public class NuvensUtil {
         float distancia = (float)Math.random() * RAIO_VISIVEL * 0.8f; // 80% do raio
 
         nuvensPos[base] = centro.x + (float)Math.cos(Math.toRadians(angulo)) * distancia;
-        nuvensPos[base + 1] = 80f + (float)Math.random() * 20f; // altura
+        nuvensPos[base + 1] = ALTURA_NUVENS + (float)Math.random() * 20f; // altura
         nuvensPos[base + 2] = centro.z + (float)Math.sin(Math.toRadians(angulo)) * distancia;
         nuvensPos[base + 3] = 6f + (float)Math.random() * 10f; // tamanho
     }
@@ -118,11 +112,11 @@ public class NuvensUtil {
 			indices[indicesIdc++] = (short)(baseIdc + 4); indices[indicesIdc++] = (short)(baseIdc + 0); indices[indicesIdc++] = (short)(baseIdc + 3);
 			vertPos += 8;
 		}
-        if(meshNuvens != null) meshNuvens.dispose();
+        if(malha != null) malha.dispose();
         
-        meshNuvens = new Mesh(true, TOTAL_VERTICES, TOTAL_INDICES, atribus);
-        meshNuvens.setVertices(vertices);
-        meshNuvens.setIndices(indices);
+        malha = new Mesh(true, TOTAL_VERTICES, TOTAL_INDICES, atribus);
+        malha.setVertices(vertices);
+        malha.setIndices(indices);
     }
 
     public static void att(float delta, Vector3 pos) {
@@ -136,13 +130,13 @@ public class NuvensUtil {
             primeiraVez = false;
             return;
         }
-        boolean precisaAtualizarMesh = false;
+        boolean precisaAtt = false;
         // movimento
         for(int i = 0; i < NUM_NUVENS; i++) {
             int base = i * 4;
 
             // movimento continuo em direção fixa(pra OESTE -X)
-            nuvensPos[base] -= VELOCIDADE * delta * 60f;
+            nuvensPos[base] -= VELO * delta * 60f;
             // verifica se saiu do raio visivel em relação do jogador
             float distanciaX = nuvensPos[base] - pos.x;
             float distanciaZ = nuvensPos[base + 2] - pos.z;
@@ -151,12 +145,12 @@ public class NuvensUtil {
             if(distancia > RAIO_VISIVEL) {
                 // nuvem espalhada ao eedor do jogador
                 attNuvemEspalhada(i, pos);
-                precisaAtualizarMesh = true;
+                precisaAtt = true;
             }
         }
         centro.set(pos);
         // atualiza a mesh a cada frame
-        if(precisaAtualizarMesh || true) attMesh();
+        if(precisaAtt || true) attMesh();
     }
 
     public static void attNuvemEspalhada(int idc, Vector3 posJogador) {
@@ -169,22 +163,22 @@ public class NuvensUtil {
         float dis = RAIO_VISIVEL * 0.7f + (float)Math.random() * RAIO_VISIVEL * 0.3f; // 70-100% do raio
 
         nuvensPos[base] = posJogador.x + (float)Math.cos(Math.toRadians(angulo)) * dis;
-        nuvensPos[base + 1] = 80f + (float)Math.random() * 20f; // altura
+        nuvensPos[base + 1] = ALTURA_NUVENS + (float)Math.random() * 20f; // altura
         nuvensPos[base + 2] = posJogador.z + (float)Math.sin(Math.toRadians(angulo)) * dis;
         nuvensPos[base + 3] = 6f + (float)Math.random() * 10f; // tamanho
     }
 
     public static void att(Matrix4 matrizCamera) {
-        if(!Mundo.nuvens || meshNuvens == null) return;
+        if(!Mundo.nuvens || malha == null) return;
 
-        shaderNuvens.begin();
-        shaderNuvens.setUniformMatrix("u_projPos", matrizCamera);
-        meshNuvens.render(shaderNuvens, GL20.GL_TRIANGLES);
-        shaderNuvens.end();
+        shader.begin();
+        shader.setUniformMatrix("u_projPos", matrizCamera);
+        malha.render(shader, GL20.GL_TRIANGLES);
+        shader.end();
     }
 
     public static void liberar() {
-		meshNuvens.dispose();
-        shaderNuvens.dispose();
+		malha.dispose();
+        shader.dispose();
     }
 }

@@ -111,7 +111,9 @@ public class Mundo {
         semente = semente == 0 ? (System.currentTimeMillis() >> 1) : semente;
         s2D = new Simplex2D(semente);
 		s3D = new Simplex3D(semente >> 1);
-
+		
+		Biomas.iniciar();
+		
         if(exec == null || exec.isShutdown()) {
 			exec = Executors.newFixedThreadPool(8);
 		}

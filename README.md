@@ -60,19 +60,20 @@ Geração em Thread separada com ExecutorService.
 Reuso de objetos Chave parq chunks.
 Reuso de 1 objeto Matrix4 para todas as chunks.
 Face culling global.
-Frustrum culling (incluindo por distância e direção de olhar).
+Frustrum culling.
 Compressão baseada em paleta.
 Otimização na atualização com variaveis locais (JIT).
-Proteção contra vazamentos de memória nativa pré calculando a quantidade de chunks.
-Cache de luz.
-Cache de chunks modificadas sem Mesh.
+Cache de chunks modificadas sem Malha.
+O Guloso (Greedy Mesh).
 
 ## Ruídos utilitários:
-1. PerlinNoise2D.java.
+1. PerlinNoise2D.java
 2. PerlinNoise3D.java
-3. SimplexNoise2D.java.
+3. SimplexNoise2D.java
 4. SimplexNoise3D.java
-5. Simplex2D.java. (atual)
+5. Simplex2D.java (atual)
+6. Simplex3D.java (atual)
+7. RidgeNoise.java 
 
 ## compatibilidade:
 * Android 4 até Android 14.
@@ -80,7 +81,7 @@ Cache de chunks modificadas sem Mesh.
 * windows (sem testes concretos)
 
 ## Desempenho:
-FPS de 30 a 42 padrão testado com até 280 chunks ativas (raio de 8).
+FPS de 30 a 55 padrão testado com até 280 chunks ativas (raio de 5).
 
 ## Mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:

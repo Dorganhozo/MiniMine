@@ -30,6 +30,7 @@ import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.Preferences;
 import com.minimine.mundo.Mundo;
 import com.minimine.ui.UI;
+import com.minimine.mundo.Biomas;
 
 public class Menu implements Screen, InputProcessor {
 	public static SpriteBatch sb;

@@ -1,141 +1,128 @@
 package com.minimine.mundo;
 
-import com.minimine.utils.ruidos.Simplex3D;
-import com.minimine.utils.ruidos.Simplex2D;
-import java.util.List;
-import java.util.ArrayList;
+import com.minimine.mundo.geracao.GeradorTerreno;
+import com.minimine.mundo.geracao.GeradorTerreno.TipoBioma;
 
+// interface entre o gerador de terreno e o sistema de chunks
 public class Biomas {
-    // Frequências ajustadas para evitar o visual de "lixo" aleatório
-    private static final double F_CLIMA = 0.00015;
-    private static final double F_RELEVO = 0.00045;
-    private static final double F_DETALHE = 0.012;
-    private static final double F_CAVERNA = 0.025;
+    public static GeradorTerreno gerador;
 
-    public static void escolher(Chunk pedaco) {
-        Simplex2D s2d = Mundo.s2D;
-        Simplex3D s3d = Mundo.s3D;
+    public static void iniciar() {
+        gerador = new GeradorTerreno(Mundo.semente);
+    }
 
-        int mundoX = pedaco.x << 4;
-        int mundoZ = pedaco.z << 4;
+    public static void escolher(Chunk chunk) {
+        int chunkX = chunk.x << 4;
+        int chunkZ = chunk.z << 4;
 
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                int mX = mundoX + x;
-                int mZ = mundoZ + z;
+        for(int x = 0; x < 16; x++) {
+            for(int z = 0; z < 16; z++) {
+                int mundoX = chunkX + x;
+                int mundoZ = chunkZ + z;
 
-                // 1. Amostragem Climática Suavizada
-                float temperatura = (float) s2d.ruidoFractal(mX * F_CLIMA, mZ * F_CLIMA, 3, 0.5, 2.0);
-                float umidade = (float) s2d.ruidoFractal((mX + 1000) * F_CLIMA, (mZ + 1000) * F_CLIMA, 3, 0.5, 2.0);
+                int altura = gerador.calcularAltura(mundoX, mundoZ);
+                TipoBioma bioma = gerador.determinarBioma(mundoX, mundoZ, altura);
 
-                // 2. Cálculo de Mistura (Suaviza a transição entre biomas)
-                MisturaBioma mistura = CalculadorBioma.obterMistura(temperatura, umidade);
+                gerarColuna(chunk, x, z, altura, bioma, mundoX, mundoZ);
+            }
+        }
+        chunk.dadosProntos = true;
+    }
 
-                // 3. Relevo Baseado na Mistura Ponderada
-                double ruidoBase = s2d.ruidoFractal(mX * F_RELEVO, mZ * F_RELEVO, 4, 0.5, 2.0);
-                double ruidoDetalhe = s2d.ruidoFractal(mX * F_DETALHE, mZ * F_DETALHE, 2, 0.5, 2.0);
+    private static void gerarColuna(Chunk chunk, int x, int z, int altura, TipoBioma bioma, int mundoX, int mundoZ) {
+        // fim do mundo
+        ChunkUtil.defBloco(x, 0, z, "pedra", chunk);
 
-                // A altura agora funde as características dos biomas próximos
-                int alturaFinal = (int) (mistura.alturaBase + (ruidoBase * mistura.variacaoAltura) + (ruidoDetalhe * 5));
-
-                // 4. Preenchimento de Blocos Otimizado
-                for (int y = 0; y < 256; y++) {
-                    String bloco = null;
-
-                    if (y <= alturaFinal) {
-                        // Camadas de solo baseadas no bioma dominante
-                        if (y == alturaFinal && y >= 62) {
-                            bloco = mistura.blocoTopo;
-                        } else if (y > alturaFinal - 4) {
-                            bloco = mistura.blocoSub;
-                        } else {
-                            bloco = "pedra";
-                        }
-
-                        // Sistema de Cavernas (Túneis circulares e orgânicos)
-                        double cav1 = s3d.ruido(mX * F_CAVERNA, y * F_CAVERNA, mZ * F_CAVERNA);
-                        double cav2 = s3d.ruido((mX + 100) * F_CAVERNA, y * F_CAVERNA, (mZ + 100) * F_CAVERNA);
-
-                        // Interseção que cria túneis em vez de buracos aleatórios
-                        if ((cav1 * cav1 + cav2 * cav2) < 0.015 && y < alturaFinal - 8) {
-                            bloco = null; 
-                        }
-                    } else if (y < 62) {
-                        bloco = "agua";
-                    }
-
-                    if (bloco != null) {
-                        ChunkUtil.defBloco(x, y, z, bloco, pedaco);
+        // base de pedra
+        for(int y = 1; y < altura - 4; y++) {
+            ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+        }
+        // camadas superiores por bioma
+        switch(bioma) {
+            case OCEANO:
+            case OCEANO_QUENTE:
+            case OCEANO_PROFUNDO:
+                // areia ou pedra
+                int profundidade = 62 - altura;
+                for(int y = altura - 4; y < altura; y++) {
+                    if(profundidade > 20) {
+                        ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+                    } else {
+                        ChunkUtil.defBloco(x, y, z, "areia", chunk);
                     }
                 }
-            }
+                // água
+                for(int y = altura; y <= 62; y++) {
+                    ChunkUtil.defBloco(x, y, z, "agua", chunk);
+                }
+            break;
+            case OCEANO_COSTEIRO:
+                // areia
+                for(int y = altura - 3; y < altura; y++) {
+                    ChunkUtil.defBloco(x, y, z, "areia", chunk);
+                }
+                // água rasa
+                for(int y = altura; y <= 62; y++) {
+                    ChunkUtil.defBloco(x, y, z, "agua", chunk);
+                }
+            break;
+            case DESERTO:
+            case COLINAS_DESERTO:
+                // areia profunda
+                for(int y = altura - 5; y < altura; y++) {
+                    ChunkUtil.defBloco(x, y, z, "areia", chunk);
+                }
+            break;
+            case PLANICIES:
+            case PLANICIES_MONTANHOSAS:
+                // terra
+                for(int y = altura - 4; y < altura - 1; y++) {
+                    ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                }
+                // grama
+                ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
+            break;
+            case PLANICIES_AGUADAS:
+                // terra
+                for(int y = altura - 4; y < altura - 1; y++) {
+                    ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                }
+                // verifica se é lago
+                double lago = Mundo.s2D.ruido(mundoX * 0.015, mundoZ * 0.015);
+                if(lago < -0.5) {
+                    ChunkUtil.defBloco(x, altura - 1, z, "areia", chunk);
+                    ChunkUtil.defBloco(x, altura, z, "agua", chunk);
+                    ChunkUtil.defBloco(x, altura + 1, z, "agua", chunk);
+                } else {
+                    ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
+                }
+            break;
+            case FLORESTA:
+            case FLORESTA_COSTEIRA:
+            case FLORESTA_MONTANHOSA:
+                // terra
+                int profTerra = bioma == TipoBioma.FLORESTA_MONTANHOSA ? 3 : 4;
+                for(int y = altura - profTerra; y < altura - 1; y++) {
+                    ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                }
+                // grama
+                ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
+            break;
+            case FLORESTA_COM_RIOS:
+                // terra
+                for(int y = altura - 4; y < altura - 1; y++) {
+                    ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                }
+                // verifica se é rio
+                double rio = Math.abs(Mundo.s2D.ruido(mundoX * 0.008, mundoZ * 0.008));
+                if(rio < 0.08) {
+                    ChunkUtil.defBloco(x, altura - 1, z, "areia", chunk);
+                    ChunkUtil.defBloco(x, altura, z, "agua", chunk);
+                } else {
+                    ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
+                }
+            break;
         }
     }
 }
 
-class MisturaBioma {
-    float alturaBase = 0;
-    float variacaoAltura = 0;
-    String blocoTopo = "grama";
-    String blocoSub = "terra";
-}
-
-class DadosBiomas {
-		public static class Def {
-			public String nome;
-			public float tempAlvo, umidAlvo;
-			public String topo, sub;
-			public float hBase, hVar;
-
-			public Def(String n, float t, float u, String s1, String s2, float hb, float hv) {
-				this.nome = n; this.tempAlvo = t; this.umidAlvo = u;
-				this.topo = s1; this.sub = s2; this.hBase = hb; this.hVar = hv;
-			}
-		}
-
-		public static final List<Def> LISTA = new ArrayList<>();
-
-		static {
-			LISTA.add(new Def("Deserto", 0.9f, -0.6f, "areia", "areia", 62, 3));
-			LISTA.add(new Def("Planicie", 0.1f, 0.0f, "grama", "terra", 68, 7));
-			LISTA.add(new Def("Selva", 0.8f, 0.7f, "grama", "terra", 65, 25));
-			LISTA.add(new Def("Tundra", -0.7f, -0.3f, "pedra", "pedra", 75, 10));
-			LISTA.add(new Def("Montanha Neve", -0.9f, 0.2f, "pedra", "pedra", 90, 60));
-		}
-	}
-	
-class CalculadorBioma {
-    public static MisturaBioma obterMistura(float temp, float umid) {
-        MisturaBioma resultado = new MisturaBioma();
-        float pesoTotal = 0;
-
-        DadosBiomas.Def dominante = null;
-        float maiorPeso = -1;
-
-        for (DadosBiomas.Def b : DadosBiomas.LISTA) {
-            float dTemp = temp - b.tempAlvo;
-            float dUmid = umid - b.umidAlvo;
-            float distanciaSq = dTemp * dTemp + dUmid * dUmid;
-
-            // Peso inversamente proporcional à distância climática
-            float peso = 1.0f / (distanciaSq + 0.05f); 
-            peso = (float) Math.pow(peso, 4); // Expande a zona de influência
-
-            resultado.alturaBase += b.hBase * peso;
-            resultado.variacaoAltura += b.hVar * peso;
-            pesoTotal += peso;
-
-            if (peso > maiorPeso) {
-                maiorPeso = peso;
-                dominante = b;
-            }
-        }
-
-        resultado.alturaBase /= pesoTotal;
-        resultado.variacaoAltura /= pesoTotal;
-        resultado.blocoTopo = dominante.topo;
-        resultado.blocoSub = dominante.sub;
-
-        return resultado;
-    }
-}
