@@ -45,7 +45,7 @@ public class TelaDemo implements Screen, InputProcessor {
         gerenciadorUI = new GerenciadorUI();
 
         try {
-            Texture textura = new Texture(Gdx.files.internal("ui/teste.png"));
+            Texture textura = new Texture(Gdx.files.internal("ui/base.png"));
             textura.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             visualJanela = new PainelFatiado(textura);
             visualBotao = new PainelFatiado(textura);
