@@ -19,6 +19,7 @@ import com.minimine.Inicio;
 import com.minimine.Cenas;
 import com.minimine.mundo.Mundo;
 import com.minimine.ui.UI;
+import com.minimine.ui.InterUtil;
 
 public class Menu implements Screen, InputProcessor {
     public SpriteBatch pincel;
@@ -42,7 +43,7 @@ public class Menu implements Screen, InputProcessor {
     public void show() {
         pincel = new SpriteBatch();
         pincelFormas = new ShapeRenderer();
-        fonte = new BitmapFont();
+        fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 15);
         fonte.getRegion().getTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
 
         camera = new OrthographicCamera();
