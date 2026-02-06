@@ -71,7 +71,7 @@ public class Menu implements Screen, InputProcessor {
         Gdx.gl.glCullFace(GL20.GL_BACK);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         
-        // Carregar preferências
+        // carregar preferencias
         Mundo.RAIO_CHUNKS = prefs.getInteger("raioChunks", Mundo.RAIO_CHUNKS);
         UI.pov = prefs.getInteger("pov", UI.pov);
         UI.sensi = prefs.getFloat("sensi", UI.sensi);
@@ -91,7 +91,7 @@ public class Menu implements Screen, InputProcessor {
         painelMenu.defEspaco(20, 30);
         painelMenu.corFundo = new Color(0.1f, 0.15f, 0.2f, 1f);
 
-        // Título
+        // titulo
         Rotulo titulo = new Rotulo("MiniMine", fonte, escalaPixel * 1.2f);
         titulo.largura = 560;
         titulo.altura = 80;
@@ -100,7 +100,7 @@ public class Menu implements Screen, InputProcessor {
         float larguraBotao = 400;
         float alturaBotao = 70;
 
-        // Botão Um Jogador
+        // botão Um jogador
         Acao acaoJogar = new Acao() {
             public void exec() {
                 Inicio.defTela(Cenas.selecao);
@@ -118,7 +118,7 @@ public class Menu implements Screen, InputProcessor {
         Botao botaoConfig = new Botao("Configuracoes", visualBotao, fonte, 0, 0, larguraBotao, alturaBotao, escalaPixel, acaoConfig);
         painelMenu.addAncorado(botaoConfig, Ancoragem.CENTRO, 0, -50);
 
-        // Botão Sair
+        // botão Sair
         Acao acaoSair = new Acao() {
             public void exec() {
                 dialogoSair.mostrar("Sair", "Deseja sair do jogo?", new CaixaDialogo.Fechar() {
@@ -187,7 +187,6 @@ public class Menu implements Screen, InputProcessor {
         pincelFormas.dispose();
         fonte.dispose();
     }
-
     @Override
     public void pause() {}
     public void resume() {}
