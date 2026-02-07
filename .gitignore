@@ -6,6 +6,10 @@
 /gdx-jogo/bin/
 /gdx-jogo/build/
 
+# pastas de build do jogo
+/gdx-pc/bin/
+/gdx-pc/build/
+
 # outras pastas de build
 /build/
 /bin/
@@ -14,6 +18,9 @@
 # pastas tmp
 /biblis-obrigatorias/
 /compilar-manual/
+
+# Ignore .settings
+.settings/
 
 # Ignore Gradle project-specific cache directory
 .gradle
@@ -24,9 +31,8 @@ build
 # Ignore local.properties
 local.properties
 
-# Ignore logs e .temp do assets
-assets/*.log
-assets/.temp/
+# Ignore .cache
+.cache
 
-# Ignore .temp do gdx-pc
-gdx-pc/.temp
+#Ignore .settings
+**/.settings/
