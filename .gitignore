@@ -36,3 +36,7 @@ local.properties
 
 #Ignore .settings
 **/.settings/
+
+# ignore arquivos tmp
+minimine.jar
+base.txt
