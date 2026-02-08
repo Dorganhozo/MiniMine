@@ -191,7 +191,6 @@ public class UI implements InputProcessor {
 			jogador.interagirBloco();
 			return true;
 		}
-
 		return false;
 
 	}
@@ -239,7 +238,6 @@ public class UI implements InputProcessor {
 
 			if(butao == Input.Buttons.RIGHT)
 				jogador.estado = Jogador.Estado.COLOCANDO_BLOCO;
-
 			
 			if(jogador.estado != Jogador.Estado.OLHANDO)
 				return true;
@@ -275,7 +273,6 @@ public class UI implements InputProcessor {
 				}
 			}
 		}
-
 		jogador.estado = Jogador.Estado.OLHANDO;
 		if(p == pontoDir) pontoDir = -1;
 		return true;
@@ -297,8 +294,6 @@ public class UI implements InputProcessor {
 			if(jogador.tom < -89f) jogador.tom = -89f;
 			ultimaDir.set(telaX, y);
 		}
-
-
 
 		if(toques.containsKey(ponteiro)) {
 			CharSequence botaoAntigo = toques.get(ponteiro);
@@ -611,7 +606,6 @@ public class UI implements InputProcessor {
 		if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop && !jogador.inv.aberto) {
 			jogadorInterageComBloco();
 		}
-
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
 			float total = rt.totalMemory() >> 20;
