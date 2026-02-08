@@ -50,7 +50,6 @@ public class ArquivosUtil {
     public static void svMundo(Mundo mundo, Jogador jogador) {
         File pasta = new File(Inicio.externo + "/MiniMine/mundos");
         if(!pasta.exists()) pasta.mkdirs();
-
         File destino = new File(pasta, Mundo.decodificarNome(mundo.nome) + ".mini");
         File tmp = new File(pasta, Mundo.decodificarNome(mundo.nome) + ".mini.tmp");
 

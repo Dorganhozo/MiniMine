@@ -34,7 +34,7 @@ android {
             manifest.srcFile 'AndroidManifest.xml'
             res.srcDirs = ['res']
             java.srcDirs = ['src']
-            assets.srcDirs = ['../assets']
+            assets.srcDirs = ['assets']
             jniLibs.srcDirs = ['libs']
         }
     }
@@ -43,6 +43,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_7
         targetCompatibility = JavaVersion.VERSION_1_7
     }
+
 }
 
 dependencies {   
