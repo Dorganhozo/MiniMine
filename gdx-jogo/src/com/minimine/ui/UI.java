@@ -127,6 +127,8 @@ public class UI implements InputProcessor {
 
 	public List<String> mensagens = new ArrayList<String>();
 
+	private byte durabilidadeDoBloco = 0;
+
 	public UI(Jogador jogador) {
 		camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		camera.position.set(10f, 18f, 10f);
@@ -176,8 +178,10 @@ public class UI implements InputProcessor {
 		});
 	}
 
-	private boolean jogadorInterageComBloco() {
+	private boolean jogadorInterageComBloco(float delta) {
 		if(jogador.estado == Jogador.Estado.OLHANDO)return false;
+
+		if((durabilidadeDoBloco -= delta) > 0)return false;
 
 		if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) 
 			jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
@@ -187,6 +191,9 @@ public class UI implements InputProcessor {
 
 		if(jogador.estado == Jogador.Estado.COLOCANDO_BLOCO) 
 			acao = true; 
+
+		// ~2 segundos
+		durabilidadeDoBloco = 60 * 2;
 
 		jogador.interagirBloco();
 		return true;
@@ -273,6 +280,7 @@ public class UI implements InputProcessor {
 		}
 
 		jogador.estado = Jogador.Estado.OLHANDO;
+		durabilidadeDoBloco = 0;
 		if(p == pontoDir) pontoDir = -1;
 		return true;
 	}
@@ -334,6 +342,7 @@ public class UI implements InputProcessor {
 		}
 
 		calcVisaoJogador(telaX, telaY);
+		durabilidadeDoBloco /= 2;
 	
 		return true;
 	}
@@ -612,7 +621,7 @@ public class UI implements InputProcessor {
 
 
 		if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop && !jogador.inv.aberto) {
-			jogadorInterageComBloco();
+			jogadorInterageComBloco(delta);
 		}
 
 		if(debug) {
