@@ -195,7 +195,6 @@ public class UI implements InputProcessor {
 
 	private boolean calcVisaoJogador(int telaX, int telaY) {
 		int y = Gdx.graphics.getHeight() - telaX;
-		jogador.inv.aoArrastar(telaX, telaY, -1);
 
 		if(!jogador.inv.aberto) {
 			float dx = Gdx.input.getDeltaX();
@@ -284,14 +283,20 @@ public class UI implements InputProcessor {
 		int y = Gdx.graphics.getHeight() - telaY;
 
 		jogador.inv.aoArrastar(telaX, y, ponteiro);
+		final int yInvertido = Gdx.graphics.getHeight() - telaY; 
+		jogador.inv.aoArrastar(telaX, yInvertido, -1);
 
 		if(ponteiro == pontoDir && !jogador.inv.aberto) {
 			float dx = telaX - ultimaDir.x;
 			float dy = y - ultimaDir.y;
 			jogador.yaw -= dx * sensi;
 			jogador.tom += dy * sensi;
-			if(jogador.tom > 89f) jogador.tom = 89f;
-			if(jogador.tom < -89f) jogador.tom = -89f;
+			if(jogador.tom > 89f)
+				jogador.tom = 89f;
+
+			if(jogador.tom < -89f) 
+				jogador.tom = -89f;
+
 			ultimaDir.set(telaX, y);
 		}
 
@@ -327,6 +332,7 @@ public class UI implements InputProcessor {
 				toques.put(ponteiro, null);
 			}
 		}
+
 		calcVisaoJogador(telaX, telaY);
 	
 		return true;
@@ -819,6 +825,10 @@ public class UI implements InputProcessor {
 		if(modoTexto) return true;
 
 		calcVisaoJogador(telaX, telaY);
+
+		final int yInvertido = Gdx.graphics.getHeight() - telaY; 
+		jogador.inv.aoArrastar(telaX, yInvertido, -1);
+
 		return true;
 	}
 

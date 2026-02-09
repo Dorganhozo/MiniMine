@@ -222,8 +222,10 @@ public class Inventario {
 			itemSprite.setSize(tamSlot - 10, tamSlot - 10); 
 
 			// centraliza o sprite na posição do ultimo toque/arrasto posFlutuante)
-			itemSprite.setPosition(posFlutuante.x - itemSprite.getWidth() / 2, 
-			posFlutuante.y - itemSprite.getHeight() / 2);
+			itemSprite.setPosition(
+				posFlutuante.x - itemSprite.getWidth() / 2, 
+				posFlutuante.y - itemSprite.getHeight() / 2
+			);
 			itemSprite.draw(UI.sb);
 			// renderiza a quantidade
 			if(itemFlutuante.quantidade > 1) {
