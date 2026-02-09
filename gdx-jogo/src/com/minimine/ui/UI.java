@@ -177,27 +177,25 @@ public class UI implements InputProcessor {
 	}
 
 	private boolean jogadorInterageComBloco() {
-		if(jogador.estado == Jogador.Estado.QUEBRANDO_BLOCO) {
-			jogador.item = "ar";
-			jogador.interagirBloco();
-			if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
-			else jogador.item = "ar";
-			return true;
-		}
-		if(jogador.estado == Jogador.Estado.COLOCANDO_BLOCO) {
-			if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
-			else jogador.item = "ar";
-			acao = true;
-			jogador.interagirBloco();
-			return true;
-		}
-		return false;
+		if(jogador.estado == Jogador.Estado.OLHANDO)return false;
+
+		if(jogador.inv.itens[jogador.inv.slotSelecionado] != null) 
+			jogador.item = jogador.inv.itens[jogador.inv.slotSelecionado].nome;
+
+		if(jogador.estado == Jogador.Estado.QUEBRANDO_BLOCO) 
+			jogador.item = "ar"; 
+
+		if(jogador.estado == Jogador.Estado.COLOCANDO_BLOCO) 
+			acao = true; 
+
+		jogador.interagirBloco();
+		return true;
 
 	}
 
 	private boolean calcVisaoJogador(int telaX, int telaY) {
 		int y = Gdx.graphics.getHeight() - telaX;
-		jogador.inv.aoArrastar(telaY, y, -1);
+		jogador.inv.aoArrastar(telaX, telaY, -1);
 
 		if(!jogador.inv.aberto) {
 			float dx = Gdx.input.getDeltaX();
@@ -238,6 +236,7 @@ public class UI implements InputProcessor {
 
 			if(butao == Input.Buttons.RIGHT)
 				jogador.estado = Jogador.Estado.COLOCANDO_BLOCO;
+
 			
 			if(jogador.estado != Jogador.Estado.OLHANDO)
 				return true;
@@ -273,6 +272,7 @@ public class UI implements InputProcessor {
 				}
 			}
 		}
+
 		jogador.estado = Jogador.Estado.OLHANDO;
 		if(p == pontoDir) pontoDir = -1;
 		return true;
@@ -294,6 +294,8 @@ public class UI implements InputProcessor {
 			if(jogador.tom < -89f) jogador.tom = -89f;
 			ultimaDir.set(telaX, y);
 		}
+
+
 
 		if(toques.containsKey(ponteiro)) {
 			CharSequence botaoAntigo = toques.get(ponteiro);
@@ -606,6 +608,7 @@ public class UI implements InputProcessor {
 		if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop && !jogador.inv.aberto) {
 			jogadorInterageComBloco();
 		}
+
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
 			float total = rt.totalMemory() >> 20;

@@ -44,8 +44,8 @@ task rodar(type: JavaExec) {
 }
 
 tasks.withType(JavaExec).configureEach{
+    def logsDir = file("${rootDir}/.cache/logs")
     doFirst {
-	def logsDir = file("${rootDir}/.cache/logs")
 	
 	if(!logsDir.exists()){
 		logsDir.mkdirs()
