@@ -1,0 +1,40 @@
+name: CI - Compilacao MiniMine
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  construcao:
+    name: Compilacao Multiplataforma
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checagem do codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Dar permissao
+        run: chmod +x gradlew
+
+      - name: Compilacao PC
+        run: ./gradlew gdx-pc:jar --no-daemon -Dorg.gradle.entrypoint.warn.implicit.dependency=false
+
+      - name: Compilacao Android
+        run: ./gradlew gdx-android:assembleDebug --no-daemon -Pandroid.suppressUnsupportedCompileSdk=34 -Pcom.android.tools.build.gradle.overrideVersionCheck=true
+
+      - name: Guardar Artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: MiniMine-Pacotes
+          path: |
+            gdx-pc/build/libs/*.jar
+            gdx-android/build/outputs/apk/debug/*.apk

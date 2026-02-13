@@ -1,0 +1,71 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    namespace "com.minimine"
+    compileSdkVersion 34
+
+    defaultConfig {
+        applicationId "com.minimine"
+        minSdkVersion 23
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+    }
+    
+    buildTypes {
+        release {                  
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            res.srcDirs = ['res']
+            java.srcDirs = ['src']
+            assets.srcDirs = ['../assets']
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+    }
+}
+
+dependencies {   
+    implementation project(":gdx-jogo")
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: '../gdx-jogo/libs', include: ['*.jar']) 
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+}
+
+task limpezaSele(type: Delete) {
+    delete 'build/classes'
+    delete 'build/intermediates/classes'
+    delete 'build/tmp'
+}
+
+tasks.whenTaskAdded { task ->
+    if(task.name.contains('Compile') || task.name.contains('JavaPreCompile')) {
+        task.outputs.upToDateWhen { false }
+    }
+}
+
+tasks.clean.dependsOn limpezaSele
