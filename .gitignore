@@ -1,12 +1,12 @@
-# pastas de build do android
+# saidas de compilação do android
 /gdx-android/bin/
 /gdx-android/build/
 
-# pastas de build do jogo
+# saidas de compilação do jogo
 /gdx-jogo/bin/
 /gdx-jogo/build/
 
-# outras pastas de build
+# outras saidas de compilação
 /build/
 /bin/
 /output/
@@ -15,14 +15,19 @@
 /biblis-obrigatorias/
 /compilar-manual/
 
-# Ignore Gradle project-specific cache directory
+# ignore o cache do gradle
 .gradle
 
-# Ignore Gradle build output directory
+# ignore a saida de compilação do gradle
 build
 
-# Ignore local.properties
 local.properties
 
-# Ignore .cache
+# ignore .cache
 .cache
+
+# ignore aplicativos tmp
+minimine.apk
+MiniMine.apk
+minimine.jar
+MiniMine.jar

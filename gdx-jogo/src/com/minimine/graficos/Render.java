@@ -160,7 +160,8 @@ public class Render {
         }
         // 2. transparentes:
         Gdx.gl.glEnable(GL20.GL_BLEND);
-
+		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+		
         for(final Chunk chunk : mundo.chunks.values()) {
             if(mundo.frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
                 chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
@@ -187,8 +188,6 @@ public class Render {
         }
 		ui.jg.render();
 		
-        Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-
         ui.att(delta, mundo);
 
 		if(ui.debug) {
