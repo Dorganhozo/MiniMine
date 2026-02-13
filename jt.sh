@@ -1,0 +1,1 @@
+cat gdx-jogo/src/com/minimine/*.java > base.txt
