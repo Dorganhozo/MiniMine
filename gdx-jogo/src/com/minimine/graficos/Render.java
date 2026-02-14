@@ -141,8 +141,10 @@ public class Render {
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-        if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
-
+        if(mundo.nuvens) {
+			NuvensUtil.att(delta, ui.jg.posicao);
+			NuvensUtil.att(ui.jg.camera.combined);
+		}
         shader.begin();
 
         shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);

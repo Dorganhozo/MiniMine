@@ -45,7 +45,8 @@ você pode descobrir mais sobre a API Lua em doc.txt.
 9. Cacto.
 10. Vidro.
 11. Tocha.
-12. pedregulho.
+12. Pedregulho.
+13. Cascalho.
 
 ## Receitas:
 ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.

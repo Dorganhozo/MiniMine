@@ -1,7 +1,5 @@
 package com.minimine.utils.ruidos;
 
-import com.minimine.utils.Mat;
-
 public class Simplex3D {
     // constantes matematicas pra inclinação do espaço 3D(Simplex)
     public static final double F3 = 1.0 / 3.0;

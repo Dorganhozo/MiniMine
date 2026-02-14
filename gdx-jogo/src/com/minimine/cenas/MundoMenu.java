@@ -136,6 +136,7 @@ public class MundoMenu implements Screen, InputProcessor {
         // botao novo mundo
         Acao acaoNovoMundo = new Acao() {
             public void exec() {
+				mundoEscolhido = false;
                 abrirDialogoNovoMundo();
             }
         };
@@ -252,6 +253,7 @@ public class MundoMenu implements Screen, InputProcessor {
                 Mundo.semente = semente;
                 dialogoSemente.fechar(false);
 				Gdx.input.setOnscreenKeyboardVisible(false);
+				mundoEscolhido = true;
                 Inicio.defTela(Cenas.jogo);
             }
         };
