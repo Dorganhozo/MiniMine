@@ -119,7 +119,7 @@ e para adicionar mais de um arquivo individual, adicione o caminho relativo a pa
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
 
 ## Dispositivos usados para testes:
-Celular:
+* Celular:
 * Modelo: Motorola G41.
 * Memória RAM: 4 GB.
 * Armazenamento: 128 GB.
@@ -129,7 +129,7 @@ Celular:
 * Sistema Operacional: Android 12 64-bit.
 * FPS padrão: 40-59.
 
-PC:
+* PC:
 * Placa Mãe: dell optiPlex 780.
 * Processador: intel core 2 quad.
 * Memória RAM: 4GB(2x2GB DDR3).
@@ -139,7 +139,7 @@ PC:
 * Sistema Operaciobal: Linux Mint 64-bit.
 * FPS padrão: 40-59.
 
-Notebook:
+* Notebook:
 * Modelo: Aspire ES 15.
 * Processador: Intel Celeron Quad Core N3450.
 * Memória RAM: 4GB DDR3 L.
@@ -158,6 +158,9 @@ Notebook:
 * **T**: abre o chat.
 * **F1**: abre o modo de debug.
 * **ESC**: abre o menu de pausa durante o jogo.
+
+## paleta de cores:
+* blocos: unseven.
 
 ## Créditos:
 
