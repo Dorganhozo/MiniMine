@@ -65,7 +65,7 @@ public class Render {
     "   float iluminacaoFinal = brilhoBruto * v_cor.b;\n" +
     // === logica de mapeamento ===
     // 1. pega os limites do atlas baseados no ID do vertice
-    "   vec4 limites = u_atlasRects[int(v_texId)];\n" +
+    "   vec4 limites = u_atlasRects[int(v_texId + 0.5)];\n" +
 
     // 2. calcula o tamanho da textura no atlas(uMax - uMin, vMax - vMin)
     "   vec2 tam = limites.zw - limites.xy;\n" +
