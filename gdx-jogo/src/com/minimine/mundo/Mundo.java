@@ -87,7 +87,7 @@ public class Mundo {
         Bloco.blocos.add(new Bloco("tocha", "tocha", "tocha", "tocha", false, true, true, 13));
 		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
 		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
-		
+
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("areia", "terra_1", "terra_2", "terra_3");
@@ -113,7 +113,7 @@ public class Mundo {
     // chamado em render:
     public void att(float delta, Jogador jogador) {
 		if(exec.isShutdown()) return;
-		
+
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 
 		if(!carregado && chunks.size() >= 1) {
@@ -205,7 +205,9 @@ public class Mundo {
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 		chunk.luzSuja = true;
         chunk.att = true;
-        // chunks perto pra atualizar se o bloco for na borda
+
+        // Marcar chunks vizinhas para atualizar malha se o bloco estiver na borda
+        // (para face culling correto)
         if(localX == 0) {
             Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
@@ -222,6 +224,21 @@ public class Mundo {
             Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
             if(chunkAdj != null) chunkAdj.att = true;
         }
+
+        // SEMPRE marcar as 4 vizinhas diretas como luzSuja
+        // porque a luz pode viajar até elas independente de onde o bloco está
+        Chunk vizinhaOeste = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
+        if(vizinhaOeste != null) vizinhaOeste.luzSuja = true;
+
+        Chunk vizinhaLeste = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
+        if(vizinhaLeste != null) vizinhaLeste.luzSuja = true;
+
+        Chunk vizinhaNorte = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
+        if(vizinhaNorte != null) vizinhaNorte.luzSuja = true;
+
+        Chunk vizinhaSul = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
+        if(vizinhaSul != null) vizinhaSul.luzSuja = true;
+
         chunksMod.put(chave, chunk);
     }
 
@@ -335,6 +352,10 @@ public class Mundo {
 				}
 				praRemover.add(chave);
 			} else if(chunk.att && !chunk.fazendo) {
+				// Se a luz está suja, recalcula antes de gerar a malha
+				if(chunk.luzSuja) {
+					ChunkLuz.attLuz(chunk);
+				}
 				if(vizinhosProntos(chunk.x, chunk.z)) {
 					gerarMalha(chave);
 				}
@@ -371,6 +392,7 @@ public class Mundo {
 		Chunk modificado = chunksMod.get(chave);
 		if(modificado != null) {
 			chunks.put(chave, modificado);
+			ChunkLuz.calcularLuz(modificado);
 			estados.put(chave, 1); // marca como pronta para malha
 			return;
 		}
@@ -402,6 +424,8 @@ public class Mundo {
 				@Override
 				public void run() {
 					Biomas.escolher(chunk);
+					ChunkLuz.calcularLuz(chunk);
+					chunk.dadosProntos = true;
 					estados.put(chave, 1); // agora ta pronta pra que as vizinhas gerem malha
 				}
 			});
@@ -547,12 +571,13 @@ public class Mundo {
 				// se os blocos ainda não foram gerados(biomas não escolhidos)
 				if(!v.dadosProntos) {
 					Biomas.escolher(v);
+					ChunkLuz.calcularLuz(v);
 					v.dadosProntos = true;
 				}
 			}
 		}
 	}
-	
+
 	public static String decodificarNome(String nome){
 	    try {
 	    	return URLDecoder.decode(nome, StandardCharsets.UTF_8.name());
@@ -583,3 +608,4 @@ public class Mundo {
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
 }
+
