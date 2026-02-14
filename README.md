@@ -26,9 +26,9 @@ refeito com LibGDX.
 21. Menu de pause.
 
 ## Modos de jogo:
-0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
-1: criativo. Não sofre com gravidade mas colide com blocos. Seus recursos não acabam
-2: sobrevivencia. Sofre com gravidade e colide com blocos. Seus recursos acabam.
+* 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
+* 1: criativo. Não sofre com gravidade mas colide com blocos. Seus recursos não acabam
+* 2: sobrevivencia. Sofre com gravidade e colide com blocos. Seus recursos acabam.
 
 você pode descobrir mais sobre a API Lua em doc.txt.
 
@@ -55,14 +55,28 @@ selecione o bloco em questão como item atual, e clique no botão de receita.
 
 essas são as receitas atuais e seus resultados:
 
-tronco = tabuas_madeira
-areia = vidro
-folha = tocha
+* tronco = tabuas_madeira
+* areia = vidro
+* folha = tocha
 
 ## Geração feita:
 
 Dominio de Deformação.
 Erosão Hidraulica.
+
+## Biomas:
+
+1. OCEANO.
+2. OCEANO_COSTEIRO.
+3. OCEANO_QUENTE.
+4. OCEANO_PROFUNDO.
+5. PLANICIES.
+6. PLANICIES_MONTANHOSAS.
+7. FLORESTA.
+8. FLORESTA_COSTEIRA.
+9. FLORESTA_MONTANHOSA.
+10. DESERTO.
+11. COLINAS_DESERTO.
 
 ## Otimizações:
 1. Geração em Thread separada com ExecutorService.
@@ -83,6 +97,7 @@ Erosão Hidraulica.
 3. Simplex2D.java (atual)
 4. Simplex3D.java (atual)
 5. RidgeRuido2D.java (atual)
+6. CelularRuido2D.java (atual)
 
 ## compatibilidade:
 * Android 4 até Android 14.
@@ -90,7 +105,7 @@ Erosão Hidraulica.
 * Windows XP até Windows 10.
 
 ## Desempenho:
-FPS de 30 a 59 padrão testado com até 121 chunks ativas (raio de 5).
+FPS de 30 a 60 padrão testado com até 112 chunks ativas (raio de 5).
 
 ## Mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -135,14 +150,15 @@ Notebook:
 * FPS padrão: 100-255.
 
 # Comandos de teclado
-**WASD**: controles de movimento.
-**ESPAÇO**: pula/voa.
-**SHIFT**: agacha/desce.
-**DIREITA/ESQUERDA**: com o mouse quebra e coloca blocos.
-**E**: abre o inventario.
-**T**: abre o chat.
-**F1**: abre o modo de debug.
-**ESC**: abre o menu de pausa durante o jogo.
+* **WASD**: controles de movimento.
+* **ESPAÇO**: pula/voa.
+* **SHIFT**: agacha/desce.
+* **DIREITA/ESQUERDA**: com o mouse quebra e coloca blocos.
+* **E**: abre o inventario.
+* **T**: abre o chat.
+* **F1**: abre o modo de debug.
+* **ESC**: abre o menu de pausa durante o jogo.
+
 ## Créditos:
 
 **Programação**:
