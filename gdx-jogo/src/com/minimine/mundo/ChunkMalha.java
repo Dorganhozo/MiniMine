@@ -7,8 +7,6 @@ import com.minimine.mundo.blocos.BlocoModelo;
 
 public class ChunkMalha {
     public static void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
-        ChunkLuz.attLuz(chunk);
-
         Chunk cXP, cXN, cZP, cZN;
         cXP = Mundo.chunks.get(Chave.calcularChave(chunk.x + 1, chunk.z));
         cXN = Mundo.chunks.get(Chave.calcularChave(chunk.x - 1, chunk.z));
@@ -16,7 +14,7 @@ public class ChunkMalha {
         cZN = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z - 1));
 
         // === gera malha de renderização(O Guloso) ===
-        
+
         // 1. eixo Y(faces cima/baixo)
         int[] mascara = new int[16 * 16];
         for(boolean cima : new boolean[]{true, false}) { // passada pra cima, depois baixo
@@ -37,7 +35,7 @@ public class ChunkMalha {
                                     vizId = 0;
                                 }
                                 Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-                                
+
                                 if(deveRenderFace(b, bViz)) {
                                     byte luz = ChunkUtil.obterLuzCompleta(x, (ny < 0 || ny >= Mundo.Y_CHUNK) ? y : ny, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
@@ -66,12 +64,12 @@ public class ChunkMalha {
                                 int vizId = 0;
                                 Chunk tC = chunk;
                                 int tx = nx;
-                                
+
                                 if(nx >= 16) { tC = cXP; tx = 0; }
                                 else if(nx < 0) { tC = cXN; tx = 15; }
-                                
+
                                 if(tC != null) vizId = ChunkUtil.obterBloco(tx, y, z, tC);
-                                
+
                                 Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
                                 if(deveRenderFace(b, bViz)) {
                                     byte luz = (tC != null) ? ChunkUtil.obterLuzCompleta(tx, y, z, tC) : 15;
@@ -100,12 +98,12 @@ public class ChunkMalha {
                                 int vizId = 0;
                                 Chunk tC = chunk;
                                 int tz = nz;
-                                
+
                                 if(nz >= 16) { tC = cZP; tz = 0; }
                                 else if(nz < 0) { tC = cZN; tz = 15; }
-                                
+
                                 if(tC != null) vizId = ChunkUtil.obterBloco(x, y, tz, tC);
-                                
+
                                 Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
                                 if(deveRenderFace(b, bViz)) {
                                     byte luz = (tC != null) ? ChunkUtil.obterLuzCompleta(x, y, tz, tC) : 15;
@@ -122,8 +120,8 @@ public class ChunkMalha {
     }
 
     private static void malhaPlana(int[] mascara, int largura, int altura, 
-    int profundidade, int faceId, Chunk chunk,
-    FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+								   int profundidade, int faceId, Chunk chunk,
+								   FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
         int n = 0;
         for(int j = 0; j < altura; j++) {
             for(int i = 0; i < largura; ) {
@@ -156,11 +154,11 @@ public class ChunkMalha {
                     int luzTotal = val & 0xFF;
                     float lb = (luzTotal & 0x0F) / 15f;
                     float ls = ((luzTotal >> 4) & 0x0F) / 15f;
-                    
+
                     Bloco b = Bloco.numIds.get(id);
                     float x = 0, y = 0, z = 0;
                     float fv = 0, fh = 0;
-                    
+
                     switch(faceId) {
                         case 0: case 1: // Y
                             x = i; z = j; y = profundidade;
@@ -187,7 +185,7 @@ public class ChunkMalha {
             }
         }
     }
-    
+
     public static boolean deveRenderFace(Bloco atual, Bloco vizinho) {
         if(vizinho == null) return true;
         if(atual.tipo == vizinho.tipo) return false;
@@ -195,3 +193,4 @@ public class ChunkMalha {
         return true;
     }
 }
+
