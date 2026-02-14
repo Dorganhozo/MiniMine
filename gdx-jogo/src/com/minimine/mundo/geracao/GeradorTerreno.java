@@ -147,16 +147,10 @@ public class GeradorTerreno {
         }
         if(umidade > 0.55 + celularVal * 0.1) {
             if(altura > nivelMar + 35) return TipoBioma.FLORESTA_MONTANHOSA;
-
-            double rio = Math.abs(ruido.ruido(x * 0.008, z * 0.008));
-            if(rio < 0.08) return TipoBioma.FLORESTA_COM_RIOS;
-
+			
             if(base < 0.05) return TipoBioma.FLORESTA_COSTEIRA;
             return TipoBioma.FLORESTA;
         }
-        double lago = ruido.ruido(x * 0.015, z * 0.015);
-        if(lago < -0.5 && altura < nivelMar + 8) return TipoBioma.PLANICIES_AGUADAS;
-
         return altura > nivelMar + 20 ? TipoBioma.PLANICIES_MONTANHOSAS : TipoBioma.PLANICIES;
     }
 
@@ -265,7 +259,6 @@ public class GeradorTerreno {
     // verifica se deve ter cascalho
     public boolean temCascalho(int x, int y, int z, int alturaSuperficie, TipoBioma bioma) {
 		// cascalho aparece em montanhas, perto de rios e em cavernas
-
 		// 1. montanhas rochosas
 		if(alturaSuperficie > nivelMar + 30) {
 			double rochoso = ridge.swiss(x * 0.003, z * 0.003, 2, 2.0, 0.4, 0.5);
@@ -274,15 +267,7 @@ public class GeradorTerreno {
 				return chance < 0.3;
 			}
 		}
-		// 2. leitos de rios
-		if(bioma == TipoBioma.FLORESTA_COM_RIOS) {
-			double rio = Math.abs(ruido.ruido(x * 0.008, z * 0.008));
-			if(rio < 0.08 && y > alturaSuperficie - 5) {
-				double chance = Math.abs(ruido.ruido(x * 0.023 + y * 0.011, z * 0.027));
-				return chance < 0.6;
-			}
-		}
-		// 3. base de cavernas e ravinas (depósitos)
+		// 2. base de cavernas e ravinas(depositos)
 		if(temCaverna(x, y, z) && !temCaverna(x, y - 1, z)) {
 			double chance = Math.abs(ruido.ruido(x * 0.031 + y * 0.007, z * 0.029));
 			return chance < 0.4;
@@ -291,9 +276,10 @@ public class GeradorTerreno {
 	}
 
     public enum TipoBioma {
-        OCEANO, OCEANO_COSTEIRO, OCEANO_QUENTE, OCEANO_PROFUNDO,
-        PLANICIES, PLANICIES_MONTANHOSAS, PLANICIES_AGUADAS,
-        FLORESTA, FLORESTA_COSTEIRA, FLORESTA_COM_RIOS, FLORESTA_MONTANHOSA,
+        OCEANO, OCEANO_COSTEIRO, OCEANO_QUENTE,
+		OCEANO_PROFUNDO,
+        PLANICIES, PLANICIES_MONTANHOSAS,
+        FLORESTA, FLORESTA_COSTEIRA, FLORESTA_MONTANHOSA,
         DESERTO, COLINAS_DESERTO
 	}
 }

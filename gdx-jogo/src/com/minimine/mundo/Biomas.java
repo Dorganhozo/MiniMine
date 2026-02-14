@@ -152,25 +152,7 @@ public class Biomas {
                 if(!gramaTemVazio) {
                     ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
                 }
-				break;
-            case PLANICIES_AGUADAS:
-                // terra
-                for(int y = altura - 4; y < altura - 1; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
-                        ChunkUtil.defBloco(x, y, z, "terra", chunk);
-                    }
-                }
-                boolean gramaAguadaVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
-                if(!gramaAguadaVazio) {
-					ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
-                }
-				break;
+			break;
             case FLORESTA:
             case FLORESTA_COSTEIRA:
             case FLORESTA_MONTANHOSA:
@@ -192,30 +174,7 @@ public class Biomas {
                 if(!gramaFlorestaVazio) {
                     ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
                 }
-				break;
-            case FLORESTA_COM_RIOS:
-                // terra com cascalho nos leitos dos rios
-                for(int y = altura - 4; y < altura - 1; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
-                        // rios tem mais cascalho
-                        if(gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
-                            ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
-                        } else {
-                            ChunkUtil.defBloco(x, y, z, "terra", chunk);
-                        }
-                    }
-                }
-				boolean gramaRioVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
-				if(!gramaRioVazio) {
-					ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
-                }
-				break;
+			break;
         }
     }
 
@@ -254,8 +213,6 @@ public class Biomas {
                         limite = 0.65; // mais densa
                     } else if(bioma == TipoBioma.FLORESTA_MONTANHOSA) {
                         limite = 0.75; // menos densa
-                    } else if(bioma == TipoBioma.FLORESTA_COM_RIOS) {
-                        limite = 0.68;
                     } else {
                         continue; // outros biomas não tem arvores neste sistema
                     }
