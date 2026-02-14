@@ -2,7 +2,7 @@ package com.minimine.utils.ruidos;
 
 import com.minimine.utils.Mat;
 
-public final class PerlinNoise3D {
+public final class PerlinRuido3D {
     public static final int[] P = new int[512];
     
     public static final int[] GX = {

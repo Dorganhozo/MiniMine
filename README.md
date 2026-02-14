@@ -11,7 +11,7 @@ refeito com LibGDX.
 6. Interface de botões de movimentação.
 7. Debug visual.
 8. Sistema de construção.
-9. Hotbar.
+9. Barra Rápida.
 10. Mods por Lua no armazenamento externo. (beta)
 11. Sistema de ciclo noturno e diário.
 12. Nuvens.
@@ -64,26 +64,24 @@ Dominio de Deformação.
 Erosão Hidraulica.
 
 ## Otimizações:
-Geração em Thread separada com ExecutorService.
-Chaves do tipo *long* para obtenção de chunks.
-Reuso de 1 objeto Matrix4 para todas as chunks.
-Face culling global.
-Frustrum culling.
-Compressão baseada em paleta.
-Otimização na atualização com variaveis locais (JIT).
-Cache de chunks modificadas sem Malha.
-O Guloso (Greedy Mesh).
-Pré-computação de erosão.
-Reuso de Arrays utilizados na geração de dados das chunks.
+1. Geração em Thread separada com ExecutorService.
+2. Chaves do tipo *long* para obtenção de chunks.
+3. Reuso de 1 objeto Matrix4 para todas as chunks.
+4. Descarte de faces sobrepostas.
+5. Não renderizar chunks fora do raio de visão.
+6. Compressão baseada em paleta.
+7. Otimização com variaveis locais pra compilação em tempo de  execução.
+8. Cache de chunks modificadas sem Malha.
+9. O Guloso (Malha Gulosa).
+10. Pré-computação de erosão.
+11. Reuso de Arrays utilizados na geração de dados das chunks.
 
 ## Ruídos utilitários:
-1. PerlinNoise2D.java
-2. PerlinNoise3D.java
-3. SimplexNoise2D.java
-4. SimplexNoise3D.java
-5. Simplex2D.java (atual)
-6. Simplex3D.java (atual)
-7. RidgeNoise2D.java 
+1. PerlinRuido2D.java
+2. PerlinRuido3D.java
+3. Simplex2D.java (atual)
+4. Simplex3D.java (atual)
+5. RidgeRuido2D.java (atual)
 
 ## compatibilidade:
 * Android 4 até Android 14.
@@ -91,7 +89,7 @@ Reuso de Arrays utilizados na geração de dados das chunks.
 * Windows XP até Windows 10.
 
 ## Desempenho:
-FPS de 30 a 59 padrão testado com até 111 chunks ativas (raio de 5).
+FPS de 30 a 59 padrão testado com até 121 chunks ativas (raio de 5).
 
 ## Mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -123,7 +121,7 @@ PC:
 * Video: intel 4 series(Integrada).
 * OpenGL: 2.1.
 * Sistema Operaciobal: Linux Mint 64-bit.
-* FPS padrão: 50-100.
+* FPS padrão: 40-59.
 
 Notebook:
 * Modelo: Aspire ES 15.
@@ -143,6 +141,7 @@ Notebook:
 **E**: abre o inventario.
 **T**: abre o chat.
 **F1**: abre o modo de debug.
+**ESC**: abre o menu de pausa durante o jogo.
 ## Créditos:
 
 **Programação**:

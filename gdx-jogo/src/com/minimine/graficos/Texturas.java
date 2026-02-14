@@ -33,6 +33,7 @@ public class Texturas {
 			atlas.put("vidro", new TextureRegion(blocos, 64, 16, 16, 16));
 			atlas.put("tocha", new TextureRegion(blocos, 80, 16, 16, 16));
 			atlas.put("pedra", new TextureRegion(blocos, 96, 16, 16, 16));
+			atlas.put("cascalho", new TextureRegion(blocos, 112, 16, 16, 16));
 			
 			// animações:
 			atlas.put("agua_a1", new TextureRegion(agua, 0, 0, 16, 16));

@@ -2,7 +2,7 @@ package com.minimine.utils.ruidos;
 
 import com.minimine.utils.Mat;  
 
-public class PerlinNoise2D {  
+public class PerlinRuido2D {  
     public static final int[] p = new int[512];  
     public static final float[][] GRADIENTES = {  
         { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },  

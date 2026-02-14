@@ -4,7 +4,7 @@ import com.minimine.ui.UI;
 import com.minimine.entidades.Jogador;
 import com.minimine.mundo.Mundo;
 import com.minimine.mundo.Chave;
-import com.minimine.mundo.blocos.BlocoModelo; // Importante para pegar os dados do atlas
+import com.minimine.mundo.blocos.BlocoModelo;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.minimine.utils.DiaNoiteUtil;
@@ -23,6 +23,7 @@ public class Render {
     public Mundo mundo;
     public static ShaderProgram shader;
 	public static ShapeRenderer debugCaixas;
+	public static boolean dispensado = false;
 
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
         new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
@@ -102,24 +103,31 @@ public class Render {
 		
 		debugCaixas = new ShapeRenderer();
 		
+		// animação da agua
         TextureRegion[] framesAgua = {
             Texturas.atlas.get("agua"),
             Texturas.atlas.get("agua_a1"),
             Texturas.atlas.get("agua_a2")
         };
-        Animacoes2D.add("agua", framesAgua, 3f); 
-
+        Animacoes2D.add("agua", framesAgua, 2.5f); 
+		
+		// carrega o modelo do jogador
 		ui.jg.criarModelo3D();
-
+		
+		// carrega as particulas
         EmissorParticulas.iniciar();
 
         ShaderProgram.pedantic = false;
 
         if(mundo.nuvens && NuvensUtil.primeiraVez) NuvensUtil.iniciar();
         if(mundo.ciclo) CorposCelestes.iniciar();
+		
+		dispensado = false;
     }
 
     public void att(float delta) {
+		if(dispensado) return;
+		
         float fator = DiaNoiteUtil.obterFatorTransicao();
         float[] corNoite = {0.05f, 0.05f, 0.15f};
         float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
@@ -171,8 +179,7 @@ public class Render {
         EmissorParticulas.att(shader, delta, ui.jg);
 
         shader.end();
-        if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
-
+        
         mundo.att(delta, ui.jg);
 
         if(mundo.carregado) {
@@ -202,6 +209,7 @@ public class Render {
     }
 
     public void liberar() {
+		dispensado = true;
         shader.dispose();
 		debugCaixas.dispose();
         ui.liberar();

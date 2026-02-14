@@ -3,8 +3,8 @@ package com.minimine.utils.ruidos;
  * ridge noise pra criar cordilheiras e cadeias montanhosas realistas
  * usa valor absoluto do ruído para criar "cristas"
  */
-public class RidgeNoise2D extends Simplex2D {
-    public RidgeNoise2D(long semente) {
+public class RidgeRuido2D extends Simplex2D {
+    public RidgeRuido2D(long semente) {
         super(semente);
     }
     // ridge noise fractal, cria cordilheiras naturais
