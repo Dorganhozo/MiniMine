@@ -31,7 +31,7 @@ public class Inicio extends Game {
 	public void create() {
 		Gdx.app.setApplicationLogger(log);
         Gdx.graphics.setVSync(false);
-		// Gdx.graphics.setForegroundFPS(0); // fps ilimitado
+		Gdx.graphics.setForegroundFPS(0); // fps ilimitado
 		
 		// blocos:
 		Audio.addSom("grama_1", "audio/blocos/grama_1.mp3");

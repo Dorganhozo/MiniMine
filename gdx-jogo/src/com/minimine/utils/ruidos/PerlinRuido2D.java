@@ -8,7 +8,6 @@ public class PerlinRuido2D {
         { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 },  
         { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 }  
     };  
-
     static {  
 		final int[] permutacao = {  
 			151,160,137,91,90,15,  

@@ -39,10 +39,25 @@ public class Biomas {
         // fim do mundo
         ChunkUtil.defBloco(x, 0, z, "pedra", chunk);
 
-        // verifica cavernas para cada camada
+        // verifica cavernas, ravinas e arcos para cada camada
         for(int y = 1; y < altura - 4; y++) {
-            if(!gerador.temCaverna(mundoX, y, mundoZ)) {
-                ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+            boolean temVazio = false;
+
+            // prioridade: ravinas > arcos > cavernas
+            if(gerador.temRavina(mundoX, y, mundoZ, altura)) {
+                temVazio = true;
+            } else if(gerador.temArco(mundoX, y, mundoZ, altura)) {
+                temVazio = true;
+            } else if(gerador.temCaverna(mundoX, y, mundoZ)) {
+                temVazio = true;
+            }
+            if(!temVazio) {
+                // verifica se deve ser cascalho ao inves de pedra
+                if(gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
+                    ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
+                } else {
+                    ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+                }
             }
         }
         // camadas superiores por bioma
@@ -53,11 +68,20 @@ public class Biomas {
                 // areia ou pedra
                 int profundidade = 62 - altura;
                 for(int y = altura - 4; y < altura; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura) 
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
                         if(profundidade > 20) {
                             ChunkUtil.defBloco(x, y, z, "pedra", chunk);
                         } else {
-                            ChunkUtil.defBloco(x, y, z, "areia", chunk);
+                            // mistura areia com cascalho em oceanos
+                            if(gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
+                                ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
+                            } else {
+                                ChunkUtil.defBloco(x, y, z, "areia", chunk);
+                            }
                         }
                     }
                 }
@@ -69,7 +93,11 @@ public class Biomas {
             case OCEANO_COSTEIRO:
                 // areia
                 for(int y = altura - 3; y < altura; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
                         ChunkUtil.defBloco(x, y, z, "areia", chunk);
                     }
                 }
@@ -82,7 +110,11 @@ public class Biomas {
             case COLINAS_DESERTO:
                 // areia profunda
                 for(int y = altura - 5; y < altura; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
                         ChunkUtil.defBloco(x, y, z, "areia", chunk);
                     }
                 }
@@ -97,25 +129,45 @@ public class Biomas {
 				break;
             case PLANICIES:
             case PLANICIES_MONTANHOSAS:
-                // terra
+                // terra com possivel cascalho em montanhas
                 for(int y = altura - 4; y < altura - 1; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
-                        ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
+                        // cascalho aparece mais em planícies montanhosas
+                        if(bioma == TipoBioma.PLANICIES_MONTANHOSAS && 
+                           gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
+                            ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
+                        } else {
+                            ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                        }
                     }
                 }
                 // grama
-                if(!gerador.temCaverna(mundoX, altura - 1, mundoZ)) {
+                boolean gramaTemVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
+                if(!gramaTemVazio) {
                     ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
                 }
 				break;
             case PLANICIES_AGUADAS:
                 // terra
                 for(int y = altura - 4; y < altura - 1; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
                         ChunkUtil.defBloco(x, y, z, "terra", chunk);
                     }
                 }
-                if(!gerador.temCaverna(mundoX, altura - 1, mundoZ)) {
+                boolean gramaAguadaVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
+                if(!gramaAguadaVazio) {
 					ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
                 }
 				break;
@@ -125,23 +177,42 @@ public class Biomas {
                 // terra
                 int profTerra = bioma == TipoBioma.FLORESTA_MONTANHOSA ? 3 : 4;
                 for(int y = altura - profTerra; y < altura - 1; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
                         ChunkUtil.defBloco(x, y, z, "terra", chunk);
                     }
                 }
                 // grama
-                if(!gerador.temCaverna(mundoX, altura - 1, mundoZ)) {
+                boolean gramaFlorestaVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
+                if(!gramaFlorestaVazio) {
                     ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
                 }
 				break;
             case FLORESTA_COM_RIOS:
-                // terra
+                // terra com cascalho nos leitos dos rios
                 for(int y = altura - 4; y < altura - 1; y++) {
-                    if(!gerador.temCaverna(mundoX, y, mundoZ)) {
-                        ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
+						|| gerador.temArco(mundoX, y, mundoZ, altura)
+						|| gerador.temCaverna(mundoX, y, mundoZ);
+
+                    if(!temVazio) {
+                        // rios tem mais cascalho
+                        if(gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
+                            ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
+                        } else {
+                            ChunkUtil.defBloco(x, y, z, "terra", chunk);
+                        }
                     }
                 }
-				if(!gerador.temCaverna(mundoX, altura - 1, mundoZ)) {
+				boolean gramaRioVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
+					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
+				if(!gramaRioVazio) {
 					ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
                 }
 				break;
