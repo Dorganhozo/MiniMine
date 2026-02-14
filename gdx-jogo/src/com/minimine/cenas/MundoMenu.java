@@ -55,7 +55,7 @@ public class MundoMenu implements Screen, InputProcessor {
     public CampoTexto campoSemente;
 
     public List<String> nomesMundos;
-    public boolean recarregarInterface;
+    public boolean recarregarInterface, mundoEscolhido;
 
     @Override
     public void show() {
@@ -103,6 +103,7 @@ public class MundoMenu implements Screen, InputProcessor {
             Gdx.app.log("ERRO", "Recursos nao encontrados: " + e.getMessage());
         }
         Gdx.input.setInputProcessor(this);
+		mundoEscolhido = false;
     }
 
     public void carregarMundos() {
@@ -163,11 +164,12 @@ public class MundoMenu implements Screen, InputProcessor {
 
                 Acao acaoJogar = new Acao() {
                     public void exec() {
+						if(mundoEscolhido) return;
                         Mundo.nome = nomeMundo;
+						mundoEscolhido = true;
                         Inicio.defTela(Cenas.jogo);
                     }
                 };
-
                 // posicionamento simples: cada botão abaixo do anterior
                 float x = 5;
                 float y = 5 + (i * (alturaBotao + espacamento));

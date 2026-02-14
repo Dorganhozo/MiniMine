@@ -27,6 +27,7 @@ import com.minimine.ui.UI;
 import com.minimine.graficos.Render;
 import com.minimine.mundo.Biomas;
 import com.minimine.entidades.Jogador;
+import com.minimine.audio.Musicas;
 
 public class Jogo implements Screen {
 	public static Mundo mundo = new Mundo();
@@ -43,16 +44,6 @@ public class Jogo implements Screen {
 		
 		LuaAPI.iniciar();
 		
-		Audio.sons.put("grama_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/grama_1.mp3")));
-		Audio.sons.put("terra_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_1.mp3")));
-		Audio.sons.put("terra_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_2.mp3")));
-		Audio.sons.put("terra_3", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/terra_3.mp3")));
-		Audio.sons.put("pedra_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/pedra_1.mp3")));
-		Audio.sons.put("pedra_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/pedra_2.mp3")));
-		Audio.sons.put("madeira_1", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_1.mp3")));
-		Audio.sons.put("madeira_2", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_2.mp3")));
-		Audio.sons.put("madeira_3", Gdx.audio.newMusic(Gdx.files.internal("audio/blocos/madeira_3.mp3")));
-		
 		new java.util.Timer().schedule(
 			new java.util.TimerTask() {
 				@Override
@@ -61,6 +52,15 @@ public class Jogo implements Screen {
 				}
 			},
 			0, 120
+		);
+		new java.util.Timer().schedule(
+			new java.util.TimerTask() {
+				@Override
+				public void run() {
+					Musicas.tocarAleatorio();
+				}
+			},
+			0, 5000
 		);
 	}
 

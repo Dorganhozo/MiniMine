@@ -2,11 +2,11 @@ package com.minimine.mundo.geracao;
 
 import com.minimine.utils.ruidos.Simplex2D;
 import com.minimine.utils.ruidos.Simplex3D;
-import com.minimine.utils.ruidos.RidgeNoise2D;
+import com.minimine.utils.ruidos.RidgeRuido2D;
 
 public class GeradorTerreno {
     public final DominioDeformacao dominio;
-    public final RidgeNoise2D ridge;
+    public final RidgeRuido2D ridge;
     public final Simplex2D ruido;
     public final Simplex3D ruido3d;
     public final Simplex3D cavernas;
@@ -19,7 +19,7 @@ public class GeradorTerreno {
     public GeradorTerreno(long semente) {
         this.semente = semente;
         this.dominio = new DominioDeformacao(semente);
-        this.ridge = new RidgeNoise2D(semente ^ 0x5DEECE66DL);
+        this.ridge = new RidgeRuido2D(semente ^ 0x5DEECE66DL);
         this.ruido = new Simplex2D(semente ^ 0x9E3779B9L);
         this.ruido3d = new Simplex3D(semente ^ 0x61C88647L);
 

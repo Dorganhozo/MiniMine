@@ -86,9 +86,12 @@ public class Mundo {
         Bloco.blocos.add(new Bloco("vidro", "vidro", true, true, false));
         Bloco.blocos.add(new Bloco("tocha", "tocha", "tocha", "tocha", false, true, true, 13));
 		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
-
+		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
+		
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
+		Bloco.addSom("areia", "terra_1", "terra_2", "terra_3");
+		Bloco.addSom("cascalho", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("pedra", "pedra_1", "pedra_2");
 		Bloco.addSom("folha", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("tabua_madeira", "madeira_1", "madeira_2", "madeira_3");
@@ -109,6 +112,8 @@ public class Mundo {
 
     // chamado em render:
     public void att(float delta, Jogador jogador) {
+		if(exec.isShutdown()) return;
+		
 		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
 
 		if(!carregado && chunks.size() >= 1) {
