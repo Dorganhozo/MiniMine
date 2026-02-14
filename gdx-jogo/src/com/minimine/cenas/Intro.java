@@ -44,7 +44,6 @@ public class Intro implements Screen {
 
     // camera
     public float yaw = 180f, tom = -20f;
-
     public int telaV, telaH, frame = 0, frame2 = 0;
 
 	// sistema de variações
@@ -69,7 +68,7 @@ public class Intro implements Screen {
 		telaV = Gdx.graphics.getWidth();
 		telaH = Gdx.graphics.getHeight();
 
-		variacao = MathUtils.random(0, 2);
+		variacao = Math.random() > 0.5 ? MathUtils.random(0, 2) : MathUtils.random(0, 2);
 
         camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		

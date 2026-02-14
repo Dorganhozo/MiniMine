@@ -16,7 +16,7 @@ import com.badlogic.gdx.math.Quaternion;
 public class Jogador {
 	public ModeloJogador modelo;
 	public ModelBatch loteModelos;
-	public int modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public int modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
