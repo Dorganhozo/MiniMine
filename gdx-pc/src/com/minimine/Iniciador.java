@@ -8,6 +8,7 @@ public class Iniciador {
     public static void main (String[] arg) {
         LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
         config.title = "MiniMine";
+        config.addIcon("minimine.png", com.badlogic.gdx.Files.FileType.Internal);
         config.width = 1280;
         config.height = 720;
         config.vSyncEnabled = false; // desativa VSync
