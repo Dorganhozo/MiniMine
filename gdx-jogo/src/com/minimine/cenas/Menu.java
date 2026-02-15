@@ -84,6 +84,7 @@ public class Menu implements Screen, InputProcessor {
         UI.sensi = prefs.getFloat("sensi", UI.sensi);
         UI.distancia = prefs.getFloat("distancia", UI.distancia);
 		Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
+        Gdx.input.setCursorCatched(false);
     }
 
     public void criarInterface() {
