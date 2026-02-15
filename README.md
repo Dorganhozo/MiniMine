@@ -134,7 +134,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * Placa Mãe: dell optiPlex 780.
 * Processador: intel core 2 quad.
 * Memória RAM: 4GB(2x2GB DDR3).
-* Armazenamento: SSD 256GB + HD 500GB.
+* Armazenamento: SSD 256GB.
 * Video: intel 4 series(Integrada).
 * OpenGL: 2.1.
 * Sistema Operaciobal: Linux Mint 64-bit.

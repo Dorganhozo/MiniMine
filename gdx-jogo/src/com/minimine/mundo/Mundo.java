@@ -152,7 +152,12 @@ public class Mundo {
 				chunk.malha = null;
             }
         }
-		chunks.clear();
+		for(Chunk chunk : chunksMod.values()) {
+            if(chunk.malha != null) {
+				chunk.malha = null;
+            }
+        }
+		chunksMod.clear();
         chunks.clear();
 		estados.clear();
         exec.shutdown();
