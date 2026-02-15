@@ -103,7 +103,7 @@ Erosão Hidraulica.
 ## compatibilidade:
 * Android 4 até Android 14.
 * Linux 32-bit e 64-bit.
-* Windows XP até Windows 10.
+* Windows XP até Windows 11.
 
 ## Desempenho:
 FPS de 30 a 60 padrão testado com até 112 chunks ativas (raio de 5).
