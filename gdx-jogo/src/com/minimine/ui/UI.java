@@ -732,6 +732,7 @@ public class UI implements InputProcessor {
     @Override 
     public boolean mouseMoved(int p, int p1) {
 		if(modoTexto) return true;
+		if(MenuPause.menuAberto) return true;
 
 		int y = Gdx.graphics.getHeight() - p1;
 		jg.inv.aoArrastar(p, y, -1);
