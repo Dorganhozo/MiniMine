@@ -7,7 +7,7 @@ refeito com LibGDX.
 2. Geração de terreno com Ruido Simplex 2D e 3D pras cavernas, manual.
 3. Colisão.
 4. Gravidade.
-5. Iluminação por vértices.
+5. Iluminação global.
 6. Interface de botões de movimentação.
 7. Debug visual.
 8. Sistema de construção.
@@ -90,6 +90,7 @@ Erosão Hidraulica.
 9. O Guloso (Malha Gulosa).
 10. Pré-computação de erosão.
 11. Reuso de Arrays utilizados na geração de dados das chunks.
+12. Iluminação feita por vértices, com niveis por blocos. (0-15)
 
 ## Ruídos utilitários:
 1. PerlinRuido2D.java

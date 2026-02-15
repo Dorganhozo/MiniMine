@@ -18,20 +18,21 @@ public class PainelRolavel extends Painel {
     public float veloRolagem = 20f;
     // barra de rolagem
     public boolean mostrarBarra = true;
-    public float larguraBarra = 8f;
-    public float margemBarra = 2f;
-    public Color corBarra = new Color(0.5f, 0.5f, 0.5f, 0.7f);
-    public Color corFundoBarra = new Color(0.3f, 0.3f, 0.3f, 0.3f);
+    public float larguraBarra = 24f; // aumentado pra ser mais facil de tocar
+    public float margemBarra = 4f;
+    public Color corBarra = new Color(0.6f, 0.6f, 0.6f, 0.9f); // mais visivel
+    public Color corBarraArrastando = new Color(0.8f, 0.8f, 0.8f, 1f); // indicativo visual
+    public Color corFundoBarra = new Color(0.2f, 0.2f, 0.2f, 0.5f);
     // arrastar conteudo e barra
     public boolean arrastandoBarra = false;
     public boolean arrastandoConteudo = false;
     public float ultimoToqueY = 0;
     // textura para desenhar retangulos
     public Texture pixelBranco;
-	
+
 	public static final Vector3 auxiliar1 = new Vector3();
 	public static final Vector3 auxiliar2 = new Vector3();
-	
+
     // cria painel rolavel com fundo visual
     public PainelRolavel(PainelFatiado visual, float x, float y, float largura, float altura, float escala) {
         super(visual, x, y, largura, altura, escala);
@@ -82,7 +83,7 @@ public class PainelRolavel extends Painel {
         limitarDeslocamento();
     }
 
-    // rocessa rolagem(roda do mouse ou gesto)
+    // processa rolagem(roda do mouse ou gesto)
     public void processarRolagem(float quantidade) {
         rolar(-quantidade * veloRolagem);
     }
@@ -126,48 +127,77 @@ public class PainelRolavel extends Painel {
     @Override
 	public boolean aoTocar(float toqueX, float toqueY, boolean pressionado) {
 		float cliqueRelativoX = toqueX - x;
-		float cliqueRelativoY = toqueY - y + deslocamentoY;
+		float cliqueRelativoY = toqueY - y;
 
-		// se soltou o dedo, avisa os filhos antes de reiniciar o arraste do painel
+		// define area da barra, maior que a barra visual pra facilitar o toque
+		float areaBarra = 40f; // area de toque generosa
+		float xInicioBarra = largura - areaBarra;
+
+		boolean toqueNaAreaBarra = precisaRolagem() && cliqueRelativoX >= xInicioBarra;
+
+		// se soltou o dedo
 		if(!pressionado) {
-			for (Componente filho : filhos) {
-				filho.aoTocar(cliqueRelativoX, cliqueRelativoY, false);
+			// se estava arrastando a barra, apenas reseta
+			if(arrastandoBarra) {
+				arrastandoBarra = false;
+				return true;
 			}
-			arrastandoConteudo = false;
-			arrastandoBarra = false;
-			// não retorna pra não travar o gerenciador
+			// se soltou fora da area da barra, avisa os filhos(botões)
+			if(!toqueNaAreaBarra) {
+				float cliqueRelativoYConteudo = cliqueRelativoY + deslocamentoY;
+				for (Componente filho : filhos) {
+					filho.aoTocar(cliqueRelativoX, cliqueRelativoYConteudo, false);
+				}
+			}
+			return contem(toqueX, toqueY);
 		}
-		// se ja estiver no meio de um arraste de tela, ignora os botões
-		if(pressionado && arrastandoConteudo) {
-			float diferenca = ultimoToqueY - toqueY;
-			deslocamentoY += (diferenca * 1.2f); // um pouco de sensibilidade
-			ultimoToqueY = toqueY;
+		// se ta pressionado E arrastando a barra
+		if(pressionado && arrastandoBarra) {
+			// calcula nova posição baseado no toque
+			float yBarra = margemBarra;
+			float alturaAreaBarra = altura - margemBarra * 2;
+			float posicaoRelativa = (cliqueRelativoY - yBarra) / alturaAreaBarra;
+			posicaoRelativa = Math.max(0, Math.min(1, posicaoRelativa));
 
-			float limite = Math.max(0, alturaConteudo - altura);
-			if(deslocamentoY < 0) deslocamentoY = 0;
-			if(deslocamentoY > limite) deslocamentoY = limite;
+			float alturaVisivel = altura - espacoSuperior - espacoInferior;
+			float maxDeslocamento = Math.max(0, alturaConteudo - alturaVisivel);
+			deslocamentoY = posicaoRelativa * maxDeslocamento;
+
 			return true;
 		}
-		// tenta clicar nos botões
-		boolean filhoCapturou = false;
-		for(int i = filhos.size() - 1; i >= 0; i--) {
-			Componente f = filhos.get(i);
-			// sk clica se o botão estiver visivel
-			float fYTela = f.y - deslocamentoY;
-			if(fYTela + f.altura > 0 && fYTela < altura) {
-				if(f.aoTocar(cliqueRelativoX, cliqueRelativoY, pressionado)) {
-					filhoCapturou = true;
-					break;
+		// se acabou de pressionar
+		if(pressionado && !arrastandoBarra) {
+			// verifica se tocou na ÁREA da barra (não precisa acertar a barrinha exata)
+			if(toqueNaAreaBarra) {
+				arrastandoBarra = true;
+
+				// ja posiciona no lugar do toque
+				float yBarra = margemBarra;
+				float alturaAreaBarra = altura - margemBarra * 2;
+				float posicaoRelativa = (cliqueRelativoY - yBarra) / alturaAreaBarra;
+				posicaoRelativa = Math.max(0, Math.min(1, posicaoRelativa));
+
+				float alturaVisivel = altura - espacoSuperior - espacoInferior;
+				float maxDeslocamento = Math.max(0, alturaConteudo - alturaVisivel);
+				deslocamentoY = posicaoRelativa * maxDeslocamento;
+
+				return true;
+			}
+			// se não tocou na área da barra, processa clique nos botões
+			float cliqueRelativoYConteudo = cliqueRelativoY + deslocamentoY;
+			for(int i = filhos.size() - 1; i >= 0; i--) {
+				Componente f = filhos.get(i);
+				// só clica se o botão estiver visível
+				float fYTela = f.y - deslocamentoY;
+				if(fYTela + f.altura > 0 && fYTela < altura) {
+					if(f.aoTocar(cliqueRelativoX, cliqueRelativoYConteudo, pressionado)) {
+						return true;
+					}
 				}
 			}
 		}
-		// se ninguem clicou e apertou o dedo, começa a preparar o arraste
-		if(pressionado && !filhoCapturou && contem(toqueX, toqueY)) {
-			arrastandoConteudo = true;
-			ultimoToqueY = toqueY;
-			return true;
-		}
-		return filhoCapturou || contem(toqueX, toqueY);
+
+		return contem(toqueX, toqueY);
 	}
 
 	@Override
@@ -207,6 +237,8 @@ public class PainelRolavel extends Painel {
         float sLargura = (((auxiliar2.x + 1) / 2) * Gdx.graphics.getWidth()) - sX;
         float sAltura = (((auxiliar2.y + 1) / 2) * Gdx.graphics.getHeight()) - sY;
 
+        // flush pra garantir que conteudo anterior seja renderizado antes do scissor
+        pincel.flush();
         Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
         Gdx.gl.glScissor((int)sX, (int)sY, (int)sLargura, (int)sAltura);
 
@@ -232,7 +264,8 @@ public class PainelRolavel extends Painel {
 			float posicao = obterPosicaoBarra();
 			float yPuxador = yBarra + (alturaAreaBarra - alturaPuxador) * posicao;
 
-			pincel.setColor(corBarra);
+			// usa cor diferente quando ta arrastando pra indicativo visual
+			pincel.setColor(arrastandoBarra ? corBarraArrastando : corBarra);
 			pincel.draw(pixelBranco, xBarra, yPuxador, larguraBarra, alturaPuxador);
 			pincel.setColor(Color.WHITE);
 		}

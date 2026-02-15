@@ -19,6 +19,9 @@ public class Painel extends Componente {
     public float espacoSuperior = 0;
     public float espacoInferior = 0;
 
+    // rastreia qual filho capturou o toque (para propagar arraste)
+    protected Componente filhoCapturado = null;
+
     // cria painel com fundo visual
     public Painel(PainelFatiado visual, float x, float y, float largura, float altura, float escala) {
         super(x, y, largura, altura);
@@ -51,7 +54,7 @@ public class Painel extends Componente {
 
     // adiciona filho com ancoragem
     public void addAncorado(Componente filho, Ancora ancoragem, float margemX, float margemY) {
-        // calcula área disponível considerando padding
+        // calcula área disponivel considerando espaço
         float larguraDisponivel = largura - espacoEsquerda - espacoDireita;
         float alturaDisponivel = altura - espacoSuperior - espacoInferior;
 
@@ -64,16 +67,28 @@ public class Painel extends Componente {
 
     @Override
     public boolean aoTocar(float toqueX, float toqueY, boolean pressionado) {
+        // se ta soltando, reseta o filho capturado
+        if(!pressionado) filhoCapturado = null;
         // verifica filhos primeiro(de tras para frente pra respeitar ordem de desenho)
         for(int i = filhos.size() - 1; i >= 0; i--) {
             Componente filho = filhos.get(i);
 
             if(filho.aoTocar(toqueX - x, toqueY - y, pressionado)) {
+                // se está pressionando e o filho consumiu o toque, rastreia ele
+                if(pressionado) {
+                    filhoCapturado = filho;
+                }
                 return true; // filho consumiu o toque
             }
         }
         // se nenhum filho consumiu e o toque ta neste painel
         return contem(toqueX, toqueY);
+    }
+
+    @Override
+    public boolean capturaArraste() {
+        // retorna true se algum filho capturado precisa de arraste
+        return filhoCapturado != null && filhoCapturado.capturaArraste();
     }
 
     @Override

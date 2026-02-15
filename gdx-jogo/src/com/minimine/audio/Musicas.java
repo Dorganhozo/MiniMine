@@ -32,6 +32,11 @@ public class Musicas {
 		}
 	}
 	
+	public static void pausarTodas() {
+		for(Music m : musicas.values()) m.pause();
+		tocando = null;
+	}
+	
 	public static void defVolume(int volume) {
 		for(Music m : musicas.values()) m.setVolume(volume);
 	}
