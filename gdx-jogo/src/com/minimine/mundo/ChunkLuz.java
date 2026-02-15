@@ -100,7 +100,6 @@ public class ChunkLuz {
         chunk.luzSuja = false;
     }
 
-    // Função para atualizar luz quando blocos mudam (usada em defBlocoMundo)
     public static void attLuz(Chunk chunk) {
         if(!chunk.luzSuja) return;
         chunk.luzSuja = false;
@@ -504,11 +503,63 @@ public class ChunkLuz {
             chunkOeste.att = true;
         }
     }
+    /*
+     * zera a luz de bloco na chunk e vizinhas quando emissor é removido
+     * isso evita que chunks importem luz antiga umas das outras durante recalculo
+     */
+    public static void zerarLuzAoRemoverEmissor(Chunk chunk) {
+        // zera luz de bloco na chunk atual
+        zerarLuzBlocoChunk(chunk);
+
+        // zera nas vizinhas também
+        Chunk chunkNorte = obterChunk(chunk.x, chunk.z - 1);
+        Chunk chunkSul = obterChunk(chunk.x, chunk.z + 1);
+        Chunk chunkLeste = obterChunk(chunk.x + 1, chunk.z);
+        Chunk chunkOeste = obterChunk(chunk.x - 1, chunk.z);
+
+        if(chunkNorte != null) zerarLuzBlocoChunk(chunkNorte);
+        if(chunkSul != null) zerarLuzBlocoChunk(chunkSul);
+        if(chunkLeste != null) zerarLuzBlocoChunk(chunkLeste);
+        if(chunkOeste != null) zerarLuzBlocoChunk(chunkOeste);
+
+        // agora marca todas como sujas pra recalcular
+        chunk.luzSuja = true;
+        chunk.att = true;
+        if(chunkNorte != null) { chunkNorte.luzSuja = true; chunkNorte.att = true; }
+        if(chunkSul != null) { chunkSul.luzSuja = true; chunkSul.att = true; }
+        if(chunkLeste != null) { chunkLeste.luzSuja = true; chunkLeste.att = true; }
+        if(chunkOeste != null) { chunkOeste.luzSuja = true; chunkOeste.att = true; }
+    }
+
+    // zera apenas luz de bloco (mantém luz solar e emissores diretos)
+    private static void zerarLuzBlocoChunk(Chunk chunk) {
+        final int totalBlocos = Mundo.CHUNK_AREA * Mundo.Y_CHUNK;
+
+        for(int i = 0; i < totalBlocos; i++) {
+            int luzAtual = chunk.luz[i] & 0xFF;
+            int luzSolar = (luzAtual >> 4) & 0x0F; // mantém bits altos(luz solar)
+
+            // verifica se este bloco é um emissor direto
+            int x = i & 0xF;
+            int z = (i >> 4) & 0xF;
+            int y = i >> 8;
+
+            int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
+            Bloco b = Bloco.numIds.get(blocoId);
+
+            if(b != null && b.luz > 0) {
+                // é um emissor, mantem sua luz
+                chunk.luz[i] = (byte)((luzSolar << 4) | (b.luz & 0x0F));
+            } else {
+                // não é emissor, zera luz de bloco
+                chunk.luz[i] = (byte)(luzSolar << 4);
+            }
+        }
+    }
 
     public static Chunk obterChunk(int cx, int cz) {
         long chave = Chave.calcularChave(cx, cz);
         return Mundo.chunks.get(chave);
     }
 }
-
 

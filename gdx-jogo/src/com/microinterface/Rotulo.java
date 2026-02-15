@@ -20,6 +20,9 @@ public class Rotulo extends Componente {
 
     @Override
     public void desenhar(SpriteBatch pincel, float delta, float paiX, float paiY) {
+        // salva a escala original da fonte para restaurar depois
+        float escalaOriginal = fonte.getData().scaleX;
+
         // aplica a escala antes de medir e desenhar
         fonte.getData().setScale(escala);
         medidor.setText(fonte, texto);
@@ -34,14 +37,9 @@ public class Rotulo extends Componente {
 
         fonte.draw(pincel, texto, posX, posY);
 
-        // reinicia a escala para não afetar outros textos por acidente
-        fonte.getData().setScale(1.0f);
+        // restaura a escala original pra não afetar outros textos
+        fonte.getData().setScale(escalaOriginal);
     }
-	
-	@Override
-	public void liberar() {
-		super.liberar();
-		fonte.dispose();
-	}
 }
+
 

@@ -83,12 +83,12 @@ public class Menu implements Screen, InputProcessor {
         UI.pov = prefs.getInteger("pov", UI.pov);
         UI.sensi = prefs.getFloat("sensi", UI.sensi);
         UI.distancia = prefs.getFloat("distancia", UI.distancia);
+		Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
     }
 
     public void criarInterface() {
         criarPainelMenu();
         criarDialogos();
-
         gerenciadorUI.add(painelMenu);
     }
 

@@ -33,6 +33,7 @@ public class Jogo implements Screen {
 	public static Mundo mundo = new Mundo();
 	public static Jogador jogador = new Jogador();
 	public static Render render;
+	public static boolean musicas = true;
 	
     @Override
 	public void show() {
@@ -50,18 +51,14 @@ public class Jogo implements Screen {
 				public void run() {
 					if(mundo.ciclo) DiaNoiteUtil.att();
 				}
-			},
-			0, 120
-		);
+			}, 0, 120);
 		new java.util.Timer().schedule(
 			new java.util.TimerTask() {
 				@Override
 				public void run() {
-					Musicas.tocarAleatorio();
+					if(musicas) Musicas.tocarAleatorio();
 				}
-			},
-			0, 5000
-		);
+			}, 0, 1000);
 	}
 
     @Override

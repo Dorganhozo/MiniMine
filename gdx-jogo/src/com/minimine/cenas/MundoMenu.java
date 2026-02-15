@@ -133,19 +133,24 @@ public class MundoMenu implements Screen, InputProcessor {
         titulo.altura = 60;
         painelPrincipal.addAncorado(titulo, Ancora.SUPERIOR_CENTRO, 0, 0);
 
-        // botao novo mundo
+        // painel fixo para botões(não rolavel) abaixo do titulo
+        Painel painelBotoes = new Painel(null, 20, 80, 760, 80, 0);
+
+        // botao novo mundo - com escala de texto reduzida para caber
         Acao acaoNovoMundo = new Acao() {
             public void exec() {
 				mundoEscolhido = false;
                 abrirDialogoNovoMundo();
             }
         };
-        Botao botaoNovoMundo = new Botao("NOVO MUNDO", visualBotao, fonteTexto, 0, 0, 400, 70, escalaPixel, acaoNovoMundo);
-        painelPrincipal.addAncorado(botaoNovoMundo, Ancora.SUPERIOR_CENTRO, 0, -80);
+        Botao botaoNovoMundo = new Botao("Novo Mundo", visualBotao, fonteTexto, 0, 0, 400, 70, escalaPixel * 0.8f, acaoNovoMundo);
+        painelBotoes.addAncorado(botaoNovoMundo, Ancora.SUPERIOR_CENTRO, 0, 0);
 
-        // painel rolavel para lista de mundos (SEM fundo visual)
+        painelPrincipal.add(painelBotoes);
+
+        // painel rolavel para lista de mundos, começa abaixo do painel de botões
         painelMundos = new PainelRolavel(20, 170, 760, 420);
-        painelMundos.defEspaco(0); // sem espaçamento interno para aproveitar toda área
+        painelMundos.defEspaco(0.5f); // sem espaçamento interno para aproveitar toda area
 
         // adiciona mundos ao painel rolavel usando ItemBotao
         if(nomesMundos.isEmpty()) {
@@ -353,8 +358,12 @@ public class MundoMenu implements Screen, InputProcessor {
         return gerenciadorUI.processarCaractere(c);
     }
 
-    @Override public void pause() {}
-    @Override public void resume() {}
+    @Override public void pause() {
+		dispose();
+	}
+    @Override public void resume() {
+		show();
+	}
 
     @Override
     public boolean keyUp(int k) { 
@@ -369,3 +378,4 @@ public class MundoMenu implements Screen, InputProcessor {
         return false; 
     }
 }
+

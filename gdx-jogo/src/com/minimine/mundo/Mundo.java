@@ -193,6 +193,16 @@ public class Mundo {
         int localZ = z & 0xF;
 
 		int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
+
+		// Detecta se o bloco antigo era um emissor de luz
+		boolean eraEmissor = false;
+		if(blocoAntigoId != 0) {
+			Bloco blocoAntigo = Bloco.numIds.get(blocoAntigoId);
+			if(blocoAntigo != null && blocoAntigo.luz > 0) {
+				eraEmissor = true;
+			}
+		}
+
 		if(blocoAntigoId != 0 && (bloco == null || bloco.equals("ar"))) {
 			// pega a luz atual do mundo pro fragmento não ficar preto
 			byte luz = obterLuzMundo(x, y, z);
@@ -202,8 +212,17 @@ public class Mundo {
 			float corFragmento = com.badlogic.gdx.graphics.Color.toFloatBits(lb, ls, 1.0f, 1.0f);
 			EmissorParticulas.criar(x, y, z, corFragmento);
 		}
+
+		// Se era emissor, zera luz IMEDIATAMENTE antes de remover o bloco
+		// Isso evita que chunks importem luz antiga durante recálculo
+		if(eraEmissor) {
+			ChunkLuz.zerarLuzAoRemoverEmissor(chunk);
+		}
+
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-		chunk.luzSuja = true;
+
+		// Se não era emissor, marca chunk e vizinhas normalmente
+		if(!eraEmissor) chunk.luzSuja = true;
         chunk.att = true;
 
         // Marcar chunks vizinhas para atualizar malha se o bloco estiver na borda
@@ -224,21 +243,21 @@ public class Mundo {
             Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
             if(chunkAdj != null) chunkAdj.att = true;
         }
+        // marca as 4 vizinhas diretas como luzSuja
+        // porque a luz pode viajar até elas independente de onde o bloco ta
+        if(!eraEmissor) {
+            Chunk vizinhaOeste = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
+            if(vizinhaOeste != null) vizinhaOeste.luzSuja = true;
 
-        // SEMPRE marcar as 4 vizinhas diretas como luzSuja
-        // porque a luz pode viajar até elas independente de onde o bloco está
-        Chunk vizinhaOeste = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
-        if(vizinhaOeste != null) vizinhaOeste.luzSuja = true;
+            Chunk vizinhaLeste = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
+            if(vizinhaLeste != null) vizinhaLeste.luzSuja = true;
 
-        Chunk vizinhaLeste = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
-        if(vizinhaLeste != null) vizinhaLeste.luzSuja = true;
+            Chunk vizinhaNorte = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
+            if(vizinhaNorte != null) vizinhaNorte.luzSuja = true;
 
-        Chunk vizinhaNorte = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
-        if(vizinhaNorte != null) vizinhaNorte.luzSuja = true;
-
-        Chunk vizinhaSul = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
-        if(vizinhaSul != null) vizinhaSul.luzSuja = true;
-
+            Chunk vizinhaSul = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
+            if(vizinhaSul != null) vizinhaSul.luzSuja = true;
+        }
         chunksMod.put(chave, chunk);
     }
 
@@ -608,4 +627,5 @@ public class Mundo {
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
 }
+
 
