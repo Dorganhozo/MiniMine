@@ -6,6 +6,10 @@
 /gdx-jogo/bin/
 /gdx-jogo/build/
 
+# saidas de compilação do pc
+/gdx-pc/bin/
+/gdx-pc/build/
+
 # outras saidas de compilação
 /build/
 /bin/
@@ -31,3 +35,9 @@ minimine.apk
 MiniMine.apk
 minimine.jar
 MiniMine.jar
+
+# ignore .settings
+.settings/
+gdx-android/.settings/
+gdx-jogo/.settings/
+gdx-pc/.settings/
