@@ -22,12 +22,11 @@ public class Entidade {
 	public final Vector3 minVec = new Vector3(), maxVec = new Vector3();
 	
 	public float yaw = 180f, tom = -20f; // pra ver onde ta olhando
-	public float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f;
+	public float VELO_MAX_QUEDA = -50f;
 	
 	public Entidade() {
 		yaw = 180f;
 		tom = -20f;
-		GRAVIDADE = -30f;
 		VELO_MAX_QUEDA = -50f;
 		largura = 0.6f;
 		altura = 1.9f;

@@ -72,7 +72,7 @@ public class Jogador extends Entidade {
 						blocoHitbox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
 						attHitbox();
 						if(blocoHitbox.intersects(hitbox)) return;
-						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, item);
+						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, inv.itens[inv.slotSelecionado].nome);
 						Bloco.tocarSom(item);
 
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
@@ -85,6 +85,10 @@ public class Jogador extends Entidade {
 
 	@Override
 	public void att(float delta) {
+		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
+		if(itemInv != null && itemInv.nome != item) item = itemInv.nome;
+		else item = "ar";
+		
 		frenteV.x = camera.direction.x;
 		frenteV.z = camera.direction.z;
 		frenteV.nor();  
@@ -108,11 +112,11 @@ public class Jogador extends Entidade {
         if(this.baixo) velocidade.y = -10f;
 
 		// gravidade no sobrevivencia
-		if(naAgua) GRAVIDADE = -10;
-		else GRAVIDADE = -30;
+		if(naAgua) Mundo.GRAVIDADE = -10;
+		else Mundo.GRAVIDADE = -30;
 
 		if(modo == 2 && !noChao || naAgua) { 
-			this.velocidade.y += GRAVIDADE * delta;
+			this.velocidade.y += Mundo.GRAVIDADE * delta;
 
 			if(this.velocidade.y < VELO_MAX_QUEDA) {
 				this.velocidade.y = VELO_MAX_QUEDA;

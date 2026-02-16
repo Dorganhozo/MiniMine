@@ -167,6 +167,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * **E**: abre o inventario.
 * **T**: abre o chat.
 * **F1**: abre o modo de debug.
+* **R**: fabrica algo com base no item selecionado.
 * **ESC**: abre o menu de pausa durante o jogo.
 
 ## paleta de cores:

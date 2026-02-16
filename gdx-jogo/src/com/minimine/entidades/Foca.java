@@ -6,9 +6,9 @@ import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
 
 public class Foca extends Entidade {
-    private float cronometroTomadaDecisao = 0;
-    private float direcaoX, direcaoZ;
-    private float necessidadeAgua = 0;
+    public float cronometroDecisao = 0;
+    public float direcaoX, direcaoZ;
+    public float necessidadeAgua = 0;
 
     public Foca(float x, float y, float z) {
         super();
@@ -20,30 +20,26 @@ public class Foca extends Entidade {
 
     @Override
     public void att(float delta) {
-        cronometroTomadaDecisao -= delta;
+        cronometroDecisao -= delta;
 
         // === logica de estados ===
-        if(cronometroTomadaDecisao <= 0) {
+        if(cronometroDecisao <= 0) {
             // se estiver muito tempo no seco, a foca "decide" procurar água
             if(!naAgua) necessidadeAgua += 5.0f; 
             else necessidadeAgua = 0;
 
             if(necessidadeAgua > 20) {
-                procurarDirecaoAgua();
-                cronometroTomadaDecisao = 60.0f; // foca no objetivo por 1 minuto
+                procurarAgua();
+                cronometroDecisao = 60.0f; // foca no objetivo por 1 minuto
             } else {
                 // vaga a esmo ou fica parada
                 direcaoX = MathUtils.random(-1f, 1f);
                 direcaoZ = MathUtils.random(-1f, 1f);
-                cronometroTomadaDecisao = MathUtils.random(2f, 5f);
+                cronometroDecisao = MathUtils.random(2f, 5f);
             }
         }
         // === fisica de gravidade ===
-        if(!naAgua) {
-            // aplica a gravidade definida na classe pai
-            velocidade.y += GRAVIDADE * delta; 
-            if(velocidade.y < VELO_MAX_QUEDA) velocidade.y = VELO_MAX_QUEDA;
-        } else {
+        if(naAgua) {
             // na água ela flutua suavemente ou submerge
             velocidade.y = MathUtils.lerp(velocidade.y, 0.2f, 0.1f); 
         }
@@ -51,7 +47,7 @@ public class Foca extends Entidade {
         float veloFinal = naAgua ? velo * 1.5f : velo * 0.3f; // rapida na água, lerda na terra
 
         // tenta mover no X e Z
-        moverComColisao(direcaoX * veloFinal * delta, 0, direcaoZ * veloFinal * delta);
+        moverColisao(direcaoX * veloFinal * delta, 0, direcaoZ * veloFinal * delta);
 
         // aplica o movimento vertical(gravidade/pulo)
         moverVertical(velocidade.y * delta);
@@ -71,22 +67,22 @@ public class Foca extends Entidade {
         }
     }
 
-    private void moverComColisao(float dx, float dy, float dz) {
+    private void moverColisao(float dx, float dy, float dz) {
         posicao.x += dx;
         attHitbox();
         if(colideMundo()) {
             posicao.x -= dx;
-            cronometroTomadaDecisao = 0; // se bateu na parede, muda de ideia
+            cronometroDecisao = 0; // se bateu na parede, muda de ideia
         }
         posicao.z += dz;
         attHitbox();
         if(colideMundo()) {
             posicao.z -= dz;
-            cronometroTomadaDecisao = 0;
+            cronometroDecisao = 0;
         }
     }
 
-    private void procurarDirecaoAgua() {
+    private void procurarAgua() {
         // escaneia ao redor para achar bloco de água
         for(int x = -10; x <= 10; x++) {
             for(int z = -10; z <= 10; z++) {
