@@ -6,6 +6,10 @@
 /gdx-jogo/bin/
 /gdx-jogo/build/
 
+# saidas de compilação do pcc
+/gdx-pc/bin/
+/gdx-pc/build/
+
 # outras saidas de compilação
 /build/
 /bin/
