@@ -18,35 +18,55 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.math.Vector2;
 
 public class Render {
     public UI ui;
     public Mundo mundo;
     public static ShaderProgram shader;
-	public static ShapeRenderer debugCaixas;
-	public static ModelBatch sb; // gerenciador de modelos 3D de entidades
-	public static boolean dispensado = false;
+    public static ShapeRenderer debugCaixas;
+    public static ModelBatch sb; // gerenciador de modelos 3D de entidades
+    public static boolean dispensado = false;
 
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
-        new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
+        new VertexAttribute(VertexAttributes.Usage.Position, 1, "a_pos"),
         new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
         new VertexAttribute(VertexAttributes.Usage.Generic, 1, "a_texId"),
         new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
     };
+
     public static String vert = 
-    "attribute vec3 a_pos;\n" +
+    "attribute float a_pos;\n" +
     "attribute vec2 a_texCoord;\n" +
-    "attribute float a_texId;\n" + // recebe o ID(0, 1, 2...)
+    "attribute float a_texId;\n" +
     "attribute vec4 a_cor;\n" +
     "uniform mat4 u_projPos;\n" +
     "varying vec2 v_texCoord;\n" +
-    "varying float v_texId;\n" + // passa pro frag
+    "varying float v_texId;\n" +
     "varying vec4 v_cor;\n" +
+	"uniform vec3 u_chunkPos;\n"+
+   
+    // descompacta posição usando operações matematicas
+    "vec3 descompactarPos(float compactada) {\n" +
+    // arredonda pro int mais proximo
+    "    float pacote = floor(compactada + 0.5);\n" +
+    // extrai X(5 bits inferiores: 0-31)
+    "    float x = mod(pacote, 32.0);\n" +
+    // extrai Y(proximos 9 bits: 0-511)
+    "    float temp = floor(pacote / 32.0);\n" +
+    "    float y = mod(temp, 512.0);\n" +
+    // extrai Z(proximos 5 bits: 0-31)
+    "    float z = floor(temp / 512.0);\n" +
+    "    return vec3(x, y, z);\n" +
+    "}\n" +
+	
     "void main() {\n" +
+    "   vec3 posLocal = descompactarPos(a_pos);\n" +
+	"   vec3 posGlobal = posLocal + u_chunkPos;\n"+
     "   v_texCoord = a_texCoord;\n" +
     "   v_texId = a_texId;\n" +
     "   v_cor = a_cor;\n" +
-    "   gl_Position = u_projPos * vec4(a_pos, 1.0);\n" +
+    "   gl_Position = u_projPos * vec4(posGlobal, 1.0);\n" +
     "}";
 
     public static String frag =
@@ -76,11 +96,11 @@ public class Render {
 
     // 4. mapeia para a posicao final no atlas
     "   const float extra = 0.0005;\n" + // pra não ter cantos invisiveis
-	"   vec2 finalUV = limites.xy + extra + localUV * (tam - 2.0 * extra);\n" +
+    "   vec2 finalUV = limites.xy + extra + localUV * (tam - 2.0 * extra);\n" +
 
     "   vec4 texCor = texture2D(u_textura, finalUV);\n" +
     "   if(texCor.a < 0.5) discard;\n" +
-	
+
     "   float dist = length(gl_FragCoord.z / gl_FragCoord.w);\n" +
     "   float inicio = 16.0;\n" + 
     "   float fim = 64.0;\n" + 
@@ -101,35 +121,35 @@ public class Render {
 
         shader = new ShaderProgram(vert, frag);
         if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
-		
-		debugCaixas = new ShapeRenderer();
-		
-		// animação da água
+
+        debugCaixas = new ShapeRenderer();
+
+        // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-            Texturas.atlas.get("agua"),
-            Texturas.atlas.get("agua_a1"),
-            Texturas.atlas.get("agua_a2")
-        }, 2.5f);  // 2.5 quadros por segundo
+			Texturas.atlas.get("agua"),
+			Texturas.atlas.get("agua_a1"),
+			Texturas.atlas.get("agua_a2")
+		}, 2.5f);  // 2.5 quadros por segundo
 		
-		// carrega as particulas
+        // carrega as particulas
         GerenciadorParticulas.iniciar(ui.jg);
 
         ShaderProgram.pedantic = false;
 
         if(mundo.nuvens && NuvensUtil.primeiraVez) NuvensUtil.iniciar();
         if(mundo.ciclo) CorposCelestes.iniciar();
-		
-		sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
-		
-		// carrega o modelo do jogador
-		ui.jg.criarModelo3D();
-		
-		dispensado = false;
+
+        sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
+
+        // carrega o modelo do jogador
+        ui.jg.criarModelo3D();
+
+        dispensado = false;
     }
 
     public void att(float delta) {
-		if(dispensado) return;
-		
+        if(dispensado) return;
+
         float fator = DiaNoiteUtil.obterFatorTransicao();
         float[] corNoite = {0.05f, 0.05f, 0.15f};
         float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
@@ -141,11 +161,11 @@ public class Render {
         Gdx.gl.glClearColor(r, g, b, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
         if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
-		
-		mundo.att(delta, ui.jg);
+
+        mundo.att(delta, ui.jg);
 
         if(mundo.carregado) {
             if(!ui.jg.nasceu) {
@@ -158,7 +178,7 @@ public class Render {
             }
             ui.jg.att(delta);
         }
-		
+
         shader.begin();
 
         shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
@@ -178,50 +198,69 @@ public class Render {
 
         // 1. solidos:
         for(final Chunk chunk : mundo.chunks.values()) {
-            if(mundo.frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
+            if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
+				shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
                 chunk.malha.render(shader, GL20.GL_TRIANGLES, 0, chunk.contaSolida);
             }
         }
         // 2. transparentes:
         Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-		
+        Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+
         for(final Chunk chunk : mundo.chunks.values()) {
-            if(mundo.frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
+            if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
+				shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
                 chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
             }
         }
         Animacoes2D.att(delta);
-        
+
         shader.end();
-		
-		if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
-		GerenciadorParticulas.att(delta);
-        
-		ui.jg.render(sb);
-		
+
+        if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
+        GerenciadorParticulas.att(delta);
+
+        ui.jg.render(sb);
+
         ui.att(delta, mundo);
 
-		if(ui.debug) {
-			debugCaixas.setColor(1, 0, 0, 1);
-			debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
-			debugCaixas.begin(ShapeRenderer.ShapeType.Line);
+        if(ui.debug) {
+            debugCaixas.setColor(1, 0, 0, 1);
+            debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
+            debugCaixas.begin(ShapeRenderer.ShapeType.Line);
 
             debugCaixas.box(ui.jg.posicao.x - ui.jg.largura/2, ui.jg.posicao.y, ui.jg.posicao.z + ui.jg.largura/2, ui.jg.largura, ui.jg.altura, ui.jg.largura);
 
             debugCaixas.end();
-		}
+        }
     }
+	
+	public final boolean frustrum(Chunk chunk, Jogador jogador) {
+		final float globalX = chunk.x << 4;
+		final float globalZ = chunk.z << 4;
+
+		// dist2(distancia ao quadrado)
+		final float distAoQuadrado = Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z);
+
+		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
+		// (RAIO * 16) * (RAIO * 16)
+		final float raioEmPixels = mundo.RAIO_CHUNKS << 4;
+		final float raioLimite = raioEmPixels * raioEmPixels;
+
+		if(!(distAoQuadrado < raioLimite)) return false;
+
+		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 255, 16);
+	}
 
     public void liberar() {
-		dispensado = true;
+        dispensado = true;
         shader.dispose();
-		debugCaixas.dispose();
+        debugCaixas.dispose();
         ui.liberar();
-		ui.jg.liberar();
+        ui.jg.liberar();
         mundo.liberar();
-		sb.dispose();
-		GerenciadorParticulas.liberar();
+        sb.dispose();
+        GerenciadorParticulas.liberar();
     }
 }
 

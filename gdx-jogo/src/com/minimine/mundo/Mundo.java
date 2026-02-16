@@ -45,6 +45,7 @@ import java.net.URLDecoder;
 import com.minimine.utils.arrays.ArrayReuso;
 import com.minimine.graficos.GerenciadorParticulas;
 import com.minimine.entidades.Entidade;
+import com.minimine.mundo.blocos.BlocoModelo;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -72,8 +73,6 @@ public class Mundo {
     public static float tick = 0.2f;
 
     public static ExecutorService exec;
-
-    public static Matrix4 matrizTmp = new Matrix4();
 
     static {
         Bloco.blocos.add(null);
@@ -131,22 +130,6 @@ public class Mundo {
 		}
     }
 
-    public boolean frustrum(Chunk chunk, Jogador jogador) {
-		float globalX = chunk.x << 4;
-		float globalZ = chunk.z << 4;
-
-		// dist2(distancia ao quadrado)
-		float distAoQuadrado = Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z);
-
-		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
-		// (RAIO * 16) * (RAIO * 16)
-		float raioEmPixels = RAIO_CHUNKS << 4;
-		float raioLimite = raioEmPixels * raioEmPixels;
-
-		if(!(distAoQuadrado < raioLimite)) return false;
-
-		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, TAM_CHUNK, Y_CHUNK, TAM_CHUNK);
-	}
     // chamado em dispose:
     public static void liberar() {
         for(Chunk chunk : chunks.values()) {
@@ -477,15 +460,12 @@ public class Mundo {
 										chunk.malha.dispose();
 										chunk.malha = null;
 									}
-									final int numVerts = vertsGeral.tam / 7;
+									final int numVerts = vertsGeral.tam / 5;
 
 									// usa totalIndices pra evitar crash
 									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
 									chunk.malha.setVertices(vertsGeral.praArray());
 									chunk.malha.setIndices(idcFinal);
-
-									matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
-									chunk.malha.transform(matrizTmp);
 
 									// verifica se ta consistente
 									if(chunk.malha.getNumIndices() != totalIndices) {
@@ -543,16 +523,13 @@ public class Mundo {
 										chunk.malha.dispose();
 										chunk.malha = null;
 									}
-									final int numVerts = vertsGeral.tam / 7;
+									final int numVerts = vertsGeral.tam / 5;
 
 									// usa totalIndices
 									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
 									chunk.malha.setVertices(vertsGeral.praArray());
 									chunk.malha.setIndices(idcFinal);
-
-									matrizTmp.setToTranslation(chunk.x << 4, 0, chunk.z << 4);
-									chunk.malha.transform(matrizTmp);
-
+									
 									// atualiza os contadores
 									chunk.contaSolida = idcSolidos.tam;
 									chunk.contaTransp = idcTransp.tam;
@@ -624,6 +601,44 @@ public class Mundo {
         Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido, true, luz));
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
+	
+	/**
+	 * Aplica uma translação permanente nos vértices da malha sem corromper
+	 * os bits de textura, ID e cor. 
+	 * Use isso APENAS UMA VEZ ao carregar o pedaço.
+	 */
+	public static void transform(com.badlogic.gdx.graphics.Mesh malha, float deslocamentoX, float deslocamentoY, float deslocamentoZ) {
+		// 5 floats por vértice conforme definido no seu código: 
+		// [PosCompactada(1), U(1), V(1), TexID(1), Cor(1)]
+		float[] vertices = new float[malha.getNumVertices() * BlocoModelo.FLOATS_VERTICE];
+		malha.getVertices(vertices);
+
+		for (int i = 0; i < vertices.length; i += BlocoModelo.FLOATS_VERTICE) {
+			// 1. Pega o float que contém os bits de posição
+			float dadoBruto = vertices[i];
+
+			// 2. Descompacta (Lógica idêntica ao seu Shader e BlocoModelo)
+			float pacote = (float) Math.floor(dadoBruto + 0.5f);
+			int px = (int) (pacote % 32.0f);
+			float temp = (float) Math.floor(pacote / 32.0f);
+			int py = (int) (temp % 512.0f);
+			int pz = (int) Math.floor(temp / 512.0f);
+
+			// 3. Aplica o deslocamento (Translação)
+			int novoX = px + (int)deslocamentoX;
+			int novoY = py + (int)deslocamentoY;
+			int novoZ = pz + (int)deslocamentoZ;
+
+			// 4. Recompacta os bits (X:5, Y:9, Z:5)
+			// Mantém os bits de textura e cor intactos pois eles estão nos índices i+1 até i+4
+			int posCompactada = (novoX & 0x1F) | ((novoY & 0x1FF) << 5) | ((novoZ & 0x1F) << 14);
+
+			vertices[i] = (float) posCompactada;
+		}
+
+		// Devolve os dados para a malha (sobrescreve os originais)
+		malha.setVertices(vertices);
+	}
 }
 
 
