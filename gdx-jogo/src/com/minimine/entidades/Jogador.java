@@ -25,6 +25,10 @@ public class Jogador extends Entidade {
 	public CharSequence item = "ar";
 	public int ALCANCE = 7;
 	public Inventario inv = new Inventario(this);
+
+	public Jogador() {
+		super();
+	}
 	
 	public void criarModelo3D() {
 		modelo = new ModeloJogador();
@@ -210,7 +214,7 @@ public class Jogador extends Entidade {
 		modelo.render(sb);
 		sb.end();
 	}
-
+	@Override
 	public void liberar() {
 		if(modelo != null) modelo.liberar();
 	}

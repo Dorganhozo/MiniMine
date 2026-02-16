@@ -149,6 +149,7 @@ public class Mundo {
 		chunksMod.clear();
         chunks.clear();
 		estados.clear();
+		entidades.clear();
         exec.shutdown();
 		Animacoes2D.liberar();
 		if(com.minimine.ui.UI.debug) {
