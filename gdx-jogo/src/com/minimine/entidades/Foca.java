@@ -30,7 +30,7 @@ public class Foca extends Entidade {
 
             if(necessidadeAgua > 20) {
                 procurarDirecaoAgua();
-                cronometroTomadaDecisao = 5.0f; // foca no objetivo por 5 segundos
+                cronometroTomadaDecisao = 60.0f; // foca no objetivo por 1 minuto
             } else {
                 // vaga a esmo ou fica parada
                 direcaoX = MathUtils.random(-1f, 1f);
@@ -90,7 +90,8 @@ public class Foca extends Entidade {
         // escaneia ao redor para achar bloco de água
         for(int x = -10; x <= 10; x++) {
             for(int z = -10; z <= 10; z++) {
-                if(Bloco.numIds.get(Mundo.obterBlocoMundo((int)posicao.x + x, (int)posicao.y, (int)posicao.z + z)).equals("agua")) {
+                Bloco bloco = Bloco.numIds.get(Mundo.obterBlocoMundo((int)posicao.x + x, (int)posicao.y, (int)posicao.z + z));
+                if(bloco != null && bloco.nome.equals("agua")) {
                     direcaoX = x > 0 ? 1 : -1;
                     direcaoZ = z > 0 ? 1 : -1;
                     return;
