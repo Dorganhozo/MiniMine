@@ -10,9 +10,11 @@ import com.minimine.graficos.Texturas;
 
 public class BlocoModelo {
     public static final float TAM = 1f;
-    // X, Y, Z (3) + U, V (2) + TexID (1) + Cor (1)
-    public static final int FLOATS_VERTICE = 7; 
-    // cache pra mapear nomes -> IDs numericos pro Shader
+    
+    // Pos(1) + U, V(2) + TexID(1) + Cor(1)
+    public static final int FLOATS_VERTICE = 5;
+
+    // cache pra mapear nomes -> IDs numericos pro shader
     public static final ObjectIntMap<String> mapaTexturas = new ObjectIntMap<>();
     // array plano pra enviar como Uniform(4 floats por textura: u, v, u2, v2)
     // suporta até 256 texturas unicas por enquanto.
@@ -21,11 +23,11 @@ public class BlocoModelo {
 
     public static final float[][][] FACE_VERTICES = {
         {{TAM, TAM, 0}, {0, TAM, 0}, {0, TAM, TAM}, {TAM, TAM, TAM}}, // topo
-        {{TAM, 0, TAM}, {0, 0, TAM}, {0, 0, 0}, {TAM, 0, 0}},         // baixo
+        {{TAM, 0, TAM}, {0, 0, TAM}, {0, 0, 0}, {TAM, 0, 0}}, // baixo
         {{TAM, 0, TAM}, {TAM, 0, 0}, {TAM, TAM, 0}, {TAM, TAM, TAM}}, // +X
-        {{0, 0, 0}, {0, 0, TAM}, {0, TAM, TAM}, {0, TAM, 0}},         // -X
+        {{0, 0, 0}, {0, 0, TAM}, {0, TAM, TAM}, {0, TAM, 0}}, // -X
         {{0, TAM, TAM}, {0, 0, TAM}, {TAM, 0, TAM}, {TAM, TAM, TAM}}, // +Z
-        {{0, 0, 0}, {0, TAM, 0}, {TAM, TAM, 0}, {TAM, 0, 0}}          // -Z
+        {{0, 0, 0}, {0, TAM, 0}, {TAM, TAM, 0}, {TAM, 0, 0}} // -Z
     };
     public static final float[][][] FACE_UVS = {
         {{1,1}, {0,1}, {0,0}, {1,0}}, 
@@ -59,6 +61,17 @@ public class BlocoModelo {
         contaTexturas++;
         return (float) id;
     }
+    /*
+     * compacta posição XYZ em um unico int usando bit pacote
+     * [5 bits X][9 bits Y][5 bits Z][13 bits livres]
+     * 
+     * X: 0-31 (5 bits, pos 0)
+     * Y: 0-511 (9 bits, pos 5) 
+     * Z: 0-31 (5 bits, pos 14)
+     */
+    private static int compactarPosicao(int x, int y, int z) {
+        return (x & 0x1F) | ((y & 0x1FF) << 5) | ((z & 0x1F) << 14);
+    }
 
     public static void addFace(int faceId, String texturaNome, float x, float y, float z, 
 	float h, float v, float luzBloco, float luzSol, FloatArrayUtil verts, ShortArrayUtil idc) {
@@ -82,22 +95,82 @@ public class BlocoModelo {
             case 2: case 3: sz = h; sy = v; uh = h; vv = v; break;
             case 4: case 5: sx = h; sy = v; uh = h; vv = v; break;
         }
-        for(int i = 0; i < 4; i++) {
-            float[] vert = FACE_VERTICES[faceId][i];
-            float[] uv = FACE_UVS[faceId][i];
-            // posicao (3 floats)
-            verts.add(x + vert[0] * sx);
-            verts.add(y + vert[1] * sy);
-            verts.add(z + vert[2] * sz);
-            // UV Local com Tiling do Guloso(2 floats)
-            // o shader vai usar fract() nisso aqui
-            verts.add(uv[0] * uh); 
-            verts.add(uv[1] * vv);
-            // textura ID(1 float)
-            verts.add(texId);
-            // cor(1 float)
-            verts.add(corFinal);
-        }
+		// face 1
+        float[] vert = FACE_VERTICES[faceId][0];
+		float[] uv = FACE_UVS[faceId][0];
+		// === compacta a posição ===
+		int px = (int)(x + vert[0] * sx);
+		int py = (int)(y + vert[1] * sy);
+		int pz = (int)(z + vert[2] * sz);
+		int posCompactada = compactarPosicao(px, py, pz);
+		
+        verts.add((float)posCompactada);
+		
+		// UV local com tiling do Guloso(2 floats)
+		verts.add(uv[0] * uh); 
+		verts.add(uv[1] * vv);
+		// textura ID(1 float)
+        verts.add(texId);
+        // cor(1 float)
+        verts.add(corFinal);
+		
+		// face 2
+		vert = FACE_VERTICES[faceId][1];
+		uv = FACE_UVS[faceId][1];
+		
+		px = (int)(x + vert[0] * sx);
+		py = (int)(y + vert[1] * sy);
+		pz = (int)(z + vert[2] * sz);
+		posCompactada = compactarPosicao(px, py, pz);
+		
+        verts.add((float)posCompactada);
+		
+		// UV local com tiling do Guloso(2 floats)
+		verts.add(uv[0] * uh); 
+		verts.add(uv[1] * vv);
+		// textura ID(1 float)
+        verts.add(texId);
+        // cor(1 float)
+        verts.add(corFinal);
+		
+		// face 3
+		vert = FACE_VERTICES[faceId][2];
+		uv = FACE_UVS[faceId][2];
+		
+		px = (int)(x + vert[0] * sx);
+		py = (int)(y + vert[1] * sy);
+		pz = (int)(z + vert[2] * sz);
+		posCompactada = compactarPosicao(px, py, pz);
+		
+        verts.add((float)posCompactada);
+		
+		// UV local com tiling do Guloso(2 floats)
+		verts.add(uv[0] * uh); 
+		verts.add(uv[1] * vv);
+		// textura ID(1 float)
+        verts.add(texId);
+        // cor(1 float)
+        verts.add(corFinal);
+		
+		// face 4
+		vert = FACE_VERTICES[faceId][3];
+		uv = FACE_UVS[faceId][3];
+		
+		px = (int)(x + vert[0] * sx);
+		py = (int)(y + vert[1] * sy);
+		pz = (int)(z + vert[2] * sz);
+		posCompactada = compactarPosicao(px, py, pz);
+		
+        verts.add((float)posCompactada);
+		
+		// UV local com tiling do Guloso(2 floats)
+		verts.add(uv[0] * uh); 
+		verts.add(uv[1] * vv);
+		// textura ID(1 float)
+        verts.add(texId);
+        // cor(1 float)
+        verts.add(corFinal);
+		
         idc.add(idcBase);
         idc.add((short)(idcBase + 1));
         idc.add((short)(idcBase + 2));

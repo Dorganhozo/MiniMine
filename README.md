@@ -24,6 +24,9 @@ refeito com LibGDX.
 19. Névoa no horizonte.
 20. Motor de geração. (beta)
 21. Menu de pause.
+22. Partículas ao quebrar blocos.
+23. 1-2 músicas.
+24. Divisão de biomas com rúido celular.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -90,7 +93,12 @@ Erosão Hidraulica.
 9. O Guloso (Malha Gulosa).
 10. Pré-computação de erosão.
 11. Reuso de Arrays utilizados na geração de dados das chunks.
-12. Iluminação feita por vértices, com niveis por blocos. (0-15)
+12. Iluminação feita por vértices, com niveis por blocos (0-15).
+13. Sistema hibrido de iluminação e ciclos diários com vértices e shader.
+14. Compactação de dados de luz em 1 único atributo de vértice.
+15. Compactação de limites do atlas para *O Guloso* funcionar com 1 atributo de vértice.
+16. Compactação de posição dos blocos em 1 atributo de vértice.
+17. buffer de até 256 texturas únicas para dados do atlas (evita mais atributos de vértice).
 
 ## Ruídos utilitários:
 1. PerlinRuido2D.java
@@ -107,6 +115,8 @@ Erosão Hidraulica.
 
 ## Desempenho:
 FPS de 30 a 60 padrão testado com até 112 chunks ativas (raio de 5).
+## uso de mémoria testada:
+50 MBs do heap java & 25 MBs do heap nativo. (112 chunks ativas)
 
 ## Mods Lua:
 você pode criar mods achando a pasta *MiniMine/mods/* no armazenamento externo. Adicione os arquivos Lua necéssarios:
@@ -120,7 +130,7 @@ e para adicionar mais de um arquivo individual, adicione o caminho relativo a pa
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
 
 ## Dispositivos usados para testes:
-* Celular:
+## Celular:
 * Modelo: Motorola G41.
 * Memória RAM: 4 GB.
 * Armazenamento: 128 GB.
@@ -130,7 +140,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * Sistema Operacional: Android 12 64-bit.
 * FPS padrão: 40-59.
 
-* PC:
+## PC:
 * Placa Mãe: dell optiPlex 780.
 * Processador: intel core 2 quad.
 * Memória RAM: 4GB(2x2GB DDR3).
@@ -140,7 +150,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * Sistema Operaciobal: Linux Mint 64-bit.
 * FPS padrão: 40-59.
 
-* Notebook:
+## Notebook:
 * Modelo: Aspire ES 15.
 * Processador: Intel Celeron Quad Core N3450.
 * Memória RAM: 4GB DDR3 L.
