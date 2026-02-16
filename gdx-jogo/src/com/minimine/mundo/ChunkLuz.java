@@ -507,7 +507,7 @@ public class ChunkLuz {
      * zera a luz de bloco na chunk e vizinhas quando emissor é removido
      * isso evita que chunks importem luz antiga umas das outras durante recalculo
      */
-    public static void zerarLuzAoRemoverEmissor(Chunk chunk) {
+    public static void zerarLuz(Chunk chunk) {
         // zera luz de bloco na chunk atual
         zerarLuzBlocoChunk(chunk);
 

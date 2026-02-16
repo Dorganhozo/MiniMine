@@ -20,7 +20,7 @@ import com.minimine.Logs;
 import com.minimine.audio.Audio;
 import com.minimine.Cenas;
 import com.minimine.mundo.blocos.Bloco;
-import com.minimine.graficos.EmissorParticulas;
+import com.minimine.graficos.GerenciadorParticulas;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -53,7 +53,7 @@ public class LuaAPI {
 		globais.set("audio", CoerceJavaToLua.coerce(new Audio()));
 		globais.set("cenas", CoerceJavaToLua.coerce(new Cenas()));
 		globais.set("bloco", CoerceJavaToLua.coerce(new Bloco()));
-		globais.set("particulas", CoerceJavaToLua.coerce(new EmissorParticulas()));
+		globais.set("particulas", CoerceJavaToLua.coerce(new GerenciadorParticulas()));
 		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
