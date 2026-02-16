@@ -38,12 +38,12 @@ import com.minimine.mundo.blocos.Bloco;
 // graficos
 import com.minimine.graficos.Render;
 import com.minimine.graficos.Animacoes2D;
-import com.minimine.graficos.EmissorParticulas;
 import com.minimine.entidades.Jogador;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import com.minimine.utils.arrays.ArrayReuso;
+import com.minimine.graficos.GerenciadorParticulas;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -199,7 +199,7 @@ public class Mundo {
 
 		int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
 
-		// Detecta se o bloco antigo era um emissor de luz
+		// detecta se o bloco antigo era um emissor de luz
 		boolean eraEmissor = false;
 		if(blocoAntigoId != 0) {
 			Bloco blocoAntigo = Bloco.numIds.get(blocoAntigoId);
@@ -207,31 +207,21 @@ public class Mundo {
 				eraEmissor = true;
 			}
 		}
-
 		if(blocoAntigoId != 0 && (bloco == null || bloco.equals("ar"))) {
-			// pega a luz atual do mundo pro fragmento não ficar preto
-			byte luz = obterLuzMundo(x, y, z);
-			float lb = (luz & 0x0F) / 15f;
-			float ls = ((luz >> 4) & 0x0F) / 15f;
-			// usa a cor compactada compativel com seu shader
-			float corFragmento = com.badlogic.gdx.graphics.Color.toFloatBits(lb, ls, 1.0f, 1.0f);
-			EmissorParticulas.criar(x, y, z, corFragmento);
+			GerenciadorParticulas.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
 		}
-
-		// Se era emissor, zera luz IMEDIATAMENTE antes de remover o bloco
-		// Isso evita que chunks importem luz antiga durante recálculo
+		// se era emissor, zera luz antes de remover o bloco
+		// isso evita que chunks importem luz antiga durante recalculo
 		if(eraEmissor) {
-			ChunkLuz.zerarLuzAoRemoverEmissor(chunk);
+			ChunkLuz.zerarLuz(chunk);
 		}
-
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 
-		// Se não era emissor, marca chunk e vizinhas normalmente
+		// se não era emissor, marca chunk e vizinhas normalmente
 		if(!eraEmissor) chunk.luzSuja = true;
         chunk.att = true;
 
-        // Marcar chunks vizinhas para atualizar malha se o bloco estiver na borda
-        // (para face culling correto)
+        // marca chunks vizinhas pra atualizar malha se o bloco ta na borda
         if(localX == 0) {
             Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;

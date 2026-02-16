@@ -115,7 +115,7 @@ public class Render {
 		ui.jg.criarModelo3D();
 		
 		// carrega as particulas
-        EmissorParticulas.iniciar();
+        GerenciadorParticulas.iniciar(ui.jg);
 
         ShaderProgram.pedantic = false;
 
@@ -178,9 +178,10 @@ public class Render {
             }
         }
         Animacoes2D.att(delta);
-        EmissorParticulas.att(shader, delta, ui.jg);
-
+        
         shader.end();
+		
+		GerenciadorParticulas.att(delta);
         
         mundo.att(delta, ui.jg);
 
@@ -217,6 +218,7 @@ public class Render {
         ui.liberar();
 		ui.jg.liberar();
         mundo.liberar();
+		GerenciadorParticulas.liberar();
     }
 }
 
