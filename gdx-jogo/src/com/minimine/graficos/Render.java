@@ -19,6 +19,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.minimine.entidades.Entidade;
+import com.minimine.entidades.Foca;
 
 public class Render {
     public UI ui;
@@ -164,11 +166,11 @@ public class Render {
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
         if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
-
         mundo.att(delta, ui.jg);
 
         if(mundo.carregado) {
             if(!ui.jg.nasceu) {
+				mundo.entidades.add(new Foca(0, 100, 0));
                 int yTeste = Mundo.obterAlturaChao((int)ui.jg.posicao.x, (int)ui.jg.posicao.z);
                 if(yTeste > 1) {
                     ui.jg.posicao.y = yTeste;
@@ -225,12 +227,23 @@ public class Render {
         ui.att(delta, mundo);
 
         if(ui.debug) {
-            debugCaixas.setColor(1, 0, 0, 1);
+            debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador
             debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
             debugCaixas.begin(ShapeRenderer.ShapeType.Line);
 
             debugCaixas.box(ui.jg.posicao.x - ui.jg.largura/2, ui.jg.posicao.y, ui.jg.posicao.z + ui.jg.largura/2, ui.jg.largura, ui.jg.altura, ui.jg.largura);
-
+			
+			debugCaixas.setColor(0, 1, 0, 1); // verde para as entidades
+			for(Entidade e : mundo.entidades) {
+				debugCaixas.box(
+					e.posicao.x - e.largura / 2, 
+					e.posicao.y, 
+					e.posicao.z - e.profundidade / 2, 
+					e.largura, 
+					e.altura, 
+					e.profundidade
+				);
+			}
             debugCaixas.end();
         }
     }
