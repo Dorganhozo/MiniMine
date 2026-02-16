@@ -13,31 +13,20 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Quaternion;
 
-public class Jogador {
+public class Jogador extends Entidade {
 	public ModeloJogador modelo;
-	public ModelBatch loteModelos;
+	
 	public int modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
-	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
+	
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
-
-	public float largura = 0.6f, altura = 1.8f, profundidade = 0.6f;
-	public boolean noChao = true, naAgua = false, agachado = false, nasceu = false;
-	public static boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
-	public BoundingBox hitbox = new BoundingBox();
-	public static final BoundingBox blocoBox = new BoundingBox();
-	public static final Vector3 minVec = new Vector3(), maxVec = new Vector3();
-
-	public static float GRAVIDADE = -30f, VELO_MAX_QUEDA = -50f, velo = 8f, pulo = 10f;
+	public float pulo = 10f;
 
 	public CharSequence item = "ar";
-	public static int ALCANCE = 7;
+	public int ALCANCE = 7;
 	public Inventario inv = new Inventario(this);
-
-	public float yaw = 180f, tom = -20f;
-
+	
 	public void criarModelo3D() {
-		loteModelos = new ModelBatch(); // gerenciador padrão de modelos 3D
 		modelo = new ModeloJogador();
 		
 		// deixa o braço reto pra frente
@@ -76,9 +65,9 @@ public class Jogador {
 					int zAnt = Mat.floor(olhoZ + dirZ * (t - 0.25f));
 
 					if(Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
-						blocoBox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
+						blocoHitbox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
 						attHitbox();
-						if(blocoBox.intersects(hitbox)) return;
+						if(blocoHitbox.intersects(hitbox)) return;
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, item);
 						Bloco.tocarSom(item);
 
@@ -90,49 +79,7 @@ public class Jogador {
 		}
 	}
 
-	public void attHitbox() {
-		float x = posicao.x;
-		float y = posicao.y;
-		float z = posicao.z;
-
-		hitbox.set(minVec.set(x - largura / 2, y, z - profundidade / 2), maxVec.set(x + largura / 2, y + altura, z + profundidade / 2));
-	}
-
-	public boolean colideComMundo() {
-		int minX = Mat.floor(hitbox.min.x);
-		int maxX = Mat.floor(hitbox.max.x);
-		int minY = Mat.floor(hitbox.min.y);
-		int maxY = Mat.floor(hitbox.max.y);
-		int minZ = Mat.floor(hitbox.min.z);
-		int maxZ = Mat.floor(hitbox.max.z);
-
-		naAgua = false;
-
-		for(int x = minX; x <= maxX; x++) {
-			for(int y = minY; y <= maxY; y++) {
-				for(int z = minZ; z <= maxZ; z++) {
-
-					int id = Mundo.obterBlocoMundo(x, y, z);
-					if(id == 0) continue;
-
-					Bloco b = Bloco.numIds.get(id);
-
-					blocoBox.set(
-						minVec.set(x, y, z),
-						maxVec.set(x + 1, y + 1, z + 1)
-					);
-					if(!b.solido) {
-						naAgua = true;
-						continue;
-					} else {
-						if(hitbox.intersects(blocoBox)) return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
+	@Override
 	public void att(float delta) {
 		frenteV.x = camera.direction.x;
 		frenteV.z = camera.direction.z;
@@ -180,7 +127,7 @@ public class Jogador {
 		posicao.y += dy;
 		attHitbox();
 
-		if(colideComMundo()) {
+		if(colideMundo()) {
 			posicao.y -= dy;
 			attHitbox(); // atualiza hitbox apos corrigir posição
 			// verifica se ta colidindo por baixo(pé no chão)
@@ -201,7 +148,7 @@ public class Jogador {
 		}
 		posicao.x += dx;
 		attHitbox();
-		if(colideComMundo()) {
+		if(colideMundo()) {
 			posicao.x -= dx;
 			velocidade.x = 0;
 			attHitbox();
@@ -211,7 +158,7 @@ public class Jogador {
 		}
 		posicao.z += dz;
 		attHitbox();
-		if(colideComMundo()) {
+		if(colideMundo()) {
 			posicao.z -= dz; 
 			velocidade.z = 0;
 			attHitbox();
@@ -248,45 +195,8 @@ public class Jogador {
 		return false;
 	}
 
-	public void nascerNoTopo() {
-		int chaoY = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
-		this.posicao.y = chaoY;
-		this.velocidade.y = 0; // zera a queda
-		this.nasceu = true;
-	}
-
-	public boolean temSuporte(float x, float z) {
-		// 1. configura uma hitbox temporaria na nova posição(x, posicao.y, z)
-		float yBase = posicao.y;
-		// usa blocoBox temporariamente pra a verificação, configurando na nova posição
-		blocoBox.set(
-			minVec.set(x - largura / 2, yBase, z - profundidade / 2), 
-			maxVec.set(x + largura / 2, yBase + altura, z + profundidade / 2)
-		);
-		// 2. define a area de busca: um pouco abaixo da base da hitbox
-		int minX = Mat.floor(blocoBox.min.x);
-		int maxX = Mat.floor(blocoBox.max.x);
-		// checa o bloco imediatamente abaixo da base(yBase - 0.1f)
-		int yCheque = Mat.floor(yBase - 0.1f); 
-		int minZ = Mat.floor(blocoBox.min.z);
-		int maxZ = Mat.floor(blocoBox.max.z);
-
-		for(int atualX = minX; atualX <= maxX; atualX++) {
-			for(int atualZ = minZ; atualZ <= maxZ; atualZ++) {
-				int id = Mundo.obterBlocoMundo(atualX, yCheque, atualZ);
-				if(id != 0) {
-					Bloco b = Bloco.numIds.get(id);
-					// se encontrar um bloco solido na camada de checagem, ha suporte
-					if(b != null && b.solido) return true;
-				}
-			}
-		}
-		// não encontrou suporte solido em nenhuma parte da area debaixo
-		return false;
-	}
-
-	public void render() {
-		if(modelo == null || loteModelos == null) return;
+	public void render(ModelBatch sb) {
+		if(modelo == null) return;
 
 		// sincroniza o modelo visual com a logica do jogador
 		modelo.instancia.transform.setToTranslation(posicao);
@@ -296,13 +206,12 @@ public class Jogador {
 		modelo.instancia.transform.rotate(Vector3.Y, anguloRotacao);
 		
 		// renderiza
-		loteModelos.begin(camera);
-		modelo.render(loteModelos);
-		loteModelos.end();
+		sb.begin(camera);
+		modelo.render(sb);
+		sb.end();
 	}
 
 	public void liberar() {
 		if(modelo != null) modelo.liberar();
-		if(loteModelos != null) loteModelos.dispose();
 	}
 }
