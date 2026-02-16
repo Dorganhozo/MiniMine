@@ -17,12 +17,14 @@ import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
 
 public class Render {
     public UI ui;
     public Mundo mundo;
     public static ShaderProgram shader;
 	public static ShapeRenderer debugCaixas;
+	public static ModelBatch sb; // gerenciador de modelos 3D de entidades
 	public static boolean dispensado = false;
 
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
@@ -31,7 +33,6 @@ public class Render {
         new VertexAttribute(VertexAttributes.Usage.Generic, 1, "a_texId"),
         new VertexAttribute(VertexAttributes.Usage.ColorPacked, 4, "a_cor")
     };
-
     public static String vert = 
     "attribute vec3 a_pos;\n" +
     "attribute vec2 a_texCoord;\n" +
@@ -103,16 +104,12 @@ public class Render {
 		
 		debugCaixas = new ShapeRenderer();
 		
-		// animação da agua
-        TextureRegion[] framesAgua = {
+		// animação da água
+        Animacoes2D.add("agua", new TextureRegion[]{
             Texturas.atlas.get("agua"),
             Texturas.atlas.get("agua_a1"),
             Texturas.atlas.get("agua_a2")
-        };
-        Animacoes2D.add("agua", framesAgua, 2.5f); 
-		
-		// carrega o modelo do jogador
-		ui.jg.criarModelo3D();
+        }, 2.5f);  // 2.5 quadros por segundo
 		
 		// carrega as particulas
         GerenciadorParticulas.iniciar(ui.jg);
@@ -121,6 +118,11 @@ public class Render {
 
         if(mundo.nuvens && NuvensUtil.primeiraVez) NuvensUtil.iniciar();
         if(mundo.ciclo) CorposCelestes.iniciar();
+		
+		sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
+		
+		// carrega o modelo do jogador
+		ui.jg.criarModelo3D();
 		
 		dispensado = false;
     }
@@ -196,7 +198,7 @@ public class Render {
 		if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
 		GerenciadorParticulas.att(delta);
         
-		ui.jg.render();
+		ui.jg.render(sb);
 		
         ui.att(delta, mundo);
 
@@ -218,6 +220,7 @@ public class Render {
         ui.liberar();
 		ui.jg.liberar();
         mundo.liberar();
+		sb.dispose();
 		GerenciadorParticulas.liberar();
     }
 }

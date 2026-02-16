@@ -44,16 +44,19 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import com.minimine.utils.arrays.ArrayReuso;
 import com.minimine.graficos.GerenciadorParticulas;
+import com.minimine.entidades.Entidade;
 
 public class Mundo {
     public static String nome = "novo mundo";
+	
+	public static List<Entidade> entidades = new ArrayList<>();
 
 	public static final List<Chunk> praLiberar = new ArrayList<>();
 	public static final List<Long> praRemover = new ArrayList<>();
 
     public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
-	// Estados: 0 = Vazia, 1 = Dados Prontos, 2 = Malha Pronta
+	// estados: 0 = vazia, 1 = dados Prontos, 2 = malha Pronta
 	public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 255;
@@ -202,56 +205,56 @@ public class Mundo {
 		// detecta se o bloco antigo era um emissor de luz
 		boolean eraEmissor = false;
 		if(blocoAntigoId != 0) {
-			Bloco blocoAntigo = Bloco.numIds.get(blocoAntigoId);
-			if(blocoAntigo != null && blocoAntigo.luz > 0) {
+			if(Bloco.numIds.get(blocoAntigoId).luz > 0) {
 				eraEmissor = true;
 			}
 		}
-		if(blocoAntigoId != 0 && (bloco == null || bloco.equals("ar"))) {
+		if(blocoAntigoId != 0 && bloco == null) {
 			GerenciadorParticulas.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
 		}
 		// se era emissor, zera luz antes de remover o bloco
 		// isso evita que chunks importem luz antiga durante recalculo
-		if(eraEmissor) {
-			ChunkLuz.zerarLuz(chunk);
-		}
+		if(eraEmissor) ChunkLuz.zerarLuz(chunk);
+		
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 
 		// se não era emissor, marca chunk e vizinhas normalmente
 		if(!eraEmissor) chunk.luzSuja = true;
         chunk.att = true;
+		
+		Chunk chunkAdj;
 
         // marca chunks vizinhas pra atualizar malha se o bloco ta na borda
         if(localX == 0) {
-            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localX == TAM_CHUNK - 1) {
-            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localZ == 0) {
-            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localZ == TAM_CHUNK - 1) {
-            Chunk chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
             if(chunkAdj != null) chunkAdj.att = true;
         }
         // marca as 4 vizinhas diretas como luzSuja
         // porque a luz pode viajar até elas independente de onde o bloco ta
         if(!eraEmissor) {
-            Chunk vizinhaOeste = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
-            if(vizinhaOeste != null) vizinhaOeste.luzSuja = true;
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
+            if(chunkAdj != null) chunkAdj.luzSuja = true;
 
-            Chunk vizinhaLeste = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
-            if(vizinhaLeste != null) vizinhaLeste.luzSuja = true;
+			chunkAdj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
+            if(chunkAdj != null) chunkAdj.luzSuja = true;
 
-            Chunk vizinhaNorte = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
-            if(vizinhaNorte != null) vizinhaNorte.luzSuja = true;
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
+            if(chunkAdj != null) chunkAdj.luzSuja = true;
 
-            Chunk vizinhaSul = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
-            if(vizinhaSul != null) vizinhaSul.luzSuja = true;
+            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
+            if(chunkAdj != null) chunkAdj.luzSuja = true;
         }
         chunksMod.put(chave, chunk);
     }
