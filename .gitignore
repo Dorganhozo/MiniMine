@@ -35,3 +35,9 @@ minimine.apk
 MiniMine.apk
 minimine.jar
 MiniMine.jar
+
+# ignore .settings
+.settings/
+gdx-android/.settings/
+gdx-jogo/.settings/
+gdx-pc/.settings/
