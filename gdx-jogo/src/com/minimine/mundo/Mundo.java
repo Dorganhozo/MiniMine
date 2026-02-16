@@ -51,6 +51,8 @@ public class Mundo {
     public static String nome = "novo mundo";
 	
 	public static List<Entidade> entidades = new ArrayList<>();
+	
+	public static float GRAVIDADE = -30f;
 
 	public static final List<Chunk> praLiberar = new ArrayList<>();
 	public static final List<Long> praRemover = new ArrayList<>();
@@ -121,8 +123,19 @@ public class Mundo {
 		if(!carregado && chunks.size() >= 1) {
 			carregado = true;
 		}
-		for(Entidade entidade : entidades) {
-			entidade.att(delta);
+		for(Entidade e : entidades) {
+			e.att(delta);
+			
+			if(!e.noChao || e.naAgua) {
+				int fluidez = 0;
+				if(e.naAgua) fluidez = 10;
+				
+				e.velocidade.y += (GRAVIDADE + fluidez) * delta;
+
+				if(e.velocidade.y < e.VELO_MAX_QUEDA) {
+					e.velocidade.y = e.VELO_MAX_QUEDA;
+				}
+			}
 		}
         if(ciclo) {
 			CorposCelestes.att(jogador.camera.combined, jogador.posicao);
@@ -605,44 +618,4 @@ public class Mundo {
         Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido, true, luz));
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
-	
-	/**
-	 * Aplica uma translação permanente nos vértices da malha sem corromper
-	 * os bits de textura, ID e cor. 
-	 * Use isso APENAS UMA VEZ ao carregar o pedaço.
-	 */
-	public static void transform(com.badlogic.gdx.graphics.Mesh malha, float deslocamentoX, float deslocamentoY, float deslocamentoZ) {
-		// 5 floats por vértice conforme definido no seu código: 
-		// [PosCompactada(1), U(1), V(1), TexID(1), Cor(1)]
-		float[] vertices = new float[malha.getNumVertices() * BlocoModelo.FLOATS_VERTICE];
-		malha.getVertices(vertices);
-
-		for (int i = 0; i < vertices.length; i += BlocoModelo.FLOATS_VERTICE) {
-			// 1. Pega o float que contém os bits de posição
-			float dadoBruto = vertices[i];
-
-			// 2. Descompacta (Lógica idêntica ao seu Shader e BlocoModelo)
-			float pacote = (float) Math.floor(dadoBruto + 0.5f);
-			int px = (int) (pacote % 32.0f);
-			float temp = (float) Math.floor(pacote / 32.0f);
-			int py = (int) (temp % 512.0f);
-			int pz = (int) Math.floor(temp / 512.0f);
-
-			// 3. Aplica o deslocamento (Translação)
-			int novoX = px + (int)deslocamentoX;
-			int novoY = py + (int)deslocamentoY;
-			int novoZ = pz + (int)deslocamentoZ;
-
-			// 4. Recompacta os bits (X:5, Y:9, Z:5)
-			// Mantém os bits de textura e cor intactos pois eles estão nos índices i+1 até i+4
-			int posCompactada = (novoX & 0x1F) | ((novoY & 0x1FF) << 5) | ((novoZ & 0x1F) << 14);
-
-			vertices[i] = (float) posCompactada;
-		}
-
-		// Devolve os dados para a malha (sobrescreve os originais)
-		malha.setVertices(vertices);
-	}
 }
-
-

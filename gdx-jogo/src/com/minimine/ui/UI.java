@@ -32,6 +32,7 @@ import com.minimine.cenas.Jogo;
 import com.minimine.mods.LuaAPI;
 import com.minimine.entidades.Jogador;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.minimine.utils.Receitas;
 
 public class UI implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -311,8 +312,7 @@ public class UI implements InputProcessor {
 						else jg.item = "ar";
 						jg.acao = true;
 						jg.interagirBloco();
-						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
-						else jg.item = "ar";
+						
 						toques.put(p, "acao");
 						sprite.setAlpha(0.5f);
 					}
@@ -323,60 +323,38 @@ public class UI implements InputProcessor {
 						jg.item = "ar";
 						jg.interagirBloco();
 						toques.put(p, "ataque");
-						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
-						else jg.item = "ar";
+						
 						sprite.setAlpha(0.5f);
 					}
 					public void aoSoltar(int t, int t2, int p){ jg.acao = false; sprite.setAlpha(0.9f);}
 				});
 			botoes.put("inv", new Botao(Texturas.texs.get("clique"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "inv") {
-					public void aoTocar(int t, int t2, int p){
-						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
-						else jg.item = "ar";
+					public void aoTocar(int t, int t2, int p){			
 						jg.inv.alternar();
 						toques.put(p, "inv");
 						sprite.setAlpha(0.5f);
 					}
 					public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
 				});
-		}
-		botoes.put("receita", new Botao(Texturas.texs.get("receita"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "receita") {
-				public void aoTocar(int t, int t2, int p){
-					if(jg.inv.itens[jg.inv.slotSelecionado] == null) return;
-					if(jg.inv.itens[jg.inv.slotSelecionado].nome.equals("tronco")) {
-						jg.inv.rmItem(jg.inv.slotSelecionado, 1);
-						jg.inv.addItem("tabua_madeira", 4);
-						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
-						else jg.item = "ar";
-						Logs.log("feito tabua");
-					} else if(jg.inv.itens[jg.inv.slotSelecionado].nome.equals("areia")) {
-						jg.inv.rmItem(jg.inv.slotSelecionado, 1);
-						jg.inv.addItem("vidro", 1);
-						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
-						else jg.item = "ar";
-						Logs.log("feito vidro");
-					} else if(jg.inv.itens[jg.inv.slotSelecionado].nome.equals("folha")) {
-						jg.inv.rmItem(jg.inv.slotSelecionado, 1);
-						jg.inv.addItem("tocha", 1);
-						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
-						else jg.item = "ar";
-						Logs.log("feito tocha");
+			botoes.put("receita", new Botao(Texturas.texs.get("receita"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "receita") {
+					public void aoTocar(int t, int t2, int p){
+						Receitas.fabricar(jg.inv);
+						toques.put(p, "receita");
+						sprite.setAlpha(0.5f);
 					}
-					toques.put(p, "receita");
-					sprite.setAlpha(0.5f);
-				}
-				public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
-			});
-		botoes.put("menu_principal", new Botao(Texturas.texs.get("receita"), 0, 0, tam, tam, "menu_principal") {
-				@Override
-				public void aoTocar(int t, int t2, int p) {
-					sprite.setAlpha(0.5f);
-					MenuPause.alternarMenu();
-					toques.put(p, "menu_principal");
-				}
-				@Override
-				public void aoSoltar(int t, int t2, int p) {sprite.setAlpha(0.9f);}
-			});
+					public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
+				});
+			botoes.put("menu_principal", new Botao(Texturas.texs.get("receita"), 0, 0, tam, tam, "menu_principal") {
+					@Override
+					public void aoTocar(int t, int t2, int p) {
+						sprite.setAlpha(0.5f);
+						MenuPause.alternarMenu();
+						toques.put(p, "menu_principal");
+					}
+					@Override
+					public void aoSoltar(int t, int t2, int p) {sprite.setAlpha(0.9f);}
+				});
+		}
 	}
 
 	public void configDpad(int v, int h) {
@@ -705,15 +683,13 @@ public class UI implements InputProcessor {
 		}
         if(p == Input.Keys.T) abrirChat();
 		if(p == Input.Keys.P) {
-			if(Mundo.debugColisao) {
-				Mundo.debugColisao = false;
-			} else {
-				Mundo.debugColisao = true;
-			}
+			if(Mundo.debugColisao) Mundo.debugColisao = false;
+			else Mundo.debugColisao = true;
 		}
 		if(p == Input.Keys.ESCAPE) {
 			MenuPause.alternarMenu();
 		}
+		if(p == Input.Keys.R) Receitas.fabricar(jg.inv);
         return true;
     }
 

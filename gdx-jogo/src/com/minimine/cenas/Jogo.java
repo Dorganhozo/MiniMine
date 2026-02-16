@@ -30,13 +30,15 @@ import com.minimine.entidades.Jogador;
 import com.minimine.audio.Musicas;
 
 public class Jogo implements Screen {
-	public static Mundo mundo = new Mundo();
-	public static Jogador jogador = new Jogador();
+	public static Mundo mundo;
+	public static Jogador jogador;
 	public static Render render;
 	public static boolean musicas = true;
 	
     @Override
 	public void show() {
+		mundo = new Mundo();
+		jogador = new Jogador();
 		mundo.ciclo = true;
 		
 		render = new Render(jogador, mundo);
@@ -71,7 +73,6 @@ public class Jogo implements Screen {
     public void dispose() {
 		mundo.carregado = false;
 		render.liberar();
-		CorposCelestes.liberar();
     }
 	
 	@Override
@@ -83,19 +84,15 @@ public class Jogo implements Screen {
 
 	@Override
 	public void hide() {
-		mundo.carregado = false;
-		for(Chunk c : mundo.chunks.values()) {
-			if(c.malha != null) c.malha.dispose();
-			c.malha = null;
-		}
-		mundo.chunks.clear();
 		ArquivosUtil.svMundo(mundo, jogador);
-		mundo.carregado = true;
+		dispose();
 	}
 	@Override
 	public void pause() {
-		LuaAPI.iniciar();	
 		hide();
 	}
-	@Override public void resume() {}
+	@Override
+	public void resume() {
+		show();
+	}
 }
