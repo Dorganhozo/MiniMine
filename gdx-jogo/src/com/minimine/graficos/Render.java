@@ -145,7 +145,7 @@ public class Render {
 
         // carrega o modelo do jogador
         ui.jg.criarModelo3D();
-
+        mundo.entidades.add(new Foca(0, 100, 0));
         dispensado = false;
     }
 
@@ -170,7 +170,6 @@ public class Render {
 
         if(mundo.carregado) {
             if(!ui.jg.nasceu) {
-				mundo.entidades.add(new Foca(0, 100, 0));
                 int yTeste = Mundo.obterAlturaChao((int)ui.jg.posicao.x, (int)ui.jg.posicao.z);
                 if(yTeste > 1) {
                     ui.jg.posicao.y = yTeste;
