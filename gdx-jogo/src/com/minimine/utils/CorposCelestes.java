@@ -10,7 +10,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Gdx;
 
 public class CorposCelestes {
-    public static Mesh meshSol, meshLua;
+    public static Mesh malhaSol, malhaLua;
     public static ShaderProgram shaderCelestial;
 
     public static final String VERT = 
@@ -38,8 +38,8 @@ public class CorposCelestes {
         if(!shaderCelestial.isCompiled()) {
             Gdx.app.log("Shader", "[ERRO] no shader celestial: " + shaderCelestial.getLog());
         }
-        meshSol = criarEsfera(12, 12);
-        meshLua = criarEsfera(10, 10);
+        malhaSol = criarEsfera(12, 12);
+        malhaLua = criarEsfera(10, 10);
     }
 
     public static Mesh criarEsfera(int aneis, int setores) {
@@ -106,22 +106,22 @@ public class CorposCelestes {
 			shaderCelestial.setUniform3fv("u_posCorpo", posSolRelativa, 0, 3);
 			shaderCelestial.setUniformf("u_tam", 8f);
 			shaderCelestial.setUniform4fv("u_cor", DiaNoiteUtil.corSol, 0, 4);
-			meshSol.render(shaderCelestial, GL20.GL_TRIANGLES);
+			malhaSol.render(shaderCelestial, GL20.GL_TRIANGLES);
 		}
 		// renderizar lua(se visivel)
 		if(DiaNoiteUtil.visibiLua > 0.01f) {
 			shaderCelestial.setUniform3fv("u_posCorpo", posLuaRelativa, 0, 3);
 			shaderCelestial.setUniformf("u_tam", 6f);
 			shaderCelestial.setUniform4fv("u_cor", DiaNoiteUtil.corLua, 0, 4);
-			meshLua.render(shaderCelestial, GL20.GL_TRIANGLES);
+			malhaLua.render(shaderCelestial, GL20.GL_TRIANGLES);
 		}
 		shaderCelestial.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 
     public static void liberar() {
-        meshSol.dispose();
-        meshLua.dispose();
+        malhaSol.dispose();
+        malhaLua.dispose();
         shaderCelestial.dispose();
     }
 }

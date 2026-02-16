@@ -141,10 +141,22 @@ public class Render {
         Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-        if(mundo.nuvens) {
-			NuvensUtil.att(delta, ui.jg.posicao);
-			NuvensUtil.att(ui.jg.camera.combined);
-		}
+        if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
+		
+		mundo.att(delta, ui.jg);
+
+        if(mundo.carregado) {
+            if(!ui.jg.nasceu) {
+                int yTeste = Mundo.obterAlturaChao((int)ui.jg.posicao.x, (int)ui.jg.posicao.z);
+                if(yTeste > 1) {
+                    ui.jg.posicao.y = yTeste;
+                    ui.jg.nasceu = true;
+                    Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
+                } else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
+            }
+            ui.jg.att(delta);
+        }
+		
         shader.begin();
 
         shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
@@ -181,21 +193,9 @@ public class Render {
         
         shader.end();
 		
+		if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
 		GerenciadorParticulas.att(delta);
         
-        mundo.att(delta, ui.jg);
-
-        if(mundo.carregado) {
-            if(!ui.jg.nasceu) {
-                int yTeste = Mundo.obterAlturaChao((int)ui.jg.posicao.x, (int)ui.jg.posicao.z);
-                if(yTeste > 1) {
-                    ui.jg.posicao.y = yTeste;
-                    ui.jg.nasceu = true;
-                    Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
-                } else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
-            }
-            ui.jg.att(delta);
-        }
 		ui.jg.render();
 		
         ui.att(delta, mundo);
