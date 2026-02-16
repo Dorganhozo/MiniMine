@@ -82,23 +82,22 @@ Erosão Hidraulica.
 11. COLINAS_DESERTO.
 
 ## Otimizações:
-1. Geração em Thread separada com ExecutorService.
-2. Chaves do tipo *long* para obtenção de chunks.
-3. Reuso de 1 objeto Matrix4 para todas as chunks.
-4. Descarte de faces sobrepostas.
-5. Não renderizar chunks fora do raio de visão.
-6. Compressão baseada em paleta.
-7. Otimização com variaveis locais pra compilação em tempo de  execução.
-8. Cache de chunks modificadas sem Malha.
-9. O Guloso (Malha Gulosa).
-10. Pré-computação de erosão.
-11. Reuso de Arrays utilizados na geração de dados das chunks.
-12. Iluminação feita por vértices, com niveis por blocos (0-15).
-13. Sistema hibrido de iluminação e ciclos diários com vértices e shader.
-14. Compactação de dados de luz em 1 único atributo de vértice.
-15. Compactação de limites do atlas para *O Guloso* funcionar com 1 atributo de vértice.
-16. Compactação de posição dos blocos em 1 atributo de vértice.
-17. buffer de até 256 texturas únicas para dados do atlas (evita mais atributos de vértice).
+* Geração em Thread separada com ExecutorService.
+* Chaves do tipo *long* para obtenção de chunks.
+* Descarte de faces sobrepostas.
+* Não renderizar chunks fora do raio de visão.
+* Compressão baseada em paleta.
+* Otimização com variaveis locais pra compilação em tempo de  execução.
+* Cache de chunks modificadas sem Malha.
+* O Guloso (Malha Gulosa).
+* Pré-computação de erosão.
+* Reuso de Arrays utilizados na geração de dados das chunks.
+* Iluminação feita por vértices, com niveis por blocos (0-15).
+* Sistema hibrido de iluminação e ciclos diários com vértices e shader.
+* Compactação de dados de luz em 1 único atributo de vértice.
+* Compactação de limites do atlas para *O Guloso* funcionar com 1 atributo de vértice.
+* Compactação de posição dos blocos em 1 atributo de vértice.
+* buffer de até 256 texturas únicas para dados do atlas (evita mais atributos de vértice).
 
 ## Ruídos utilitários:
 1. PerlinRuido2D.java
