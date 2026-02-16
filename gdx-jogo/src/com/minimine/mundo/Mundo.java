@@ -121,6 +121,9 @@ public class Mundo {
 		if(!carregado && chunks.size() >= 1) {
 			carregado = true;
 		}
+		for(Entidade entidade : entidades) {
+			entidade.att(delta);
+		}
         if(ciclo) {
 			CorposCelestes.att(jogador.camera.combined, jogador.posicao);
 			// ciclo de dia e noite:
