@@ -88,11 +88,15 @@ public class MenuPause {
             "sair") {
             @Override
             public void aoTocar(int telaX, int telaY, int p) {
+                try {
+                    salvarJogo();
+                    Inicio.defTela(Cenas.menu);
+                    fecharMenu();
+                } catch(Exception e) {
+                    Gdx.app.log("[MenuPause]", "[ERRO]: "+e);
+                }
                 sprite.setAlpha(0.7f);
-				salvarJogo();
-				Inicio.defTela(Cenas.menu);
-				fecharMenu();
-				Cenas.jogo.dispose();
+				
                 Gdx.app.log("MenuPause", "Tocou SAIR em " + telaX + "," + telaY);
             }
             @Override

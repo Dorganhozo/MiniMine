@@ -6,8 +6,9 @@ import com.minimine.mundo.Mundo;
 import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.minimine.utils.Objeto;
 
-public class Entidade {
+public class Entidade extends Objeto {
 	public int vida;
 	public float velo = 8f; // tem uma velocidade
 	public float peso = 65f; // 65 kg
@@ -36,6 +37,7 @@ public class Entidade {
 		altura = 1.9f;
 		profundidade = 0.6f;
 		hitbox = new BoundingBox();
+		liberado = false;
 	}
 	
 	public void attHitbox() {
@@ -155,5 +157,6 @@ public class Entidade {
 		if(baixo) velocidade.y = -10;
 	}
 	public void render(ModelBatch mb) {}
-	public void liberar() {}
+	@Override
+	public void liberar() {super.liberar();}
 }

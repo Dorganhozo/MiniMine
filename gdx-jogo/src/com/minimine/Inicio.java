@@ -73,8 +73,6 @@ public class Inicio extends Game {
 			Texturas.blocos.dispose();
 			Texturas.agua.dispose();
 			Texturas.atlas.clear();
-			Mundo.liberar();
-			UI.liberar();
 			NuvensUtil.liberar();
 			CorposCelestes.liberar();
 			Audio.liberar();

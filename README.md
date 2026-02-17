@@ -146,7 +146,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * Armazenamento: SSD 256GB.
 * Video: intel 4 series(Integrada).
 * OpenGL: 2.1.
-* Sistema Operaciobal: Linux Mint 64-bit.
+* Sistema Operaciobal: Linux Mint XCFE 64-bit.
 * FPS padrão: 40-59.
 
 ## Notebook:
