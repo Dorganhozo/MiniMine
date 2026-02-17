@@ -44,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import com.minimine.utils.arrays.ArrayReuso;
-import com.minimine.graficos.GerenciadorParticulas;
 import com.minimine.entidades.Entidade;
 import com.minimine.mundo.blocos.BlocoModelo;
 
@@ -172,7 +171,6 @@ public class Mundo extends Objeto {
 		estados.clear();
 		entidades.clear();
         exec.shutdown();
-		Animacoes2D.liberar();
 		if(com.minimine.ui.UI.debug) {
 			Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
 		}
@@ -218,7 +216,7 @@ public class Mundo extends Objeto {
 			}
 		}
 		if(blocoAntigoId != 0 && bloco == null) {
-			GerenciadorParticulas.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
+			Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
 		}
 		// se era emissor, zera luz antes de remover o bloco
 		// isso evita que chunks importem luz antiga durante recalculo

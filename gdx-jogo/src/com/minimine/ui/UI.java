@@ -446,6 +446,8 @@ public class UI extends Objeto implements InputProcessor {
 		}
 		dialogo.porFrame(delta, sb, fonte);
 		MenuPause.renderizar(sb, fonte);
+
+		jg.inv.porFrame(sb, fonte);
 		
 		if(menuAberto) menuOpcoes.porFrame(delta, sb, fonte);
 		
@@ -526,7 +528,7 @@ public class UI extends Objeto implements InputProcessor {
 		dialogo.aoFim();
         sb.dispose();
         fonte.dispose();
-		MenuPause.liberar();
+		new MenuPause().liberar();
     }
 
 	public Texto addTexto(String nome, String texto, int x, int y) {

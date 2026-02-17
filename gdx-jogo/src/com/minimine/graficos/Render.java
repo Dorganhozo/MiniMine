@@ -28,6 +28,7 @@ public class Render extends Objeto {
     public Mundo mundo;
     public static ShaderProgram shader;
     public static ShapeRenderer debugCaixas;
+    public static GerenciadorParticulas gp;
     public static ModelBatch sb; // gerenciador de modelos 3D de entidades
     
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
@@ -134,7 +135,7 @@ public class Render extends Objeto {
 		}, 2.5f);  // 2.5 quadros por segundo
 		
         // carrega as particulas
-        GerenciadorParticulas.iniciar(ui.jg);
+        gp = new GerenciadorParticulas(ui.jg);
 
         ShaderProgram.pedantic = false;
 
@@ -144,11 +145,11 @@ public class Render extends Objeto {
         sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
 
         mundo.entidades.add(new Foca(0, 100, 0));
-        dispensado = false;
+        liberado = false;
     }
 
     public void att(float delta) {
-        if(dispensado) return;
+        if(liberado) return;
 
         float fator = DiaNoiteUtil.obterFatorTransicao();
         float[] corNoite = {0.05f, 0.05f, 0.15f};
@@ -217,7 +218,7 @@ public class Render extends Objeto {
         shader.end();
 
         if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
-        GerenciadorParticulas.att(delta);
+        gp.att(delta);
 
         ui.att(delta, mundo);
 		
@@ -273,13 +274,15 @@ public class Render extends Objeto {
     @Override
     public void liberar() {
         super.liberar();
+        if(liberado) return;
         shader.dispose();
         debugCaixas.dispose();
         ui.liberar();
         ui.jg.liberar();
         mundo.liberar();
         sb.dispose();
-        GerenciadorParticulas.liberar();
+        gp.liberar();
+        new Animacoes2D().liberar();
     }
 }
 
