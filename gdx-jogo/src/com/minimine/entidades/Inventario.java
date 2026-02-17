@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.ui.UI;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 public class Inventario {
 	public Jogador jogador;
@@ -171,18 +172,18 @@ public class Inventario {
         }
     }
 
-    public void att() {
+    public void porFrame(SpriteBatch sb, BitmapFont fonte) {
 		if(spritesHotbar == null || spritesHotbar.length == 0 ||
 		   itens == null || itens.length == 0) return;
 		// hotbar:
 		for(int i = 0; i < spritesHotbar.length; i++) {
 			if(spritesHotbar[i] == null) continue;
-			spritesHotbar[i].draw(UI.sb);
+			spritesHotbar[i].draw(sb);
 
 			if(i == slotSelecionado) {
-				UI.sb.setColor(1, 1, 1, 0.5f);
-				spritesHotbar[i].draw(UI.sb);
-				UI.sb.setColor(1, 1, 1, 1);
+				sb.setColor(1, 1, 1, 0.5f);
+				spritesHotbar[i].draw(sb);
+				sb.setColor(1, 1, 1, 1);
 			}
 			// apenas checa se temum item no slot
 			// se o item foi pego, itens[i] é null e o desenho é ignorado
@@ -190,10 +191,10 @@ public class Inventario {
 				Sprite itemSprite = new Sprite(itens[i].textura);
 				itemSprite.setSize(tamSlot - 10, tamSlot - 10);
 				itemSprite.setPosition(spritesHotbar[i].getX() + 5, spritesHotbar[i].getY() + 5);
-				itemSprite.draw(UI.sb);
+				itemSprite.draw(sb);
 
 				if(itens[i].quantidade > 1) {
-					UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
+					fonte.draw(sb, String.valueOf(itens[i].quantidade), 
 					spritesHotbar[i].getX() + tamSlot - 15, 
 					spritesHotbar[i].getY() + 15);
 				}
@@ -202,19 +203,19 @@ public class Inventario {
 		// inventario:
 		if(aberto) {
 			for(int i = 0; i < sprites.length; i++) {
-				sprites[i].draw(UI.sb);
+				sprites[i].draw(sb);
 				// checa se tem um item no slot
 				if(itens[i] != null) {
 					Sprite itemSprite = new Sprite(itens[i].textura);
 
 					itemSprite.setSize(tamSlot - 5, tamSlot - 5); 
 					itemSprite.setPosition(sprites[i].getX() + 5, sprites[i].getY() + 5);
-					itemSprite.draw(UI.sb);
+					itemSprite.draw(sb);
 
 					if(itens[i].quantidade > 1) {
-						UI.fonte.draw(UI.sb, String.valueOf(itens[i].quantidade), 
-									  sprites[i].getX() + tamSlot - 15, 
-									  sprites[i].getY() + 15);
+						fonte.draw(sb, String.valueOf(itens[i].quantidade), 
+                        sprites[i].getX() + tamSlot - 15, 
+                        sprites[i].getY() + 15);
 					}
 				}
 			}
@@ -226,12 +227,12 @@ public class Inventario {
 			// centraliza o sprite na posição do ultimo toque/arrasto posFlutuante)
 			itemSprite.setPosition(posFlutuante.x - itemSprite.getWidth() / 2, 
 								   posFlutuante.y - itemSprite.getHeight() / 2);
-			itemSprite.draw(UI.sb);
+			itemSprite.draw(sb);
 			// renderiza a quantidade
 			if(itemFlutuante.quantidade > 1) {
-				UI.fonte.draw(UI.sb, String.valueOf(itemFlutuante.quantidade), 
-							  itemSprite.getX() + tamSlot - 15, 
-							  itemSprite.getY() + 15);
+				fonte.draw(sb, String.valueOf(itemFlutuante.quantidade), 
+                itemSprite.getX() + tamSlot - 15, 
+                itemSprite.getY() + 15);
 			}
 		}
 	}

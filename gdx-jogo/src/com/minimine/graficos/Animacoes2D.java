@@ -6,8 +6,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.Gdx;
 import java.util.ArrayList;
 import java.util.List;
+import com.minimine.utils.Objeto;
 
-public class Animacoes2D {
+public class Animacoes2D extends Objeto {
     // lista de animações ativas
     public static List<InfoAnimacao> animacoes = new ArrayList<>();
 
@@ -122,8 +123,9 @@ public class Animacoes2D {
 			p.getPixels() // os dados brutos dos pixels
 		);
 	}
-
-    public static void liberar() {
+    @Override
+    public void liberar() {
+        super.liberar();
         for(InfoAnimacao anim : animacoes) {
             anim.liberar();
         }
