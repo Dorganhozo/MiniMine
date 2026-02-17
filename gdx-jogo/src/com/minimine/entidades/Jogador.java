@@ -112,6 +112,7 @@ public class Jogador extends Entidade {
 	public void att(float delta) {
 		if(modo != 2) voando = true;
 		super.att(delta);
+
 		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
 		if(itemInv != null && itemInv.nome != item) item = itemInv.nome;
 		else if(itemInv == null) item = "ar";
