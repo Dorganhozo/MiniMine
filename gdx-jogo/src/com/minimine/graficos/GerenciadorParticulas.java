@@ -8,19 +8,20 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.minimine.entidades.Jogador;
+import com.minimine.utils.Objeto;
 
-public class GerenciadorParticulas {
-    private static DecalBatch lote;
-    private static Array<Decal> particulas = new Array<>();
-    private static Array<DadosParticula> dados = new Array<>();
-    private static Jogador jogadorRef; // referencia da camera
+public class GerenciadorParticulas extends Objeto {
+    public DecalBatch lote;
+    public Array<Decal> particulas = new Array<>();
+    public Array<DadosParticula> dados = new Array<>();
+    public Jogador jogadorRef; // referencia da camera
 
     static class DadosParticula {
         Vector3 velo = new Vector3();
         float vida;
     }
 
-    public static void iniciar(Jogador jogador) {
+    public GerenciadorParticulas(Jogador jogador) {
         jogadorRef = jogador;
         lote = new DecalBatch(new CameraGroupStrategy(jogador.camera));
     }
@@ -29,7 +30,7 @@ public class GerenciadorParticulas {
      * posição do bloco quebrou
      * regiao A textura completa do bloco
      */
-    public static void criar(float x, float y, float z, TextureRegion regiao) {
+    public void criar(float x, float y, float z, TextureRegion regiao) {
         int quantidade = MathUtils.random(5, 15); // fragmentos
 
         // tamanho da textura original
@@ -73,7 +74,7 @@ public class GerenciadorParticulas {
         }
     }
 
-    public static void att(float delta) {
+    public void att(float delta) {
         for(int i = 0; i < particulas.size; i++) {
             Decal d = particulas.get(i);
             DadosParticula dp = dados.get(i);
@@ -102,7 +103,9 @@ public class GerenciadorParticulas {
         lote.flush();
     }
 
-    public static void liberar() {
+    @Override
+    public void liberar() {
+        super.liberar();
         if(lote != null) lote.dispose();
     }
 }

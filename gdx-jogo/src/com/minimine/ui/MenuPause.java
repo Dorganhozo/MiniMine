@@ -10,8 +10,9 @@ import com.minimine.Inicio;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.cenas.Jogo;
 import com.minimine.Cenas;
+import com.minimine.utils.Objeto;
 
-public class MenuPause {
+public class MenuPause extends Objeto {
     public static EstanteVertical menuPause;
     public static boolean menuAberto = false;
     public static ShapeRenderer shapeRenderer;
@@ -207,7 +208,9 @@ public class MenuPause {
         Gdx.app.log("MenuPause", "Tela ajustada para " + largura + "x" + altura);
     }
 
-    public static void liberar() {
+    @Override
+    public void liberar() {
+        super.liberar();
         if(shapeRenderer != null) shapeRenderer.dispose();
     }
 }
