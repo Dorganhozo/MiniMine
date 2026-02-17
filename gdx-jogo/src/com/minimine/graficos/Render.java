@@ -143,8 +143,6 @@ public class Render {
 
         sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
 
-        // carrega o modelo do jogador
-        ui.jg.criarModelo3D();
         mundo.entidades.add(new Foca(0, 100, 0));
         dispensado = false;
     }
@@ -221,9 +219,17 @@ public class Render {
         if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
         GerenciadorParticulas.att(delta);
 
-        ui.jg.render(sb);
-
         ui.att(delta, mundo);
+		
+		// renderiza os modelos 3D
+		sb.begin(ui.jg.camera);
+		
+		ui.jg.render(sb);
+		
+		for(Entidade e : mundo.entidades) {
+			e.render(sb);
+		}
+		sb.end();
 
         if(ui.debug) {
             debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador

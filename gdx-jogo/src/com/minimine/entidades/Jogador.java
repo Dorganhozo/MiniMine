@@ -12,32 +12,57 @@ import com.minimine.mundo.Mundo;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.Model;
+import net.mgsx.gltf.scene3d.scene.SceneAsset;
+import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 
 public class Jogador extends Entidade {
-	public ModeloJogador modelo;
-	
 	public int modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
-	
-	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
-	public float pulo = 10f;
 
 	public CharSequence item = "ar";
 	public int ALCANCE = 7;
 	public Inventario inv = new Inventario(this);
+	
+	public Model modelo;
+    public ModelInstance instancia;
+    public SceneAsset ativoCena;
+
+    public float tempoAnimacao = 0;
+
+    public Quaternion rotTemp = new Quaternion();
+    public Vector3 eulerTemp = new Vector3();
+
+    // referencias dos nos
+    public Node cabeca, tronco, bracoDir, bracoEsq, pernaDir, pernaEsq;
+
+    // rotações originais
+    public Quaternion rotCabeca = new Quaternion();
+    public Quaternion rotTronco = new Quaternion();
+    public Quaternion rotBracoDir = new Quaternion();
+    public Quaternion rotBracoEsq = new Quaternion();
+    public Quaternion rotPernaDir = new Quaternion();
+    public Quaternion rotPernaEsq = new Quaternion();
 
 	public Jogador() {
 		super();
-	}
-	
-	public void criarModelo3D() {
-		modelo = new ModeloJogador();
-		
+		try {
+            ativoCena = new GLTFLoader().load(Gdx.files.internal("modelos/jogador.gltf"));
+            modelo = ativoCena.scene.model;
+            instancia = new ModelInstance(modelo);
+
+            pegarNos();
+            salvarRotacoes();
+        } catch(Exception e) {
+            Gdx.app.error("[Jogador]", "Erro no GLTF: " + e.getMessage());
+        }
 		// deixa o braço reto pra frente
-		modelo.bracoDir.rotation.set(modelo.rotBracoDir);
+		bracoDir.rotation.set(rotBracoDir);
 		// rotaciona 90 graus no eixo X
-		modelo.bracoDir.rotation.mul(new Quaternion(Vector3.X, 90f));
-		modelo.instancia.calculateTransforms();
+		bracoDir.rotation.mul(new Quaternion(Vector3.X, 90f));
+		instancia.calculateTransforms();
 	}
 
 	public void interagirBloco() {
@@ -85,31 +110,16 @@ public class Jogador extends Entidade {
 
 	@Override
 	public void att(float delta) {
+		super.att(delta);
 		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
 		if(itemInv != null && itemInv.nome != item) item = itemInv.nome;
-		else item = "ar";
+		else if(itemInv == null) item = "ar";
 		
 		frenteV.x = camera.direction.x;
 		frenteV.z = camera.direction.z;
 		frenteV.nor();  
 		direitaV.x = frenteV.z;
 		direitaV.z = -frenteV.x;
-
-		velocidade.x = 0;
-		velocidade.z = 0;
-		if(modo != 2) velocidade.y = 0;
-
-		if(this.frente) velocidade.add(frenteV.cpy().scl(velo));
-		if(this.tras)  velocidade.sub(frenteV.cpy().scl(velo));
-		if(this.esquerda) velocidade.add(direitaV.cpy().scl(velo));
-		if(this.direita) velocidade.sub(direitaV.cpy().scl(velo));
-		if(this.cima) {
-			if(modo != 2 || noChao || naAgua) {
-				velocidade.y = pulo; // pulo
-				noChao = false;
-			}
-        }
-        if(this.baixo) velocidade.y = -10f;
 
 		// gravidade no sobrevivencia
 		if(naAgua) Mundo.GRAVIDADE = -10;
@@ -178,48 +188,43 @@ public class Jogador extends Entidade {
 		}
 	}
 
-	public boolean ehChao() {
-		// verifica se ha blocos solidos logo abaixo dos pes do jogador
-		float epsilon = 0.05f; // margem pra evitar flutuação
-		float yCheque = posicao.y - epsilon;
-
-		int minX = Mat.floor(posicao.x - largura / 2);
-		int maxX = Mat.floor(posicao.x + largura / 2);
-		int y = Mat.floor(yCheque);
-		int minZ = Mat.floor(posicao.z - profundidade / 2);
-		int maxZ = Mat.floor(posicao.z + profundidade / 2);
-
-		for(int x = minX; x <= maxX; x++) {
-			for(int z = minZ; z <= maxZ; z++) {
-				int id = Mundo.obterBlocoMundo(x, y, z);
-				if(id != 0) {
-					Bloco b = Bloco.numIds.get(id);
-					if(b != null && b.solido) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
 	public void render(ModelBatch sb) {
 		if(modelo == null) return;
 
 		// sincroniza o modelo visual com a logica do jogador
-		modelo.instancia.transform.setToTranslation(posicao);
+		instancia.transform.setToTranslation(posicao);
 		
 		// aplica a rotação(yaw) da camera ao corpo
 		float anguloRotacao = ((float)Math.toDegrees(-Math.atan2(camera.direction.z, camera.direction.x)) - 90);
-		modelo.instancia.transform.rotate(Vector3.Y, anguloRotacao);
+		instancia.transform.rotate(Vector3.Y, anguloRotacao);
 		
-		// renderiza
-		sb.begin(camera);
-		modelo.render(sb);
-		sb.end();
+		
+		if(instancia != null) sb.render(instancia);
 	}
 	@Override
 	public void liberar() {
-		if(modelo != null) modelo.liberar();
+		if(modelo != null) modelo.dispose();
+		if(ativoCena != null) ativoCena.dispose();
 	}
+
+    public void pegarNos() {
+        cabeca = instancia.getNode("cabeca", true);
+        tronco = instancia.getNode("tronco", true);
+        bracoDir = instancia.getNode("braco_dir", true);
+        bracoEsq = instancia.getNode("braco_esq", true);
+        pernaDir = instancia.getNode("perna_dir", true);
+        pernaEsq = instancia.getNode("perna_esq", true);
+
+		instancia.nodes.clear();
+		instancia.nodes.add(bracoDir);
+    }
+
+    public void salvarRotacoes() {
+        if(cabeca != null) rotCabeca.set(cabeca.rotation);
+        if(tronco != null) rotTronco.set(tronco.rotation);
+        if(bracoDir != null) rotBracoDir.set(bracoDir.rotation);
+        if(bracoEsq != null) rotBracoEsq.set(bracoEsq.rotation);
+        if(pernaDir != null) rotPernaDir.set(pernaDir.rotation);
+        if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
+    }
 }

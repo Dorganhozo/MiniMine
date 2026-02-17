@@ -5,15 +5,19 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.minimine.mundo.Mundo;
 import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
 
 public class Entidade {
 	public int vida;
 	public float velo = 8f; // tem uma velocidade
 	public float peso = 65f; // 65 kg
 	public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
-	public boolean noChao = true, naAgua = false, agachado = false, nasceu = false;
+	public boolean noChao = true, naAgua = false, agachado = false, nasceu = false, voando = false;
 	
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
+	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
+	public float pulo = 10f;
+	
 	public float largura = 0.6f, altura = 1.9f, profundidade = 0.6f;
 
 	public BoundingBox hitbox = new BoundingBox();
@@ -108,9 +112,48 @@ public class Entidade {
 		return false;
 	}
 	
-	public void att(float delta) {}
-	
-	public void liberar() {
-		
+	public boolean ehChao() {
+		// verifica se ha blocos solidos logo abaixo dos pes do jogador
+		float epsilon = 0.05f; // margem pra evitar flutuação
+		float yCheque = posicao.y - epsilon;
+
+		int minX = Mat.floor(posicao.x - largura / 2);
+		int maxX = Mat.floor(posicao.x + largura / 2);
+		int y = Mat.floor(yCheque);
+		int minZ = Mat.floor(posicao.z - profundidade / 2);
+		int maxZ = Mat.floor(posicao.z + profundidade / 2);
+
+		for(int x = minX; x <= maxX; x++) {
+			for(int z = minZ; z <= maxZ; z++) {
+				int id = Mundo.obterBlocoMundo(x, y, z);
+				if(id != 0) {
+					Bloco b = Bloco.numIds.get(id);
+					if(b != null && b.solido) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
+	
+	public void att(float delta) {
+		velocidade.x = 0;
+		velocidade.z = 0;
+		if(voando) velocidade.y = 0;
+		
+		if(frente) velocidade.add(frenteV.cpy().scl(velo));
+		if(tras)  velocidade.sub(frenteV.cpy().scl(velo));
+		if(esquerda) velocidade.add(direitaV.cpy().scl(velo));
+		if(direita) velocidade.sub(direitaV.cpy().scl(velo));
+		if(cima) {
+			if(voando || noChao || naAgua) {
+				velocidade.y = pulo; // pulo
+				noChao = false;
+			}
+        }
+		if(baixo) velocidade.y = -10;
+	}
+	public void render(ModelBatch mb) {}
+	public void liberar() {}
 }
