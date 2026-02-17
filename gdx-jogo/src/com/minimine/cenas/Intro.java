@@ -159,7 +159,8 @@ public class Intro implements Screen {
 
 	// cubo girando
 	public void renderVariacao1(float delta) {
-		UI.attCamera(camera, yaw, tom);
+		UI.attCamera(camera.direction, yaw, tom);
+		camera.up.set(0, 1, 0);
 		camera.update();  
 
 		clone.transform.rotate(Vector3.Y, 50 * delta);  
@@ -180,7 +181,8 @@ public class Intro implements Screen {
 
 	// cubo explode em bolhas
 	public void renderVariacao3(float delta) {
-		UI.attCamera(camera, yaw, tom);
+		UI.attCamera(camera.direction, yaw, tom);
+		camera.up.set(0, 1, 0);
 		camera.update();
 
 		// explodir apos 2 segundos

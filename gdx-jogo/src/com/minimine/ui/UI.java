@@ -423,7 +423,8 @@ public class UI implements InputProcessor {
 	}
 
 	public void att(float delta, Mundo mundo) {
-		attCamera(camera, jg.yaw, jg.tom);
+		attCamera(camera.direction, jg.yaw, jg.tom);
+		camera.up.set(0, 1, 0);
 
 		Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
 		Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0); 
@@ -445,7 +446,6 @@ public class UI implements InputProcessor {
 		
 		if(menuAberto) menuOpcoes.porFrame(delta, sb, fonte);
 		
-		this.jg.inv.att();
 		if(debug) {
 			float livre = rt.freeMemory() >> 20;
 			float total = rt.totalMemory() >> 20;
@@ -466,7 +466,7 @@ public class UI implements InputProcessor {
 
 			fonte.draw(sb, String.format(
 						   "X: %.1f, Y: %.1f, Z: %.1f\n" +
-						   "Mundo: %s\njg:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
+						   "Mundo: %s\nJogador:\nModo: %s\nSlot: %d\nItem: %s\nNo chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 						   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
 						   "Mundo:\nRaio Chunks: %d\nChunks ativos: %d\nChunks Alteradas: %d\nSemente: %d\nTempo: %.2f\nTick: %.3f\nVelocidade do tempo: %.5f",
 						   jg.posicao.x, jg.posicao.y, jg.posicao.z,
@@ -479,7 +479,7 @@ public class UI implements InputProcessor {
 
 			fonte.draw(sb, String.format(
 						   "FPS: %d\n" +
-						   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\nh\n"+
+						   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\nMemória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\nMemória nativa usada: %.1f MB\n\n"+
 						   "Logs:\n%s",
 						   fps,
 						   Thread.activeCount(), livre, total, total - livre, nativaLivre, nativaTotal, nativaTotal - nativaLivre,
@@ -489,7 +489,7 @@ public class UI implements InputProcessor {
 		sb.end();
 	}
 
-	public static void attCamera(PerspectiveCamera camera, float yaw, float tom) {
+	public static void attCamera(Vector3 vetor, float yaw, float tom) {
 		float yawRad = yaw * MathUtils.degRad;
 		float tomRad = tom * MathUtils.degRad;
 
@@ -497,8 +497,7 @@ public class UI implements InputProcessor {
 		float cy = MathUtils.sin(tomRad);
 		float cz = MathUtils.cos(tomRad) * MathUtils.cos(yawRad);
 
-		camera.direction.set(cx, cy, cz).nor();
-		camera.up.set(0, 1, 0);
+		vetor.set(cx, cy, cz).nor();
 	}
 
     public void ajustar(int v, int h) {

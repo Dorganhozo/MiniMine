@@ -159,6 +159,9 @@ public class Mundo {
 				chunk.malha = null;
             }
         }
+		for(Entidade e : entidades) {
+			e.liberar();
+		}
 		chunksMod.clear();
         chunks.clear();
 		estados.clear();

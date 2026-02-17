@@ -108,7 +108,7 @@ Erosão Hidraulica.
 6. CelularRuido2D.java (atual)
 
 ## compatibilidade:
-* Android 4 até Android 14.
+* Android 4 até Android 15.
 * Linux 32-bit e 64-bit.
 * Windows XP até Windows 11.
 
