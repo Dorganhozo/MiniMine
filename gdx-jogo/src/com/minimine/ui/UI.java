@@ -33,8 +33,9 @@ import com.minimine.mods.LuaAPI;
 import com.minimine.entidades.Jogador;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.minimine.utils.Receitas;
+import com.minimine.utils.Objeto;
 
-public class UI implements InputProcessor {
+public class UI extends Objeto implements InputProcessor {
 	public static PerspectiveCamera camera;
 	public static Map<CharSequence, Botao> botoes = new HashMap<>();
 	public static Map<CharSequence, Texto> textos = new HashMap<>();
@@ -92,6 +93,8 @@ public class UI implements InputProcessor {
 
 		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		MenuPause.shapeRenderer = new ShapeRenderer();
+
+		liberado = false;
     }
 
 	public void abrirChat() {
@@ -515,8 +518,10 @@ public class UI implements InputProcessor {
 
         sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);
     }
-
-    public static void liberar() {
+	
+	@Override
+    public void liberar() {
+		super.liberar();
 		for(Botao e : botoes.values()) e.aoFim();
 		dialogo.aoFim();
         sb.dispose();
