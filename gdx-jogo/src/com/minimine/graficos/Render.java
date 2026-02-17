@@ -21,15 +21,15 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.minimine.entidades.Entidade;
 import com.minimine.entidades.Foca;
+import com.minimine.utils.Objeto;
 
-public class Render {
+public class Render extends Objeto {
     public UI ui;
     public Mundo mundo;
     public static ShaderProgram shader;
     public static ShapeRenderer debugCaixas;
     public static ModelBatch sb; // gerenciador de modelos 3D de entidades
-    public static boolean dispensado = false;
-
+    
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
         new VertexAttribute(VertexAttributes.Usage.Position, 1, "a_pos"),
         new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
@@ -270,8 +270,9 @@ public class Render {
 		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 255, 16);
 	}
 
+    @Override
     public void liberar() {
-        dispensado = true;
+        super.liberar();
         shader.dispose();
         debugCaixas.dispose();
         ui.liberar();
