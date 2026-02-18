@@ -26,6 +26,7 @@ import com.minimine.utils.Objeto;
 public class Render extends Objeto {
     public UI ui;
     public Mundo mundo;
+	public static boolean pause = false;
     public static ShaderProgram shader;
     public static ShapeRenderer debugCaixas;
     public static GerenciadorParticulas gp;
@@ -150,108 +151,110 @@ public class Render extends Objeto {
 
     public void att(float delta) {
         if(liberado) return;
+		if(!pause) {
+			float fator = DiaNoiteUtil.obterFatorTransicao();
+			float[] corNoite = {0.05f, 0.05f, 0.15f};
+			float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
 
-        float fator = DiaNoiteUtil.obterFatorTransicao();
-        float[] corNoite = {0.05f, 0.05f, 0.15f};
-        float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
+			float r = corNoite[0] * (1f - fator) + corDia[0] * fator;
+			float g = corNoite[1] * (1f - fator) + corDia[1] * fator;
+			float b = corNoite[2] * (1f - fator) + corDia[2] * fator;
 
-        float r = corNoite[0] * (1f - fator) + corDia[0] * fator;
-        float g = corNoite[1] * (1f - fator) + corDia[1] * fator;
-        float b = corNoite[2] * (1f - fator) + corDia[2] * fator;
+			Gdx.gl.glClearColor(r, g, b, 1f);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-        Gdx.gl.glClearColor(r, g, b, 1f);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-        Gdx.gl.glEnable(GL20.GL_CULL_FACE);
-        Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+			if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
+			mundo.att(delta, ui.jg);
 
-        if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
-        mundo.att(delta, ui.jg);
-
-        if(mundo.carregado) {
-            if(!ui.jg.nasceu) {
-                int yTeste = Mundo.obterAlturaChao((int)ui.jg.posicao.x, (int)ui.jg.posicao.z);
-                if(yTeste > 1) {
-                    ui.jg.posicao.y = yTeste;
-                    ui.jg.nasceu = true;
-                    Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
-                } else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
-            }
-            ui.jg.att(delta);
-        }
-
-        shader.begin();
-
-        shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
-        shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz); 
-        shader.setUniformf("u_alturaSol", DiaNoiteUtil.obterFatorTransicao());
-
-        // == envia dados do atlas pro shader ===
-        // envia a tabela de pesquisa uma vez por frame(ou quando mudar)
-        // o 4fv envia vetores de 4 floats
-        shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4); 
-
-        DiaNoiteUtil.aplicarShader(shader);
-
-        Texturas.blocos.bind(0);
-        shader.setUniformi("u_textura", 0);
-        Gdx.gl.glDisable(GL20.GL_BLEND);
-
-        // 1. solidos:
-        for(final Chunk chunk : mundo.chunks.values()) {
-            if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
-				shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
-                chunk.malha.render(shader, GL20.GL_TRIANGLES, 0, chunk.contaSolida);
-            }
-        }
-        // 2. transparentes:
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-        Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-
-        for(final Chunk chunk : mundo.chunks.values()) {
-            if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
-				shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
-                chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
-            }
-        }
-        Animacoes2D.att(delta);
-
-        shader.end();
-
-        if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
-        gp.att(delta);
-
-        ui.att(delta, mundo);
-		
-		// renderiza os modelos 3D
-		sb.begin(ui.jg.camera);
-		
-		ui.jg.render(sb);
-		
-		for(Entidade e : mundo.entidades) {
-			e.render(sb);
-		}
-		sb.end();
-
-        if(ui.debug) {
-            debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador
-            debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
-            debugCaixas.begin(ShapeRenderer.ShapeType.Line);
-
-            debugCaixas.box(ui.jg.posicao.x - ui.jg.largura/2, ui.jg.posicao.y, ui.jg.posicao.z + ui.jg.largura/2, ui.jg.largura, ui.jg.altura, ui.jg.largura);
-			
-			debugCaixas.setColor(0, 1, 0, 1); // verde para as entidades
-			for(Entidade e : mundo.entidades) {
-				debugCaixas.box(
-					e.posicao.x - e.largura / 2, 
-					e.posicao.y, 
-					e.posicao.z - e.profundidade / 2, 
-					e.largura, 
-					e.altura, 
-					e.profundidade
-				);
+			if(mundo.carregado) {
+				if(!ui.jg.nasceu) {
+					int yTeste = Mundo.obterAlturaChao((int)ui.jg.posicao.x, (int)ui.jg.posicao.z);
+					if(yTeste > 1) {
+						ui.jg.posicao.y = yTeste;
+						ui.jg.nasceu = true;
+						Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
+					} else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
+				}
+				ui.jg.att(delta);
 			}
-            debugCaixas.end();
-        }
+
+			shader.begin();
+
+			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
+			shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz); 
+			shader.setUniformf("u_alturaSol", DiaNoiteUtil.obterFatorTransicao());
+
+			// == envia dados do atlas pro shader ===
+			// envia a tabela de pesquisa uma vez por frame(ou quando mudar)
+			// o 4fv envia vetores de 4 floats
+			shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4); 
+
+			DiaNoiteUtil.aplicarShader(shader);
+
+			Texturas.blocos.bind(0);
+			shader.setUniformi("u_textura", 0);
+			Gdx.gl.glDisable(GL20.GL_BLEND);
+
+			// 1. solidos:
+			for(final Chunk chunk : mundo.chunks.values()) {
+				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
+					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
+					chunk.malha.render(shader, GL20.GL_TRIANGLES, 0, chunk.contaSolida);
+				}
+			}
+			// 2. transparentes:
+			Gdx.gl.glEnable(GL20.GL_BLEND);
+			Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+
+			for(final Chunk chunk : mundo.chunks.values()) {
+				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
+					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
+					chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
+				}
+			}
+			Animacoes2D.att(delta);
+
+			shader.end();
+
+			if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
+			gp.att(delta);
+
+			// renderiza os modelos 3D
+			sb.begin(ui.jg.camera);
+
+			ui.jg.render(sb);
+
+			for(Entidade e : mundo.entidades) {
+				e.render(sb);
+			}
+			sb.end();
+
+			// renderiza o debug:
+			if(ui.debug) {
+				debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador
+				debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
+				debugCaixas.begin(ShapeRenderer.ShapeType.Line);
+
+				debugCaixas.box(ui.jg.posicao.x - ui.jg.largura/2, ui.jg.posicao.y, ui.jg.posicao.z + ui.jg.largura/2, ui.jg.largura, ui.jg.altura, ui.jg.largura);
+
+				debugCaixas.setColor(0, 1, 0, 1); // verde para as entidades
+				for(Entidade e : mundo.entidades) {
+					debugCaixas.box(
+						e.posicao.x - e.largura / 2, 
+						e.posicao.y, 
+						e.posicao.z - e.profundidade / 2, 
+						e.largura, 
+						e.altura, 
+						e.profundidade
+					);
+				}
+				debugCaixas.end();
+			}
+		}
+		// renderiza a interface de usuario:
+		ui.att(delta, mundo);
     }
 	
 	public final boolean frustrum(Chunk chunk, Jogador jogador) {
