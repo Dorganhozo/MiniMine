@@ -24,6 +24,8 @@ public class GerenciadorParticulas extends Objeto {
     public GerenciadorParticulas(Jogador jogador) {
         jogadorRef = jogador;
         lote = new DecalBatch(new CameraGroupStrategy(jogador.camera));
+		
+		liberado = false;
     }
 
     /*
@@ -106,6 +108,7 @@ public class GerenciadorParticulas extends Objeto {
     @Override
     public void liberar() {
         super.liberar();
+		if(liberado) return;
         if(lote != null) lote.dispose();
     }
 }
