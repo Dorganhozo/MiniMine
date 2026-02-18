@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +41,8 @@ import com.minimine.mundo.blocos.Bloco;
 import com.minimine.graficos.Render;
 import com.minimine.graficos.Animacoes2D;
 import com.minimine.entidades.Jogador;
+import com.minimine.entidades.Foca;
+import java.util.Random;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -49,9 +52,9 @@ import com.minimine.mundo.blocos.BlocoModelo;
 
 public class Mundo extends Objeto {
     public static String nome = "novo mundo";
-	
+
 	public static List<Entidade> entidades = new ArrayList<>();
-	
+
 	public static float GRAVIDADE = -30f;
 
 	public static final List<Chunk> praLiberar = new ArrayList<>();
@@ -92,7 +95,7 @@ public class Mundo extends Objeto {
 		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
 		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
 		Bloco.blocos.add(new Bloco("gelo", "gelo"));
-		
+
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("areia", "terra_1", "terra_2", "terra_3");
@@ -110,37 +113,24 @@ public class Mundo extends Objeto {
 
 		Biomas.iniciar();
 
-        if(exec == null || exec.isShutdown()) {
-			exec = Executors.newFixedThreadPool(8);
-		}
+        if(exec == null || exec.isShutdown()) exec = Executors.newFixedThreadPool(8);
+		
 		liberado = false;
     }
 
     // chamado em render:
-    public void att(float delta, Jogador jogador) {
+    public void att(float delta, Jogador jg) {
 		if(exec.isShutdown()) return;
 
-		attChunks((int) jogador.posicao.x, (int) jogador.posicao.z);
+		attChunks((int)jg.posicao.x, (int)jg.posicao.z);
 
 		if(!carregado && chunks.size() >= 1) {
 			carregado = true;
 		}
-		for(Entidade e : entidades) {
-			e.att(delta);
-			
-			if(!e.noChao || e.naAgua) {
-				int fluidez = 0;
-				if(e.naAgua) fluidez = 10;
-				
-				e.velocidade.y += (GRAVIDADE + fluidez) * delta;
-
-				if(e.velocidade.y < e.VELO_MAX_QUEDA) {
-					e.velocidade.y = e.VELO_MAX_QUEDA;
-				}
-			}
-		}
+		
+		GerenciadorEntidades.att(delta, this, jg);
         if(ciclo) {
-			CorposCelestes.att(jogador.camera.combined, jogador.posicao);
+			CorposCelestes.att(jg.camera.combined, jg.posicao);
 			// ciclo de dia e noite:
 			if(tick > 0.03f) {
 				tick = 0;
@@ -173,7 +163,7 @@ public class Mundo extends Objeto {
 		entidades.clear();
         exec.shutdown();
 		if(com.minimine.ui.UI.debug) Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
-		
+
 		ArrayReuso.limparPools();
     }
 
@@ -215,19 +205,19 @@ public class Mundo extends Objeto {
 				eraEmissor = true;
 			}
 		}
-		if(blocoAntigoId != 0 && bloco == null) {
+		if(blocoAntigoId != 0 && bloco != null) {
 			Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
 		}
 		// se era emissor, zera luz antes de remover o bloco
 		// isso evita que chunks importem luz antiga durante recalculo
 		if(eraEmissor) ChunkLuz.zerarLuz(chunk);
-		
+
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 
 		// se não era emissor, marca chunk e vizinhas normalmente
 		if(!eraEmissor) chunk.luzSuja = true;
         chunk.att = true;
-		
+
 		Chunk chunkAdj;
 
         // marca chunks vizinhas pra atualizar malha se o bloco ta na borda
@@ -305,6 +295,7 @@ public class Mundo extends Objeto {
 		}
 		return 80; // caso de segurança: se o mundo estiver vazio, nasce no 80
 	}
+
     // GERAÇÃO DE DADOS:
     public boolean deveAttChunk(int chunkX, int chunkZ, int x, int z) {
         int distX = Mat.abs(chunkX - x);
@@ -552,7 +543,7 @@ public class Mundo extends Objeto {
 									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
 									chunk.malha.setVertices(vertsGeral.praArray());
 									chunk.malha.setIndices(idcFinal);
-									
+
 									// atualiza os contadores
 									chunk.contaSolida = idcSolidos.tam;
 									chunk.contaTransp = idcTransp.tam;
@@ -625,3 +616,4 @@ public class Mundo extends Objeto {
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
 }
+

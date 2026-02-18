@@ -145,8 +145,6 @@ public class Render extends Objeto {
 
         sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
 
-        mundo.entidades.add(new Foca(0, 100, 0));
-		ui.jg.inv.addItem("gelo", 16);
         liberado = false;
     }
 
