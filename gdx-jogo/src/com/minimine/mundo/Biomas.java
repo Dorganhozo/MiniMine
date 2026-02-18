@@ -64,7 +64,7 @@ public class Biomas {
         switch(bioma) {
             case OCEANO:
             case OCEANO_QUENTE:
-            case OCEANO_PROFUNDO:
+            case ABISMO_MARINHO:
                 // areia ou pedra
                 int profundidade = 62 - altura;
                 for(int y = altura - 4; y < altura; y++) {
@@ -89,7 +89,7 @@ public class Biomas {
                 for(int y = altura; y <= 62; y++) {
                     ChunkUtil.defBloco(x, y, z, "agua", chunk);
                 }
-				break;
+			break;
             case OCEANO_COSTEIRO:
                 // areia
                 for(int y = altura - 3; y < altura; y++) {
@@ -105,7 +105,7 @@ public class Biomas {
                 for(int y = altura; y <= 62; y++) {
                     ChunkUtil.defBloco(x, y, z, "agua", chunk);
                 }
-				break;
+			break;
             case DESERTO:
             case COLINAS_DESERTO:
                 // areia profunda
@@ -126,7 +126,7 @@ public class Biomas {
                         ChunkUtil.defBloco(x, altura + cy, z, "cacto", chunk);
                     }
                 }
-				break;
+			break;
             case PLANICIES:
             case PLANICIES_MONTANHOSAS:
                 // terra com possivel cascalho em montanhas
@@ -244,5 +244,27 @@ public class Biomas {
             Arvores.gerarArvoreLarga(chunk, x, y, z, alturaTronco);
         }
     }
+	
+	public static String obterBioma(int x, int z) {
+		if(gerador == null) return "Desconhecido";
+
+		TipoBioma bioma = TipoBioma.values()[gerador.calcularDadosColuna(x, z)[1]];
+
+		// retorna o nome formatado
+		switch(bioma) {
+			case OCEANO: return "Oceano";
+			case OCEANO_COSTEIRO: return "Costa";
+			case OCEANO_QUENTE: return "Mar Quente";
+			case ABISMO_MARINHO: return "Abismo Marinho";
+			case PLANICIES: return "Planície";
+			case PLANICIES_MONTANHOSAS: return "Planície Alta";
+			case FLORESTA: return "Floresta";
+			case FLORESTA_COSTEIRA: return "Mata Costeira";
+			case FLORESTA_MONTANHOSA: return "Serrania";
+			case DESERTO: return "Deserto";
+			case COLINAS_DESERTO: return "Dunas";
+			default: return "Desconhecido";
+		}
+	}
 }
 

@@ -2,6 +2,20 @@
 
 refeito com LibGDX.
 
+## Requisitos mínimos:
+
+## PC/Notebook:
+* Sistema Operacional: Windows/Linux
+* Java: 7.
+* RAM: 350 MBs.
+* OpenGL: 2.
+
+## Celular:
+* Sistema Operacional: Android.
+* Java: 7.
+* RAM: 200 MBs.
+* OpenGL: 2.
+
 ## Já feito:
 1. Gerenciamento de chunks dinâmico.
 2. Geração de terreno com Ruido Simplex 2D e 3D pras cavernas, manual.

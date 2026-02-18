@@ -93,6 +93,7 @@ public class MenuPause extends Objeto {
                 try {
                     salvarJogo();
                     Inicio.defTela(Cenas.menu);
+					Cenas.jogo.dispose();
                     fecharMenu();
                 } catch(Exception e) {
                     Gdx.app.log("[MenuPause]", "[ERRO]: "+e);

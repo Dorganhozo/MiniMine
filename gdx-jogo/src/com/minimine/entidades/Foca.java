@@ -94,7 +94,7 @@ public class Foca extends Entidade {
     @Override
     public void att(float delta) {
         super.att(delta);
-        if (animCtr != null) animCtr.update(delta);
+        if(animCtr != null) animCtr.update(delta);
 
         // === 1. acumula tempo e necessidades continuas ===
         attNecessidades(delta);
@@ -360,6 +360,8 @@ public class Foca extends Entidade {
 
     @Override
     public void liberar() {
+		super.liberar();
+		if(liberado) return;
         if(modelo != null) modelo.dispose();
         if(ativoCena != null) ativoCena.dispose();
     }
