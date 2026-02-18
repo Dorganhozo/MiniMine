@@ -97,7 +97,7 @@ public class Foca extends Entidade {
         if (animCtr != null) animCtr.update(delta);
 
         // === 1. acumula tempo e necessidades continuas ===
-        atualizarNecessidades(delta);
+        attNecessidades(delta);
 
         // === 2. recompensas continuas(a cada frame) ===
         acumularRecompensas();
@@ -113,14 +113,14 @@ public class Foca extends Entidade {
         processarFisicaColisao(delta);
 
         // === 6. atualiza animação conforme estado ===
-        atualizarAnimacao();
+        attAnimacao();
 
         // === 7. salva estado do frame para o proximo ===
         estavaNaAgua = naAgua;
     }
 	
     // necessidades
-    public void atualizarNecessidades(float delta) {
+    public void attNecessidades(float delta) {
         if(naAgua) {
             tempoNaAgua += delta;
             tempoForaDaAgua = 0f;
@@ -326,7 +326,7 @@ public class Foca extends Entidade {
     }
     
     // animações
-    public void atualizarAnimacao() {
+    public void attAnimacao() {
         if(animCtr == null) return;
         switch(estado) {
             case NADANDO:
@@ -351,7 +351,7 @@ public class Foca extends Entidade {
 
         // rotaciona o modelo pra direção de movimento
         if(direcao.len2() > 0.01f) {
-            float angulo = (float)Math.toDegrees(Math.atan2(direcao.x, direcao.z));
+            float angulo = (float)Math.toDegrees(Math.atan2(-direcao.x, -direcao.z));
             instancia.transform.setToRotation(Vector3.Y, angulo);
         }
         instancia.transform.setTranslation(posicao);

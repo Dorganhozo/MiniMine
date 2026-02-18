@@ -244,7 +244,7 @@ public class Render extends Objeto {
 					debugCaixas.box(
 						e.posicao.x - e.largura / 2, 
 						e.posicao.y, 
-						e.posicao.z - e.profundidade / 2, 
+						e.posicao.z + e.profundidade / 2, 
 						e.largura, 
 						e.altura, 
 						e.profundidade
