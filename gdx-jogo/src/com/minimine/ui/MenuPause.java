@@ -11,6 +11,7 @@ import com.minimine.utils.ArquivosUtil;
 import com.minimine.cenas.Jogo;
 import com.minimine.Cenas;
 import com.minimine.utils.Objeto;
+import com.minimine.graficos.Render;
 
 public class MenuPause extends Objeto {
     public static EstanteVertical menuPause;
@@ -129,13 +130,14 @@ public class MenuPause extends Objeto {
 
     public static void abrirMenu() {
         if(menuPause == null) iniciar();
-        
+        Render.pause = true;
         menuAberto = true;
         Gdx.input.setCursorCatched(false);
         Gdx.app.log("MenuPause", "===== MENU ABERTO =====");
     }
 
     public static void fecharMenu() {
+		Render.pause = false;
         menuAberto = false;
         Gdx.input.setCursorCatched(true);
         Gdx.app.log("MenuPause", "===== MENU FECHADO =====");

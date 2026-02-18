@@ -15,7 +15,7 @@ import com.badlogic.gdx.math.Vector3;
 
 /*
  * foca com IA de aprendizado por reforço
- *
+ 
  * estados internos:
  *   VAGANDO: anda aleatoriamente(baixa necessidade de água)
  *   SEDENTA: procura água ativamente
