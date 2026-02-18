@@ -116,7 +116,7 @@ public class Render extends Objeto {
     public Render(Jogador jogador, Mundo mundo) {
         this.ui = new UI(jogador);
         this.mundo = mundo;
-
+		
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glCullFace(GL20.GL_BACK);
@@ -146,6 +146,7 @@ public class Render extends Objeto {
         sb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
 
         mundo.entidades.add(new Foca(0, 100, 0));
+		ui.jg.inv.addItem("gelo", 16);
         liberado = false;
     }
 

@@ -91,7 +91,8 @@ public class Mundo extends Objeto {
         Bloco.blocos.add(new Bloco("tocha", "tocha", "tocha", "tocha", false, true, true, 13));
 		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
 		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
-
+		Bloco.blocos.add(new Bloco("gelo", "gelo"));
+		
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("areia", "terra_1", "terra_2", "terra_3");
@@ -151,7 +152,7 @@ public class Mundo extends Objeto {
 	@Override
     public void liberar() {
 		super.liberar();
-		
+		if(liberado) return;
         for(Chunk chunk : chunks.values()) {
             if(chunk.malha != null) {
                 chunk.malha.dispose();
@@ -171,9 +172,8 @@ public class Mundo extends Objeto {
 		estados.clear();
 		entidades.clear();
         exec.shutdown();
-		if(com.minimine.ui.UI.debug) {
-			Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
-		}
+		if(com.minimine.ui.UI.debug) Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
+		
 		ArrayReuso.limparPools();
     }
 

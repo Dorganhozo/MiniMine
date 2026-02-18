@@ -87,7 +87,7 @@ public class GeradorTerreno {
         // converte escala -1,1 para blocos reais
         int blocos;
         if(altura < 0) {
-            blocos = nivelMar + (int)(altura * 25.0);
+            blocos = nivelMar + (int)(altura * 60.0);
         } else {
             // reduz a escala vertical em 25% pra terrenos menos ingrimes
             blocos = nivelMar + (int)(altura * 97.0);
@@ -107,8 +107,8 @@ public class GeradorTerreno {
     }
 
     public double identificarTipo(double base) {
-        if(base < -0.2) return 0.0; // oceano profundo
-        if(base < 0.0) return (base + 0.2) / 0.2 * 0.2; // transição mar
+        if(base < -0.5) return -0.5; // oceano profundo
+        if(base < 0.0) return base * 0.4; // transição mar
         // aumento o raio de planícies para ter mais áreas planas
         if(base < 0.35) return 0.2 + (base / 0.35) * 0.2; // planicies expandidas
         return 0.4 + (Math.min(base - 0.35, 0.65) / 0.65) * 0.6; // montanhas
@@ -134,7 +134,7 @@ public class GeradorTerreno {
 
         // define bioma
         if(altura <= nivelMar) {
-            if(altura < nivelMar - 20) return TipoBioma.OCEANO_PROFUNDO;
+            if(altura < nivelMar - 35 || base < -0.7) return TipoBioma.ABISMO_MARINHO;
             if(temp > 0.7) return TipoBioma.OCEANO_QUENTE;
             return TipoBioma.OCEANO;
         }
@@ -277,7 +277,7 @@ public class GeradorTerreno {
 
     public enum TipoBioma {
         OCEANO, OCEANO_COSTEIRO, OCEANO_QUENTE,
-		OCEANO_PROFUNDO,
+		ABISMO_MARINHO,
         PLANICIES, PLANICIES_MONTANHOSAS,
         FLORESTA, FLORESTA_COSTEIRA, FLORESTA_MONTANHOSA,
         DESERTO, COLINAS_DESERTO
