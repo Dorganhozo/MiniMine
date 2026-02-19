@@ -178,7 +178,6 @@ public class Render extends Objeto {
 				}
 				ui.jg.att(delta);
 			}
-
 			shader.begin();
 
 			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);

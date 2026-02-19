@@ -12,8 +12,8 @@ import java.util.Iterator;
 public class GerenciadorEntidades {
 	public static final Random aleatorio = new Random();
     public static float tempo = 0f;
-    public static final float INTERVALO = 3f;
-    public static final int MAX_ENTIDADES = 30;
+    public static final float INTERVALO = 5f; // segundos
+    public static final int MAX_ENTIDADES = 20;
     public static final float DIST_MIN_NASCER = 10f;
 	
 	public static void att(float delta, Mundo mundo, Jogador jg) {
@@ -49,6 +49,7 @@ public class GerenciadorEntidades {
 	}
 	
 	public static void tentarNascerEntidade(Jogador jogador, Mundo mundo) {
+		if(jogador.bioma.equals("Tundra")) return;
 		// pega um chunk carregado aleatório(estado 2 = malha pronta)
 		List<Long> disponiveis = new ArrayList<>();
 		for(Map.Entry<Long, Integer> e : mundo.estados.entrySet()) {
@@ -73,8 +74,12 @@ public class GerenciadorEntidades {
 
 			int wy = mundo.obterAlturaChao(wx, wz);
 			if(wy <= 1) continue;
-
-			mundo.entidades.add(new Foca(wx, wy, wz));
+			
+			Entidade entidade = null;
+			
+			entidade = new Foca(wx, wy, wz);
+			
+			if(entidade != null) mundo.entidades.add(entidade);
 			return;
 		}
 	}

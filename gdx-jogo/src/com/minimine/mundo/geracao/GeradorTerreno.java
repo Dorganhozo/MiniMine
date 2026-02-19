@@ -12,9 +12,8 @@ public class GeradorTerreno {
     public final Simplex3D ruido3d;
     public final Simplex3D cavernas;
     public final Simplex3D cavernasProfundas;
-    public final CelularRuido2D celular; // pra biomas
+    public final CelularRuido2D celular;
     public final ErosaoHidraulica erosao;
-
     public final long semente;
     public final int nivelMar = 62;
 
@@ -25,41 +24,29 @@ public class GeradorTerreno {
         this.ruido = new Simplex2D(semente ^ 0x9E3779B9L);
         this.ruido3d = new Simplex3D(semente ^ 0x61C88647L);
 
-        // novos ruidos para cavernas em diferentes camadas
         this.cavernas = new Simplex3D(semente ^ 0x1A2B3C4DL);
         this.cavernasProfundas = new Simplex3D(semente ^ 0x9F8E7D6CL);
 
-        // ruido celular para divisão natural de biomas
         this.celular = new CelularRuido2D(semente ^ 0x4F3C2B1AL);
 
-        // pré-computa erosão pra uma região
         this.erosao = new ErosaoHidraulica(semente, 512, 8.0);
-        this.erosao.simularGotas(3000, dominio);
+        this.erosao.simularGotas(1000, dominio);
     }
 
     public int[] calcularDadosColuna(int x, int z) {
-        // 1. base continental com dominio distorção
         double base = dominio.obterElevacaoContinental(x, z);
-
-        // 2. identifica tipo de terreno(oceano, planicie, montanha)
         double tipoTerreno = identificarTipo(base);
         double altura = base;
 
-        // 3. suavizaçãp: reduz a intensidade das montanhas para criar mais areas planas
         double suavizacao = ruido.ruido(x * 0.0002, z * 0.0002) * 0.5 + 0.5;
 
-        // se for terreno elevado, adiciona detalhes de montanhas
         if(tipoTerreno > 0.3) {
             double montanhas = ridge.ridgeFractal(x * 0.0008, z * 0.0008, 2, 2.2, 0.5);
             double cordilheiras = ridge.ridgeBilateral(x * 0.0004, z * 0.0004, 2, 2.0, 0.5);
-
             double fatorMontanha = (tipoTerreno - 0.3) / 0.7;
 
-            // reduz a contribuição das montanhas em 40%
             altura += montanhas * fatorMontanha * 0.48;
             altura += cordilheiras * fatorMontanha * 0.24;
-
-            // aplica suavização progressiva
             altura = altura * (0.7 + suavizacao * 0.3);
 
             if(fatorMontanha > 0.5) {
@@ -67,32 +54,25 @@ public class GeradorTerreno {
                 altura += rochoso * (fatorMontanha - 0.5) * 0.12;
             }
         } else {
-            // areas baixas pra ter transições mais suaves
             double transicao = ruido.ruidoFractal(x * 0.001, z * 0.001, 2, 0.5, 2.0);
             altura += transicao * 0.05 * (1.0 - tipoTerreno);
         }
-        // turbulencia jordan pra micro variações de solo
-        double turbulencia = ridge.jordan(x * 0.001, z * 0.001, 3, 2.1, 1.0, 0.5);
+        double turbulencia = ridge.jordan(x * 0.001, z * 0.001, 2, 2.1, 1.0, 0.5);
         altura += turbulencia * 0.08;
 
-        // aplica erosão pré-calculada
         double valorErosao = erosao.obterErosaoInterpolada(x, z);
         altura += valorErosao * 0.1;
 
-        // detalhes finais de superficie
-        double detalhe1 = ruido.ruidoFractal(x * 0.01, z * 0.01, 3, 0.5, 2.0) * 0.05;
+        double detalhe1 = ruido.ruidoFractal(x * 0.01, z * 0.01, 2, 0.5, 2.0) * 0.05;
         double detalhe2 = ruido.ruidoFractal(x * 0.03, z * 0.03, 2, 0.5, 2.0) * 0.03;
         altura += detalhe1 + detalhe2;
 
-        // converte escala -1,1 para blocos reais
         int blocos;
         if(altura < 0) {
             blocos = nivelMar + (int)(altura * 60.0);
         } else {
-            // reduz a escala vertical em 25% pra terrenos menos ingrimes
             blocos = nivelMar + (int)(altura * 97.0);
         }
-        // variações 3D pra criar saliencias e pequenos tuneis superiiciais
         if(blocos > nivelMar + 25) {
             double var3d = ruido3d.ruidoFractal(x * 0.04, blocos * 0.08, z * 0.04, 1, 0.5, 2.0);
             if(var3d > 0.45) {
@@ -100,186 +80,154 @@ public class GeradorTerreno {
             }
         }
         int alturaFinal = Math.max(1, Math.min(240, blocos));
-        // passa a base continental ja calculada pra evitar reprocessamento no bioma
         TipoBioma bioma = determinarBioma(x, z, alturaFinal, base);
 
         return new int[] { alturaFinal, bioma.ordinal() };
     }
 
     public double identificarTipo(double base) {
-        if(base < -0.5) return -0.5; // oceano profundo
-        if(base < 0.0) return base * 0.4; // transição mar
-        // aumento o raio de planícies para ter mais áreas planas
-        if(base < 0.35) return 0.2 + (base / 0.35) * 0.2; // planicies expandidas
-        return 0.4 + (Math.min(base - 0.35, 0.65) / 0.65) * 0.6; // montanhas
+        if(base < -0.5) return -0.5;
+        if(base < 0.0) return base * 0.4;
+        if(base < 0.35) return 0.2 + (base / 0.35) * 0.2;
+        return 0.4 + (Math.min(base - 0.35, 0.65) / 0.65) * 0.6;
     }
 
     public TipoBioma determinarBioma(int x, int z, int altura, double base) {
-        // usa ruido celular para criar regiões de biomas naturais
         double celularVal = celular.ruido(x * 0.0008, z * 0.0008);
 
-        // temperatura baseada na latitude(Z), altura e influencia celular
         double distEquador = Math.abs(z * 0.00015);
         double temp = 1.0 - distEquador * 0.7;
         temp -= Math.max(0, (altura - nivelMar) * 0.004);
-        // adiciona variação celular na temperatura
         temp += (celularVal - 0.3) * 0.2;
 
-        // umidade baseada na proximidade com oceano(base continental baixa)
         double umidade = Math.exp(-Math.max(0, base) * 2.0);
-        double varClima = ruido.ruidoFractal(x * 0.0003, z * 0.0003, 4, 0.6, 2.0);
+        double varClima = ruido.ruidoFractal(x * 0.0003, z * 0.0003, 2, 0.6, 2.0);
         umidade += varClima * 0.3;
-        // adiciona influencia celular na umidade pra criar bolsões
         umidade += (1.0 - celularVal) * 0.15;
 
-        // define bioma
         if(altura <= nivelMar) {
-            if(altura < nivelMar - 35 || base < -0.7) return TipoBioma.ABISMO_MARINHO;
+            if(altura < nivelMar - 35 || base < -0.7) return TipoBioma.OCEANO_ABISSAL;
             if(temp > 0.7) return TipoBioma.OCEANO_QUENTE;
             return TipoBioma.OCEANO;
         }
-        // mais blocos de praia para transição suave
         if(altura < nivelMar + 5) return TipoBioma.OCEANO_COSTEIRO;
 
-        // usa celular para criar fronteiras mais definidas entre biomas
         if(umidade < 0.25 - celularVal * 0.1) {
             return altura > nivelMar + 15 ? TipoBioma.COLINAS_DESERTO : TipoBioma.DESERTO;
         }
         if(umidade > 0.55 + celularVal * 0.1) {
             if(altura > nivelMar + 35) return TipoBioma.FLORESTA_MONTANHOSA;
-			
             if(base < 0.05) return TipoBioma.FLORESTA_COSTEIRA;
             return TipoBioma.FLORESTA;
         }
         return altura > nivelMar + 20 ? TipoBioma.PLANICIES_MONTANHOSAS : TipoBioma.PLANICIES;
     }
 
-    // verifica se deve haver caverna nesta posição
-    public boolean temCaverna(int x, int y, int z) {
-        // não gera cavernas muito perto da ultima camada
-        if(y < 10) return false; 
-        // não gera cavernas muito alto
-        if(y > 180) return false; 
+    /**
+     * calcula de uma vez quais Y da coluna são vazios(caverna, ravina ou arco)
+     * sem mais chamadas separadas a temRavina/temArco/temCaverna por bloco
+     */
+    public boolean[] calcularVaziosColuna(int x, int z, int altura) {
+        boolean[] vazios = new boolean[altura];
 
-        boolean temCavernaAqui = false;
-        double valorCaverna = 0.0;
+        // pilar e formato de temArco são 2D puros: calculados uma vez por coluna
+        final boolean podeArco = altura > nivelMar + 20;
+        double pilarArco = podeArco ? celular.ruido(x * 0.015, z * 0.015) : 0;
+        final boolean arcoViavel = podeArco
+            && pilarArco > 0.35 && pilarArco < 0.55
+            && ruido.ruido(x * 0.02, z * 0.02) > 0.4;
 
-        // cavernas principais(camada media)
-        if(y >= 20 && y <= 80) {
-            valorCaverna = cavernas.ruidoFractal(x * 0.02, y * 0.03, z * 0.02, 3, 0.5, 2.0);
-            if(valorCaverna > 0.6) temCavernaAqui = true;
+        for(int y = 1; y < altura; y++) {
+            vazios[y] = temRavina(x, y, z, altura)
+				|| temArcoY(x, y, z, altura, arcoViavel)
+				|| temCaverna(x, y, z);
         }
-        // cavernas profundas(mais raras e maiores)
-        if(y >= 10 && y <= 50) {
-            double valorProf = cavernasProfundas.ruidoFractal(x * 0.015, y * 0.025, z * 0.015, 2, 0.5, 2.0);
-            if(valorProf > 0.65) {
-                temCavernaAqui = true;
-                valorCaverna = Math.max(valorCaverna, valorProf);
-            }
-        }
-        // cavernas superficiais(pequenas) invadem a superficie
-        if(y >= 50 && y <= 140) {
-            double valorSup = ruido3d.ruidoFractal(x * 0.025, y * 0.035, z * 0.025, 2, 0.5, 2.0);
-            // permite que cavernas superficiais cheguem mais perto da superficie
-            double limiar = 0.7 - (Math.max(0, y - 100) * 0.002); // fica mais facil perto da superficie
-            if(valorSup > limiar) {
-                temCavernaAqui = true;
-                valorCaverna = Math.max(valorCaverna, valorSup);
-            }
-        }
-        // tuneis horizontais usando ruido verme
-        double tunel = cavernas.ruido(x * 0.01, y * 0.5, z * 0.01);
-        double espessura = Math.abs(ruido3d.ruido(x * 0.03, y * 0.1, z * 0.03));
-        if(tunel > 0.5 && espessura < 0.15) {
-            temCavernaAqui = true;
-            valorCaverna = Math.max(valorCaverna, tunel);
-        }
-        // evita cavernas muito rasas(1-2 blocos) com grande extensão
-        if(temCavernaAqui) {
-            // verifica altura da caverna olhando blocos adjacentes verticalmente
-            double acima = cavernas.ruidoFractal(x * 0.02, (y + 1) * 0.03, z * 0.02, 3, 0.5, 2.0);
-            double abaixo = cavernas.ruidoFractal(x * 0.02, (y - 1) * 0.03, z * 0.02, 3, 0.5, 2.0);
-
-            // se a caverna é muito rasa(ambos lados bloqueados), so mantém se o valor for muito alto
-            if(acima < 0.6 && abaixo < 0.6) {
-                // cavernas rasas precisam de valor muito mais alto pra existir
-                if(valorCaverna < 0.75) return false;
-            }
-        }
-        return temCavernaAqui;
+        return vazios;
     }
 
-    // sistema de ravinas(cavernas que invadem a superficie)
-    public boolean temRavina(int x, int y, int z, int alturaSuperficie) {
-		// so gera ravinas perto da superficie
-		if(y < alturaSuperficie - 40 || y > alturaSuperficie + 5) return false;
-
-		// usa dois ruídos combinados pra criar ravinas sinuosas
-		double ravina1 = Math.abs(ruido3d.ruido(x * 0.012, y * 0.008, z * 0.012));
-		double ravina2 = ruido3d.ruido(x * 0.008, y * 0.015, z * 0.008);
-
-		// ravina é um "corte" estreito e profundo
-		if(ravina1 < 0.08 && ravina2 > 0.3) {
-			// profundidade da ravina diminui conforme se afasta da superficie
-			double distSuperficie = Math.abs(y - alturaSuperficie + 10);
-			double fatorProf = Math.max(0, 1.0 - distSuperficie / 35.0);
-			// usa ruido para chance determinística
-			double chance = Math.abs(ruido.ruido(x * 0.041 + y * 0.003, z * 0.037));
-			return chance < fatorProf * 0.8;
-		}
-		return false;
-	}
-
-    // sistema de arcos naturais
-    public boolean temArco(int x, int y, int z, int alturaSuperficie) {
-        // arcos so aparecem em regiões montanhosas
+    // versão interna, recebe arcoViavel ja calculado fora do loop
+    private boolean temArcoY(int x, int y, int z, int alturaSuperficie, boolean arcoViavel) {
+        if(!arcoViavel) return false;
         if(y < alturaSuperficie - 25 || y > alturaSuperficie + 15) return false;
-        if(alturaSuperficie < nivelMar + 20) return false; // precisa ser montanhoso
 
-        // usa ruido celular para identificar "pilares" potenciais
+        double vao = Math.abs(ruido3d.ruido(x * 0.03, y * 0.05, z * 0.03));
+        if(vao >= 0.2) return false;
+
+        double distTopo = Math.abs(y - (alturaSuperficie - 5));
+        double curvatura = 1.0 - (distTopo * distTopo) / 225.0;
+        return curvatura > 0.3;
+    }
+
+    public boolean temCaverna(int x, int y, int z) {
+        if(y < 10 || y > 140) return false;
+        // tres zonas sem sobreposição, cada Y avalia exatamente 1 sistema
+        // y 50-80 rodava principais+superficiais, tuneis cobriam tudo por cima),
+        // causando densidade absurda de cavernas e custo multiplicado
+        if(y <= 40) {
+            // profundas: raras e grandes
+            return cavernasProfundas.ruidoFractal(x * 0.015, y * 0.025, z * 0.015, 2, 0.5, 2.0) > 0.65;
+        }
+        if(y <= 90) {
+            // principais: camada do meio
+            return cavernas.ruidoFractal(x * 0.02, y * 0.03, z * 0.02, 3, 0.5, 2.0) > 0.62;
+        }
+        // superficiais: ficam mais raras conforme sobem
+        double limiar = 0.68 + (y - 90) * 0.002; // 0.68 em y=90 → 0.78 em y=140
+        return ruido3d.ruidoFractal(x * 0.025, y * 0.035, z * 0.025, 2, 0.5, 2.0) > limiar;
+    }
+
+    public boolean temRavina(int x, int y, int z, int alturaSuperficie) {
+        if(y < alturaSuperficie - 40 || y > alturaSuperficie + 5) return false;
+
+        double ravina1 = Math.abs(ruido3d.ruido(x * 0.012, y * 0.008, z * 0.012));
+        if(ravina1 >= 0.08) return false; // sai barato
+
+        double ravina2 = ruido3d.ruido(x * 0.008, y * 0.015, z * 0.008);
+        if(ravina2 <= 0.3) return false;
+
+        double distSuperficie = Math.abs(y - alturaSuperficie + 10);
+        double fatorProf = Math.max(0, 1.0 - distSuperficie / 35.0);
+        double chance = Math.abs(ruido.ruido(x * 0.041 + y * 0.003, z * 0.037));
+        return chance < fatorProf * 0.8;
+    }
+
+    public boolean temArco(int x, int y, int z, int alturaSuperficie) {
+        if(y < alturaSuperficie - 25 || y > alturaSuperficie + 15) return false;
+        if(alturaSuperficie < nivelMar + 20) return false;
+
         double pilar = celular.ruido(x * 0.015, z * 0.015);
+        if(pilar <= 0.35 || pilar >= 0.55) return false; // sai antes
 
-        // arcos são raros e aparecem onde há dois pilares proximos
-        if(pilar > 0.35 && pilar < 0.55) {
-            // verifica se ha um "vão" horizontal entre pilares
-            double vao = Math.abs(ruido3d.ruido(x * 0.03, y * 0.05, z * 0.03));
-            double formato = ruido.ruido(x * 0.02, z * 0.02);
+        double vao = Math.abs(ruido3d.ruido(x * 0.03, y * 0.05, z * 0.03));
+        if(vao >= 0.2) return false; // sai antes de calcular formato e curvatura
 
-            // arco é um vazio em forma de parabola
-            double distTopo = Math.abs(y - (alturaSuperficie - 5));
-            double curvatura = 1.0 - (distTopo * distTopo) / 225.0; // parabola
+        double formato = ruido.ruido(x * 0.02, z * 0.02);
+        if(formato <= 0.4) return false;
 
-            if(vao < 0.2 && curvatura > 0.3 && formato > 0.4) {
-                return true;
+        double distTopo = Math.abs(y - (alturaSuperficie - 5));
+        double curvatura = 1.0 - (distTopo * distTopo) / 225.0;
+        return curvatura > 0.3;
+    }
+
+    // verifica se deve haver cascalho nesta posição
+    public boolean temCascalho(int x, int y, int z, int alturaSuperficie, TipoBioma bioma) {
+        // so avalia cascalho rochoso perto da superficie de montanhas
+        if(alturaSuperficie > nivelMar + 30 && y > alturaSuperficie - 8) {
+            double rochoso = ridge.swiss(x * 0.003, z * 0.003, 2, 2.0, 0.4, 0.5);
+            if(rochoso > 0.6) {
+                double chance = Math.abs(ruido.ruido(x * 0.017 + y * 0.013, z * 0.019));
+                return chance < 0.3;
             }
         }
         return false;
     }
 
-    // verifica se deve ter cascalho
-    public boolean temCascalho(int x, int y, int z, int alturaSuperficie, TipoBioma bioma) {
-		// cascalho aparece em montanhas, perto de rios e em cavernas
-		// 1. montanhas rochosas
-		if(alturaSuperficie > nivelMar + 30) {
-			double rochoso = ridge.swiss(x * 0.003, z * 0.003, 2, 2.0, 0.4, 0.5);
-			if(rochoso > 0.6 && y > alturaSuperficie - 8) {
-				double chance = Math.abs(ruido.ruido(x * 0.017 + y * 0.013, z * 0.019));
-				return chance < 0.3;
-			}
-		}
-		// 2. base de cavernas e ravinas(depositos)
-		if(temCaverna(x, y, z) && !temCaverna(x, y - 1, z)) {
-			double chance = Math.abs(ruido.ruido(x * 0.031 + y * 0.007, z * 0.029));
-			return chance < 0.4;
-		}
-		return false;
-	}
-
     public enum TipoBioma {
         OCEANO, OCEANO_COSTEIRO, OCEANO_QUENTE,
-		ABISMO_MARINHO,
+        OCEANO_ABISSAL,
         PLANICIES, PLANICIES_MONTANHOSAS,
         FLORESTA, FLORESTA_COSTEIRA, FLORESTA_MONTANHOSA,
         DESERTO, COLINAS_DESERTO
 	}
 }
+

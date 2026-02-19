@@ -477,7 +477,7 @@ public class UI extends Objeto implements InputProcessor {
 						   (jg.modo == 0 ? "espectador" : jg.modo == 1 ? "criativo" : "sobrevivencia"), 
 						   jg.inv.slotSelecionado, jg.item, jg.noChao, jg.naAgua, jg.agachado, jg.velo, jg.altura,
 						   jg.direita, jg.esquerda, jg.frente, jg.tras, jg.cima, jg.baixo, jg.acao,
-						   mundo.nome, Biomas.obterBioma((int)jg.posicao.x, (int)jg.posicao.z), mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.semente, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo), 
+						   mundo.nome, jg.bioma, mundo.RAIO_CHUNKS, mundo.chunks.size(), mundo.chunksMod.size(), mundo.semente, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo), 
 					   50, Gdx.graphics.getHeight() - 100);
 			fonte.draw(sb, String.format(
 						   "FPS: %d\n" +
@@ -503,6 +503,7 @@ public class UI extends Objeto implements InputProcessor {
 	}
 
     public void ajustar(int v, int h) {
+		Gdx.gl.glViewport(0, 0, v, h);
 		for(Botao b : botoes.values()) {
 			if(b != null) b.aoAjustar(v, h);
 		}

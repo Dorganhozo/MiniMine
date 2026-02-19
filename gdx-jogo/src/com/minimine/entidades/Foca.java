@@ -55,8 +55,8 @@ public class Foca extends Entidade {
     // direção corrente calculada pela IA
     public Vector3 direcao = new Vector3();
 
-    public SceneAsset ativoCena;
-    public Model modelo;
+    public static SceneAsset ativoCena;
+    public static Model modelo;
     public ModelInstance instancia;
     public AnimationController animCtr;
 	
@@ -71,6 +71,7 @@ public class Foca extends Entidade {
 
     public Foca(float x, float y, float z) {
         super();
+		bioma = "Tundra";
         this.posicao.set(x, y, z);
         this.largura = 0.8f;
         this.altura = 0.6f;
@@ -80,8 +81,10 @@ public class Foca extends Entidade {
         ia = new IA();
 
         try {
-            ativoCena = new GLTFLoader().load(Gdx.files.internal("modelos/foca.gltf"));
-            modelo = ativoCena.scene.model;
+            if(modelo == null && ativoCena == null) {
+				ativoCena = new GLTFLoader().load(Gdx.files.internal("modelos/foca.gltf"));
+				modelo = ativoCena.scene.model;
+			}
             instancia = new ModelInstance(modelo);
             animCtr = new AnimationController(instancia);
             animCtr.setAnimation("nadando", -1);
@@ -363,6 +366,8 @@ public class Foca extends Entidade {
 		if(liberado) return;
         if(modelo != null) modelo.dispose();
         if(ativoCena != null) ativoCena.dispose();
+		modelo = null;
+		ativoCena = null;
     }
 }
 
