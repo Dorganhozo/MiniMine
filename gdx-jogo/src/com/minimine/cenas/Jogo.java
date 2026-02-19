@@ -1,42 +1,25 @@
 package com.minimine.cenas;
 
 import com.badlogic.gdx.Screen;
-import com.minimine.utils.Net;
-import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import java.util.List;
-import com.minimine.utils.ArquivosUtil;
-import java.util.ArrayList;
-import com.minimine.mods.LuaAPI;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
-import com.minimine.mundo.ChunkUtil;
-import com.minimine.utils.NuvensUtil;
-import com.minimine.utils.DiaNoiteUtil;
-import com.minimine.graficos.Texturas;
-import com.minimine.utils.CorposCelestes;
-import com.minimine.Inicio;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.minimine.mods.Util;
-import com.minimine.Logs;
-import com.minimine.audio.Audio;
-import com.minimine.mundo.Chunk;
-import com.minimine.mundo.Mundo;
-import com.minimine.ui.UI;
-import com.minimine.graficos.Render;
-import com.minimine.mundo.Biomas;
 import com.minimine.entidades.Jogador;
 import com.minimine.audio.Musicas;
+import com.minimine.mundo.Mundo;
+import com.minimine.graficos.Render;
+import com.minimine.utils.ArquivosUtil;
+import com.minimine.mods.LuaAPI;
+import com.minimine.Inicio;
+import com.minimine.utils.DiaNoiteUtil;
 
 public class Jogo implements Screen {
 	public static Mundo mundo;
 	public static Jogador jogador;
 	public static Render render;
 	public static boolean musicas = true;
+	public static java.util.Timer relogio;
 	
     @Override
 	public void show() {
+		relogio = new java.util.Timer();
 		mundo = new Mundo();
 		jogador = new Jogador();
 		mundo.ciclo = true;
@@ -47,14 +30,14 @@ public class Jogo implements Screen {
 		
 		LuaAPI.iniciar();
 		
-		new java.util.Timer().schedule(
+		relogio.schedule(
 			new java.util.TimerTask() {
 				@Override
 				public void run() {
 					if(mundo.ciclo) DiaNoiteUtil.att();
 				}
 			}, 0, 120);
-		new java.util.Timer().schedule(
+		relogio.schedule(
 			new java.util.TimerTask() {
 				@Override
 				public void run() {
@@ -72,13 +55,13 @@ public class Jogo implements Screen {
     @Override
     public void dispose() {
 		mundo.carregado = false;
+		relogio.cancel();
 		render.liberar();
     }
 	
 	@Override
 	public void resize(int v, int h) {
 		render.ui.ajustar(v, h);
-		Gdx.gl.glViewport(0, 0, v, h);
 		LuaAPI.ajustar(v, h);
 	}
 

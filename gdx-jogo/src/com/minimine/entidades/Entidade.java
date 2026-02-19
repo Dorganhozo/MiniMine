@@ -29,6 +29,8 @@ public class Entidade extends Objeto {
 	public float yaw = 180f, tom = -20f; // pra ver onde ta olhando
 	public float VELO_MAX_QUEDA = -50f;
 	
+	public String bioma = "";
+	
 	public Entidade() {
 		yaw = 180f;
 		tom = -20f;

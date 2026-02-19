@@ -95,6 +95,7 @@ public class Mundo extends Objeto {
 		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
 		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
 		Bloco.blocos.add(new Bloco("gelo", "gelo"));
+		Bloco.blocos.add(new Bloco("neve", "neve"));
 
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
@@ -127,7 +128,6 @@ public class Mundo extends Objeto {
 		if(!carregado && chunks.size() >= 1) {
 			carregado = true;
 		}
-		
 		GerenciadorEntidades.att(delta, this, jg);
         if(ciclo) {
 			CorposCelestes.att(jg.camera.combined, jg.posicao);
@@ -154,9 +154,7 @@ public class Mundo extends Objeto {
 				chunk.malha = null;
             }
         }
-		for(Entidade e : entidades) {
-			e.liberar();
-		}
+		entidades.get(0).liberar();
 		chunksMod.clear();
         chunks.clear();
 		estados.clear();

@@ -17,6 +17,8 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Model;
 import net.mgsx.gltf.scene3d.scene.SceneAsset;
 import net.mgsx.gltf.loaders.gltf.GLTFLoader;
+import com.minimine.mundo.Biomas;
+import com.minimine.cenas.Jogo;
 
 public class Jogador extends Entidade {
 	public int modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
@@ -48,6 +50,14 @@ public class Jogador extends Entidade {
 
 	public Jogador() {
 		super();
+		
+		Jogo.relogio.schedule(
+			new java.util.TimerTask() {
+				@Override
+				public void run() {
+					bioma = Biomas.obterBioma((int)posicao.x, (int)posicao.z);
+				}
+			}, 0, 500);
 		try {
             ativoCena = new GLTFLoader().load(Gdx.files.internal("modelos/jogador.gltf"));
             modelo = ativoCena.scene.model;
@@ -186,7 +196,7 @@ public class Jogador extends Entidade {
 		camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
 
 		if(posicao.y < -100f) {
-			posicao.y = 80f;
+			posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
 		}
 	}
 

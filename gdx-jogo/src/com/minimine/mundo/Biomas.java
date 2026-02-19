@@ -16,21 +16,26 @@ public class Biomas {
         int chunkX = chunk.x << 4;
         int chunkZ = chunk.z << 4;
 
+        // OTIMIZAÇÃO: calcula e armazena alturas/biomas em cache local para evitar
+        // que addArvores chame calcularDadosColuna de novo pra cada coluna (eliminava
+        // até 144 chamadas extras por chunk de floresta, duplicando o tempo de geração).
+        int[][] alturas = new int[16][16];
+        TipoBioma[][] biomasCache = new TipoBioma[16][16];
+
         for(int x = 0; x < 16; x++) {
             for(int z = 0; z < 16; z++) {
                 int mundoX = chunkX + x;
                 int mundoZ = chunkZ + z;
 
-                // recebe altura e bioma em uma unica chamada otimizada
                 int[] dados = gerador.calcularDadosColuna(mundoX, mundoZ);
-                int altura = dados[0];
-                TipoBioma bioma = TipoBioma.values()[dados[1]];
+                alturas[x][z] = dados[0];
+                biomasCache[x][z] = TipoBioma.values()[dados[1]];
 
-                gerarColuna(chunk, x, z, altura, bioma, mundoX, mundoZ);
+                gerarColuna(chunk, x, z, alturas[x][z], biomasCache[x][z], mundoX, mundoZ);
             }
         }
-        // adiciona arvores depois gerar todas as colunas
-        addArvores(chunk, chunkX, chunkZ);
+        // adiciona arvores depois de gerar todas as colunas, usando o cache
+        addArvores(chunk, chunkX, chunkZ, biomasCache, alturas);
 
         chunk.dadosProntos = true;
     }
@@ -39,20 +44,12 @@ public class Biomas {
         // fim do mundo
         ChunkUtil.defBloco(x, 0, z, "pedra", chunk);
 
-        // verifica cavernas, ravinas e arcos para cada camada
-        for(int y = 1; y < altura - 4; y++) {
-            boolean temVazio = false;
+        // uma chamada por coluna — o gerador resolve internamente quais Y são vazios
+        boolean[] vazios = gerador.calcularVaziosColuna(mundoX, mundoZ, altura);
 
-            // prioridade: ravinas > arcos > cavernas
-            if(gerador.temRavina(mundoX, y, mundoZ, altura)) {
-                temVazio = true;
-            } else if(gerador.temArco(mundoX, y, mundoZ, altura)) {
-                temVazio = true;
-            } else if(gerador.temCaverna(mundoX, y, mundoZ)) {
-                temVazio = true;
-            }
-            if(!temVazio) {
-                // verifica se deve ser cascalho ao inves de pedra
+        // blocos de pedra/cascalho do interior
+        for(int y = 1; y < altura - 4; y++) {
+            if(!vazios[y]) {
                 if(gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
                     ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
                 } else {
@@ -60,23 +57,18 @@ public class Biomas {
                 }
             }
         }
-        // camadas superiores por bioma
+
+        // camadas superiores por bioma — sem nenhuma chamada a temRavina/temArco/temCaverna
         switch(bioma) {
             case OCEANO:
             case OCEANO_QUENTE:
-            case ABISMO_MARINHO:
-                // areia ou pedra
+            case OCEANO_ABISSAL:
                 int profundidade = 62 - altura;
                 for(int y = altura - 4; y < altura; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura) 
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
+                    if(!vazios[y]) {
                         if(profundidade > 20) {
                             ChunkUtil.defBloco(x, y, z, "pedra", chunk);
                         } else {
-                            // mistura areia com cascalho em oceanos
                             if(gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
                                 ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
                             } else {
@@ -85,40 +77,23 @@ public class Biomas {
                         }
                     }
                 }
-                // agua
                 for(int y = altura; y <= 62; y++) {
                     ChunkUtil.defBloco(x, y, z, "agua", chunk);
                 }
-			break;
+				break;
             case OCEANO_COSTEIRO:
-                // areia
                 for(int y = altura - 3; y < altura; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
-                        ChunkUtil.defBloco(x, y, z, "areia", chunk);
-                    }
+                    if(!vazios[y]) ChunkUtil.defBloco(x, y, z, "areia", chunk);
                 }
-                // agua rasa
                 for(int y = altura; y <= 62; y++) {
                     ChunkUtil.defBloco(x, y, z, "agua", chunk);
                 }
-			break;
+				break;
             case DESERTO:
             case COLINAS_DESERTO:
-                // areia profunda
                 for(int y = altura - 5; y < altura; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
-                        ChunkUtil.defBloco(x, y, z, "areia", chunk);
-                    }
+                    if(!vazios[y]) ChunkUtil.defBloco(x, y, z, "areia", chunk);
                 }
-                // cactos esparsos no deserto
                 double cactoChance = Mundo.s2D.ruido(mundoX * 0.1, mundoZ * 0.1);
                 if(cactoChance > 0.85 && altura > 62) {
                     int alturaCacto = (int)((Mundo.s2D.ruido(mundoX * 0.3, mundoZ * 0.3) * 0.5 + 0.5) * 3) + 2;
@@ -126,18 +101,12 @@ public class Biomas {
                         ChunkUtil.defBloco(x, altura + cy, z, "cacto", chunk);
                     }
                 }
-			break;
+				break;
             case PLANICIES:
             case PLANICIES_MONTANHOSAS:
-                // terra com possivel cascalho em montanhas
                 for(int y = altura - 4; y < altura - 1; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
-                        // cascalho aparece mais em planícies montanhosas
-                        if(bioma == TipoBioma.PLANICIES_MONTANHOSAS && 
+                    if(!vazios[y]) {
+                        if(bioma == TipoBioma.PLANICIES_MONTANHOSAS &&
                            gerador.temCascalho(mundoX, y, mundoZ, altura, bioma)) {
                             ChunkUtil.defBloco(x, y, z, "cascalho", chunk);
                         } else {
@@ -145,41 +114,22 @@ public class Biomas {
                         }
                     }
                 }
-                // grama
-                boolean gramaTemVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
-                if(!gramaTemVazio) {
-                    ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
-                }
-			break;
+                if(!vazios[altura - 1]) ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
+				break;
             case FLORESTA:
             case FLORESTA_COSTEIRA:
             case FLORESTA_MONTANHOSA:
-                // terra
                 int profTerra = bioma == TipoBioma.FLORESTA_MONTANHOSA ? 3 : 4;
                 for(int y = altura - profTerra; y < altura - 1; y++) {
-                    boolean temVazio = gerador.temRavina(mundoX, y, mundoZ, altura)
-						|| gerador.temArco(mundoX, y, mundoZ, altura)
-						|| gerador.temCaverna(mundoX, y, mundoZ);
-
-                    if(!temVazio) {
-                        ChunkUtil.defBloco(x, y, z, "terra", chunk);
-                    }
+                    if(!vazios[y]) ChunkUtil.defBloco(x, y, z, "terra", chunk);
                 }
-                // grama
-                boolean gramaFlorestaVazio = gerador.temRavina(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temArco(mundoX, altura - 1, mundoZ, altura)
-					|| gerador.temCaverna(mundoX, altura - 1, mundoZ);
-                if(!gramaFlorestaVazio) {
-                    ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
-                }
-			break;
+                if(!vazios[altura - 1]) ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
+				break;
         }
     }
 
-    // adiciona arvores depois toda a chunk ta gerada
-    public static void addArvores(Chunk chunk, int chunkX, int chunkZ) {
+    // OTIMIZAÇÃO: recebe cache de biomas/alturas para evitar recalcular colunas
+    public static void addArvores(Chunk chunk, int chunkX, int chunkZ, TipoBioma[][] biomasCache, int[][] alturas) {
         for(int x = 2; x < 14; x++) {
             for(int z = 2; z < 14; z++) {
                 int mundoX = chunkX + x;
@@ -187,6 +137,14 @@ public class Biomas {
 
                 // usa pra decidir se coloca arvore
                 double arvoreRuido = Mundo.s2D.ruido(mundoX * 0.1, mundoZ * 0.1);
+
+                // usa o bioma já calculado — sem nova chamada a calcularDadosColuna
+                TipoBioma bioma = biomasCache[x][z];
+
+                // atalho rápido: outros biomas não têm árvores
+                if(bioma != TipoBioma.FLORESTA && bioma != TipoBioma.FLORESTA_COSTEIRA && bioma != TipoBioma.FLORESTA_MONTANHOSA) {
+                    continue;
+                }
 
                 // encontra a altura do terreno nesta posição
                 int altura = -1;
@@ -203,18 +161,12 @@ public class Biomas {
 
                 // florestas: arvores densas
                 if(blocoBase == 1) { // grama
-                    // verifica bioma original para densidade
-                    int[] dados = gerador.calcularDadosColuna(mundoX, mundoZ);
-                    TipoBioma bioma = TipoBioma.values()[dados[1]];
-
                     double limite = 0.7; // padrão
 
                     if(bioma == TipoBioma.FLORESTA || bioma == TipoBioma.FLORESTA_COSTEIRA) {
                         limite = 0.65; // mais densa
                     } else if(bioma == TipoBioma.FLORESTA_MONTANHOSA) {
                         limite = 0.75; // menos densa
-                    } else {
-                        continue; // outros biomas não tem arvores neste sistema
                     }
                     if(arvoreRuido > limite) {
                         gerarArvore(chunk, x, altura + 1, z, mundoX, mundoZ, bioma);
@@ -244,18 +196,13 @@ public class Biomas {
             Arvores.gerarArvoreLarga(chunk, x, y, z, alturaTronco);
         }
     }
-	
-	public static String obterBioma(int x, int z) {
-		if(gerador == null) return "Desconhecido";
 
-		TipoBioma bioma = TipoBioma.values()[gerador.calcularDadosColuna(x, z)[1]];
-
-		// retorna o nome formatado
+	public static String bioma_str(TipoBioma bioma) {
 		switch(bioma) {
 			case OCEANO: return "Oceano";
 			case OCEANO_COSTEIRO: return "Costa";
 			case OCEANO_QUENTE: return "Mar Quente";
-			case ABISMO_MARINHO: return "Abismo Marinho";
+			case OCEANO_ABISSAL: return "Oceano Abissal";
 			case PLANICIES: return "Planície";
 			case PLANICIES_MONTANHOSAS: return "Planície Alta";
 			case FLORESTA: return "Floresta";
@@ -265,6 +212,51 @@ public class Biomas {
 			case COLINAS_DESERTO: return "Dunas";
 			default: return "Desconhecido";
 		}
+	}
+
+	public static String obterBioma(int x, int z) {
+		if(gerador == null) return "Desconhecido";
+
+		TipoBioma bioma = TipoBioma.values()[gerador.calcularDadosColuna(x, z)[1]];
+
+		// retorna o nome formatado
+		return bioma_str(bioma);
+	}
+
+	public static int[] localizarBioma(String nomeBioma, int origemX, int origemZ) {
+		// converte nome pro enum
+		TipoBioma alvo = null;
+		for(TipoBioma b : TipoBioma.values()) {
+			if(bioma_str(b).equalsIgnoreCase(nomeBioma)) {
+				alvo = b;
+				break;
+			}
+		}
+		if(alvo == null) return null; // bioma não reconhecido
+
+		int passo = 64; // verifica a cada 64 blocos
+		int raioMax = 100000; // desiste depois de 10 mil blocos
+
+		for(int raio = passo; raio <= raioMax; raio += passo) {
+			// varre o perimetro do raio atual em espiral
+			for(int dx = -raio; dx <= raio; dx += passo) {
+				for(int dz = -raio; dz <= raio; dz += passo) {
+					// so verifica a borda do quadrado atual
+					if(Math.abs(dx) != raio && Math.abs(dz) != raio) continue;
+
+					int x = origemX + dx;
+					int z = origemZ + dz;
+
+					int[] dados = gerador.calcularDadosColuna(x, z);
+					TipoBioma bioma = TipoBioma.values()[dados[1]];
+
+					if(bioma == alvo) {
+						return new int[]{ x, z };
+					}
+				}
+			}
+		}
+		return null; // não encontrado no raio maximo
 	}
 }
 

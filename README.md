@@ -41,6 +41,7 @@ refeito com LibGDX.
 22. Partículas ao quebrar blocos.
 23. 1-2 músicas.
 24. Divisão de biomas com rúido celular.
+25. Entidades.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -86,7 +87,7 @@ Erosão Hidraulica.
 1. OCEANO.
 2. OCEANO_COSTEIRO.
 3. OCEANO_QUENTE.
-4. ABISMO_MARINHO.
+4. OCEANO_ABISSAL.
 5. PLANICIES.
 6. PLANICIES_MONTANHOSAS.
 7. FLORESTA.
@@ -111,7 +112,8 @@ Erosão Hidraulica.
 * Compactação de dados de luz em 1 único atributo de vértice.
 * Compactação de limites do atlas para *O Guloso* funcionar com 1 atributo de vértice.
 * Compactação de posição dos blocos em 1 atributo de vértice.
-* buffer de até 256 texturas únicas para dados do atlas (evita mais atributos de vértice).
+* Buffer de até 256 texturas únicas para dados do atlas (evita mais atributos de vértice).
+* Carregamento e descarregamento dinamico de entidades.
 
 ## Ruídos utilitários:
 1. PerlinRuido2D.java
