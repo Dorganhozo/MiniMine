@@ -49,7 +49,7 @@ public class GerenciadorEntidades {
 	}
 	
 	public static void tentarNascerEntidade(Jogador jogador, Mundo mundo) {
-		if(jogador.bioma.equals("Tundra")) return;
+		if(!jogador.bioma.equals("Mar Quente")) return;
 		// pega um chunk carregado aleatório(estado 2 = malha pronta)
 		List<Long> disponiveis = new ArrayList<>();
 		for(Map.Entry<Long, Integer> e : mundo.estados.entrySet()) {
@@ -67,7 +67,7 @@ public class GerenciadorEntidades {
 			int wx = cx * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
 			int wz = cz * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
 
-			// distância minima do jogador
+			// distancia minima do jogador
 			float dx = wx - jogador.posicao.x;
 			float dz = wz - jogador.posicao.z;
 			if(dx * dx + dz * dz < DIST_MIN_NASCER * DIST_MIN_NASCER) continue;

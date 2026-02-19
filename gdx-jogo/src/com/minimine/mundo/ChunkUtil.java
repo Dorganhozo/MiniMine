@@ -27,7 +27,7 @@ public class ChunkUtil {
 		int idc = x + (z << 4) + (y * Mundo.CHUNK_AREA);
 		chunk.luz[idc] = (byte)((chunk.luz[idc] & 0x0F) | ((valor & 15) << 4));
 	}
-	
+
 	public static Bloco obterblocoTipo(int x, int y, int z, Chunk chunk, Chunk chunkAdj) {
 		// caso esteja dentro da propria area
 		if(x >= 0 && x < 16 && z >= 0 && z < 16) {
@@ -50,21 +50,17 @@ public class ChunkUtil {
 
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x < 0 || x >= 16 || y < 0 || y >= Mundo.Y_CHUNK || z < 0 || z >= 16) {
-			return false; // ou delega ao chunk adjacente antes
+			return false;
 		}
 		int total = x + (z << 4) + (y * 256);
 		int[] arr = chunk.blocos;
 
 		int bloco;
 		if(chunk.usaPaleta) {
-			int idc = (arr[total / chunk.blocosPorInt] >>> 
-				((total % chunk.blocosPorInt) * chunk.paletaBits))
-				& ((1 << chunk.paletaBits) - 1);
+			int idc = lerPacote(total, chunk.paletaBits, arr, chunk.blocosPorInt);
 			bloco = chunk.paleta[idc];
 		} else {
-			bloco = (arr[total / chunk.blocosPorInt] >>> 
-				((total % chunk.blocosPorInt) * chunk.bitsPorBloco))
-				& ((1 << chunk.bitsPorBloco) - 1);
+			bloco = lerPacote(total, chunk.bitsPorBloco, arr, chunk.blocosPorInt);
 		}
 		return bloco != 0;
 	}
@@ -77,16 +73,21 @@ public class ChunkUtil {
 		return Math.min(bits, 8);
 	}
 
+	// usa bit-shift
+	// blocosPorInt é sempre potência de 2 (32/1=32, 32/2=16, 32/4=8, 32/8=4),
+	// então: x/n == x>>log2(n)  e  x%n == x&(n-1)
 	public static int lerPacote(int indiceGlobal, int bits, int[] arr, int blocosPorInt) {
-		int idc = indiceGlobal / blocosPorInt;
-		int bitPos = (indiceGlobal % blocosPorInt) * bits;
+		int log2 = Integer.numberOfTrailingZeros(blocosPorInt);
+		int idc = indiceGlobal >> log2;
+		int bitPos = (indiceGlobal & (blocosPorInt - 1)) * bits;
 		int mascara = (1 << bits) - 1;
 		return (arr[idc] >>> bitPos) & mascara;
 	}
 
 	public static void gravarPacote(int indiceGlobal, int valor, int bits, int[] arr, int blocosPorInt) {
-		int idc = indiceGlobal / blocosPorInt;
-		int bitPos = (indiceGlobal % blocosPorInt) * bits;
+		int log2 = Integer.numberOfTrailingZeros(blocosPorInt);
+		int idc = indiceGlobal >> log2;
+		int bitPos = (indiceGlobal & (blocosPorInt - 1)) * bits;
 		int mascara = ((1 << bits) - 1) << bitPos;
 		arr[idc] = (arr[idc] & ~mascara) | ((valor & ((1 << bits) - 1)) << bitPos);
 	}
@@ -155,14 +156,14 @@ public class ChunkUtil {
 					}
 				}
 			}
-			// se ainda estamos em paleta(idc valido), grava ndice
+			// se ainda estamos em paleta(idc valido), grava indice
 			if(chunk.usaPaleta) {
 				gravarPacote(total, idc, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt);
 				return;
 			}
 			// caso contrario, conversão ocorreu e prossegue pra modo direto
 		}
-		// kodo direto: garantias de bits e compactação se necessario
+		// modo direto: garantias de bits e compactação se necessario
 		if(!chunk.usaPaleta) {
 			if(bloco > chunk.maxIds) {
 				ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(bloco), chunk);
@@ -191,7 +192,6 @@ public class ChunkUtil {
 			for(int i = 0; i < totalBlocos; i++) {
 				int idAntigo = (antigos[i / blocosPorIntAntigo] >>> ((i % blocosPorIntAntigo) * bitsAntigo))
 					& ((1 << bitsAntigo) - 1);
-				// idAntigo é indice de paleta -> mantem mesmo indice no novo pacote
 				int idNovoIdc = i / chunk.blocosPorInt;
 				int idNovoBit = (i % chunk.blocosPorInt) * chunk.paletaBits;
 				novos[idNovoIdc] |= (idAntigo & ((1 << chunk.paletaBits) - 1)) << idNovoBit;
@@ -243,10 +243,7 @@ public class ChunkUtil {
 
 	public static void compactar(int bitsPorBloco, Chunk chunk) {
 		// se chunk estava em paleta e compactar é pedido pra modo direto
-		// converte paleta->direto usando bitsPorBloco calculado
 		if(chunk.usaPaleta && bitsPorBloco > 0) {
-			// converter paleta para direto mantendi bitsPorBloco minimo requerido
-			// descobre maior id na paleta
 			int maxVal = 0;
 			if(chunk.paleta != null) {
 				for(int i = 0; i < chunk.paletaTam; i++) {
@@ -257,9 +254,7 @@ public class ChunkUtil {
 				bitsPorBloco = bitsPraMaxId(maxVal);
 			}
 			convertPaletaDireto(chunk, 0);
-			// agora talvez seja necessario reajustar bits se convertPaleta escolheu bits diferentes
 			if(chunk.bitsPorBloco < bitsPorBloco) {
-				// aumenta bitsPorBloco se solicitado(refaz direto)
 				int bitsAntigo = chunk.bitsPorBloco;
 				int blocosPorIntAntigo = chunk.blocosPorInt;
 				int[] antigos = chunk.blocos;
@@ -285,7 +280,7 @@ public class ChunkUtil {
 			}
 			return;
 		}
-		// comportamento antigo
+		// comportamento antigo(modo direto)
 		if(bitsPorBloco < 1) bitsPorBloco = 1;
 
 		int bitsAntigo = chunk.bitsPorBloco;
@@ -312,3 +307,4 @@ public class ChunkUtil {
 		chunk.blocos = novos;
 	}
 }
+

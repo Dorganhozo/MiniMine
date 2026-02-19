@@ -122,8 +122,7 @@ public class GeradorTerreno {
         }
         return altura > nivelMar + 20 ? TipoBioma.PLANICIES_MONTANHOSAS : TipoBioma.PLANICIES;
     }
-
-    /**
+    /*
      * calcula de uma vez quais Y da coluna são vazios(caverna, ravina ou arco)
      * sem mais chamadas separadas a temRavina/temArco/temCaverna por bloco
      */
@@ -161,8 +160,6 @@ public class GeradorTerreno {
     public boolean temCaverna(int x, int y, int z) {
         if(y < 10 || y > 140) return false;
         // tres zonas sem sobreposição, cada Y avalia exatamente 1 sistema
-        // y 50-80 rodava principais+superficiais, tuneis cobriam tudo por cima),
-        // causando densidade absurda de cavernas e custo multiplicado
         if(y <= 40) {
             // profundas: raras e grandes
             return cavernasProfundas.ruidoFractal(x * 0.015, y * 0.025, z * 0.015, 2, 0.5, 2.0) > 0.65;

@@ -6,18 +6,28 @@ import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.blocos.BlocoModelo;
 
 public class ChunkMalha {
+
+    // tamanho maximo de mascara necessaria(eixo X/Z: 16 * Y_CHUNK)
+    public static final int MASCARA_MAX = 16 * Mundo.Y_CHUNK;
+
+    // reutiliza array de mascara por thread
+    private static final ThreadLocal<int[]> MASCARA_CACHE = new ThreadLocal<int[]>() {
+        @Override protected int[] initialValue() { return new int[MASCARA_MAX]; }
+    };
+
     public static void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
-        Chunk cXP, cXN, cZP, cZN;
+    Chunk cXP, cXN, cZP, cZN;
         cXP = Mundo.chunks.get(Chave.calcularChave(chunk.x + 1, chunk.z));
         cXN = Mundo.chunks.get(Chave.calcularChave(chunk.x - 1, chunk.z));
         cZP = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z + 1));
         cZN = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z - 1));
 
-        // === gera malha de renderização(O Guloso) ===
+        final int[] mascara = MASCARA_CACHE.get();
+
+        // === gera malha de renderização (O Guloso) ===
 
         // 1. eixo Y(faces cima/baixo)
-        int[] mascara = new int[16 * 16];
-        for(boolean cima : new boolean[]{true, false}) { // passada pra cima, depois baixo
+        for(boolean cima : new boolean[]{true, false}) {
             for(int y = 0; y < Mundo.Y_CHUNK; y++) {
                 int n = 0;
                 for(int z = 0; z < 16; z++) {
@@ -31,11 +41,10 @@ public class ChunkMalha {
                                 int vizId = 0;
                                 if(ny >= 0 && ny < Mundo.Y_CHUNK) {
                                     vizId = ChunkUtil.obterBloco(x, ny, z, chunk);
-                                } else { 
+                                } else {
                                     vizId = 0;
                                 }
                                 Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-
                                 if(deveRenderFace(b, bViz)) {
                                     byte luz = ChunkUtil.obterLuzCompleta(x, (ny < 0 || ny >= Mundo.Y_CHUNK) ? y : ny, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
@@ -49,7 +58,6 @@ public class ChunkMalha {
             }
         }
         // 2. eixo X(faces leste/oeste)
-        mascara = new int[16 * Mundo.Y_CHUNK];
         for(boolean leste : new boolean[]{true, false}) {
             for(int x = 0; x < 16; x++) {
                 int n = 0;
@@ -88,7 +96,7 @@ public class ChunkMalha {
             for(int z = 0; z < 16; z++) {
                 int n = 0;
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-                    for (int x = 0; x < 16; x++) {
+                    for(int x = 0; x < 16; x++) {
                         int id = ChunkUtil.obterBloco(x, y, z, chunk);
                         int val = 0;
                         if(id != 0) {
@@ -119,15 +127,14 @@ public class ChunkMalha {
         }
     }
 
-    private static void malhaPlana(int[] mascara, int largura, int altura, 
-								   int profundidade, int faceId, Chunk chunk,
-								   FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+    public static void malhaPlana(int[] mascara, int largura, int altura,
+	int profundidade, int faceId, Chunk chunk,
+	FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
         int n = 0;
         for(int j = 0; j < altura; j++) {
             for(int i = 0; i < largura; ) {
                 int val = mascara[n];
                 if(val != 0) {
-                    // encontrou inicio de face
                     int v = 1;
                     while(i + v < largura && mascara[n + v] == val) {
                         v++;
@@ -143,13 +150,11 @@ public class ChunkMalha {
                         }
                         if(continua) h++;
                     }
-                    // limpar mascara
                     for(int l = 0; l < h; l++) {
                         for(int k = 0; k < v; k++) {
                             mascara[n + k + l * largura] = 0;
                         }
                     }
-                    // dados da face
                     int id = val >> 8;
                     int luzTotal = val & 0xFF;
                     float lb = (luzTotal & 0x0F) / 15f;
@@ -160,18 +165,18 @@ public class ChunkMalha {
                     float fv = 0, fh = 0;
 
                     switch(faceId) {
-                        case 0: case 1: // Y
+                        case 0: case 1:
                             x = i; z = j; y = profundidade;
-                            fv = v; fh = h; 
-                            break;
-                        case 2: case 3: // X
+                            fv = v; fh = h;
+                        break;
+                        case 2: case 3:
                             z = i; y = j; x = profundidade;
                             fv = v; fh = h;
-                            break;
-                        case 4: case 5: // Z
+                        break;
+                        case 4: case 5:
                             x = i; y = j; z = profundidade;
                             fv = v; fh = h;
-                            break;
+                        break;
                     }
                     ShortArrayUtil lista = b.transparente ? idcTransp : idcSolidos;
                     BlocoModelo.addFace(faceId, b.texturaId(faceId), x, y, z, fv, fh, lb, ls, verts, lista);
