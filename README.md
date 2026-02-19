@@ -114,6 +114,9 @@ Erosão Hidraulica.
 * Compactação de posição dos blocos em 1 atributo de vértice.
 * Buffer de até 256 texturas únicas para dados do atlas (evita mais atributos de vértice).
 * Carregamento e descarregamento dinamico de entidades.
+* Cache de fila de luz.
+* Cache de luz temporaria.
+* Cache de fatias em ChunkMalha.java.
 
 ## Ruídos utilitários:
 1. PerlinRuido2D.java

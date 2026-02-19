@@ -13,6 +13,7 @@ public final class Chunk {
 	public boolean usaPaleta = true; // controla se estamos no modo paleta
 	public volatile boolean fazendo = false;
 	public volatile boolean att = false;
+	public volatile boolean luzFazendo = false;
 	public volatile boolean luzSuja = true;
 	public volatile boolean dadosProntos = false;
 	public volatile int contaSolida = 0;

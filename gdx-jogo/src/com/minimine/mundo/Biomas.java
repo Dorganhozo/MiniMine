@@ -16,9 +16,11 @@ public class Biomas {
         int chunkX = chunk.x << 4;
         int chunkZ = chunk.z << 4;
 
-        // OTIMIZAÇÃO: calcula e armazena alturas/biomas em cache local para evitar
-        // que addArvores chame calcularDadosColuna de novo pra cada coluna (eliminava
-        // até 144 chamadas extras por chunk de floresta, duplicando o tempo de geração).
+        /*
+		calcula e armazena alturas/biomas em cache local pra evitar
+        que addArvores chame calcularDadosColuna de novo pra cada coluna(eliminava
+        até 144 chamadas extras por chunk de floresta, duplicando o tempo de geração)
+		 */
         int[][] alturas = new int[16][16];
         TipoBioma[][] biomasCache = new TipoBioma[16][16];
 
@@ -36,7 +38,6 @@ public class Biomas {
         }
         // adiciona arvores depois de gerar todas as colunas, usando o cache
         addArvores(chunk, chunkX, chunkZ, biomasCache, alturas);
-
         chunk.dadosProntos = true;
     }
 
@@ -44,7 +45,7 @@ public class Biomas {
         // fim do mundo
         ChunkUtil.defBloco(x, 0, z, "pedra", chunk);
 
-        // uma chamada por coluna — o gerador resolve internamente quais Y são vazios
+        // uma chamada por coluna, o gerador resolve internamente quais Y são vazios
         boolean[] vazios = gerador.calcularVaziosColuna(mundoX, mundoZ, altura);
 
         // blocos de pedra/cascalho do interior
@@ -57,8 +58,7 @@ public class Biomas {
                 }
             }
         }
-
-        // camadas superiores por bioma — sem nenhuma chamada a temRavina/temArco/temCaverna
+        // camadas superiores por bioma, sem nenhuma chamada a temRavina/temArco/temCaverna
         switch(bioma) {
             case OCEANO:
             case OCEANO_QUENTE:
@@ -128,7 +128,7 @@ public class Biomas {
         }
     }
 
-    // OTIMIZAÇÃO: recebe cache de biomas/alturas para evitar recalcular colunas
+    // recebe cache de biomas/alturas para evitar recalcular colunas
     public static void addArvores(Chunk chunk, int chunkX, int chunkZ, TipoBioma[][] biomasCache, int[][] alturas) {
         for(int x = 2; x < 14; x++) {
             for(int z = 2; z < 14; z++) {
@@ -138,14 +138,13 @@ public class Biomas {
                 // usa pra decidir se coloca arvore
                 double arvoreRuido = Mundo.s2D.ruido(mundoX * 0.1, mundoZ * 0.1);
 
-                // usa o bioma já calculado — sem nova chamada a calcularDadosColuna
+                // usa o bioma ja calculado, sem nova chamada a calcularDadosColuna
                 TipoBioma bioma = biomasCache[x][z];
 
-                // atalho rápido: outros biomas não têm árvores
+                // atalho rapido: outros biomas não têm arvores
                 if(bioma != TipoBioma.FLORESTA && bioma != TipoBioma.FLORESTA_COSTEIRA && bioma != TipoBioma.FLORESTA_MONTANHOSA) {
                     continue;
                 }
-
                 // encontra a altura do terreno nesta posição
                 int altura = -1;
                 for(int y = Mundo.Y_CHUNK - 1; y >= 0; y--) {
@@ -178,7 +177,7 @@ public class Biomas {
 
     // gera uma arvore com variações
     public static void gerarArvore(Chunk chunk, int x, int y, int z, int mundoX, int mundoZ, TipoBioma bioma) {
-        // usa ruído para determinar tipo e tamanho da árvore
+        // usa ruido para determinar tipo e tamanho da arvore
         double tipoRuido = Mundo.s2D.ruido(mundoX * 0.2, mundoZ * 0.2);
         double tamRuido = Mundo.s2D.ruido(mundoX * 0.25, mundoZ * 0.25);
 
