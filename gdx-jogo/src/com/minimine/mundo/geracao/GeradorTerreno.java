@@ -30,7 +30,7 @@ public class GeradorTerreno {
         this.celular = new CelularRuido2D(semente ^ 0x4F3C2B1AL);
 
         this.erosao = new ErosaoHidraulica(semente, 512, 8.0);
-        this.erosao.simularGotas(1000, dominio);
+        this.erosao.simularGotas(500, dominio);
     }
 
     public int[] calcularDadosColuna(int x, int z) {

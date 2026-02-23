@@ -35,6 +35,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.minimine.utils.Receitas;
 import com.minimine.utils.Objeto;
 import com.minimine.mundo.Biomas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class UI extends Objeto implements InputProcessor {
 	public static PerspectiveCamera camera;
@@ -252,7 +253,7 @@ public class UI extends Objeto implements InputProcessor {
 	public void criarBotoesPadrao() {
 		if(!botoes.isEmpty()) return;
 		
-		Texture mira = Texturas.texs.get("mira");
+		TextureRegion mira = Texturas.atlas.get("mira");
 		if(mira == null) {
 			Gdx.app.log("[UI]", "[ERRO]: A textura mira é null");
 			spriteMira = null;
@@ -309,7 +310,7 @@ public class UI extends Objeto implements InputProcessor {
 					public void aoTocar(int t, int t2, int p){ jg.frente = true; jg.esquerda = true; sprite.setAlpha(0.5f); }
 					public void aoSoltar(int t, int t2, int p){ jg.frente = false; jg.esquerda = false; sprite.setAlpha(0.9f); }
 				});
-			botoes.put("acao", new Botao(Texturas.texs.get("clique"), 0, 0, tam, tam, "acao") {
+			botoes.put("acao", new Botao(Texturas.atlas.get("clique"), 0, 0, tam, tam, "acao") {
 					public void aoTocar(int t, int t2, int p){
 						if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
 						else jg.item = "ar";
@@ -321,7 +322,7 @@ public class UI extends Objeto implements InputProcessor {
 					}
 					public void aoSoltar(int t, int t2, int p){ jg.acao = false; sprite.setAlpha(0.9f); }
 				});
-			botoes.put("ataque", new Botao(Texturas.texs.get("ataque"), 0, 0, tam, tam, "ataque") {
+			botoes.put("ataque", new Botao(Texturas.atlas.get("ataque"), 0, 0, tam, tam, "ataque") {
 					public void aoTocar(int t, int t2, int p){
 						jg.item = "ar";
 						jg.interagirBloco();
@@ -331,7 +332,7 @@ public class UI extends Objeto implements InputProcessor {
 					}
 					public void aoSoltar(int t, int t2, int p){ jg.acao = false; sprite.setAlpha(0.9f);}
 				});
-			botoes.put("inv", new Botao(Texturas.texs.get("clique"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "inv") {
+			botoes.put("inv", new Botao(Texturas.atlas.get("clique"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "inv") {
 					public void aoTocar(int t, int t2, int p){			
 						jg.inv.alternar();
 						toques.put(p, "inv");
@@ -339,7 +340,7 @@ public class UI extends Objeto implements InputProcessor {
 					}
 					public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
 				});
-			botoes.put("receita", new Botao(Texturas.texs.get("receita"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "receita") {
+			botoes.put("receita", new Botao(Texturas.atlas.get("receita"), 0, 0, jg.inv.tamSlot, jg.inv.tamSlot, "receita") {
 					public void aoTocar(int t, int t2, int p){
 						Receitas.fabricar(jg.inv);
 						toques.put(p, "receita");
@@ -347,7 +348,7 @@ public class UI extends Objeto implements InputProcessor {
 					}
 					public void aoSoltar(int t, int t2, int p){sprite.setAlpha(0.9f);}
 				});
-			botoes.put("menu_principal", new Botao(Texturas.texs.get("receita"), 0, 0, tam, tam, "menu_principal") {
+			botoes.put("menu_principal", new Botao(Texturas.atlas.get("receita"), 0, 0, tam, tam, "menu_principal") {
 					@Override
 					public void aoTocar(int t, int t2, int p) {
 						sprite.setAlpha(0.5f);
