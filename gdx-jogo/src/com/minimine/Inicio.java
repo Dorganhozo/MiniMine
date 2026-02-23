@@ -72,6 +72,8 @@ public class Inicio extends Game {
 			for(Texture tex : Texturas.texs.values()) tex.dispose();
 			Texturas.blocos.dispose();
 			Texturas.agua.dispose();
+			Texturas.icones.dispose();
+			Texturas.base.dispose();
 			Texturas.atlas.clear();
 			NuvensUtil.liberar();
 			CorposCelestes.liberar();

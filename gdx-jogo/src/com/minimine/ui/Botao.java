@@ -6,12 +6,24 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Botao extends InterUtil.Objeto {
 	public Sprite sprite;
 	public Rectangle hitbox;
 	public float x, y;
 	public float tamX, tamY;
+	
+	public Botao(TextureRegion tex, float x, float y, float tamX, float tamY, String nome) {
+		super(nome);
+		sprite = new Sprite(tex);
+		this.x = x; this.y = y;
+		this.tamX = tamX; this.tamY = tamY;
+		sprite.setPosition(x, y);
+		sprite.setSize(tamX, tamY);
+
+		hitbox = new Rectangle(x, y, tamX, tamY);
+	}
 	
 	public Botao(Texture tex, float x, float y, float tamX, float tamY, String nome) {
 		super(nome);

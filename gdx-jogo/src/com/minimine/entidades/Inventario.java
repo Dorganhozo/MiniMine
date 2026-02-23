@@ -42,7 +42,8 @@ public class Inventario {
 
     public Inventario(Jogador jogador) {
         texSlot = Texturas.texs.get("slot");
-        aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        if(texSlot != null) aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		else Gdx.app.log("[Inventario]", "[ERRO]: Textura de slot nula");
 		this.jogador = jogador;
     }
 

@@ -11,12 +11,16 @@ public class Texturas {
 	public static TexLista<CharSequence, TextureRegion> atlas = new TexLista<CharSequence, TextureRegion>();
 	public static Texture blocos;
 	public static Texture agua;
+	public static Texture icones;
+	public static Texture base;
 	
 	static {
 		try {
 			// atlas:
 			blocos = new Texture(Gdx.files.internal("blocos/blocos.png"));
 			agua = new Texture(Gdx.files.internal("blocos/anims/agua.png"));
+			icones = new Texture(Gdx.files.internal("ui/icones_16x16.png"));
+			base = new Texture(Gdx.files.internal("ui/base_botao.png"));
 			// blocos:
 			atlas.put("grama_topo", new TextureRegion(blocos, 0, 0, 16, 16));
 			atlas.put("grama_lado", new TextureRegion(blocos, 16, 0, 16, 16));
@@ -41,24 +45,19 @@ public class Texturas {
 			atlas.put("agua_a1", new TextureRegion(agua, 0, 0, 16, 16));
 			atlas.put("agua_a2", new TextureRegion(agua, 0, 16, 16, 16));
 			// interface:
+			atlas.put("mira", new TextureRegion(icones, 0, 0, 16, 16));
+			atlas.put("clique", new TextureRegion(icones, 16, 0, 16, 16));
+			atlas.put("ataque", new TextureRegion(icones, 32, 0, 16, 16));
+			atlas.put("receita", new TextureRegion(icones, 48, 0, 16, 16));
+			
 			texs.put("botao_f", new Texture(Gdx.files.internal("ui/botao_f.png")));
 			texs.put("botao_t", new Texture(Gdx.files.internal("ui/botao_t.png")));
 			texs.put("botao_d", new Texture(Gdx.files.internal("ui/botao_d.png")));
 			texs.put("botao_e", new Texture(Gdx.files.internal("ui/botao_e.png")));
-			texs.put("mira", new Texture(Gdx.files.internal("ui/mira.png")));
-			texs.put("clique", new Texture(Gdx.files.internal("ui/clique.png")));
-			texs.put("ataque", new Texture(Gdx.files.internal("ui/ataque.png")));
-			texs.put("slot", new Texture(Gdx.files.internal("ui/slot.png")));
-			texs.put("receita", new Texture(Gdx.files.internal("ui/receita.png")));
+			texs.put("slot", base);
 			texs.put("botao_opcao", new Texture(Gdx.files.internal("ui/botao_opcao.png")));
 			texs.put("botao_ld", new Texture(Gdx.files.internal("ui/botao_ld.png")));
 			texs.put("botao_le", new Texture(Gdx.files.internal("ui/botao_le.png")));
-			texs.put("salvar", new Texture(Gdx.files.internal("ui/salvar.png")));
-			texs.put("botao_ativado", new Texture(Gdx.files.internal("ui/botao_ativado.png")));
-			texs.put("botao_desativado", new Texture(Gdx.files.internal("ui/botao_desativado.png")));
-			texs.put("botao_aviso", new Texture(Gdx.files.internal("ui/botao_aviso.png")));
-			texs.put("botao_servidor", new Texture(Gdx.files.internal("ui/servidor.png")));
-			texs.put("botao_cliente", new Texture(Gdx.files.internal("ui/cliente.png")));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: " + e);
 		}
