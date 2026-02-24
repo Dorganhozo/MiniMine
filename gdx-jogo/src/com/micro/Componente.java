@@ -1,4 +1,4 @@
-package com.microinterface;
+package com.micro;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import java.util.ArrayList;

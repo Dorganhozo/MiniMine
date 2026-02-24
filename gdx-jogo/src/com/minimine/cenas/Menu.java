@@ -19,14 +19,14 @@ import com.minimine.Cenas;
 import com.minimine.mundo.Mundo;
 import com.minimine.ui.UI;
 import com.minimine.ui.InterUtil;
-import com.microinterface.GerenciadorUI;
-import com.microinterface.PainelFatiado;
-import com.microinterface.Painel;
-import com.microinterface.CaixaDialogo;
-import com.microinterface.Rotulo;
-import com.microinterface.Ancora;
-import com.microinterface.Acao;
-import com.microinterface.Botao;
+import com.micro.GerenciadorUI;
+import com.micro.PainelFatiado;
+import com.micro.Painel;
+import com.micro.CaixaDialogo;
+import com.micro.Rotulo;
+import com.micro.Ancora;
+import com.micro.Acao;
+import com.micro.Botao;
 
 public class Menu implements Screen, InputProcessor {
     public SpriteBatch pincel;

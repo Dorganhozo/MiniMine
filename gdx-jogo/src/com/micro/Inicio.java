@@ -1,4 +1,4 @@
-package com.microinterface;
+package com.micro;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
