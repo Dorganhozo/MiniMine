@@ -5,46 +5,45 @@ public class Simplex3D {
     public static final double F3 = 1.0 / 3.0;
     public static final double G3 = 1.0 / 6.0;
 
-    public static final int[][] GRAD3 = {
-        {1,1,0}, {-1,1,0}, {1,-1,0}, {-1,-1,0},
-        {1,0,1}, {-1,0,1}, {1,0,-1}, {-1,0,-1},
-        {0,1,1}, {0,-1,1}, {0,1,-1}, {0,-1,-1}
-    };
     public final int[] p;
+    public final int[] pResto12; // vetor rapido para evitar a conta de resto
 
     public Simplex3D(long semente) {
-		// embaralhamento robusto usando um misturador de bits(MurmurHash3)
-		int[] perm = new int[256];
-		for(int i = 0; i < 256; i++) perm[i] = i;
+        // embaralhamento robusto usando um misturador de bits
+        int[] perm = new int[256];
+        for(int i = 0; i < 256; i++) perm[i] = i;
 
-		for(int i = 255; i > 0; i--) {
-			// misturador de bits pra garantir determinismo e alta entropia
-			long m = semente + i;
-			m ^= m >>> 33;
-			m *= 0xff51afd7ed558ccdL;
-			m ^= m >>> 33;
-			m *= 0xc4ceb9fe1a85ec53L;
-			m ^= m >>> 33;
+        for(int i = 255; i > 0; i--) {
+            long m = semente + i;
+            m ^= m >>> 33;
+            m *= 0xff51afd7ed558ccdL;
+            m ^= m >>> 33;
+            m *= 0xc4ceb9fe1a85ec53L;
+            m ^= m >>> 33;
 
-			int j = (int) (Math.abs(m) % (i + 1));
+            int j = (int)(Math.abs(m) % (i + 1));
 
-			int tmp = perm[i];
-			perm[i] = perm[j];
-			perm[j] = tmp;
-		}
+            int tmp = perm[i];
+            perm[i] = perm[j];
+            perm[j] = tmp;
+        }
 
-		this.p = new int[512];
-		for(int i = 0; i < 512; i++) {
-			this.p[i] = perm[i & 255];
-		}
+        this.p = new int[512];
+        this.pResto12 = new int[512]; // inicia o vetor de otimização
+
+        for(int i = 0; i < 512; i++) {
+            this.p[i] = perm[i & 255];
+            // resolve o calculo de resto antecipadamente
+            this.pResto12[i] = this.p[i] % 12; 
+        }
     }
 
     public double ruido(double xin, double yin, double zin) {
         double s = (xin + yin + zin) * F3;
-        
-		int i = (xin + s) >= 0 ? (int)(xin + s) : (int)(xin + s) - 1;
-		int j = (yin + s) >= 0 ? (int)(yin + s) : (int)(yin + s) - 1;
-		int k = (zin + s) >= 0 ? (int)(zin + s) : (int)(zin + s) - 1;
+
+        int i = (xin + s) >= 0 ? (int)(xin + s) : (int)(xin + s) - 1;
+        int j = (yin + s) >= 0 ? (int)(yin + s) : (int)(yin + s) - 1;
+        int k = (zin + s) >= 0 ? (int)(zin + s) : (int)(zin + s) - 1;
 
         double t = (i + j + k) * G3;
         double X0 = i - t;
@@ -82,47 +81,63 @@ public class Simplex3D {
 
         double n0, n1, n2, n3;
 
-        // valor de contribuição 0.6 para evitar quinas
+        // uso do vetor rapido pResto12 e função direta de gradiente
         double t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
         if(t0 < 0) n0 = 0.0;
         else {
             t0 *= t0;
-            int gi0 = p[ii + p[jj + p[kk]]] % 12;
-            n0 = t0 * t0 * dot(GRAD3[gi0], x0, y0, z0);
+            int gi0 = pResto12[ii + p[jj + p[kk]]];
+            n0 = t0 * t0 * gradiente(gi0, x0, y0, z0);
         }
         double t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
         if(t1 < 0) n1 = 0.0;
         else {
             t1 *= t1;
-            int gi1 = p[ii + i1 + p[jj + j1 + p[kk + k1]]] % 12;
-            n1 = t1 * t1 * dot(GRAD3[gi1], x1, y1, z1);
+            int gi1 = pResto12[ii + i1 + p[jj + j1 + p[kk + k1]]];
+            n1 = t1 * t1 * gradiente(gi1, x1, y1, z1);
         }
         double t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
         if(t2 < 0) n2 = 0.0;
         else {
             t2 *= t2;
-            int gi2 = p[ii + i2 + p[jj + j2 + p[kk + k2]]] % 12;
-            n2 = t2 * t2 * dot(GRAD3[gi2], x2, y2, z2);
+            int gi2 = pResto12[ii + i2 + p[jj + j2 + p[kk + k2]]];
+            n2 = t2 * t2 * gradiente(gi2, x2, y2, z2);
         }
         double t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
         if(t3 < 0) n3 = 0.0;
         else {
             t3 *= t3;
-            int gi3 = p[ii + 1 + p[jj + 1 + p[kk + 1]]] % 12;
-            n3 = t3 * t3 * dot(GRAD3[gi3], x3, y3, z3);
+            int gi3 = pResto12[ii + 1 + p[jj + 1 + p[kk + 1]]];
+            n3 = t3 * t3 * gradiente(gi3, x3, y3, z3);
         }
         return 32.0 * (n0 + n1 + n2 + n3);
     }
 
-    public static double dot(int[] g, double x, double y, double z) {
-        return g[0] * x + g[1] * y + g[2] * z;
+    // estrutura de escolha direta que substitui a matriz GRAD3
+    // evita acesso constante à memória e multiplicações por zero
+    public final static double gradiente(int indice, double x, double y, double z) {
+        switch(indice) {
+            case 0: return x + y;
+            case 1: return -x + y;
+            case 2: return x - y;
+            case 3: return -x - y;
+            case 4: return x + z;
+            case 5: return -x + z;
+            case 6: return x - z;
+            case 7: return -x - z;
+            case 8: return y + z;
+            case 9: return -y + z;
+            case 10: return y - z;
+            case 11: return -y - z;
+            default: return 0.0;
+        }
     }
 
     public double ruidoFractal(double x, double y, double z, int oitavas, double persistencia, double lacunaridade) {
-        double total = 0;
-        double frequencia = 1;
-        double amplitude = 1;
-        double maximo = 0;
+        double total = 0.0;
+        double frequencia = 1.0;
+        double amplitude = 1.0;
+        double maximo = 0.0;
 
         for(int i = 0; i < oitavas; i++) {
             total += ruido(x * frequencia, y * frequencia, z * frequencia) * amplitude;

@@ -21,37 +21,33 @@ public class CelularRuido2D {
         for(int i = 0; i < 512; i++) p[i] = perm[i & 255];
     }
 
-    // retorna a posição aleatoria de um ponto dentro de uma celula da grade
-    public double obterPontoQuadrado(int x, int y, int eixo) {
-        int h = p[(p[x & 255] + y) & 255] + eixo;
-        // gera um valor "aleatório" entre 0 e 1 baseado no hash
-        return (double)(p[h & 255]) / 255.0;
-    }
-
     public double ruido(double x, double y) {
-        int xInt = (int)Math.floor(x);
-        int yInt = (int)Math.floor(y);
+		int xInt = (int)Math.floor(x);
+		int yInt = (int)Math.floor(y);
 
-        double distMinima = 1.0e10;
+		double distMinima = Double.POSITIVE_INFINITY;
 
-        // verifica o quadrado atual e os 8 vizinhos
-        for(int i = -1; i <= 1; i++) {
-            for(int j = -1; j <= 1; j++) {
-                int cx = xInt + i;
-                int cy = yInt + j;
+		// calcula e usa o ponto
+		for(int i = -1; i <= 1; i++) {
+			for(int j = -1; j <= 1; j++) {
+				int cx = xInt + i;
+				int cy = yInt + j;
+				
+				// pega uma posição aleatoria de um ponto dentro de uma celula da grade
+				// calcula o hash
+				int h = p[(p[cx & 255] + cy) & 255];
 
-                // posição do ponto dentro da celula vizinha
-                double px = cx + obterPontoQuadrado(cx, cy, 0);
-                double py = cy + obterPontoQuadrado(cx, cy, 1);
+				// calcula X e Y com
+				double px = cx + ((double)(p[h & 255]) / 255.0);
+				double py = cy + ((double)(p[(h + 1) & 255]) / 255.0);
 
-                double dx = px - x;
-                double dy = py - y;
-                double dist = dx * dx + dy * dy; // distancia euclidiana ao quadrado
+				double dx = px - x;
+				double dy = py - y;
+				double dist = dx * dx + dy * dy;
 
-                if(dist < distMinima) distMinima = dist;
-            }
-        }
-        // Retorna a raiz para ter a distância real (ajustado para range 0-1)
-        return Math.sqrt(distMinima);
-    }
+				if(dist < distMinima) distMinima = dist;
+			}
+		}
+		return Math.sqrt(distMinima);
+	}
 }
