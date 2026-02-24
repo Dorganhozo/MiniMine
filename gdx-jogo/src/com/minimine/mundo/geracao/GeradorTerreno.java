@@ -100,7 +100,7 @@ public class GeradorTerreno {
         temp -= Math.max(0, (altura - nivelMar) * 0.004);
         temp += (celularVal - 0.3) * 0.2;
 
-        double umidade = Math.exp(-Math.max(0, base) * 2.0);
+		double umidade = ruido.ruidoFractal(x * 0.0005, z * 0.0005, 2, 0.5, 2.0) * 0.5 + 0.5;
         double varClima = ruido.ruidoFractal(x * 0.0003, z * 0.0003, 2, 0.6, 2.0);
         umidade += varClima * 0.3;
         umidade += (1.0 - celularVal) * 0.15;
