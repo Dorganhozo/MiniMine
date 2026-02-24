@@ -41,7 +41,7 @@ public class Inventario {
     public Vector2 posFlutuante = new Vector2(); // posicao visual do item flutuante
 
     public Inventario(Jogador jogador) {
-        texSlot = Texturas.texs.get("slot");
+        texSlot = Texturas.base;
         if(texSlot != null) aoAjustar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		else Gdx.app.log("[Inventario]", "[ERRO]: Textura de slot nula");
 		this.jogador = jogador;

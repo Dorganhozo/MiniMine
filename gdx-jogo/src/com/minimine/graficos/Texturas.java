@@ -54,8 +54,6 @@ public class Texturas {
 			texs.put("botao_t", new Texture(Gdx.files.internal("ui/botao_t.png")));
 			texs.put("botao_d", new Texture(Gdx.files.internal("ui/botao_d.png")));
 			texs.put("botao_e", new Texture(Gdx.files.internal("ui/botao_e.png")));
-			texs.put("slot", base);
-			texs.put("botao_opcao", new Texture(Gdx.files.internal("ui/botao_opcao.png")));
 			texs.put("botao_ld", new Texture(Gdx.files.internal("ui/botao_ld.png")));
 			texs.put("botao_le", new Texture(Gdx.files.internal("ui/botao_le.png")));
 		} catch(Exception e) {
