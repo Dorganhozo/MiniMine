@@ -36,7 +36,7 @@ public class Foca extends Entidade {
     public float tempoNaAgua = 0f; // acumula tempo dentro da água
     public float tempoPresoTotal = 0f; // pra detectar travamento
 
-    public int   colisoesSeguidas = 0; // detecta quando ta presa em canto
+    public int colisoesSeguidas = 0; // detecta quando ta presa em canto
     public static final int LIMITE_COLISOES = 6;
 
     // necessidade e memória de água
@@ -54,6 +54,7 @@ public class Foca extends Entidade {
 	
     // direção corrente calculada pela IA
     public Vector3 direcao = new Vector3();
+	public Vector3 direcaoSuave = new Vector3();
 
     public static SceneAsset ativoCena;
     public static Model modelo;
@@ -161,7 +162,7 @@ public class Foca extends Entidade {
         recompensaPendente = 0f;
 
         // verifica se ta presa
-        atualizarEstado();
+        attEstado();
 
         // monta vetor de observação
         float[] obs = montarObservacao();
@@ -170,10 +171,10 @@ public class Foca extends Entidade {
         float[] acao = ia.pensar(obs);
 
         // interpreta saidas
-        //  acao[0] = moveX  (-1 a 1)
-        //  acao[1] = moveZ  (-1 a 1)
-        //  acao[2] = pular  (>0.5 = pula)
-        //  acao[3] = mergulhar (<-0.5 = submerge; so na água)
+        //  acao[0] = moveX(-1 a 1)
+        //  acao[1] = moveZ(-1 a 1)
+        //  acao[2] = pular(>0.5 = pula)
+        //  acao[3] = mergulhar(<-0.5 = submerge; so na água)
         direcao.x = acao[0];
         direcao.z = acao[1];
 
@@ -196,7 +197,7 @@ public class Foca extends Entidade {
     }
     
     // maquina de estados
-    public void atualizarEstado() {
+    public void attEstado() {
         if(colisoesSeguidas >= LIMITE_COLISOES) {
             estado = Estado.PRESA;
             tempoPresoTotal += 1f;
@@ -260,23 +261,31 @@ public class Foca extends Entidade {
 	
     // aplica a direção calculada aos vetores de frente/direita
     public void aplicarMovimento() {
-        frente = (direcao.x != 0 || direcao.z != 0);
-        tras = false;
-        esquerda = false;
-        direita = false;
+		frente = (direcao.x != 0 || direcao.z != 0);
+		tras = false; esquerda = false; direita = false;
 
-        frenteV.x = direcao.x;
-        frenteV.z = direcao.z;
-        if(frenteV.len2() > 0.001f) frenteV.nor();
+		// suaviza direção para movimento mais fluido(lerp entre direção atual e nova)
+		float fatorSuavizacao = naAgua ? 0.08f : 0.15f; // mais lento na água
+		direcaoSuave.x = MathUtils.lerp(direcaoSuave.x, direcao.x, fatorSuavizacao);
+		direcaoSuave.z = MathUtils.lerp(direcaoSuave.z, direcao.z, fatorSuavizacao);
 
-        direitaV.x =  frenteV.z;
-        direitaV.z = -frenteV.x;
-    }
+		frenteV.x = direcaoSuave.x;
+		frenteV.z = direcaoSuave.z;
+		if(frenteV.len2() > 0.001f) frenteV.nor();
+
+		direitaV.x =  frenteV.z;
+		direitaV.z = -frenteV.x;
+	}
     
     // fisica e colisão
     public void processarFisicaColisao(float delta) {
         // gravidade na água
-        if(naAgua) velocidade.y = MathUtils.lerp(velocidade.y, 0.2f, 0.1f);
+        if(naAgua) {
+			velocidade.y = MathUtils.lerp(velocidade.y, baixo ? -3f : 0.5f, 0.12f);
+			// resistencia lateral da água(movimento horizontal mais arrastado)
+			velocidade.x *= 0.88f;
+			velocidade.z *= 0.88f;
+		}
         
         float dx = velocidade.x * delta;
         float dy = velocidade.y * delta;
@@ -352,8 +361,8 @@ public class Foca extends Entidade {
         if(instancia == null) return;
 
         // rotaciona o modelo pra direção de movimento
-        if(direcao.len2() > 0.01f) {
-            float angulo = (float)Math.toDegrees(Math.atan2(-direcao.x, -direcao.z));
+        if(direcaoSuave.len2() > 0.01f) {
+			float angulo = (float)Math.toDegrees(Math.atan2(-direcaoSuave.x, -direcaoSuave.z));
             instancia.transform.setToRotation(Vector3.Y, angulo);
         }
         instancia.transform.setTranslation(posicao);

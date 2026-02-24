@@ -37,14 +37,16 @@ public class GerenciadorEntidades {
 		for(Entidade e : mundo.entidades) {
 			e.att(delta);
 
-			if(!e.noChao || e.naAgua) {
-				int fluidez = 0;
-				if(e.naAgua) fluidez = 10;
-
-				e.velocidade.y += (mundo.GRAVIDADE + fluidez) * delta;
-
-				if(e.velocidade.y < e.VELO_MAX_QUEDA) e.velocidade.y = e.VELO_MAX_QUEDA;
+			if(e.naAgua) {
+				// empuxo quase cancela a gravidade; foca fica levemente suspensa
+				float empuxo = -mundo.GRAVIDADE * 0.92f; // ~27.6, quase neutraliza os -30
+				e.velocidade.y += (mundo.GRAVIDADE + empuxo) * delta;
+				// amortece velocidade vertical na água pra dar sensação de resistencia do fluido
+				e.velocidade.y *= (float)Math.pow(0.85, e instanceof Foca ? 1.5 : 1);
+			} else {
+				e.velocidade.y += mundo.GRAVIDADE * delta;
 			}
+			if(e.velocidade.y < e.VELO_MAX_QUEDA) e.velocidade.y = e.VELO_MAX_QUEDA;
 		}
 	}
 	
