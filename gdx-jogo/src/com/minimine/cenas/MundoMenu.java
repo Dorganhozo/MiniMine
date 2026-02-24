@@ -56,6 +56,7 @@ public class MundoMenu implements Screen, InputProcessor {
 
     public List<String> nomesMundos;
     public boolean recarregarInterface, mundoEscolhido;
+    public static boolean liberado = false;
 
     @Override
     public void show() {
@@ -104,6 +105,7 @@ public class MundoMenu implements Screen, InputProcessor {
         }
         Gdx.input.setInputProcessor(this);
 		mundoEscolhido = false;
+        liberado = false;
     }
 
     public void carregarMundos() {
@@ -314,6 +316,9 @@ public class MundoMenu implements Screen, InputProcessor {
 
     @Override
     public void dispose() {
+        if(liberado) return;
+        liberado = true;
+        
         if(pincel != null) pincel.dispose();
         if(pincelFormas != null) pincelFormas.dispose();
         if(fonteTitulo != null) fonteTitulo.dispose();
