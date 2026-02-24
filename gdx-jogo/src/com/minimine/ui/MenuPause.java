@@ -3,125 +3,92 @@ package com.minimine.ui;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.minimine.graficos.Texturas;
+import com.minimine.graficos.Render;
 import com.minimine.Inicio;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.cenas.Jogo;
 import com.minimine.Cenas;
 import com.minimine.utils.Objeto;
-import com.minimine.graficos.Render;
+
+import com.micro.GerenciadorUI;
+import com.micro.Painel;
+import com.micro.PainelFatiado;
+import com.micro.Botao;
+import com.micro.Ancora;
+import com.micro.Acao;
 
 public class MenuPause extends Objeto {
-    public static EstanteVertical menuPause;
+    public static GerenciadorUI gerenciador;
+    public static Painel painelMenu;
+    public static PainelFatiado visualBotao;
+
     public static boolean menuAberto = false;
-    public static ShapeRenderer shapeRenderer;
-    public static Botao botaoVoltar, botaoSalvar, botaoSair;
+    public static ShapeRenderer sr;
+
+    // dimensões do painel
+    public static float LARGURA_PAINEL = 260f;
+    public static float ALTURA_PAINEL = 260f;
+    public static float LARGURA_BOTAO = 200f;
+    public static float ALTURA_BOTAO = 55f;
+    public static float ESCALA_PIXEL = 3f;
 
     public static void iniciar() {
-        float larguraTela = Gdx.graphics.getWidth();
-        float alturaTela = Gdx.graphics.getHeight();
+        gerenciador = new GerenciadorUI();
 
-        // tamanho dos botões
-        float larguraBotao = 200f;
-        float alturaBotao = 60f;
-        float espacoBotoes = 20f;
+        // base dos botões
+        visualBotao = new PainelFatiado(Texturas.base);
 
-        // posição central
-        float xCentral = (larguraTela - larguraBotao) / 2f;
-        float yCentral = alturaTela / 2f + alturaBotao;
+        float cx = -LARGURA_PAINEL / 2f;
+        float cy = -ALTURA_PAINEL  / 2f;
 
-        Gdx.app.log("MenuPause", String.format("Inicializando menu - Tela: %.0fx%.0f, Centro: %.0f,%.0f", 
-		larguraTela, alturaTela, xCentral, yCentral));
+        painelMenu = new Painel(visualBotao, cx, cy, LARGURA_PAINEL, ALTURA_PAINEL, ESCALA_PIXEL);
+        painelMenu.defEspaco(16, 20);
 
-        // criar o menu vertical
-        menuPause = new EstanteVertical("menuPause", (int)xCentral, (int)yCentral, espacoBotoes);
+        // === botão voltar ===
+        Botao botaoVoltar = new Botao("Voltar", visualBotao, UI.fonte,
+			0, 0, LARGURA_BOTAO, ALTURA_BOTAO, ESCALA_PIXEL,
+			new Acao() {
+				@Override
+				public void exec() {
+					fecharMenu();
+				}
+			});
+        painelMenu.addAncorado(botaoVoltar, Ancora.SUPERIOR_CENTRO, 0, 0);
 
-        // botão voltar
-        botaoVoltar = new Botao(
-            Texturas.texs.get("botao_opcao"), 
-            xCentral, 
-            yCentral, 
-            larguraBotao, 
-            alturaBotao, 
-            "voltar") {
-            @Override
-            public void aoTocar(int telaX, int telaY, int p) {
-                sprite.setAlpha(0.7f);
-                Gdx.app.log("MenuPause", "Tocou VOLTAR em " + telaX + "," + telaY);
-				fecharMenu();
-            }
-            @Override
-            public void aoSoltar(int telaX, int telaY, int p) {
-                sprite.setAlpha(1f);
-                Gdx.app.log("MenuPause", "Soltou VOLTAR - Fechando");
-            }
-        };
-        // botão salvar
-        botaoSalvar = new Botao(
-            Texturas.texs.get("botao_opcao"), 
-            xCentral, 
-            yCentral - alturaBotao - espacoBotoes, 
-            larguraBotao, 
-            alturaBotao, 
-            "salvar") {
-            @Override
-            public void aoTocar(int telaX, int telaY, int p) {
-                sprite.setAlpha(0.7f);
-				fecharMenu();
-				salvarJogo();
-				UI.abrirDialogo("Jogo salvo com sucesso!");
-                Gdx.app.log("MenuPause", "Tocou SALVAR em " + telaX + "," + telaY);
-            }
-            @Override
-            public void aoSoltar(int telaX, int telaY, int p) {
-                sprite.setAlpha(1f);
-                Gdx.app.log("MenuPause", "Soltou SALVAR");
-            }
-        };
-        // botão sair
-        botaoSair = new Botao(
-            Texturas.texs.get("botao_opcao"), 
-            xCentral, 
-            yCentral - (alturaBotao + espacoBotoes) * 2, 
-            larguraBotao, 
-            alturaBotao, 
-            "sair") {
-            @Override
-            public void aoTocar(int telaX, int telaY, int p) {
-                try {
-                    salvarJogo();
-                    Inicio.defTela(Cenas.menu);
-					Cenas.jogo.dispose();
-                    fecharMenu();
-                } catch(Exception e) {
-                    Gdx.app.log("[MenuPause]", "[ERRO]: "+e);
-                }
-                sprite.setAlpha(0.7f);
-				
-                Gdx.app.log("MenuPause", "Tocou SAIR em " + telaX + "," + telaY);
-            }
-            @Override
-            public void aoSoltar(int telaX, int telaY, int p) {
-                sprite.setAlpha(1f);
-                Gdx.app.log("MenuPause", "Soltou SAIR");
-				fecharMenu();
-            }
-        };
-        // adiciona na ordem
-        menuPause.add(botaoVoltar);
-        menuPause.add(botaoSalvar);
-        menuPause.add(botaoSair);
+        // === botão salvar ===
+        Botao botaoSalvar = new Botao("Salvar", visualBotao, UI.fonte,
+			0, 0, LARGURA_BOTAO, ALTURA_BOTAO, ESCALA_PIXEL,
+			new Acao() {
+				@Override
+				public void exec() {
+					salvarJogo();
+					fecharMenu();
+					UI.abrirDialogo("Jogo salvo!");
+				}
+			});
+        painelMenu.addAncorado(botaoSalvar, Ancora.CENTRO, 0, 0);
 
-        // log das hitboxes
-        Gdx.app.log("MenuPause", String.format("Voltar hitbox: %.0f,%.0f %.0fx%.0f", 
-		botaoVoltar.hitbox.x, botaoVoltar.hitbox.y, botaoVoltar.hitbox.width, botaoVoltar.hitbox.height));
-        Gdx.app.log("MenuPause", String.format("Salvar hitbox: %.0f,%.0f %.0fx%.0f", 
-		botaoSalvar.hitbox.x, botaoSalvar.hitbox.y, botaoSalvar.hitbox.width, botaoSalvar.hitbox.height));
-        Gdx.app.log("MenuPause", String.format("Sair hitbox: %.0f,%.0f %.0fx%.0f", 
-		botaoSair.hitbox.x, botaoSair.hitbox.y, botaoSair.hitbox.width, botaoSair.hitbox.height));
-        Gdx.app.log("MenuPause", "Menu inicializado - " + menuPause.filhos.size() + " botões");
+        // === botão sair ===
+        Botao botaoSair = new Botao("Sair", visualBotao, UI.fonte,
+			0, 0, LARGURA_BOTAO, ALTURA_BOTAO, ESCALA_PIXEL,
+			new Acao() {
+				@Override
+				public void exec() {
+					try {
+						salvarJogo();
+						fecharMenu();
+						Inicio.defTela(Cenas.menu);
+						Cenas.jogo.dispose();
+					} catch (Exception e) {
+						Gdx.app.log("[MenuPause]", "[ERRO]: " + e);
+					}
+				}
+			});
+        painelMenu.addAncorado(botaoSair, Ancora.INFERIOR_CENTRO, 0, 0);
+
+        gerenciador.add(painelMenu);
     }
 
     public static void alternarMenu() {
@@ -130,7 +97,7 @@ public class MenuPause extends Objeto {
     }
 
     public static void abrirMenu() {
-        if(menuPause == null) iniciar();
+        if(gerenciador == null) iniciar();
         Render.pause = true;
         menuAberto = true;
         Gdx.input.setCursorCatched(false);
@@ -138,7 +105,7 @@ public class MenuPause extends Objeto {
     }
 
     public static void fecharMenu() {
-		Render.pause = false;
+        Render.pause = false;
         menuAberto = false;
         Gdx.input.setCursorCatched(true);
         Gdx.app.log("MenuPause", "===== MENU FECHADO =====");
@@ -152,69 +119,50 @@ public class MenuPause extends Objeto {
 				}
 			}).start();
         Gdx.app.log("MenuPause", "Salvando o jogo...");
-        fecharMenu();
     }
 
     public static void renderizar(SpriteBatch sb, BitmapFont fonte) {
-        if(!menuAberto || menuPause == null) return;
+        if(!menuAberto || gerenciador == null) return;
 
+        // encerra o sb pra desenhar o fundo escuro com ShapeRenderer
         sb.end();
 
-        shapeRenderer.setProjectionMatrix(sb.getProjectionMatrix());
-
-        // desenha fundo semi-transparente escuro
+        sr.setProjectionMatrix(sb.getProjectionMatrix());
         Gdx.gl.glEnable(Gdx.gl.GL_BLEND);
         Gdx.gl.glBlendFunc(Gdx.gl.GL_SRC_ALPHA, Gdx.gl.GL_ONE_MINUS_SRC_ALPHA);
 
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(0, 0, 0, 0.7f);
-        shapeRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        shapeRenderer.end();
+        sr.begin(ShapeRenderer.ShapeType.Filled);
+        sr.setColor(0f, 0f, 0f, 0.65f);
+        sr.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        sr.end();
 
         Gdx.gl.glDisable(Gdx.gl.GL_BLEND);
 
         sb.begin();
 
-        // renderiza os botões
-        menuPause.porFrame(0, sb, fonte);
+        // centraliza o painel no meio da tela antes de desenhar
+        painelMenu.x = Gdx.graphics.getWidth()  / 2f - LARGURA_PAINEL / 2f;
+        painelMenu.y = Gdx.graphics.getHeight() / 2f - ALTURA_PAINEL  / 2f;
 
-        // desenha texto nos botões
-        float larguraTela = Gdx.graphics.getWidth();
-        float alturaTela = Gdx.graphics.getHeight();
-        float alturaBotao = 60f;
-        float espacoBotoes = 20f;
-
-        // textos centralizados nos botões
-        String[] textos = {"Voltar", "Salvar", "Sair"};
-        float yCentral = alturaTela / 2f + alturaBotao;
-
-        for(int i = 0; i < textos.length; i++) {
-            float yTexto = (yCentral - (alturaBotao + espacoBotoes) * i - alturaBotao / 2f) + 50f;
-            float xTexto = larguraTela / 2f - 30f;
-            fonte.draw(sb, textos[i], xTexto, yTexto);
-        }
+        gerenciador.desenhar(sb, Gdx.graphics.getDeltaTime());
+    }
+	
+	// processadores de toque
+    public static boolean processarToque(float x, float y, boolean pressionado) {
+        if(!menuAberto || gerenciador == null) return false;
+        return gerenciador.processarToque(x, y, pressionado);
     }
 
-    public static void aoAjustar(int largura, int altura) {
-        if(menuPause == null) return;
-
-        float larguraBotao = 200f;
-        float alturaBotao = 60f;
-        
-        float xCentral = (largura - larguraBotao) / 2f;
-        float yCentral = altura / 2f + alturaBotao;
-
-        menuPause.x = (int)xCentral;
-        menuPause.y = (int)yCentral;
-        menuPause.att();
-
-        Gdx.app.log("MenuPause", "Tela ajustada para " + largura + "x" + altura);
+    public static void processarArraste(float x, float y) {
+        if(!menuAberto || gerenciador == null) return;
+        gerenciador.processarArraste(x, y);
     }
 
     @Override
     public void liberar() {
         super.liberar();
-        if(shapeRenderer != null) shapeRenderer.dispose();
+        if(sr != null) sr.dispose();
+        if(gerenciador != null)   gerenciador.liberar();
     }
 }
 

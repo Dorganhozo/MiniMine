@@ -17,13 +17,13 @@ import com.minimine.mundo.Mundo;
 import com.minimine.ui.UI;
 import com.minimine.Cenas;
 import com.minimine.Inicio;
-import com.microinterface.GerenciadorUI;
-import com.microinterface.Painel;
-import com.microinterface.PainelFatiado;
-import com.microinterface.Botao;
-import com.microinterface.Rotulo;
-import com.microinterface.Ancora;
-import com.microinterface.Acao;
+import com.micro.GerenciadorUI;
+import com.micro.Painel;
+import com.micro.PainelFatiado;
+import com.micro.Botao;
+import com.micro.Rotulo;
+import com.micro.Ancora;
+import com.micro.Acao;
 
 public class Config implements Screen, InputProcessor {
     public SpriteBatch pincel;

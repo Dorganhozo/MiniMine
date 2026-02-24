@@ -1,4 +1,4 @@
-package com.microinterface;
+package com.micro;
 
 public interface Acao {
     void exec();

@@ -93,7 +93,7 @@ public class UI extends Objeto implements InputProcessor {
 		this.jg.camera = camera;
 		
 		configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		MenuPause.shapeRenderer = new ShapeRenderer();
+		MenuPause.sr = new ShapeRenderer();
 
 		liberado = false;
     }
@@ -137,19 +137,10 @@ public class UI extends Objeto implements InputProcessor {
 		if(modoTexto) return true;
 		
 		if(MenuPause.menuAberto) {
-			for(InterUtil.Objeto objeto : MenuPause.menuPause.filhos) {
-				if(objeto instanceof Botao) {
-					Botao bo = (Botao) objeto;
-					if(bo.hitbox.contains(telaX, y)) {
-						bo.aoTocar(telaX, y, p);
-						return true;
-					}
-				}
-			}
-			// se clicou fora dos botões, fecha o menu
-			MenuPause.fecharMenu();
-			return true;
-		}
+            boolean consumido = MenuPause.processarToque(telaX, y, true);
+            if(!consumido) MenuPause.fecharMenu(); // clicou fora do painel
+            return true;
+        }
         if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop && !jg.inv.aberto) {
             if(b == Input.Buttons.LEFT) {
                 jg.item = "ar";
@@ -196,6 +187,10 @@ public class UI extends Objeto implements InputProcessor {
                 }
             }
         }
+		if(MenuPause.menuAberto) {
+            MenuPause.processarToque(telaX, y, false);
+            return true;
+        }
         if(p == pontoDir) pontoDir = -1;
         return true;
     }
@@ -206,7 +201,11 @@ public class UI extends Objeto implements InputProcessor {
 		int y = Gdx.graphics.getHeight() - telaY;
 
         jg.inv.aoArrastar(telaX, y, p);
-
+		
+		if(MenuPause.menuAberto) {
+            MenuPause.processarArraste(telaX, y);
+            return true;
+        }
 		if(p == pontoDir && !jg.inv.aberto) {
 			float dx = telaX - ultimaDir.x;
 			float dy = y - ultimaDir.y;
@@ -508,7 +507,6 @@ public class UI extends Objeto implements InputProcessor {
 		for(Botao b : botoes.values()) {
 			if(b != null) b.aoAjustar(v, h);
 		}
-		MenuPause.aoAjustar(v, h);
 		configDpad(v, h);
 
         camera.viewportWidth = v;
