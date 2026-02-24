@@ -54,14 +54,29 @@ public class Simplex2D {
             maximo += amplitude;
 
             return total / maximo;
-        }
-		if(oitavas == 3) {
+        } else if(oitavas == 3) {
             total += ruido(x * frequencia, y * frequencia) * amplitude;
             maximo += amplitude;
             amplitude *= persistencia;
             frequencia *= lacunaridade;
 
             total += ruido(x * frequencia, y * frequencia) * amplitude;
+            maximo += amplitude;
+			
+			total += ruido(x * frequencia, y * frequencia) * amplitude;
+            maximo += amplitude;
+
+            return total / maximo;
+        } else if(oitavas == 4) {
+            total += ruido(x * frequencia, y * frequencia) * amplitude;
+            maximo += amplitude;
+            amplitude *= persistencia;
+            frequencia *= lacunaridade;
+
+            total += ruido(x * frequencia, y * frequencia) * amplitude;
+            maximo += amplitude;
+
+			total += ruido(x * frequencia, y * frequencia) * amplitude;
             maximo += amplitude;
 			
 			total += ruido(x * frequencia, y * frequencia) * amplitude;

@@ -96,7 +96,10 @@ public class Mundo extends Objeto {
 		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
 		Bloco.blocos.add(new Bloco("gelo", "gelo"));
 		Bloco.blocos.add(new Bloco("neve", "neve"));
-
+		Bloco.blocos.add(new Bloco("coral_rosa", "coral_rosa"));
+		Bloco.blocos.add(new Bloco("coral_azul", "coral_azul"));
+		Bloco.blocos.add(new Bloco("coral_amarelo", "coral_amarelo"));
+		
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("areia", "terra_1", "terra_2", "terra_3");
