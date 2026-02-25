@@ -430,7 +430,7 @@ public class UI extends Objeto implements InputProcessor {
         if(coracaoCompleto == null || coracaoMetade == null || coracaoVazio == null) return;
 
         int totalCoracoes = jg.vidaMax >> 1; // 20 vida = 10 corações
-        float tamCoracao  = 20f;
+        float tamCoracao  = 30f;
         float espCoracao  = 2f;
 
         // posiciona acima da hotbar(ou no canto superior esquerdo se a hotbar não existir)
