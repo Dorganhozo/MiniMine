@@ -12,7 +12,6 @@ public class Biomas {
 	 que addArvores chame calcularDadosColuna de novo pra cada coluna(eliminava
 	 até 144 chamadas extras por chunk de floresta, duplicando o tempo de geração)
 	 */
-	
 	public static volatile TipoBioma[][] biomasCache = new TipoBioma[16][16];
 
     public static void iniciar() {
@@ -126,6 +125,35 @@ public class Biomas {
                 }
                 if(!vazios[altura - 1]) ChunkUtil.defBloco(x, altura - 1, z, "grama", chunk);
 				break;
+			case MAR_CONGELADO:
+				// camada de gelo na superficie e água abaixo
+				for(int y = altura - 3; y < altura; y++) {
+					if(!vazios[y]) ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+				}
+				// gelo no nivel do mar ou no topo da coluna
+				if(!vazios[altura - 1]) ChunkUtil.defBloco(x, altura - 1, z, "gelo", chunk);
+
+				for(int y = altura; y <= 62; y++) {
+					// no topo do mar, coloca gelo, abaixo coloca água
+					if(y == 62) ChunkUtil.defBloco(x, y, z, "gelo", chunk);
+					else ChunkUtil.defBloco(x, y, z, "agua", chunk);
+				}
+				break;
+			case TUNDRA:
+				// chão de terra coberto com uma camada de neve
+				for(int y = altura - 4; y < altura - 1; y++) {
+					if(!vazios[y]) ChunkUtil.defBloco(x, y, z, "terra", chunk);
+				}
+				if(!vazios[altura - 1]) ChunkUtil.defBloco(x, altura - 1, z, "neve", chunk);
+				break;
+			case PICOS_GELADOS:
+				// montanhas de pedra pura cobertas de neve grossa e gelo
+				for(int y = altura - 5; y < altura - 2; y++) {
+					if(!vazios[y]) ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+				}
+				if(!vazios[altura - 2]) ChunkUtil.defBloco(x, altura - 2, z, "gelo", chunk);
+				if(!vazios[altura - 1]) ChunkUtil.defBloco(x, altura - 1, z, "neve", chunk);
+				break;
         }
     }
 
@@ -210,6 +238,9 @@ public class Biomas {
 			case FLORESTA_MONTANHOSA: return "Serrania";
 			case DESERTO: return "Deserto";
 			case COLINAS_DESERTO: return "Dunas";
+			case MAR_CONGELADO: return "Mar Congelado";
+			case TUNDRA: return "Tundra";
+			case PICOS_GELADOS: return "Picos Gelados";
 			default: return "Desconhecido";
 		}
 	}

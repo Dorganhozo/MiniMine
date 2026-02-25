@@ -18,7 +18,7 @@ refeito com LibGDX.
 
 ## Já feito:
 1. Gerenciamento de chunks dinâmico.
-2. Geração de terreno com Ruido Simplex 2D e 3D pras cavernas, manual.
+2. Motor de geração.
 3. Colisão.
 4. Gravidade.
 5. Iluminação global.
@@ -26,7 +26,7 @@ refeito com LibGDX.
 7. Debug visual.
 8. Sistema de construção.
 9. Barra Rápida.
-10. Mods por Lua no armazenamento externo. (beta)
+10. Mods por Lua no armazenamento externo.
 11. Sistema de ciclo noturno e diário.
 12. Nuvens.
 13. Salvamento dinamico de mundos binario.
@@ -36,12 +36,13 @@ refeito com LibGDX.
 17. Divisão de biomas.
 18. Água animada via *Gdx.gl.glTexSubImage2D(...)*.
 19. Névoa no horizonte.
-20. Motor de geração. (beta)
+20. Inventario.
 21. Menu de pause.
 22. Partículas ao quebrar blocos.
 23. 1-2 músicas.
 24. Divisão de biomas com rúido celular.
 25. Entidades.
+26. Sistema de nascimento de entidades baseado em bioma.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -65,6 +66,11 @@ você pode descobrir mais sobre a API Lua em doc.txt.
 11. Tocha.
 12. Pedregulho.
 13. Cascalho.
+14. Bloco de gelo.
+15. Bloco de neve.
+16. Bloco de coral rosa.
+17. Bloco de coral azul
+18. Bloco de coral amarelo.
 
 ## Receitas:
 ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.
@@ -95,6 +101,9 @@ Erosão Hidraulica.
 9. FLORESTA_MONTANHOSA.
 10. DESERTO.
 11. COLINAS_DESERTO.
+12. MAR_CONGELADO.
+13. TUNDRA.
+14. PICOS_GELADOS.
 
 ## Otimizações:
 * Geração em Thread separada com ExecutorService.
@@ -104,7 +113,7 @@ Erosão Hidraulica.
 * Compressão baseada em paleta.
 * Otimização com variaveis locais pra compilação em tempo de  execução.
 * Cache de chunks modificadas sem Malha.
-* O Guloso (Malha Gulosa).
+* O Guloso(Malha Gulosa).
 * Pré-computação de erosão.
 * Reuso de Arrays utilizados na geração de dados das chunks.
 * Iluminação feita por vértices, com niveis por blocos (0-15).
@@ -117,6 +126,9 @@ Erosão Hidraulica.
 * Cache de fila de luz.
 * Cache de luz temporaria.
 * Cache de fatias em ChunkMalha.java.
+* Reutilização de texturas 2D para criação de menus e botões via fatiação.
+* Geração inteligente que econimiza cálculos com base em uma variavel previsivel.
+* Cache de tipos de biomas(também ajuda na transição mais caotica de biomas com neve e areia).
 
 ## Ruídos utilitários:
 1. PerlinRuido2D.java
@@ -143,6 +155,9 @@ att.lua // será chamado no loop principal
 
 e para adicionar mais de um arquivo individual, adicione o caminho relativo a pasta atual em *MiniMine/mods/arquivos.mini*. os arquivos são separados e carregados por quebra de linha.
 
+## AVISO
+o jogo ainda não foi lançado e a API Lua ainda pode mudar bastante.
+
 ## Adicionais:
 
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados a cada entrada em um mundo.
@@ -159,14 +174,14 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * FPS padrão: 40-59.
 
 ## PC:
-* Placa Mãe: dell optiPlex 780.
-* Processador: intel core 2 quad.
+* Placa Mãe: Dell OptiPlex 780.
+* Processador: Intel Core 2 Quad.
 * Memória RAM: 4GB(2x2GB DDR3).
 * Armazenamento: SSD 256GB.
-* Video: intel 4 series(Integrada).
+* Video: Intel 4 Series(Integrada).
 * OpenGL: 2.1.
 * Sistema Operaciobal: Linux Mint XCFE 64-bit.
-* FPS padrão: 40-59.
+* FPS padrão: 45-64.
 
 ## Notebook:
 * Modelo: Aspire ES 15.
@@ -190,7 +205,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * **ESC**: abre o menu de pausa durante o jogo.
 
 ## paleta de cores:
-* blocos: unseven.
+* blocos/icones/botões: unseven.
 
 ## Créditos:
 

@@ -43,52 +43,14 @@ public class Simplex2D {
         double amplitude = 1.0;
         double maximo = 0.0; 
 
-        // otimização mantida pra 2 oitavas
-        if(oitavas == 2) {
-            total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-            amplitude *= persistencia;
-            frequencia *= lacunaridade;
-
-            total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-
-            return total / maximo;
-        } else if(oitavas == 3) {
-            total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-            amplitude *= persistencia;
-            frequencia *= lacunaridade;
-
-            total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-			
-			total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-
-            return total / maximo;
-        } else if(oitavas == 4) {
-            total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-            amplitude *= persistencia;
-            frequencia *= lacunaridade;
-
-            total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-
-			total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-			
-			total += ruido(x * frequencia, y * frequencia) * amplitude;
-            maximo += amplitude;
-
-            return total / maximo;
-        }
         for(int i = 0; i < oitavas; i++) {
             total += ruido(x * frequencia, y * frequencia) * amplitude;
             maximo += amplitude;
-            amplitude *= persistencia;
-            frequencia *= lacunaridade;
+			
+			if(i < oitavas - 1) {
+				amplitude *= persistencia;
+				frequencia *= lacunaridade;
+			}
         }
         return total / maximo;
     }
