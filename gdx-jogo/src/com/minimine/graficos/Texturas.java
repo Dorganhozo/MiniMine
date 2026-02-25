@@ -52,6 +52,9 @@ public class Texturas {
 			atlas.put("clique", new TextureRegion(icones, 16, 0, 16, 16));
 			atlas.put("ataque", new TextureRegion(icones, 32, 0, 16, 16));
 			atlas.put("receita", new TextureRegion(icones, 48, 0, 16, 16));
+			atlas.put("coracao_completo", new TextureRegion(icones, 64, 0, 16, 16));
+			atlas.put("coracao_metade", new TextureRegion(icones, 80, 0, 16, 16));
+			atlas.put("coracao_vazio", new TextureRegion(icones, 96, 0, 16, 16));
 			
 			texs.put("botao_f", new Texture(Gdx.files.internal("ui/botao_f.png")));
 			texs.put("botao_t", new Texture(Gdx.files.internal("ui/botao_t.png")));

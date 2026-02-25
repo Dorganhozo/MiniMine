@@ -2,12 +2,12 @@ package com.minimine.mundo.geracao;
 
 import com.minimine.utils.ruidos.Simplex2D;
 import com.minimine.utils.ruidos.Simplex3D;
-import com.minimine.utils.ruidos.RidgeRuido2D;
+import com.minimine.utils.ruidos.CristaRuido2D;
 import com.minimine.utils.ruidos.CelularRuido2D;
 
 public class GeradorTerreno {
     public final DominioDeformacao dominio;
-    public final RidgeRuido2D ridge;
+    public final CristaRuido2D ridge;
     public final Simplex2D ruido;
     public final Simplex3D ruido3d;
     public final Simplex3D cavernas;
@@ -20,7 +20,7 @@ public class GeradorTerreno {
     public GeradorTerreno(long semente) {
         this.semente = semente;
         this.dominio = new DominioDeformacao(semente);
-        this.ridge = new RidgeRuido2D(semente ^ 0x5DEECE66DL);
+        this.ridge = new CristaRuido2D(semente ^ 0x5DEECE66DL);
         this.ruido = new Simplex2D(semente ^ 0x9E3779B9L);
         this.ruido3d = new Simplex3D(semente ^ 0x61C88647L);
 
@@ -104,7 +104,13 @@ public class GeradorTerreno {
         double varClima = ruido.ruidoFractal(x * 0.0003, z * 0.0003, 2, 0.6, 2.0);
         umidade += varClima * 0.3;
         umidade += (1.0 - celularVal) * 0.15;
-
+		
+		if(temp < 0.3) {
+			if(altura <= nivelMar) {
+				return TipoBioma.MAR_CONGELADO;
+			}
+			return altura > nivelMar + 40 ? TipoBioma.PICOS_GELADOS : TipoBioma.TUNDRA;
+		}
         if(altura <= nivelMar) {
             if(altura < nivelMar - 35 || base < -0.7) return TipoBioma.OCEANO_ABISSAL;
             if(temp > 0.7) return TipoBioma.OCEANO_QUENTE;
@@ -220,11 +226,12 @@ public class GeradorTerreno {
     }
 
     public enum TipoBioma {
-        OCEANO, OCEANO_COSTEIRO, OCEANO_QUENTE,
-        OCEANO_ABISSAL,
-        PLANICIES, PLANICIES_MONTANHOSAS,
-        FLORESTA, FLORESTA_COSTEIRA, FLORESTA_MONTANHOSA,
-        DESERTO, COLINAS_DESERTO
+		OCEANO, OCEANO_COSTEIRO, OCEANO_QUENTE,
+		OCEANO_ABISSAL, MAR_CONGELADO,
+		PLANICIES, PLANICIES_MONTANHOSAS,
+		FLORESTA, FLORESTA_COSTEIRA, FLORESTA_MONTANHOSA,
+		DESERTO, COLINAS_DESERTO,
+		TUNDRA, PICOS_GELADOS
 	}
 }
 

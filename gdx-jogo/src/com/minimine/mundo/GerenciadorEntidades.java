@@ -51,7 +51,6 @@ public class GerenciadorEntidades {
 	}
 	
 	public static void tentarNascerEntidade(Jogador jogador, Mundo mundo) {
-		if(!jogador.bioma.equals("Mar Quente")) return;
 		// pega um chunk carregado aleatório(estado 2 = malha pronta)
 		List<Long> disponiveis = new ArrayList<>();
 		for(Map.Entry<Long, Integer> e : mundo.estados.entrySet()) {
@@ -66,20 +65,22 @@ public class GerenciadorEntidades {
 			int cz = Chave.z(chave);
 
 			// posição aleatória dentro da chunk
-			int wx = cx * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
-			int wz = cz * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
+			int mx = cx * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
+			int mz = cz * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
 
 			// distancia minima do jogador
-			float dx = wx - jogador.posicao.x;
-			float dz = wz - jogador.posicao.z;
+			float dx = mx - jogador.posicao.x;
+			float dz = mz - jogador.posicao.z;
 			if(dx * dx + dz * dz < DIST_MIN_NASCER * DIST_MIN_NASCER) continue;
 
-			int wy = mundo.obterAlturaChao(wx, wz);
+			int wy = mundo.obterAlturaChao(mx, mz);
 			if(wy <= 1) continue;
 			
 			Entidade entidade = null;
 			
-			entidade = new Foca(wx, wy, wz);
+			String bioma = Biomas.obterBioma(mx, mz);
+			
+			if(bioma.equals("Mar Congelado")) entidade = new Foca(mx, wy, mz);
 			
 			if(entidade != null) mundo.entidades.add(entidade);
 			return;

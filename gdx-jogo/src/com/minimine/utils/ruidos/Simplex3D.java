@@ -38,7 +38,7 @@ public class Simplex3D {
         }
     }
 
-    public double ruido(double xin, double yin, double zin) {
+    public final double ruido(double xin, double yin, double zin) {
         double s = (xin + yin + zin) * F3;
 
         int i = (xin + s) >= 0 ? (int)(xin + s) : (int)(xin + s) - 1;
@@ -114,7 +114,7 @@ public class Simplex3D {
     }
 
     // estrutura de escolha direta que substitui a matriz GRAD3
-    // evita acesso constante à memória e multiplicações por zero
+    // evita acesso constante a memória e multiplicações por zero
     public final static double gradiente(int indice, double x, double y, double z) {
         switch(indice) {
             case 0: return x + y;
@@ -133,17 +133,20 @@ public class Simplex3D {
         }
     }
 
-    public double ruidoFractal(double x, double y, double z, int oitavas, double persistencia, double lacunaridade) {
+    public final double ruidoFractal(double x, double y, double z, int oitavas, double persistencia, double lacunaridade) {
         double total = 0.0;
         double frequencia = 1.0;
         double amplitude = 1.0;
         double maximo = 0.0;
-
+		
         for(int i = 0; i < oitavas; i++) {
             total += ruido(x * frequencia, y * frequencia, z * frequencia) * amplitude;
             maximo += amplitude;
-            amplitude *= persistencia;
-            frequencia *= lacunaridade;
+			
+			if(i < oitavas - 1) {
+				amplitude *= persistencia;
+				frequencia *= lacunaridade;
+			}
         }
         return total / maximo;
     }
