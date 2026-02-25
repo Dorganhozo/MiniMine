@@ -31,10 +31,8 @@ local.properties
 .cache
 
 # ignore aplicativos tmp
-minimine.apk
-MiniMine.apk
-minimine.jar
-MiniMine.jar
+*.apk
+*.jar
 
 # ignore .settings
 .settings/

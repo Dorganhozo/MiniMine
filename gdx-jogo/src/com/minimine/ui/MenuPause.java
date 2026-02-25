@@ -65,7 +65,7 @@ public class MenuPause extends Objeto {
 				public void exec() {
 					salvarJogo();
 					fecharMenu();
-					UI.abrirDialogo("Jogo salvo!");
+					UI.abrirDialogo("Jogo salvo!", null);
 				}
 			});
         painelMenu.addAncorado(botaoSalvar, Ancora.CENTRO, 0, 0);
