@@ -40,7 +40,7 @@ public class Foca extends Entidade {
     public static final int LIMITE_COLISOES = 6;
 
     // necessidade e memória de água
-    public float necessidadeAgua = 0f;   // 0 = hidratada, >100 = critica
+    public float necessidadeAgua = 0f; // 0 = hidratada, >100 = critica
     public boolean estavaNaAgua = false; // quadro anterior
 
     // ultima posição de água encontrada no escaner(pode ser(-1,-1) se não encontrou)
@@ -66,13 +66,16 @@ public class Foca extends Entidade {
     public static final float REC_NADANDO_SEDENTA = 1f; // por tick na água com sede
     public static final float REC_VAGANDO_NA_AGUA = 0.2f;
     public static final float PEN_FORA_AGUA_SEDENTA = -0.5f; // por tick fora com sede
-    public static final float PEN_SAIU_DA_AGUA = -5f;
+    public static final float PEN_SAIU_DA_AGUA = -0.5f;
     public static final float PEN_COLISAO = -1f;
     public static final float REC_SOBREVIVEU = 0.05f; // recompensa base por existir
 
     public Foca(float x, float y, float z) {
         super();
+		vida = 20;
+		vidaMax = 20;
 		bioma = "Tundra";
+		
         this.posicao.set(x, y, z);
         this.largura = 0.8f;
         this.altura = 0.6f;

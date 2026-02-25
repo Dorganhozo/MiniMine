@@ -10,6 +10,7 @@ import com.minimine.utils.Objeto;
 
 public class Entidade extends Objeto {
 	public int vida;
+	public int vidaMax;
 	public float velo = 8f; // tem uma velocidade
 	public float peso = 65f; // 65 kg
 	public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
