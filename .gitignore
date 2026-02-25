@@ -1,6 +1,7 @@
 # saidas de compilação do android
 /gdx-android/bin/
 /gdx-android/build/
+/gdx-android/gen/
 
 # saidas de compilação do jogo
 /gdx-jogo/bin/
@@ -9,10 +10,12 @@
 # saidas de compilação do pc
 /gdx-pc/bin/
 /gdx-pc/build/
+/gdx-pc/gen/
 
 # outras saidas de compilação
 /build/
 /bin/
+/gen/
 /output/
 
 # pastas tmp
