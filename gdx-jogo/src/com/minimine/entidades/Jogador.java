@@ -50,7 +50,8 @@ public class Jogador extends Entidade {
 
 	public Jogador() {
 		super();
-		
+		vida = 20;
+		vidaMax = 20;
 		Jogo.relogio.schedule(
 			new java.util.TimerTask() {
 				@Override

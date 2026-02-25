@@ -153,7 +153,7 @@ public class UI extends Objeto implements InputProcessor {
 
         gerenciador.addDialogo(dialogoChat);
     }
-	
+
     // chat
     public void abrirChat() {
         if(chatAberto) return;
@@ -175,7 +175,7 @@ public class UI extends Objeto implements InputProcessor {
 				}
 			});
     }
-	
+
     // abre um dialogo de aviso com padrão ao fechar
     public static void abrirDialogo(String titulo, final CaixaDialogo.Fechar fechar) {
         // cria um dialogo temporario de alerta para não misturar com o de chat
@@ -315,7 +315,7 @@ public class UI extends Objeto implements InputProcessor {
         }
         if(spriteMira != null) {
             spriteMira.setPosition(v / 2f - spriteMira.getWidth() / 2f,
-			h / 2f - spriteMira.getHeight() / 2f);
+								   h / 2f - spriteMira.getHeight() / 2f);
             spriteMira.setAlpha(0.9f);
         }
     }
@@ -327,7 +327,7 @@ public class UI extends Objeto implements InputProcessor {
         rotulos.put(nome, r);
         return r;
     }
-	
+
     // loop principal
     public void att(float delta, Mundo mundo) {
         attCamera(camera.direction, jg.yaw, jg.tom);
@@ -352,6 +352,9 @@ public class UI extends Objeto implements InputProcessor {
         // inventario
         renderizarInventario(sb, fonte, jg.inv);
 
+        // barra de vida
+        renderizarVida(sb);
+
         // menu pause
         MenuPause.renderizar(sb, fonte);
 
@@ -372,23 +375,16 @@ public class UI extends Objeto implements InputProcessor {
         for(int i = 0; i < inv.rectsHotbar.length; i++) {
             if(inv.rectsHotbar[i] == null) continue;
             float rx = inv.rectsHotbar[i].x, ry = inv.rectsHotbar[i].y;
-            float rw = inv.rectsHotbar[i].width, rh = inv.rectsHotbar[i].height;
+            float rv = inv.rectsHotbar[i].width, rh = inv.rectsHotbar[i].height;
 
-            Sprite slotSprite = new Sprite(inv.texSlot);
-            slotSprite.setSize(rw, rh);
-            slotSprite.setPosition(rx, ry);
-            slotSprite.draw(sb);
-
+			sb.draw(inv.texSlot, rx, ry, rv, rh);
             if(i == inv.slotSelecionado) {
                 sb.setColor(1, 1, 1, 0.5f);
-                slotSprite.draw(sb);
+                sb.draw(inv.texSlot, rx, ry, rv, rh);
                 sb.setColor(1, 1, 1, 1);
             }
-            if(inv.itens[i] != null) {
-                Sprite itemSprite = new Sprite(inv.itens[i].textura);
-                itemSprite.setSize(inv.tamSlot - 10, inv.tamSlot - 10);
-                itemSprite.setPosition(rx + 5, ry + 5);
-                itemSprite.draw(sb);
+            if(inv.itens[i] != null) {		
+				sb.draw(inv.itens[i].textura, rx + 5, ry + 5, inv.tamSlot - 10, inv.tamSlot - 10);
                 if(inv.itens[i].quantidade > 1) {
                     fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
 							   rx + inv.tamSlot - 15, ry + 15);
@@ -399,38 +395,64 @@ public class UI extends Objeto implements InputProcessor {
         if(inv.aberto) {
             for(int i = 0; i < inv.rects.length; i++) {
                 float rx = inv.rects[i].x, ry = inv.rects[i].y;
-                float rw = inv.rects[i].width, rh = inv.rects[i].height;
-
-                Sprite slotSprite = new Sprite(inv.texSlot);
-                slotSprite.setSize(rw, rh);
-                slotSprite.setPosition(rx, ry);
-                slotSprite.draw(sb);
+                float rv = inv.rects[i].width, rh = inv.rects[i].height;
+				
+				sb.draw(inv.texSlot, rx, ry, rv, rh);
 
                 if(inv.itens[i] != null) {
-                    Sprite itemSprite = new Sprite(inv.itens[i].textura);
-                    itemSprite.setSize(inv.tamSlot - 5, inv.tamSlot - 5);
-                    itemSprite.setPosition(rx + 5, ry + 5);
-                    itemSprite.draw(sb);
+					sb.draw(inv.itens[i].textura, rx + 5, ry + 5, inv.tamSlot - 5, inv.tamSlot - 5);
+                    
                     if(inv.itens[i].quantidade > 1) {
                         fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
-								   rx + inv.tamSlot - 15, ry + 15);
+						rx + inv.tamSlot - 15, ry + 15);
                     }
                 }
             }
         }
         // item flutuante
         if(inv.itemFlutuante != null) {
-            Sprite itemSprite = new Sprite(inv.itemFlutuante.textura);
-            itemSprite.setSize(inv.tamSlot - 10, inv.tamSlot - 10);
-            itemSprite.setPosition(
-                inv.posFlutuante.x - itemSprite.getWidth() / 2,
-                inv.posFlutuante.y - itemSprite.getHeight() / 2);
-            itemSprite.draw(sb);
+			float posX = inv.posFlutuante.x - inv.itemFlutuante.textura.getRegionWidth() / 2;
+			float posY = inv.posFlutuante.y - inv.itemFlutuante.textura.getRegionHeight() / 2;
+			
+			sb.draw(inv.itemFlutuante.textura, posX, posY, inv.tamSlot - 10, inv.tamSlot - 10);
             if(inv.itemFlutuante.quantidade > 1) {
                 fonte.draw(sb, String.valueOf(inv.itemFlutuante.quantidade),
-						   itemSprite.getX() + inv.tamSlot - 15,
-						   itemSprite.getY() + 15);
+						   posX + inv.tamSlot - 15,
+						   posY + 15);
             }
+        }
+    }
+
+    public void renderizarVida(SpriteBatch sb) {
+        TextureRegion coracaoCompleto = Texturas.atlas.get("coracao_completo");
+        TextureRegion coracaoMetade   = Texturas.atlas.get("coracao_metade");
+        TextureRegion coracaoVazio    = Texturas.atlas.get("coracao_vazio");
+        if(coracaoCompleto == null || coracaoMetade == null || coracaoVazio == null) return;
+
+        int totalCoracoes = jg.vidaMax >> 1; // 20 vida = 10 corações
+        float tamCoracao  = 20f;
+        float espCoracao  = 2f;
+
+        // posiciona acima da hotbar(ou no canto superior esquerdo se a hotbar não existir)
+        float hotbarY = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
+            ? jg.inv.rectsHotbar[0].y + jg.inv.tamSlot + 4f
+            : 30f;
+        float startX = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
+            ? jg.inv.rectsHotbar[0].x
+            : 10f;
+
+        for(int i = 0; i < totalCoracoes; i++) {
+            float x = startX + i * (tamCoracao + espCoracao);
+            float y = hotbarY;
+
+            int vidaEsseCoracao = jg.vida - i * 2; // quanta vida "sobra" pra esse coração
+
+            TextureRegion tex;
+            if(vidaEsseCoracao >= 2) tex = coracaoCompleto;
+            else if(vidaEsseCoracao == 1) tex = coracaoMetade;
+            else tex = coracaoVazio;
+
+            sb.draw(tex, x, y, tamCoracao, tamCoracao);
         }
     }
 
@@ -468,7 +490,7 @@ public class UI extends Objeto implements InputProcessor {
 					   sb2.toString()),
 				   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
     }
-	
+
     // camera
     public static void attCamera(Vector3 vetor, float yaw, float tom) {
         float yawRad = yaw * MathUtils.degRad;
@@ -479,7 +501,7 @@ public class UI extends Objeto implements InputProcessor {
             MathUtils.cos(tomRad) * MathUtils.cos(yawRad)
         ).nor();
     }
-	
+
     public void ajustar(int v, int h) {
         Gdx.gl.glViewport(0, 0, v, h);
         camera.viewportWidth  = v;
@@ -489,7 +511,7 @@ public class UI extends Objeto implements InputProcessor {
         jg.inv.aoAjustar(v, h);
         configDpad(v, h);
     }
-	
+
     @Override
     public void liberar() {
         super.liberar();
@@ -709,5 +731,6 @@ public class UI extends Objeto implements InputProcessor {
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
+
 
 
