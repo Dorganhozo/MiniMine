@@ -57,7 +57,7 @@ public class UI extends Objeto implements InputProcessor {
     public Sprite spriteMira;
     public int pontoDir = -1;
     public final Vector2 ultimaDir = new Vector2();
-	
+
     public static GerenciadorUI gerenciador;
     public static PainelFatiado visualBase;
 
@@ -115,7 +115,7 @@ public class UI extends Objeto implements InputProcessor {
     private void criarDialogos() {
         // dialogo de chat
         dialogoChat = new CaixaDialogo(visualBase, fonte, 3f,
-		new ShapeRenderer()); // ShapeRenderer proprio do dialogo
+									   new ShapeRenderer()); // ShapeRenderer proprio do dialogo
         dialogoChat.largura = 500;
         dialogoChat.altura  = 200;
 
@@ -153,8 +153,8 @@ public class UI extends Objeto implements InputProcessor {
 
         gerenciador.addDialogo(dialogoChat);
     }
-    // Chat
-
+	
+    // chat
     public void abrirChat() {
         if(chatAberto) return;
         chatAberto = true;
@@ -175,14 +175,8 @@ public class UI extends Objeto implements InputProcessor {
 				}
 			});
     }
-    // dialogo generico de alerta
-
-    // abre um dialogo de aviso simples
-    public static void abrirDialogo(String titulo) {
-        abrirDialogo(titulo, null);
-    }
-
-    // abre um diálogo de aviso com padrão ao fechar
+	
+    // abre um dialogo de aviso com padrão ao fechar
     public static void abrirDialogo(String titulo, final CaixaDialogo.Fechar fechar) {
         // cria um dialogo temporario de alerta para não misturar com o de chat
         // reutiliza o gerenciador; o dialogo se auto remove ao fechar
@@ -193,9 +187,9 @@ public class UI extends Objeto implements InputProcessor {
         alerta.y = Gdx.graphics.getHeight() / 2f - alerta.altura  / 2f;
         alerta.addOk(visualBase);
         gerenciador.addDialogo(alerta);
-        alerta.mostrar(titulo, "", fechar != null ? fechar : new CaixaDialogo.Fechar(){@Override public void aoFechar(boolean c) {}});
+        alerta.mostrar(titulo, "", fechar != null ? fechar : new CaixaDialogo.Fechar(){@Override public void aoFechar(boolean c){}});
     }
-    // D-pad (mantido como sprites — texturas direcionais não fazem sentido no Micro)
+    // dpad(mantido como sprites, texturas direcionais não fazem sentido na Micro)
     public void criarBotoesDpad() {
         if(!botoesDpad.isEmpty()) return;
 
@@ -209,29 +203,29 @@ public class UI extends Objeto implements InputProcessor {
         float tam = MathUtils.clamp(botaoTam * Gdx.graphics.getDensity(), 50f, 150f);
 
         botoesDpad.put("direita", new BotaoDpad(Texturas.texs.get("botao_d"),  tam) {
-			public void aoTocar(){jg.direita = true;}
-			public void aoSoltar(){ jg.direita = false;}
-		});
+				public void aoTocar(){jg.direita = true;}
+				public void aoSoltar(){ jg.direita = false;}
+			});
         botoesDpad.put("esquerda", new BotaoDpad(Texturas.texs.get("botao_e"), tam) {
-			public void aoTocar(){ jg.esquerda = true;}
-			public void aoSoltar(){jg.esquerda = false;}
-		});
+				public void aoTocar(){ jg.esquerda = true;}
+				public void aoSoltar(){jg.esquerda = false;}
+			});
         botoesDpad.put("frente", new BotaoDpad(Texturas.texs.get("botao_f"), tam) {
-			public void aoTocar(){ jg.frente = true;}
-			public void aoSoltar(){ jg.frente = false;}
-		});
+				public void aoTocar(){ jg.frente = true;}
+				public void aoSoltar(){ jg.frente = false;}
+			});
         botoesDpad.put("tras", new BotaoDpad(Texturas.texs.get("botao_t"), tam) {
-			public void aoTocar(){jg.tras = true;}
-			public void aoSoltar(){ jg.tras = false;}
-		});
+				public void aoTocar(){jg.tras = true;}
+				public void aoSoltar(){ jg.tras = false;}
+			});
         botoesDpad.put("cima", new BotaoDpad(Texturas.texs.get("botao_f"), tam) {
-			public void aoTocar(){ jg.cima = true;}
-			public void aoSoltar(){ jg.cima = false;}
-		});
+				public void aoTocar(){ jg.cima = true;}
+				public void aoSoltar(){ jg.cima = false;}
+			});
         botoesDpad.put("diagDireita", new BotaoDpad(Texturas.texs.get("botao_ld"), tam) {
-			public void aoTocar(){ jg.frente = jg.direita  = true;}
-			public void aoSoltar(){ jg.frente = jg.direita = false;}
-		});
+				public void aoTocar(){ jg.frente = jg.direita  = true;}
+				public void aoSoltar(){ jg.frente = jg.direita = false;}
+			});
         botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.texs.get("botao_le"), tam) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
 
         botoesDpad.put("baixo", new BotaoDpad(Texturas.texs.get("botao_t"), tam) {
@@ -279,39 +273,39 @@ public class UI extends Objeto implements InputProcessor {
     public void configDpad(int v, int h) {
         criarBotoesDpad();
         if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) {
-            posicionarMira(v, h);
+            defPosMira(v, h);
             return;
         }
         float tam = MathUtils.clamp(botaoTam * Gdx.graphics.getDensity(), 50f, 150f);
         float centroX = espaco + tam * 1.5f;
         float centroY = espaco + tam * 1.5f;
 
-        posicionarDpad("direita", centroX + espaco, centroY - tam / 2);
-        posicionarDpad("esquerda", centroX - tam - espaco,  centroY - tam / 2);
-        posicionarDpad("frente", centroX - tam / 2, centroY + espaco);
-        posicionarDpad("tras", centroX - tam / 2, centroY - tam - espaco);
-        posicionarDpad("cima", v - tam * 1.5f, centroY + espaco);
-        posicionarDpad("baixo", v - tam * 1.5f, centroY - tam - espaco);
-        posicionarDpad("diagDireita",  centroX + espaco, centroY + espaco);
-        posicionarDpad("diagEsquerda", centroX - tam - espaco, centroY + espaco);
-        posicionarDpad("acao", v - tam * 1.5f, centroY * 2 + espaco);
-        posicionarDpad("ataque", v - tam * 2.5f, centroY * 2 + espaco);
-        posicionarDpad("receita", v - tam, h - tam);
+        defPosDpad("direita", centroX + espaco, centroY - tam / 2);
+        defPosDpad("esquerda", centroX - tam - espaco,  centroY - tam / 2);
+        defPosDpad("frente", centroX - tam / 2, centroY + espaco);
+        defPosDpad("tras", centroX - tam / 2, centroY - tam - espaco);
+        defPosDpad("cima", v - tam * 1.5f, centroY + espaco);
+        defPosDpad("baixo", v - tam * 1.5f, centroY - tam - espaco);
+        defPosDpad("diagDireita",  centroX + espaco, centroY + espaco);
+        defPosDpad("diagEsquerda", centroX - tam - espaco, centroY + espaco);
+        defPosDpad("acao", v - tam * 1.5f, centroY * 2 + espaco);
+        defPosDpad("ataque", v - tam * 2.5f, centroY * 2 + espaco);
+        defPosDpad("receita", v - tam, h - tam);
 
         int hotbarX = v / 2 - (jg.inv.hotbarSlots * jg.inv.tamSlot) / 2;
-        posicionarDpad("inv", hotbarX + jg.inv.hotbarSlots * jg.inv.tamSlot, jg.inv.hotbarY);
+        defPosDpad("inv", hotbarX + jg.inv.hotbarSlots * jg.inv.tamSlot, jg.inv.hotbarY);
 
-        posicionarMira(v, h);
+        defPosMira(v, h);
     }
 
-    public void posicionarDpad(String nome, float x, float y) {
+    public void defPosDpad(String nome, float x, float y) {
         BotaoDpad b = botoesDpad.get(nome);
         if(b == null) return;
         b.sprite.setPosition(x, y);
         b.hitbox.setPosition(x, y);
     }
 
-    public void posicionarMira(int v, int h) {
+    public void defPosMira(int v, int h) {
         if(spriteMira == null) {
             TextureRegion r = Texturas.atlas.get("mira");
             if(r != null) {
@@ -325,7 +319,7 @@ public class UI extends Objeto implements InputProcessor {
             spriteMira.setAlpha(0.9f);
         }
     }
-    
+
     public static Rotulo addRotulo(String nome, String texto, float x, float y) {
         Rotulo r = new Rotulo(texto, fonte, 1f);
         r.x = x;
@@ -333,6 +327,7 @@ public class UI extends Objeto implements InputProcessor {
         rotulos.put(nome, r);
         return r;
     }
+	
     // loop principal
     public void att(float delta, Mundo mundo) {
         attCamera(camera.direction, jg.yaw, jg.tom);
@@ -355,21 +350,91 @@ public class UI extends Objeto implements InputProcessor {
         for(Rotulo r : rotulos.values()) r.desenhar(sb, delta, 0f, 0f);
 
         // inventario
-        jg.inv.porFrame(sb, fonte);
+        renderizarInventario(sb, fonte, jg.inv);
 
         // menu pause
         MenuPause.renderizar(sb, fonte);
 
-        // dialogos do Micro(chat, alertas)
+        // dialogos da Micro(chat, alertas)
         gerenciador.desenhar(sb, delta);
 
         // debug
-        if(debug) desenharDebug(sb, mundo);
+        if(debug) renderDebug(mundo);
 
         sb.end();
     }
 
-    public void desenharDebug(SpriteBatch batch, Mundo mundo) {
+    public void renderizarInventario(SpriteBatch sb, BitmapFont fonte, Inventario inv) {
+        if(inv.rectsHotbar == null || inv.rectsHotbar.length == 0 ||
+           inv.itens == null || inv.itens.length == 0) return;
+
+        // hotbar
+        for(int i = 0; i < inv.rectsHotbar.length; i++) {
+            if(inv.rectsHotbar[i] == null) continue;
+            float rx = inv.rectsHotbar[i].x, ry = inv.rectsHotbar[i].y;
+            float rw = inv.rectsHotbar[i].width, rh = inv.rectsHotbar[i].height;
+
+            Sprite slotSprite = new Sprite(inv.texSlot);
+            slotSprite.setSize(rw, rh);
+            slotSprite.setPosition(rx, ry);
+            slotSprite.draw(sb);
+
+            if(i == inv.slotSelecionado) {
+                sb.setColor(1, 1, 1, 0.5f);
+                slotSprite.draw(sb);
+                sb.setColor(1, 1, 1, 1);
+            }
+            if(inv.itens[i] != null) {
+                Sprite itemSprite = new Sprite(inv.itens[i].textura);
+                itemSprite.setSize(inv.tamSlot - 10, inv.tamSlot - 10);
+                itemSprite.setPosition(rx + 5, ry + 5);
+                itemSprite.draw(sb);
+                if(inv.itens[i].quantidade > 1) {
+                    fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
+							   rx + inv.tamSlot - 15, ry + 15);
+                }
+            }
+        }
+        // inventario completo
+        if(inv.aberto) {
+            for(int i = 0; i < inv.rects.length; i++) {
+                float rx = inv.rects[i].x, ry = inv.rects[i].y;
+                float rw = inv.rects[i].width, rh = inv.rects[i].height;
+
+                Sprite slotSprite = new Sprite(inv.texSlot);
+                slotSprite.setSize(rw, rh);
+                slotSprite.setPosition(rx, ry);
+                slotSprite.draw(sb);
+
+                if(inv.itens[i] != null) {
+                    Sprite itemSprite = new Sprite(inv.itens[i].textura);
+                    itemSprite.setSize(inv.tamSlot - 5, inv.tamSlot - 5);
+                    itemSprite.setPosition(rx + 5, ry + 5);
+                    itemSprite.draw(sb);
+                    if(inv.itens[i].quantidade > 1) {
+                        fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
+								   rx + inv.tamSlot - 15, ry + 15);
+                    }
+                }
+            }
+        }
+        // item flutuante
+        if(inv.itemFlutuante != null) {
+            Sprite itemSprite = new Sprite(inv.itemFlutuante.textura);
+            itemSprite.setSize(inv.tamSlot - 10, inv.tamSlot - 10);
+            itemSprite.setPosition(
+                inv.posFlutuante.x - itemSprite.getWidth() / 2,
+                inv.posFlutuante.y - itemSprite.getHeight() / 2);
+            itemSprite.draw(sb);
+            if(inv.itemFlutuante.quantidade > 1) {
+                fonte.draw(sb, String.valueOf(inv.itemFlutuante.quantidade),
+						   itemSprite.getX() + inv.tamSlot - 15,
+						   itemSprite.getY() + 15);
+            }
+        }
+    }
+
+    public void renderDebug(Mundo mundo) {
         float livre = rt.freeMemory()  >> 20;
         float total = rt.totalMemory() >> 20;
         float nativaLivre = debugador.obterHeapLivre() >> 20;
@@ -381,7 +446,7 @@ public class UI extends Objeto implements InputProcessor {
         int inicio = Math.max(0, logsArr.length - 15);
         for(int i = inicio; i < logsArr.length; i++) sb2.append(logsArr[i]).append("\n");
 
-        fonte.draw(batch, String.format(
+        fonte.draw(sb, String.format(
 					   "Jogador:\nX: %.1f, Y: %.1f, Z: %.1f\nModo: %s\nSlot: %d\nItem: %s\n" +
 					   "No chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 					   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
@@ -394,7 +459,7 @@ public class UI extends Objeto implements InputProcessor {
 					   mundo.nome, jg.bioma, mundo.RAIO_CHUNKS, mundo.chunks.size(),
 					   mundo.chunksMod.size(), mundo.semente, DiaNoiteUtil.tempo, mundo.tick, DiaNoiteUtil.tempo_velo),
 				   50, Gdx.graphics.getHeight() - 100);
-        fonte.draw(batch, String.format(
+        fonte.draw(sb, String.format(
 					   "FPS: %d\nThreads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\n" +
 					   "Memória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\n" +
 					   "Memória nativa usada: %.1f MB\n\nLogs:\n%s",
@@ -403,7 +468,8 @@ public class UI extends Objeto implements InputProcessor {
 					   sb2.toString()),
 				   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
     }
-    // Camera
+	
+    // camera
     public static void attCamera(Vector3 vetor, float yaw, float tom) {
         float yawRad = yaw * MathUtils.degRad;
         float tomRad = tom * MathUtils.degRad;
@@ -413,6 +479,7 @@ public class UI extends Objeto implements InputProcessor {
             MathUtils.cos(tomRad) * MathUtils.cos(yawRad)
         ).nor();
     }
+	
     public void ajustar(int v, int h) {
         Gdx.gl.glViewport(0, 0, v, h);
         camera.viewportWidth  = v;
@@ -422,6 +489,7 @@ public class UI extends Objeto implements InputProcessor {
         jg.inv.aoAjustar(v, h);
         configDpad(v, h);
     }
+	
     @Override
     public void liberar() {
         super.liberar();
@@ -617,7 +685,7 @@ public class UI extends Objeto implements InputProcessor {
         else if (y < 0) jg.inv.slotSelecionado = (jg.inv.slotSelecionado - 1 + jg.inv.hotbarSlots) % jg.inv.hotbarSlots;
         return true;
     }
-    
+
     private abstract class BotaoDpad {
         public final Sprite sprite;
         public final com.badlogic.gdx.math.Rectangle hitbox;
@@ -641,4 +709,5 @@ public class UI extends Objeto implements InputProcessor {
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
+
 
