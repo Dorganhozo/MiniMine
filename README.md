@@ -135,7 +135,7 @@ Erosão Hidraulica.
 2. PerlinRuido3D.java
 3. Simplex2D.java (atual)
 4. Simplex3D.java (atual)
-5. RidgeRuido2D.java (atual)
+5. CristaRuido2D.java (atual)
 6. CelularRuido2D.java (atual)
 
 ## compatibilidade:
