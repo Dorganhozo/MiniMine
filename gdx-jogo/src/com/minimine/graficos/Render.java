@@ -194,7 +194,7 @@ public class Render extends Objeto {
 			Texturas.blocos.bind(0);
 			shader.setUniformi("u_textura", 0);
 			Gdx.gl.glDisable(GL20.GL_BLEND);
-
+			
 			// 1. solidos:
 			for(final Chunk chunk : mundo.chunks.values()) {
 				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
@@ -205,7 +205,7 @@ public class Render extends Objeto {
 			// 2. transparentes:
 			Gdx.gl.glEnable(GL20.GL_BLEND);
 			Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-
+			
 			for(final Chunk chunk : mundo.chunks.values()) {
 				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
 					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
@@ -213,22 +213,20 @@ public class Render extends Objeto {
 				}
 			}
 			Animacoes2D.att(delta);
-
 			shader.end();
 
 			if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
 			gp.att(delta);
-
+			
 			// renderiza os modelos 3D
 			sb.begin(ui.jg.camera);
 
 			ui.jg.render(sb);
-
 			for(Entidade e : mundo.entidades) {
 				e.render(sb);
 			}
 			sb.end();
-
+			
 			// renderiza o debug:
 			if(ui.debug) {
 				debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador
@@ -255,7 +253,7 @@ public class Render extends Objeto {
 		ui.att(delta, mundo);
     }
 	
-	public final boolean frustrum(Chunk chunk, Jogador jogador) {
+	public final static boolean frustrum(Chunk chunk, Jogador jogador) {
 		final float globalX = chunk.x << 4;
 		final float globalZ = chunk.z << 4;
 
@@ -264,7 +262,7 @@ public class Render extends Objeto {
 
 		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
 		// (RAIO * 16) * (RAIO * 16)
-		final float raioEmPixels = mundo.RAIO_CHUNKS << 4;
+		final float raioEmPixels = Mundo.RAIO_CHUNKS << 4;
 		final float raioLimite = raioEmPixels * raioEmPixels;
 
 		if(!(distAoQuadrado < raioLimite)) return false;

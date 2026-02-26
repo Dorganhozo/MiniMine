@@ -20,7 +20,7 @@ public class Entidade extends Objeto {
 	public float aceleracaoAr = 5f;  // controle aereo reduzido
 	public float atritoAr = 1.5f; // quase sem frenagem no ar
 	public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
-	public boolean noChao = true, naAgua = false, agachado = false, nasceu = false, voando = false;
+	public boolean movendo = false, noChao = true, naAgua = false, agachado = false, nasceu = false, voando = false;
 
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
@@ -188,6 +188,8 @@ public class Entidade extends Objeto {
 			}
 		}
 		if(baixo) velocidade.y = -10;
+		
+		movendo = noChao && (Math.abs(velocidade.x) > 1f || Math.abs(velocidade.z) > 1f);
 	}
 	public void render(ModelBatch mb) {}
 	@Override
