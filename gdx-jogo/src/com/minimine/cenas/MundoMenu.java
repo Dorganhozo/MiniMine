@@ -251,7 +251,7 @@ public class MundoMenu implements Screen, InputProcessor {
         Acao acaoConfirmarSemente = new Acao() {
             public void exec() {
                 String textoSemente = campoSemente.texto.trim();
-                int semente = 0;
+                long semente = 0;
                 try {
                     semente = Integer.parseInt(textoSemente);
                 } catch(Exception e) {

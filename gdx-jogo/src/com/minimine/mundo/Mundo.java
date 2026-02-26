@@ -25,6 +25,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.Texture;
@@ -114,7 +115,7 @@ public class Mundo extends Objeto {
     }
 
     public void iniciar() {
-        semente = semente == 0 ? (System.currentTimeMillis() >> 1) : semente;
+        semente = semente == 0 ? (System.currentTimeMillis() * MathUtils.random(2, 10)) : semente;
         s2D = new Simplex2D(semente);
 		s3D = new Simplex3D(semente >> 1);
 
@@ -159,15 +160,17 @@ public class Mundo extends Objeto {
             if(chunk.malha != null) {
 				chunk.malha = null;
             }
-        }
-		entidades.get(0).liberar();
+		}
+        for(Entidade e : entidades) {
+			e.liberar();
+			e = null;
+		}
 		chunksMod.clear();
         chunks.clear();
 		estados.clear();
 		entidades.clear();
         exec.shutdown();
 		if(com.minimine.ui.UI.debug) Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
-
 		ArrayReuso.limparPools();
     }
 
