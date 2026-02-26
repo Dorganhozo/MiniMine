@@ -66,11 +66,13 @@ public class ChunkUtil {
 	}
 
 	public static int bitsPraMaxId(int maxId) {
-		int val = 1;
-		int bits = 0;
-		while(val <= maxId && bits < 8) { val <<= 1; bits++; }
-		if(bits == 0) bits = 1;
-		return Math.min(bits, 8);
+		// lerPacote/gravarPacote usam bit-shift assumindo que blocosPorInt é potência de 2.
+		// Isso só é verdade quando bits ∈ {1, 2, 4, 8} → blocosPorInt ∈ {32, 16, 8, 4}.
+		// Valores como 3, 5, 6, 7 resultam em blocosPorInt ímpar e corrompem o índice.
+		if(maxId <= 1)  return 1; // 32 blocos/int
+		if(maxId <= 3)  return 2; // 16 blocos/int
+		if(maxId <= 15) return 4; //  8 blocos/int
+		return 8;                 //  4 blocos/int
 	}
 
 	// usa bit-shift
@@ -307,4 +309,5 @@ public class ChunkUtil {
 		chunk.blocos = novos;
 	}
 }
+
 

@@ -363,12 +363,8 @@ public class MundoMenu implements Screen, InputProcessor {
         return gerenciadorUI.processarCaractere(c);
     }
 
-    @Override public void pause() {
-		dispose();
-	}
-    @Override public void resume() {
-		show();
-	}
+    @Override public void pause() {}
+    @Override public void resume() {}
 
     @Override
     public boolean keyUp(int k) { 
