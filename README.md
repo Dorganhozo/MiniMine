@@ -132,12 +132,10 @@ Erosão Hidraulica.
 * Cache de tipos de biomas(também ajuda na transição mais caotica de biomas com neve e areia).
 
 ## Ruídos utilitários:
-1. PerlinRuido2D.java
-2. PerlinRuido3D.java
-3. Simplex2D.java (atual)
-4. Simplex3D.java (atual)
-5. CristaRuido2D.java (atual)
-6. CelularRuido2D.java (atual)
+3. Simplex2D.java
+4. Simplex3D.java
+5. CristaRuido2D.java
+6. CelularRuido2D.java
 
 ## compatibilidade:
 * Android 4 até Android 15.

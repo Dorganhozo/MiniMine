@@ -22,6 +22,7 @@ public class Bloco {
 	public Bloco(CharSequence nome, String topo) {this(nome, topo, topo);}
 	public Bloco(CharSequence nome, String topo, String lados) {this(nome, topo, lados, topo);}
 	public Bloco(CharSequence nome, String topo, String lados, String baixo) {this(nome,topo, lados, baixo, false);}
+	public Bloco(CharSequence nome, String topo, boolean transparente, boolean solido, boolean culling, int luz) {this(nome, topo, topo, topo, transparente, solido, culling, luz, false);}
 	public Bloco(CharSequence nome, String topo, boolean transparente) {this(nome, topo, topo, topo, transparente);}
 	public Bloco(CharSequence nome, String topo, boolean transparente, boolean solido) {this(nome, topo, topo, topo, transparente, solido);}
 	public Bloco(CharSequence nome, String topo, String lados, String baixo, boolean transparente) {this(nome, topo, lados, baixo, transparente, true);}
