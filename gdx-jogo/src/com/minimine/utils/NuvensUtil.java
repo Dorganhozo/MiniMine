@@ -16,7 +16,7 @@ public class NuvensUtil {
     public static float tempo = 0f;
     public static float[] nuvensPos; // [x, y, z, tam] pra cada nuvem
     public static final int NUM_NUVENS = 100;
-    public static final float RAIO_VISIVEL = 150f;
+    public static final float RAIO_VISIVEL = 200f;
 	public static float ALTURA_NUVENS = 150;
     public static final float VELO = 0.2f;
 	

@@ -256,16 +256,14 @@ public class Render extends Objeto {
 	public final static boolean frustrum(Chunk chunk, Jogador jogador) {
 		final float globalX = chunk.x << 4;
 		final float globalZ = chunk.z << 4;
-
-		// dist2(distancia ao quadrado)
-		final float distAoQuadrado = Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z);
-
+		
 		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
 		// (RAIO * 16) * (RAIO * 16)
 		final float raioEmPixels = Mundo.RAIO_CHUNKS << 4;
 		final float raioLimite = raioEmPixels * raioEmPixels;
-
-		if(!(distAoQuadrado < raioLimite)) return false;
+		
+		// dist2(distancia ao quadrado)
+		if(!(Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z) < raioLimite)) return false;
 
 		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 255, 16);
 	}

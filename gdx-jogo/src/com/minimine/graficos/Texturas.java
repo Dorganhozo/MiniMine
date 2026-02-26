@@ -44,6 +44,8 @@ public class Texturas {
 			atlas.put("coral_azul", new TextureRegion(blocos, 48, 32, 16, 16));
 			atlas.put("coral_amarelo", new TextureRegion(blocos, 64, 32, 16, 16));
 			atlas.put("capim", new TextureRegion(blocos, 80, 32, 16, 16));
+			atlas.put("tulipa", new TextureRegion(blocos, 96, 32, 16, 16));
+			atlas.put("iris_azul", new TextureRegion(blocos, 112, 32, 16, 16));
 			// animações:
 			atlas.put("agua_a1", new TextureRegion(agua, 0, 0, 16, 16));
 			atlas.put("agua_a2", new TextureRegion(agua, 0, 16, 16, 16));
@@ -79,9 +81,7 @@ public class Texturas {
 	}
 	
 	public static void liberar() {
-		for(Texture tex : texs.values()) {
-			tex.dispose();
-		}
+		for(Texture tex : texs.values()) tex.dispose();
 		blocos.dispose();
 	}
 }

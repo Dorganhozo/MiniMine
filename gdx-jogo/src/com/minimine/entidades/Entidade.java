@@ -39,13 +39,6 @@ public class Entidade extends Objeto {
 	public String bioma = "";
 
 	public Entidade() {
-		yaw = 180f;
-		tom = -20f;
-		VELO_MAX_QUEDA = -50f;
-		largura = 0.6f;
-		altura = 1.9f;
-		profundidade = 0.6f;
-		hitbox = new BoundingBox();
 		liberado = false;
 	}
 
