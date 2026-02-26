@@ -365,8 +365,7 @@ public class Foca extends Entidade {
 
         // rotaciona o modelo pra direção de movimento
         if(direcaoSuave.len2() > 0.01f) {
-			float angulo = (float)Math.toDegrees(Math.atan2(-direcaoSuave.x, -direcaoSuave.z));
-            instancia.transform.setToRotation(Vector3.Y, angulo);
+            instancia.transform.setToRotation(Vector3.Y, (float)Math.toDegrees(Math.atan2(-direcaoSuave.x, -direcaoSuave.z)));
         }
         instancia.transform.setTranslation(posicao);
         sb.render(instancia);

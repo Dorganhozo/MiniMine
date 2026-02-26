@@ -337,7 +337,6 @@ public class UI extends Objeto implements InputProcessor {
         Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
 
-        camera.update();
         sb.begin();
 
         // mira

@@ -11,27 +11,33 @@ import com.minimine.utils.Objeto;
 public class Entidade extends Objeto {
 	public int vida;
 	public int vidaMax;
-	public float velo = 8f; // tem uma velocidade
+	public float velo = 8f; // velocidade maxima no chão
 	public float peso = 65f; // 65 kg
+
+	// constantes de movimento
+	public float aceleracaoChao = 60f; // quão rapido chega na velocidade maxima no chão
+	public float atritoChao = 20f;  // quão rapido freia no chão quando solta a tecla
+	public float aceleracaoAr = 5f;  // controle aereo reduzido
+	public float atritoAr = 1.5f; // quase sem frenagem no ar
 	public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
 	public boolean noChao = true, naAgua = false, agachado = false, nasceu = false, voando = false;
-	
+
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
 	public float pulo = 10f;
-	
+
 	public float largura = 0.6f, altura = 1.9f, profundidade = 0.6f;
 
 	public BoundingBox hitbox = new BoundingBox();
 	public final BoundingBox blocoHitbox = new BoundingBox(); // colisão dos blocos
-	
+
 	public final Vector3 minVec = new Vector3(), maxVec = new Vector3();
-	
+
 	public float yaw = 180f, tom = -20f; // pra ver onde ta olhando
 	public float VELO_MAX_QUEDA = -50f;
-	
+
 	public String bioma = "";
-	
+
 	public Entidade() {
 		yaw = 180f;
 		tom = -20f;
@@ -42,7 +48,7 @@ public class Entidade extends Objeto {
 		hitbox = new BoundingBox();
 		liberado = false;
 	}
-	
+
 	public void attHitbox() {
 		float x = posicao.x;
 		float y = posicao.y;
@@ -50,7 +56,7 @@ public class Entidade extends Objeto {
 
 		hitbox.set(minVec.set(x - largura / 2, y, z - profundidade / 2), maxVec.set(x + largura / 2, y + altura, z + profundidade / 2));
 	}
-	
+
 	public boolean colideMundo() {
 		int minX = Mat.floor(hitbox.min.x);
 		int maxX = Mat.floor(hitbox.max.x);
@@ -85,7 +91,7 @@ public class Entidade extends Objeto {
 		}
 		return false;
 	}
-	
+
 	// para verificar se tem chão embaixo dos pés da entidade
 	public boolean temSuporte(float x, float z) {
 		// 1. configura uma hitbox temporaria na nova posição(x, posicao.y, z)
@@ -116,7 +122,7 @@ public class Entidade extends Objeto {
 		// não encontrou suporte solido em nenhuma parte da area debaixo
 		return false;
 	}
-	
+
 	public boolean ehChao() {
 		// verifica se ha blocos solidos logo abaixo dos pes do jogador
 		float epsilon = 0.05f; // margem pra evitar flutuação
@@ -141,25 +147,50 @@ public class Entidade extends Objeto {
 		}
 		return false;
 	}
-	
+
 	public void att(float delta) {
-		velocidade.x = 0;
-		velocidade.z = 0;
 		if(voando) velocidade.y = 0;
-		
-		if(frente) velocidade.add(frenteV.cpy().scl(velo));
-		if(tras)  velocidade.sub(frenteV.cpy().scl(velo));
-		if(esquerda) velocidade.add(direitaV.cpy().scl(velo));
-		if(direita) velocidade.sub(direitaV.cpy().scl(velo));
+
+		// escolhe aceleração e atrito dependendo de onde está
+		boolean noControle = noChao || voando || naAgua;
+		float acel  = noControle ? aceleracaoChao : aceleracaoAr;
+		float atrito = noControle ? atritoChao    : atritoAr;
+
+		// direção da entidade
+		float desejadoX = 0, desejadoZ = 0;
+		if(frente) { desejadoX += frenteV.x;   desejadoZ += frenteV.z; }
+		if(tras) { desejadoX -= frenteV.x;   desejadoZ -= frenteV.z; }
+		if(esquerda) { desejadoX += direitaV.x;  desejadoZ += direitaV.z; }
+		if(direita) { desejadoX -= direitaV.x;  desejadoZ -= direitaV.z; }
+
+		// normaliza pra evitar diagonal mais rapida
+		float tam = (float)Math.sqrt(desejadoX * desejadoX + desejadoZ * desejadoZ);
+		if(tam > 1f) { desejadoX /= tam; desejadoZ /= tam; }
+
+		float veloAlvo = (agachado && noChao) ? velo * 0.5f : velo;
+		desejadoX *= veloAlvo;
+		desejadoZ *= veloAlvo;
+
+		// acelera em direção ao alvo
+		velocidade.x += (desejadoX - velocidade.x) * Math.min(acel * delta, 1f);
+		velocidade.z += (desejadoZ - velocidade.z) * Math.min(acel * delta, 1f);
+
+		// aplica atrito quando sem entrasa(so no chão/voando)
+		if(desejadoX == 0 && desejadoZ == 0) {
+			float fator = Math.max(0f, 1f - atrito * delta);
+			velocidade.x *= fator;
+			velocidade.z *= fator;
+		}
 		if(cima) {
 			if(voando || noChao || naAgua) {
-				velocidade.y = pulo; // pulo
+				velocidade.y = pulo;
 				noChao = false;
 			}
-        }
+		}
 		if(baixo) velocidade.y = -10;
 	}
 	public void render(ModelBatch mb) {}
 	@Override
 	public void liberar() {super.liberar();}
 }
+
