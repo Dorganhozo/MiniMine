@@ -194,25 +194,20 @@ public class Jogador extends Entidade {
 			velocidade.z = 0;
 			attHitbox();
 		}
+		if(posicao.y < -100f) posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
+		
 		camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
-
-		if(posicao.y < -100f) {
-			posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
-		}
+		camera.update();
 	}
 
 	public void render(ModelBatch sb) {
-		if(modelo == null) return;
-
-		// sincroniza o modelo visual com a logica do jogador
-		instancia.transform.setToTranslation(posicao);
-		
 		// aplica a rotação(yaw) da camera ao corpo
-		float anguloRotacao = ((float)Math.toDegrees(-Math.atan2(camera.direction.z, camera.direction.x)) - 90);
-		instancia.transform.rotate(Vector3.Y, anguloRotacao);
+		instancia.transform.setToRotation(Vector3.Y, ((float)Math.toDegrees(-Math.atan2(camera.direction.z, camera.direction.x)) - 90));
 		
+		// sincroniza o modelo visual com a logica do jogador
+		instancia.transform.setTranslation(posicao);
 		
-		if(instancia != null) sb.render(instancia);
+		sb.render(instancia);
 	}
 	@Override
 	public void liberar() {
