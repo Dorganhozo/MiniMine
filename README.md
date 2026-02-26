@@ -72,6 +72,8 @@ você pode descobrir mais sobre a API Lua em doc.txt.
 17. Bloco de coral azul
 18. Bloco de coral amarelo.
 19. Capim.
+20. Tulipa.
+21. Íris azul.
 
 ## Receitas:
 ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.
