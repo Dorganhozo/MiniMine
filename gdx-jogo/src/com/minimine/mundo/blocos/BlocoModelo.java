@@ -10,7 +10,7 @@ import com.minimine.graficos.Texturas;
 
 public class BlocoModelo {
     public static final float TAM = 1f;
-    
+
     // Pos(1) + U, V(2) + TexID(1) + Cor(1)
     public static final int FLOATS_VERTICE = 5;
 
@@ -61,13 +61,14 @@ public class BlocoModelo {
         contaTexturas++;
         return (float) id;
     }
+
     /*
      * compacta posição XYZ em um unico int usando bit pacote
      * [5 bits X][9 bits Y][5 bits Z][13 bits livres]
      * 
-     * X: 0-31 (5 bits, pos 0)
-     * Y: 0-511 (9 bits, pos 5) 
-     * Z: 0-31 (5 bits, pos 14)
+     * X: 0-31(5 bits, pos 0)
+     * Y: 0-511(9 bits, pos 5) 
+     * Z: 0-31(5 bits, pos 14)
      */
     private static int compactarPosicao(int x, int y, int z) {
         return (x & 0x1F) | ((y & 0x1FF) << 5) | ((z & 0x1F) << 14);
@@ -103,9 +104,9 @@ public class BlocoModelo {
 		int py = (int)(y + vert[1] * sy);
 		int pz = (int)(z + vert[2] * sz);
 		int posCompactada = compactarPosicao(px, py, pz);
-		
+
         verts.add((float)posCompactada);
-		
+
 		// UV local com tiling do Guloso(2 floats)
 		verts.add(uv[0] * uh); 
 		verts.add(uv[1] * vv);
@@ -113,18 +114,18 @@ public class BlocoModelo {
         verts.add(texId);
         // cor(1 float)
         verts.add(corFinal);
-		
+
 		// face 2
 		vert = FACE_VERTICES[faceId][1];
 		uv = FACE_UVS[faceId][1];
-		
+
 		px = (int)(x + vert[0] * sx);
 		py = (int)(y + vert[1] * sy);
 		pz = (int)(z + vert[2] * sz);
 		posCompactada = compactarPosicao(px, py, pz);
-		
+
         verts.add((float)posCompactada);
-		
+
 		// UV local com tiling do Guloso(2 floats)
 		verts.add(uv[0] * uh); 
 		verts.add(uv[1] * vv);
@@ -132,18 +133,18 @@ public class BlocoModelo {
         verts.add(texId);
         // cor(1 float)
         verts.add(corFinal);
-		
+
 		// face 3
 		vert = FACE_VERTICES[faceId][2];
 		uv = FACE_UVS[faceId][2];
-		
+
 		px = (int)(x + vert[0] * sx);
 		py = (int)(y + vert[1] * sy);
 		pz = (int)(z + vert[2] * sz);
 		posCompactada = compactarPosicao(px, py, pz);
-		
+
         verts.add((float)posCompactada);
-		
+
 		// UV local com tiling do Guloso(2 floats)
 		verts.add(uv[0] * uh); 
 		verts.add(uv[1] * vv);
@@ -151,18 +152,18 @@ public class BlocoModelo {
         verts.add(texId);
         // cor(1 float)
         verts.add(corFinal);
-		
+
 		// face 4
 		vert = FACE_VERTICES[faceId][3];
 		uv = FACE_UVS[faceId][3];
-		
+
 		px = (int)(x + vert[0] * sx);
 		py = (int)(y + vert[1] * sy);
 		pz = (int)(z + vert[2] * sz);
 		posCompactada = compactarPosicao(px, py, pz);
-		
+
         verts.add((float)posCompactada);
-		
+
 		// UV local com tiling do Guloso(2 floats)
 		verts.add(uv[0] * uh); 
 		verts.add(uv[1] * vv);
@@ -170,7 +171,7 @@ public class BlocoModelo {
         verts.add(texId);
         // cor(1 float)
         verts.add(corFinal);
-		
+
         idc.add(idcBase);
         idc.add((short)(idcBase + 1));
         idc.add((short)(idcBase + 2));
@@ -178,4 +179,79 @@ public class BlocoModelo {
         idc.add((short)(idcBase + 3));
         idc.add(idcBase);
     }
+
+    /*
+     * gera modelo em X para vegetação(capim, flores)
+     * dois quads diagonais, cada um renderizado dos dois lados.
+     * usa os vertices inteiros das quinas do bloco, o empacotamento atual não suporta frações
+     * registra na lista transparente pois precisa de alpha test/blend no Render.java
+     */
+    public static void addModeloX(String texturaNome, float x, float y, float z,
+	float luzBloco, float luzSol, FloatArrayUtil verts, ShortArrayUtil idc) {
+        float texId = obterIdTextura(texturaNome);
+
+        // modeloX usa faceId 2(+X) como referencia de multiplicador de luz lateral
+        float multFace = ChunkLuz.FACE_LUZ[2];
+        int r = (int)(luzBloco * multFace * 255);
+        int g = (int)(luzSol  * multFace * 255);
+        int b = (int)(multFace * 255);
+        float cor = Color.toFloatBits(r, g, b, 255);
+
+        int ix = (int)x;
+        int iy = (int)y;
+        int iz = (int)z;
+
+        /*
+         * quad A: diagonal / — vai de(x, z+1) até(x+1, z)
+         * quad B: diagonal \ — vai de(x, z)   até(x+1, z+1)
+         
+         * cada quad: 4 vertices, indices gerados duas vezes com orientação invertida
+         * atributos de vertice: posCompactada, u, v, texId, cor
+         */
+        float[][][] quads = {
+            {
+                // quad A: /
+                // px, py, pz, u, v
+                {ix,   iy,   iz+1, 0, 1},
+                {ix+1, iy,   iz,   1, 1},
+                {ix+1, iy+1, iz,   1, 0},
+                {ix,   iy+1, iz+1, 0, 0}
+            },
+            {
+                // quad B: \
+                {ix,   iy,   iz,   0, 1},
+                {ix+1, iy,   iz+1, 1, 1},
+                {ix+1, iy+1, iz+1, 1, 0},
+                {ix,   iy+1, iz,   0, 0}
+            }
+        };
+        for(float[][] quad : quads) {
+            short idcBase = (short)(verts.tam / FLOATS_VERTICE);
+
+            for(float[] v : quad) {
+                int posComp = compactarPosicao((int)v[0], (int)v[1], (int)v[2]);
+                verts.add((float)posComp);
+                verts.add(v[3]); // u
+                verts.add(v[4]); // v
+                verts.add(texId);
+                verts.add(cor);
+            }
+            // orientação normal(frente)
+            idc.add(idcBase);
+            idc.add((short)(idcBase + 1));
+            idc.add((short)(idcBase + 2));
+            idc.add((short)(idcBase + 2));
+            idc.add((short)(idcBase + 3));
+            idc.add(idcBase);
+
+            // orientação invertido(costas)
+            idc.add(idcBase);
+            idc.add((short)(idcBase + 3));
+            idc.add((short)(idcBase + 2));
+            idc.add((short)(idcBase + 2));
+            idc.add((short)(idcBase + 1));
+            idc.add(idcBase);
+        }
+    }
 }
+

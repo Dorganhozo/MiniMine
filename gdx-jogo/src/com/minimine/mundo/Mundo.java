@@ -91,7 +91,7 @@ public class Mundo extends Objeto {
         Bloco.blocos.add(new Bloco("tabua_madeira", "tabua_madeira"));
         Bloco.blocos.add(new Bloco("cacto", "cacto_topo", "cacto_lado"));
         Bloco.blocos.add(new Bloco("vidro", "vidro", true, true, false));
-        Bloco.blocos.add(new Bloco("tocha", "tocha", "tocha", "tocha", false, true, true, 13));
+        Bloco.blocos.add(new Bloco("tocha", "tocha", "tocha", "tocha", false, true, true, 13, true));
 		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
 		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
 		Bloco.blocos.add(new Bloco("gelo", "gelo"));
@@ -99,6 +99,7 @@ public class Mundo extends Objeto {
 		Bloco.blocos.add(new Bloco("coral_rosa", "coral_rosa"));
 		Bloco.blocos.add(new Bloco("coral_azul", "coral_azul"));
 		Bloco.blocos.add(new Bloco("coral_amarelo", "coral_amarelo"));
+		Bloco.blocos.add(new Bloco("capim", "capim", true, false, false, 0, true));
 		
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
@@ -613,7 +614,7 @@ public class Mundo extends Objeto {
     }
 
 	public static Bloco addBloco(String nome, String topo, String lados, String baixo, boolean alfa, boolean solido, int luz) {
-        Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido, true, luz));
+        Bloco.blocos.add(new Bloco(nome, topo, lados, baixo, alfa, solido, true, luz, false));
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
 }
