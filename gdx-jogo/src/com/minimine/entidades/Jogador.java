@@ -23,6 +23,7 @@ import com.minimine.cenas.Jogo;
 public class Jogador extends Entidade {
 	public int modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
+	public float forcaMovimento = 0; // Controla a intensidade do balanço
 
 	public CharSequence item = "ar";
 	public int ALCANCE = 7;
@@ -63,7 +64,7 @@ public class Jogador extends Entidade {
             ativoCena = new GLTFLoader().load(Gdx.files.internal("modelos/jogador.gltf"));
             modelo = ativoCena.scene.model;
             instancia = new ModelInstance(modelo);
-
+			
             pegarNos();
             salvarRotacoes();
         } catch(Exception e) {
@@ -72,7 +73,7 @@ public class Jogador extends Entidade {
 		// deixa o braço reto pra frente
 		bracoDir.rotation.set(rotBracoDir);
 		// rotaciona 90 graus no eixo X
-		bracoDir.rotation.mul(new Quaternion(Vector3.X, 90f));
+		bracoDir.rotation.mul(new Quaternion(Vector3.X, 100f));
 		instancia.calculateTransforms();
 	}
 
@@ -196,19 +197,34 @@ public class Jogador extends Entidade {
 		}
 		if(posicao.y < -100f) posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
 		
+		if(movendo) {
+			tempoAnimacao += delta * 8f; // o tempo corre enquanto anda
+			forcaMovimento = Math.min(1f, forcaMovimento + delta * 5f); // liga o balanço
+		} else {
+			forcaMovimento = Math.max(0f, forcaMovimento - delta * 5f); // desliga o balanço
+			if(forcaMovimento == 0) tempoAnimacao = 0; // reinicia o ciclo ao parar totalmente
+		}
 		camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
 		camera.update();
 	}
 
-	public void render(ModelBatch sb) {
-		// aplica a rotação(yaw) da camera ao corpo
-		instancia.transform.setToRotation(Vector3.Y, ((float)Math.toDegrees(-Math.atan2(camera.direction.z, camera.direction.x)) - 90));
-		
-		// sincroniza o modelo visual com a logica do jogador
-		instancia.transform.setTranslation(posicao);
-		
-		sb.render(instancia);
+	public void render(ModelBatch mb) {
+		instancia.transform.set(camera.view).inv();
+
+		// calculo do balanço(oscilação)
+		// seno faz o movimento lateral(X)
+		float balancoX = (float)Math.sin(tempoAnimacao * 0.5f) * 0.05f;
+		// cosseno absoluto faz o movimento de "pulo" do passo(Y)
+		float balancoY = (float)Math.abs(Math.cos(tempoAnimacao)) * 0.05f;
+
+		// deixa o braço na tela
+		instancia.transform.translate(0.5f + balancoX, -2.15f + balancoY, -1f);
+
+		instancia.transform.rotate(Vector3.Y, 15); 
+
+		mb.render(instancia);
 	}
+	
 	@Override
 	public void liberar() {
 		if(modelo != null) modelo.dispose();
