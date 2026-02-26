@@ -21,7 +21,7 @@ import com.minimine.mundo.Biomas;
 import com.minimine.cenas.Jogo;
 
 public class Jogador extends Entidade {
-	public int modo = 0; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
+	public int modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
 	public PerspectiveCamera camera;
 	public float forcaMovimento = 0; // Controla a intensidade do balanço
 
@@ -150,6 +150,7 @@ public class Jogador extends Entidade {
 			posicao.add(velocidade.x * delta, velocidade.y * delta, velocidade.z * delta);
 			attHitbox();
 			camera.position.set(posicao.x, posicao.y + altura * 0.95f, posicao.z);
+			camera.update();
 			return;
 		}
 		float dx = velocidade.x * delta;
