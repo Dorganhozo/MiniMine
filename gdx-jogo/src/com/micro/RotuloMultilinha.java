@@ -58,17 +58,22 @@ public class RotuloMultilinha extends Componente {
 
     public void desenhar(SpriteBatch pincel, float delta, float paiX, float paiY) {
         quebrarTexto();
-
         fonte.getData().setScale(escala);
 
-        float totalAltura = linhas.size * alturaLinha * 1.2f;
-        float posY = paiY + (altura / 2) + (totalAltura / 2);
+        float desenharX = paiX + x;
+        float desenharY = paiY + y;
+
+        // em vez de centralizar no meio da caixa, começamos do topo da area permitida
+        // isso evita que o texto desça para tras dos botões ou entradas
+        float posY = desenharY + altura - alturaLinha;
 
         for(int i = 0; i < linhas.size; i++) {
             medidor.setText(fonte, linhas.get(i));
-            float posX = paiX + (largura / 2) - (medidor.width / 2);
+            // centraliza apenas horizontalmente
+            float posX = desenharX + (largura / 2) - (medidor.width / 2);
+            
             fonte.draw(pincel, linhas.get(i), posX, posY);
-            posY -= alturaLinha * 1.2f;
+            posY -= alturaLinha * 1.3f; // eSspaçamento entre linhas um pouco maior
         }
         fonte.getData().setScale(1.0f);
     }
