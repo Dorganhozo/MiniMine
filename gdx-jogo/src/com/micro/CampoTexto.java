@@ -109,6 +109,7 @@ public class CampoTexto extends Componente {
             mostrarCursor = !mostrarCursor;
             tempoCursor = 0;
         }
+
         Color corOriginal = pincel.getColor();
         if(emFoco) {
             pincel.setColor(1f, 1f, 1f, 1f);
@@ -118,7 +119,9 @@ public class CampoTexto extends Componente {
         visual.desenhar(pincel, desenharX, desenharY, largura, altura, escala);
         pincel.setColor(corOriginal);
 
-        fonte.getData().setScale(escala);
+        // define uma escala menor para o texto interno caber na altura do campo
+        float escalaInterna = escala * 0.7f; 
+        fonte.getData().setScale(escalaInterna);
 
         String textoExibir = texto.isEmpty() ? padrao : texto;
         if(!textoExibir.isEmpty()) {
@@ -135,7 +138,9 @@ public class CampoTexto extends Componente {
                 textoExibir = textoExibir.substring(textoExibir.length() - tam);
                 medidor.setText(fonte, textoExibir);
             }
+            
             float posX = desenharX + margemInterna;
+            // centraliza verticalmente usando a altura da fonte com a nova escala
             float posY = desenharY + (altura / 2) + (medidor.height / 2);
 
             if(texto.isEmpty()) {
@@ -146,6 +151,7 @@ public class CampoTexto extends Componente {
             fonte.draw(pincel, textoExibir, posX, posY);
             fonte.setColor(Color.WHITE);
         }
+        // ajuste do cursor para acompanhar a nova escala
         if(emFoco && mostrarCursor) {
             float cursorX = desenharX + margemInterna;
             if(!texto.isEmpty()) {
@@ -153,7 +159,6 @@ public class CampoTexto extends Componente {
                 cursorX += medidor.width;
             }
             float cursorY = desenharY + altura / 2;
-
             medidor.setText(fonte, "|");
             fonte.setColor(Color.BLACK);
             fonte.draw(pincel, "|", cursorX, cursorY + medidor.height / 2);
