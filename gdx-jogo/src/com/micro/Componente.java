@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 public abstract class Componente {
     public float x, y, largura, altura;
+    public int ordemZ = 0;
     protected ArrayList<Componente> filhos = new ArrayList<>();
 
     public Componente(float x, float y, float largura, float altura) {
