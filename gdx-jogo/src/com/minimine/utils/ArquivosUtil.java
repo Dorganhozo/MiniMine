@@ -44,7 +44,8 @@ import java.nio.charset.StandardCharsets;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class ArquivosUtil {
-    public static final String VERSAO = "v0.0.1";
+    public static final int[] VERSAO = { 0, 0, 1 };
+	public static final String versao = "v" + VERSAO[0] + "." + VERSAO[1] + "." + VERSAO[2];
 	public static boolean debug = true;
     // salva o mundo compactado(.mini), e faz escrita atomica para evitar arquivos truncados
     public static void svMundo(Mundo mundo, Jogador jogador) {
@@ -62,7 +63,8 @@ public class ArquivosUtil {
             try {
                 // versao.txt
                 zos.putNextEntry(new ZipEntry("versao.txt"));
-                byte[] vt = VERSAO.getBytes(Charset.forName("UTF-8"));
+				
+                byte[] vt = versao.getBytes(Charset.forName("UTF-8"));
                 zos.write(vt);
                 zos.closeEntry();
                 // mundo.bin(escreve diretamente no zip usando o mesmo DataOutputStream)
@@ -144,8 +146,8 @@ public class ArquivosUtil {
                         int r;
                         while((r = zis.read(buf)) > 0) tmp.write(buf, 0, r);
                         String v = new String(tmp.toByteArray(), Charset.forName("UTF-8")).trim();
-						if(!VERSAO.equals(v)) {
-							if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] a versao "+v+" do mundo não e a mais atual "+VERSAO);
+						if(!versao.equals(v)) {
+							if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] a versao "+v+" do mundo não e a mais atual "+versao);
 						}
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] versao.txt: " + v);
                     } else if("mundo.bin".equals(nome)) {

@@ -27,6 +27,8 @@ import com.micro.Rotulo;
 import com.micro.Ancora;
 import com.micro.Acao;
 import com.micro.Botao;
+import com.minimine.utils.Net;
+import com.minimine.utils.ArquivosUtil;
 
 public class Menu implements Screen, InputProcessor {
     public SpriteBatch pincel;
@@ -43,7 +45,7 @@ public class Menu implements Screen, InputProcessor {
 
     public Painel painelMenu;
     public CaixaDialogo dialogoSair;
-    
+
     public static Preferences prefs;
 
     @Override
@@ -58,7 +60,7 @@ public class Menu implements Screen, InputProcessor {
         vista.apply(true);
 
         gerenciadorUI = new GerenciadorUI();
-        
+
         prefs = Gdx.app.getPreferences("MiniConfig");
 
         try {
@@ -72,12 +74,12 @@ public class Menu implements Screen, InputProcessor {
             Gdx.app.log("ERRO", "Recursos nao encontrados: " + e.getMessage());
         } 
         Gdx.input.setInputProcessor(this);
-        
+
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glCullFace(GL20.GL_BACK);
         Gdx.gl.glEnable(GL20.GL_BLEND);
-        
+
         // carregar preferencias
         Mundo.RAIO_CHUNKS = prefs.getInteger("raioChunks", Mundo.RAIO_CHUNKS);
         UI.pov = prefs.getInteger("pov", UI.pov);
@@ -85,6 +87,43 @@ public class Menu implements Screen, InputProcessor {
         UI.distancia = prefs.getFloat("distancia", UI.distancia);
 		Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
         Gdx.input.setCursorCatched(false);
+
+        // verifica atualizações em segundo plano ao abrir o menu
+        Net.verificarAtualizacao(new Net.ResultadoAtualizacao() {
+				public void aoVerificar(boolean temAtualizacao, String novaVersao, String tipo) {
+					if(!temAtualizacao) return;
+
+					// exibe dialogo informando sobre a atualização disponível
+					dialogoSair.mostrar(
+						"Atualização disponível!",
+						"Nova versão " + novaVersao + " (" + tipo + ") encontrada!\nDeseja baixar agora?",
+						new CaixaDialogo.Fechar() {
+							public void aoFechar(boolean confirmou) {
+								if(!confirmou) return;
+
+								// define o caminho de destino dependendo da plataforma
+								String destino;
+								if(com.badlogic.gdx.Application.ApplicationType.Android
+								   .equals(Gdx.app.getType())) {
+									destino = com.minimine.Inicio.externo + "/MiniMine/update/MiniMine.apk";
+								} else {
+									destino = System.getProperty("user.dir") + "/minimine.jar";
+								}
+
+								Net.baixarAtualizacao(destino, new java.util.function.Consumer<String>() {
+										public void accept(String caminho) {
+											if(caminho == null) {
+												Gdx.app.log("[Menu]", "Falha no download da atualização.");
+												return;
+											}
+											Gdx.app.log("[Menu]", "Atualização baixada: " + caminho);
+										}
+									});
+							}
+						}
+					);
+				}
+			});
     }
 
     public void criarInterface() {
@@ -116,7 +155,7 @@ public class Menu implements Screen, InputProcessor {
         Botao botaoJogar = new Botao("Um Jogador", visualBotao, fonte, 0, 0, larguraBotao, alturaBotao, escalaPixel, acaoJogar);
         painelMenu.addAncorado(botaoJogar, Ancora.CENTRO, 0, 50);
 
-        // botão Configurações
+        // botão configurações
         Acao acaoConfig = new Acao() {
             public void exec() {
                 Inicio.defTela(Cenas.configuracoes);
@@ -129,12 +168,12 @@ public class Menu implements Screen, InputProcessor {
         Acao acaoSair = new Acao() {
             public void exec() {
                 dialogoSair.mostrar("Sair", "Deseja sair do jogo?", new CaixaDialogo.Fechar() {
-                    public void aoFechar(boolean confirmou) {
-                        if(confirmou) {
-                            Gdx.app.exit();
-                        }
-                    }
-                });
+						public void aoFechar(boolean confirmou) {
+							if(confirmou) {
+								Gdx.app.exit();
+							}
+						}
+					});
             }
         };
         Botao botaoSair = new Botao("Sair", visualBotao, fonte, 0, 0, 200, 60, escalaPixel, acaoSair);
@@ -196,14 +235,16 @@ public class Menu implements Screen, InputProcessor {
 		gerenciadorUI.liberar();
     }
     @Override
-    public void pause() {}
-    public void resume() {}
-    public void hide() {
+	public void hide() {
 		dispose();
 	}
-    public boolean keyDown(int k) { return false; }
-    public boolean keyUp(int k) { return false; }
+	@Override
+    public void pause() {}
+    public void resume() {}
+    public boolean keyDown(int c) { return false; }
+    public boolean keyUp(int c) { return false; }
     public boolean keyTyped(char c) { return false; }
     public boolean mouseMoved(int x, int y) { return false; }
     public boolean scrolled(float a, float b) { return false; }
 }
+
