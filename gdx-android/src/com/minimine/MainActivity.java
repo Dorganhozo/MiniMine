@@ -4,6 +4,7 @@ import android.os.Bundle;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import android.app.Activity;
+import java.io.File;
 
 public class MainActivity extends AndroidApplication {
 	public static Activity ISSO;
@@ -15,11 +16,14 @@ public class MainActivity extends AndroidApplication {
 		try {
 			java.lang.reflect.Method m = android.os.StrictMode.class.getMethod("disableDeathOnFileUriExposure");
 			m.invoke(null);
-		} catch (Exception e) {}
+		} catch(Exception e) {}
 		
 		Sistema.pedirArmazTotal(this);
 		
 		ISSO = this;
+		
+		File apk = new File(Sistema.externo, "MiniMine/tmp/MiniMine.apk");
+		if(apk.exists()) apk.delete();
         
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         
