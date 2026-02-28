@@ -14,17 +14,13 @@ public class Provedor extends ContentProvider {
 
     @Override
 	public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException {
-		// No Android 4, às vezes a URI pode vir com caminhos levemente diferentes
-		// mas o File(uri.getPath()) costuma ser tiro e queda.
+		// no Android 4, as vezes a URI pode vir com caminhos levemente diferentes
 		File arquivo = new File(uri.getPath());
 
-		if (arquivo.exists()) {
-			return ParcelFileDescriptor.open(arquivo, ParcelFileDescriptor.MODE_READ_ONLY);
-		}
+		if(arquivo.exists()) return ParcelFileDescriptor.open(arquivo, ParcelFileDescriptor.MODE_READ_ONLY);
+		
 		throw new FileNotFoundException("Arquivo não encontrado: " + uri.getPath());
 	}
-
-    // Métodos obrigatórios que não faremos nada
     @Override public Cursor query(Uri u, String[] s, String o, String[] a, String g) { return null; }
     @Override public String getType(Uri u) { return "application/vnd.android.package-archive"; }
     @Override public Uri insert(Uri u, ContentValues v) { return null; }

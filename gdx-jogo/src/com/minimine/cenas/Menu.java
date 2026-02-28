@@ -49,8 +49,10 @@ public class Menu implements Screen, InputProcessor {
     public CaixaDialogo dialogoSair;
 
     public static Preferences prefs;
-    public static boolean verificado = false;
-
+	
+	public static boolean atualizar = false;
+	public static String novaVersao, tipo;
+	
     @Override
     public void show() {
         pincel = new SpriteBatch();
@@ -88,31 +90,32 @@ public class Menu implements Screen, InputProcessor {
         UI.distancia = prefs.getFloat("distancia", UI.distancia);
         Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
         Gdx.input.setCursorCatched(false);
-
-        if(!verificado) {
-            verificarAtualizacoes();
-            verificado = true;
-        }
+		
+		if(atualizar) {
+			dialogoSair.mostrar(
+				"Atualização disponível!",
+				"Nova versão " + novaVersao + " (" + tipo + ") encontrada!\nDeseja baixar agora?",
+				new CaixaDialogo.Fechar() {
+					public void aoFechar(boolean confirmou) {
+						if(!confirmou) return;
+						iniciarDownload();
+					}
+				}
+			);
+		}
     }
-
-    public void verificarAtualizacoes() {
-        Net.verificarAtualizacao(new Net.ResultadoAtualizacao() {
+	
+	public static void procurarAtt() {
+		Net.verificarAtualizacao(new Net.ResultadoAtualizacao() {
 				public void aoVerificar(boolean temAtualizacao, String novaVersao, String tipo) {
 					if(!temAtualizacao) return;
 
-					dialogoSair.mostrar(
-						"Atualização disponível!",
-						"Nova versão " + novaVersao + " (" + tipo + ") encontrada!\nDeseja baixar agora?",
-						new CaixaDialogo.Fechar() {
-							public void aoFechar(boolean confirmou) {
-								if(!confirmou) return;
-								iniciarDownload();
-							}
-						}
-					);
+					atualizar = true;
+					Menu.novaVersao = novaVersao;
+					Menu.tipo = tipo;
 				}
 			});
-    }
+	}
 
     public void iniciarDownload() {
         // caminho de destino: externo no Android, diretorio atual no Desktop

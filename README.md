@@ -43,6 +43,7 @@ refeito com LibGDX.
 24. Divisão de biomas com rúido celular.
 25. Entidades.
 26. Sistema de nascimento de entidades baseado em bioma.
+27. Auto atualização quando ligado a internet.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
