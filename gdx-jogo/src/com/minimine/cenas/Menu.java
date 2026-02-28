@@ -3,32 +3,34 @@ package com.minimine.cenas;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.Preferences;
+
 import com.minimine.Inicio;
 import com.minimine.Cenas;
-import com.minimine.mundo.Mundo;
 import com.minimine.ui.UI;
 import com.minimine.ui.InterUtil;
-import com.micro.GerenciadorUI;
-import com.micro.PainelFatiado;
-import com.micro.Painel;
-import com.micro.CaixaDialogo;
-import com.micro.Rotulo;
-import com.micro.Ancora;
-import com.micro.Acao;
-import com.micro.Botao;
 import com.minimine.utils.Net;
 import com.minimine.utils.ArquivosUtil;
+import com.minimine.mundo.Mundo;
+
+import com.micro.Acao;
+import com.micro.Botao;
+import com.micro.Painel;
+import com.micro.Rotulo;
+import com.micro.Ancora;
+import com.micro.CaixaDialogo;
+import com.micro.PainelFatiado;
+import com.micro.GerenciadorUI;
 
 public class Menu implements Screen, InputProcessor {
     public SpriteBatch pincel;
@@ -47,6 +49,7 @@ public class Menu implements Screen, InputProcessor {
     public CaixaDialogo dialogoSair;
 
     public static Preferences prefs;
+    public static boolean verificado = false;
 
     @Override
     public void show() {
@@ -67,61 +70,67 @@ public class Menu implements Screen, InputProcessor {
             Texture textura = new Texture(Gdx.files.internal("ui/base.png"));
             textura.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             visualJanela = new PainelFatiado(textura);
-            visualBotao = new PainelFatiado(textura);
-
+            visualBotao  = new PainelFatiado(textura);
             criarInterface();
         } catch(Exception e) {
             Gdx.app.log("ERRO", "Recursos nao encontrados: " + e.getMessage());
-        } 
+        }
         Gdx.input.setInputProcessor(this);
-
-        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
+        Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glCullFace(GL20.GL_BACK);
         Gdx.gl.glEnable(GL20.GL_BLEND);
 
         // carregar preferencias
-        Mundo.RAIO_CHUNKS = prefs.getInteger("raioChunks", Mundo.RAIO_CHUNKS);
+        Mundo.RAIO_CHUNKS  = prefs.getInteger("raioChunks", Mundo.RAIO_CHUNKS);
         UI.pov = prefs.getInteger("pov", UI.pov);
         UI.sensi = prefs.getFloat("sensi", UI.sensi);
         UI.distancia = prefs.getFloat("distancia", UI.distancia);
-		Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
+        Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
         Gdx.input.setCursorCatched(false);
 
-        // verifica atualizações em segundo plano ao abrir o menu
+        if(!verificado) {
+            verificarAtualizacoes();
+            verificado = true;
+        }
+    }
+
+    public void verificarAtualizacoes() {
         Net.verificarAtualizacao(new Net.ResultadoAtualizacao() {
 				public void aoVerificar(boolean temAtualizacao, String novaVersao, String tipo) {
 					if(!temAtualizacao) return;
 
-					// exibe dialogo informando sobre a atualização disponível
 					dialogoSair.mostrar(
 						"Atualização disponível!",
 						"Nova versão " + novaVersao + " (" + tipo + ") encontrada!\nDeseja baixar agora?",
 						new CaixaDialogo.Fechar() {
 							public void aoFechar(boolean confirmou) {
 								if(!confirmou) return;
-
-								// define o caminho de destino dependendo da plataforma
-								String destino;
-								if(com.badlogic.gdx.Application.ApplicationType.Android
-								   .equals(Gdx.app.getType())) {
-									destino = com.minimine.Inicio.externo + "/MiniMine/update/MiniMine.apk";
-								} else {
-									destino = System.getProperty("user.dir") + "/minimine.jar";
-								}
-
-								Net.baixarAtualizacao(destino, new java.util.function.Consumer<String>() {
-										public void accept(String caminho) {
-											if(caminho == null) {
-												Gdx.app.log("[Menu]", "Falha no download da atualização.");
-												return;
-											}
-											Gdx.app.log("[Menu]", "Atualização baixada: " + caminho);
-										}
-									});
+								iniciarDownload();
 							}
 						}
 					);
+				}
+			});
+    }
+
+    public void iniciarDownload() {
+        // caminho de destino: externo no Android, diretorio atual no Desktop
+        final String destino;
+        if(com.badlogic.gdx.Application.ApplicationType.Android.equals(Gdx.app.getType())) {
+            destino = Inicio.externo + "/MiniMine/tmp/MiniMine.apk";
+        } else {
+            destino = System.getProperty("user.dir") + "/minimine.jar";
+        }
+        Net.baixarAtualizacao(destino, new Net.ResultadoDownload() {
+				public void aoBaixar(String caminho) {
+					if(caminho == null) {
+						Gdx.app.log("[Menu]", "Falha no download da atualização.");
+						return;
+					}
+					Gdx.app.log("[Menu]", "Atualização baixada: " + caminho);
+					// aciona o instalador(APK no Android, JAR no desktop)
+					Inicio.instalador.instalar(caminho);
 				}
 			});
     }
@@ -137,16 +146,14 @@ public class Menu implements Screen, InputProcessor {
         painelMenu.defEspaco(20, 30);
         painelMenu.corFundo = new Color(0.1f, 0.15f, 0.2f, 1f);
 
-        // titulo
         Rotulo titulo = new Rotulo("MiniMine", fonte, escalaPixel * 1.2f);
         titulo.largura = 560;
-        titulo.altura = 80;
+        titulo.altura  = 80;
         painelMenu.addAncorado(titulo, Ancora.SUPERIOR_CENTRO, 0, 0);
 
         float larguraBotao = 400;
-        float alturaBotao = 70;
+        float alturaBotao  = 70;
 
-        // botão um jogador
         Acao acaoJogar = new Acao() {
             public void exec() {
                 Inicio.defTela(Cenas.selecao);
@@ -155,7 +162,6 @@ public class Menu implements Screen, InputProcessor {
         Botao botaoJogar = new Botao("Um Jogador", visualBotao, fonte, 0, 0, larguraBotao, alturaBotao, escalaPixel, acaoJogar);
         painelMenu.addAncorado(botaoJogar, Ancora.CENTRO, 0, 50);
 
-        // botão configurações
         Acao acaoConfig = new Acao() {
             public void exec() {
                 Inicio.defTela(Cenas.configuracoes);
@@ -164,14 +170,11 @@ public class Menu implements Screen, InputProcessor {
         Botao botaoConfig = new Botao("Configuracoes", visualBotao, fonte, 0, 0, larguraBotao, alturaBotao, escalaPixel, acaoConfig);
         painelMenu.addAncorado(botaoConfig, Ancora.CENTRO, 0, -50);
 
-        // botão sair
         Acao acaoSair = new Acao() {
             public void exec() {
                 dialogoSair.mostrar("Sair", "Deseja sair do jogo?", new CaixaDialogo.Fechar() {
 						public void aoFechar(boolean confirmou) {
-							if(confirmou) {
-								Gdx.app.exit();
-							}
+							if(confirmou) Gdx.app.exit();
 						}
 					});
             }
@@ -232,19 +235,20 @@ public class Menu implements Screen, InputProcessor {
         pincel.dispose();
         pincelFormas.dispose();
         fonte.dispose();
-		gerenciadorUI.liberar();
+        gerenciadorUI.liberar();
     }
+
     @Override
-	public void hide() {
-		dispose();
-	}
-	@Override
-    public void pause() {}
-    public void resume() {}
-    public boolean keyDown(int c) { return false; }
-    public boolean keyUp(int c) { return false; }
-    public boolean keyTyped(char c) { return false; }
-    public boolean mouseMoved(int x, int y) { return false; }
-    public boolean scrolled(float a, float b) { return false; }
+    public void hide() {
+        dispose();
+    }
+
+    @Override public void pause(){}
+    @Override public void resume(){}
+    public boolean keyDown(int c){ return false; }
+    public boolean keyUp(int c){ return false; }
+    public boolean keyTyped(char c){ return false; }
+    public boolean mouseMoved(int x, int y){ return false; }
+    public boolean scrolled(float a, float b){ return false; }
 }
 
