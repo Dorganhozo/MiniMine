@@ -18,5 +18,11 @@
             </intent-filter>
         </activity>
 		<activity android:name=".Crash$CrashActivity"/>
+			
+		<provider
+			android:name="com.minimine.Provedor"
+			android:authorities="com.minimine.instalar"
+			android:exported="true"
+			android:grantUriPermissions="true" />
     </application>
 </manifest>
