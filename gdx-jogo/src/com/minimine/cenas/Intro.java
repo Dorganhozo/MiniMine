@@ -95,10 +95,10 @@ public class Intro implements Screen {
 			clone = new ModelInstance(modelo);
 			clone.transform.translate(10, 0, 0);
 		} else if(variacao == 1) {
-			// textura 2D
-			texturaToda = new Sprite(cuboTextura);
-			texturaToda.setSize(telaV, telaH);
-			texturaToda.setPosition(0, 0);
+			variacao = 0;
+			Model modelo = mb2.createBox(5f, 5f, 5f, material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+			clone = new ModelInstance(modelo);
+			clone.transform.translate(10, 0, 0);
 		} else if(variacao == 2) {
 			// explosão de esferas
 			Model modelo = mb2.createBox(5f, 5f, 5f, material, Usage.Position | Usage.Normal | Usage.TextureCoordinates);
@@ -130,7 +130,7 @@ public class Intro implements Screen {
 		if(variacao == 0) {
 			renderVariacao1(delta);
 		} else if(variacao == 1) {
-			renderVariacao2(delta);
+			renderVariacao1(delta);
 		} else if(variacao == 2) {
 			renderVariacao3(delta);
 		}
@@ -169,16 +169,7 @@ public class Intro implements Screen {
 		mb.render(clone, ambiente);  
 		mb.end();
 	}
-	// textura 2D aparece/desaparece
-	public void renderVariacao2(float delta) {
-		// alfa baseado no progresso de carregamento
-		texturaToda.setAlpha(alfa);
-
-		sb.begin();
-		texturaToda.draw(sb);
-		sb.end();
-	}
-
+	
 	// cubo explode em bolhas
 	public void renderVariacao3(float delta) {
 		UI.attCamera(camera.direction, yaw, tom);

@@ -11,12 +11,18 @@ public class MainActivity extends AndroidApplication {
     @Override
     public void onCreate(Bundle s) {
         super.onCreate(s);
+		
+		try {
+			java.lang.reflect.Method m = android.os.StrictMode.class.getMethod("disableDeathOnFileUriExposure");
+			m.invoke(null);
+		} catch (Exception e) {}
+		
 		Sistema.pedirArmazTotal(this);
 		
 		ISSO = this;
         
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         
-        initialize(new Inicio(Sistema.externo, new DebugadorDoAndroid()), cfg);
+        initialize(new Inicio(Sistema.externo, new DebugadorDoAndroid(), new InstaladorAndroid(this)), cfg);
     }
 }
