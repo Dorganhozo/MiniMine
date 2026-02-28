@@ -133,7 +133,7 @@ public class Mundo extends Objeto {
 		attChunks((int)jg.posicao.x, (int)jg.posicao.z);
 
 		if(!carregado && estados.size() >= 1) {
-			if(estados.get(Chave.calcularChave(jg.posicao.x, jg.posicao.z)) == 1) carregado = true;
+			if(estados.get(Chave.calcularChave((int)jg.posicao.x, (int)jg.posicao.z)) == 1) carregado = true;
 		}
 		GerenciadorEntidades.att(delta, this, jg);
         if(ciclo) {
