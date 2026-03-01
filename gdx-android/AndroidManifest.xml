@@ -18,7 +18,6 @@
             </intent-filter>
         </activity>
 		<activity android:name=".Crash$CrashActivity"/>
-			
 		<provider
 			android:name="com.minimine.Provedor"
 			android:authorities="com.minimine.instalar"

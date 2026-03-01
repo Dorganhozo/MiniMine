@@ -52,8 +52,8 @@ public class ArquivosUtil {
         File pasta = new File(Inicio.externo + "/MiniMine/mundos");
         if(!pasta.exists()) pasta.mkdirs();
 		
-        File destino = new File(pasta, URLEncoder.encode(mundo.nome, StandardCharsets.UTF_8) + ".mini");
-        File tmp = new File(pasta, URLEncoder.encode(mundo.nome, StandardCharsets.UTF_8) + ".mini.tmp");
+        File destino = new File(pasta, URLEncoder.encode(mundo.nome) + ".mini");
+        File tmp = new File(pasta, URLEncoder.encode(mundo.nome) + ".mini.tmp");
 
         try {
             // escreve em arquivo temporario

@@ -7,7 +7,7 @@ import com.minimine.utils.ruidos.CelularRuido2D;
 
 public class GeradorTerreno {
     public final DominioDeformacao dominio;
-    public final CristaRuido2D ridge;
+    public final CristaRuido2D crista;
     public final Simplex2D ruido;
     public final Simplex3D ruido3d;
     public final Simplex3D cavernas;
@@ -20,7 +20,7 @@ public class GeradorTerreno {
     public GeradorTerreno(long semente) {
         this.semente = semente;
         this.dominio = new DominioDeformacao(semente);
-        this.ridge = new CristaRuido2D(semente ^ 0x5DEECE66DL);
+        this.crista = new CristaRuido2D(semente ^ 0x5DEECE66DL);
         this.ruido = new Simplex2D(semente ^ 0x9E3779B9L);
         this.ruido3d = new Simplex3D(semente ^ 0x61C88647L);
 
@@ -41,8 +41,8 @@ public class GeradorTerreno {
         double suavizacao = ruido.ruido(x * 0.0002, z * 0.0002) * 0.5 + 0.5;
 
         if(tipoTerreno > 0.3) {
-            double montanhas = ridge.ridgeFractal(x * 0.0008, z * 0.0008, 2, 2.2, 0.5);
-            double cordilheiras = ridge.ridgeBilateral(x * 0.0004, z * 0.0004, 2, 2.0, 0.5);
+            double montanhas = crista.cristaFractal(x * 0.0008, z * 0.0008, 2, 2.2, 0.5);
+            double cordilheiras = crista.cristaBilateral(x * 0.0004, z * 0.0004, 2, 2.0, 0.5);
             double fatorMontanha = (tipoTerreno - 0.3) / 0.7;
 
             altura += montanhas * fatorMontanha * 0.48;
@@ -50,14 +50,14 @@ public class GeradorTerreno {
             altura = altura * (0.7 + suavizacao * 0.3);
 
             if(fatorMontanha > 0.5) {
-                double rochoso = ridge.swiss(x * 0.002, z * 0.002, 2, 2.0, 0.4, 0.5);
+                double rochoso = crista.swiss(x * 0.002, z * 0.002, 2, 2.0, 0.4, 0.5);
                 altura += rochoso * (fatorMontanha - 0.5) * 0.12;
             }
         } else {
             double transicao = ruido.ruidoFractal(x * 0.001, z * 0.001, 2, 0.5, 2.0);
             altura += transicao * 0.05 * (1.0 - tipoTerreno);
         }
-        double turbulencia = ridge.jordan(x * 0.001, z * 0.001, 2, 2.1, 1.0, 0.5);
+        double turbulencia = crista.jordan(x * 0.001, z * 0.001, 2, 2.1, 1.0, 0.5);
         altura += turbulencia * 0.08;
 
         double valorErosao = erosao.obterErosaoInterpolada(x, z);
@@ -86,11 +86,13 @@ public class GeradorTerreno {
     }
 
     public double identificarTipo(double base) {
-        if(base < -0.5) return -0.5;
-        if(base < 0.0) return base * 0.4;
-        if(base < 0.35) return 0.2 + (base / 0.35) * 0.2;
-        return 0.4 + (Math.min(base - 0.35, 0.65) / 0.65) * 0.6;
-    }
+		if(base < -0.5) return -0.5;
+		// curva suave continua
+		double t = (base + 1.0) / 2.0; // mapeia [-1,1] -> [0,1]
+		// passo borrado cubico
+		t = t * t * (3.0 - 2.0 * t);
+		return -0.5 + t;
+	}
 
     public TipoBioma determinarBioma(int x, int z, int altura, double base) {
         double celularVal = celular.ruido(x * 0.0008, z * 0.0008);
@@ -216,7 +218,7 @@ public class GeradorTerreno {
     public boolean temCascalho(int x, int y, int z, int alturaSuperficie, TipoBioma bioma) {
         // so avalia cascalho rochoso perto da superficie de montanhas
         if(alturaSuperficie > nivelMar + 30 && y > alturaSuperficie - 8) {
-            double rochoso = ridge.swiss(x * 0.003, z * 0.003, 2, 2.0, 0.4, 0.5);
+            double rochoso = crista.swiss(x * 0.003, z * 0.003, 2, 2.0, 0.4, 0.5);
             if(rochoso > 0.6) {
                 double chance = Math.abs(ruido.ruido(x * 0.017 + y * 0.013, z * 0.019));
                 return chance < 0.3;

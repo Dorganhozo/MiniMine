@@ -103,7 +103,7 @@ public class Mundo extends Objeto {
 		Bloco.blocos.add(new Bloco("capim", "capim", true, false, false, 0, true));
 		Bloco.blocos.add(new Bloco("tulipa", "tulipa", true, false, false, 3, true));
 		Bloco.blocos.add(new Bloco("iris_azul", "iris_azul", true, false, false, 1, true));
-		
+
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("areia", "terra_1", "terra_2", "terra_3");
@@ -122,7 +122,7 @@ public class Mundo extends Objeto {
 		Biomas.iniciar();
 
         if(exec == null || exec.isShutdown()) exec = Executors.newFixedThreadPool(8);
-		
+
 		liberado = false;
     }
 
@@ -448,6 +448,15 @@ public class Mundo extends Objeto {
 					ChunkLuz.calcularLuz(chunk);
 					chunk.dadosProntos = true;
 					estados.put(chave, 1); // agora ta pronta pra que as vizinhas gerem malha
+
+					// notifica as 4 vizinhas diretas que um novo vizinho ficou disponível
+					// garante que faces de borda omitidas (chunk era null na geração) sejam regeneradas
+					int[] dxs = {-1, 1, 0, 0};
+					int[] dzs = {0, 0, -1, 1};
+					for(int i = 0; i < 4; i++) {
+						Chunk viz = chunks.get(Chave.calcularChave(chunk.x + dxs[i], chunk.z + dzs[i]));
+						if(viz != null && !viz.fazendo) viz.att = true;
+					}
 				}
 			});
 	}
@@ -623,4 +632,5 @@ public class Mundo extends Objeto {
         return Bloco.blocos.get(Bloco.blocos.size()-1);
     }
 }
+
 

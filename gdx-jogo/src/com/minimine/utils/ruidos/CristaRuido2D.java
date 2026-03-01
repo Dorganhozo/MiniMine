@@ -8,7 +8,7 @@ public class CristaRuido2D extends Simplex2D {
         super(semente);
     }
     // ruido de crista fractal
-    public final double ridgeFractal(double x, double z, int oitavas, double lacunaridade, double ganho) {
+    public final double cristaFractal(double x, double z, int oitavas, double lacunaridade, double ganho) {
         double amplitude = 0.5;
         double frequencia = 1.0;
         double resultado = 0.0;
@@ -37,7 +37,7 @@ public class CristaRuido2D extends Simplex2D {
         return resultado / pesoAcumulado;
     }
 
-    public final double ridgeBilateral(double x, double z, int oitavas, double lacunaridade, double ganho) {
+    public final double cristaBilateral(double x, double z, int oitavas, double lacunaridade, double ganho) {
         double amplitude = 0.5;
         double frequencia = 1.0;
         double resultado = 0.0;

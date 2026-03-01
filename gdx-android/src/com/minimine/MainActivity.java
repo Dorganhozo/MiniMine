@@ -23,6 +23,7 @@ public class MainActivity extends AndroidApplication {
 		ISSO = this;
 		
 		File apk = new File(Sistema.externo, "MiniMine/tmp/MiniMine.apk");
+		new File(Sistema.externo, "MiniMine/tmp/").mkdirs();
 		if(apk.exists()) apk.delete();
         
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();

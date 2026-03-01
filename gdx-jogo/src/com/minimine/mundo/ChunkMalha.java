@@ -79,7 +79,9 @@ public class ChunkMalha {
                                 if(tC != null) vizId = ChunkUtil.obterBloco(tx, y, z, tC);
 
                                 Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-                                if(deveRenderFace(b, bViz)) {
+                                // se chunk vizinho de borda não existe, não renderiza a face agora:
+                                // quando ele carregar, marcará este chunk com att=true e a malha será refeita
+                                if(deveRenderFace(b, bViz) && !(tC == null && (nx < 0 || nx >= 16))) {
                                     byte luz = (tC != null) ? ChunkUtil.obterLuzCompleta(tx, y, z, tC) : 15;
                                     val = (id << 8) | (luz & 0xFF);
                                 }
@@ -113,7 +115,9 @@ public class ChunkMalha {
                                 if(tC != null) vizId = ChunkUtil.obterBloco(x, y, tz, tC);
 
                                 Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
-                                if(deveRenderFace(b, bViz)) {
+                                // se chunk vizinho de borda não existe, não renderiza a face agora:
+                                // quando ele carregar, marcará este chunk com att=true e a malha será refeita
+                                if(deveRenderFace(b, bViz) && !(tC == null && (nz < 0 || nz >= 16))) {
                                     byte luz = (tC != null) ? ChunkUtil.obterLuzCompleta(x, y, tz, tC) : 15;
                                     val = (id << 8) | (luz & 0xFF);
                                 }
@@ -149,7 +153,7 @@ public class ChunkMalha {
     }
 
     public static void malhaPlana(int[] mascara, int largura, int altura,
-	int profundidade, int faceId, Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+								  int profundidade, int faceId, Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
         int n = 0;
         for(int j = 0; j < altura; j++) {
             for(int i = 0; i < largura; ) {
@@ -218,4 +222,5 @@ public class ChunkMalha {
         return true;
     }
 }
+
 
