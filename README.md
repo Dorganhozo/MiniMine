@@ -146,7 +146,8 @@ Erosão Hidraulica.
 * Windows XP até Windows 11.
 
 ## Desempenho:
-FPS de 30 a 60 padrão testado com até 112 chunks ativas (raio de 5).
+FPS de 40 a 60 padrão testado com até 112 chunks ativas (raio de 5).
+
 ## uso de mémoria testada:
 50 MBs do heap java & 25 MBs do heap nativo. (112 chunks ativas)
 
@@ -173,7 +174,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * OpenGL ES: 3.2.
 * JVM: Java VM ART 2.1.0.
 * Sistema Operacional: Android 12 64-bit.
-* FPS padrão: 40-59.
+* FPS padrão: 40-60.
 
 ## PC:
 * Placa Mãe: Dell OptiPlex 780.
