@@ -42,16 +42,21 @@ import com.minimine.cenas.Jogo;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.minimine.mundo.blocos.BlocoEstrutura;
 
 public class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
 	public static final String versao = "v" + VERSAO[0] + "." + VERSAO[1] + "." + VERSAO[2];
 	public static boolean debug = true;
+
+    public static final int VERSAO_MINIES = 1;
+    public static final String ID_BLOCO_NULO = "bloco_nulo";
+
     // salva o mundo compactado(.mini), e faz escrita atomica para evitar arquivos truncados
     public static void svMundo(Mundo mundo, Jogador jogador) {
         File pasta = new File(Inicio.externo + "/MiniMine/mundos");
         if(!pasta.exists()) pasta.mkdirs();
-		
+
         File destino = new File(pasta, URLEncoder.encode(mundo.nome) + ".mini");
         File tmp = new File(pasta, URLEncoder.encode(mundo.nome) + ".mini.tmp");
 
@@ -63,7 +68,7 @@ public class ArquivosUtil {
             try {
                 // versao.txt
                 zos.putNextEntry(new ZipEntry("versao.txt"));
-				
+
                 byte[] vt = versao.getBytes(Charset.forName("UTF-8"));
                 zos.write(vt);
                 zos.closeEntry();
@@ -192,7 +197,6 @@ public class ArquivosUtil {
     }
 	// gravadores e leitores de binarios:
     public static void gravarMundo(DataOutputStream dos, Mundo mundo) throws IOException {
-        // seed
         dos.writeLong(mundo.semente);
         // quantos chunks salvos
         dos.writeInt(mundo.chunksMod.size());
@@ -213,7 +217,7 @@ public class ArquivosUtil {
                 }
             }
             dos.writeInt(totalNaoAr);
-
+			
             for(int x = 0; x < cx; x++) {
                 for(int y = 0; y < cy; y++) {
                     for(int z = 0; z < cz; z++) {
@@ -228,6 +232,9 @@ public class ArquivosUtil {
                     }
                 }
             }
+			byte[] meta = chunk.meta;
+			dos.writeInt(meta.length);
+			for(int i = 0; i < meta.length; i++) dos.writeByte(meta[i]);
         }
         dos.flush();
     }
@@ -275,7 +282,7 @@ public class ArquivosUtil {
         dos.writeFloat(DiaNoiteUtil.tempo_velo);
         dos.flush();
     }
-	
+
 	// leitores
     public static void lerMundo(DataInputStream dis, Mundo mundo) throws IOException {
         mundo.semente = dis.readLong();
@@ -283,7 +290,7 @@ public class ArquivosUtil {
 
         for(int i = 0; i < totalChunks; i++) {
             long chave = dis.readLong();
-            
+
             Chunk chunk = new Chunk();
             ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
             chunk.x = Chave.x(chave);
@@ -297,13 +304,16 @@ public class ArquivosUtil {
                 CharSequence id = dis.readUTF();
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
+			byte[] meta = new byte[dis.readInt()];
+			for(int d = 0; d < meta.length; d++) meta[d] = dis.readByte();
+			
 			chunk.malha = null;
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Long, Chunk>();
             if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Long, Chunk>();
 
             mundo.chunksMod.put(chave, chunk);
 			mundo.chunks.put(chave, chunk);
-            
+
             chunk.att = true;
 			chunk.dadosProntos = true;
 			mundo.estados.put(chave, 1);
@@ -344,18 +354,17 @@ public class ArquivosUtil {
 					int quantidade = dis.readInt();
 
 					TextureRegion textura = null;
-					
+
 					for(Bloco b : Bloco.blocos) {
                         if(b == null) continue;
                         if(b.nome.equals(nome)) {
-                            // pega a textura do bloco
                             textura = Texturas.atlas.obter(b.lados);
                             break;
                         }
                     }
                     if(textura == null) {
                         Gdx.app.log("[Inventario]", "textura não encontrada para: " + nome);
-                        textura = Texturas.atlas.obter("terra"); // padrão
+                        textura = Texturas.atlas.obter("terra");
                     }
 					jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
 				} else {
@@ -367,6 +376,196 @@ public class ArquivosUtil {
 		}
     }
 
+    // svEstrutura: salva uma região do mundo como .minies
+    /*
+     * varre a bcaixa[baseX..baseX+larg-1, baseY..baseY+alt-1, baseZ..baseZ+prof-1],
+     * descarta ar(id==0) e bloco_nulo, salva os demais com coordenadas locais
+     
+     * arquivo: MiniMine/estruturas/<nome>.minies
+     * formato: veja cabeçalho de BlocoEstrutura.java
+     */
+    public static void svEstrutura(
+		String nome,
+		int larg, int alt, int prof,
+		int ancX, int ancY, int ancZ,
+		int baseX, int baseY, int baseZ) throws IOException {
+
+        File pasta = new File(Inicio.externo + "/MiniMine/estruturas");
+        if(!pasta.exists()) pasta.mkdirs();
+
+        File destino = new File(pasta, nome + ".minies");
+        File tmp = new File(pasta, nome + ".minies.tmp");
+
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(tmp)));
+            // cabeçalho
+            dos.writeInt(VERSAO_MINIES);
+            dos.writeUTF(nome);
+            dos.writeInt(larg);
+            dos.writeInt(alt);
+            dos.writeInt(prof);
+            dos.writeInt(ancX);
+            dos.writeInt(ancY);
+            dos.writeInt(ancZ);
+
+            // primeiro passo: conta blocos validos
+            int total = 0;
+            for(int lx = 0; lx < larg; lx++) {
+                for(int ly = 0; ly < alt; ly++) {
+                    for(int lz = 0; lz < prof; lz++) {
+                        int id = Mundo.obterBlocoMundo(baseX + lx, baseY + ly, baseZ + lz);
+                        if(id == 0) continue;
+                        Bloco b = Bloco.numIds.get(id);
+                        if(b == null) continue;
+                        if(ID_BLOCO_NULO.equals("" + b.nome)) continue;
+                        total++;
+                    }
+                }
+            }
+            dos.writeInt(total);
+			
+            // segundo passo: escreve blocos
+            for(int lx = 0; lx < larg; lx++) {
+                for(int ly = 0; ly < alt; ly++) {
+                    for(int lz = 0; lz < prof; lz++) {
+                        int id = Mundo.obterBlocoMundo(baseX + lx, baseY + ly, baseZ + lz);
+                        if(id == 0) continue;
+                        Bloco b = Bloco.numIds.get(id);
+                        if(b == null) continue;
+                        if(ID_BLOCO_NULO.equals("" + b.nome)) continue;
+                        dos.writeInt(lx);
+                        dos.writeInt(ly);
+                        dos.writeInt(lz);
+                        dos.writeUTF("" + b.nome);
+						dos.writeInt(Mundo.obterMetaMundo(baseX + lx, baseY + ly, baseZ + lz));
+                    }
+                }
+            }
+			
+            dos.flush();
+        } finally {
+            try {
+				if(dos != null) dos.close();
+			} catch(Throwable t) {}
+        }
+        // escrita atomica
+        if(tmp.exists()) {
+            if(destino.exists()) destino.delete();
+            boolean ok = tmp.renameTo(destino);
+            if(!ok) {
+                FileOutputStream fos = null;
+                FileInputStream  fis = null;
+                try {
+                    fis = new FileInputStream(tmp);
+                    fos = new FileOutputStream(destino);
+                    byte[] buf = new byte[8192];
+                    int r;
+                    while((r = fis.read(buf)) > 0) fos.write(buf, 0, r);
+                    fos.flush();
+                } finally {
+                    try {
+						if(fos != null) fos.close();
+					} catch(Throwable t) {}
+                    try {
+						if(fis != null) fis.close();
+					} catch(Throwable t) {}
+                }
+                tmp.delete();
+            }
+        }
+        if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] estrutura salva: " + destino.getAbsolutePath());
+    }
+
+    // crEstrutura — carrega um .minies e retorna os dados
+    /*
+     * retorna um DadosEstrutura com todos os blocos e metadados,
+     * ou null se o arquivo não existir ou estiver corrompido
+     */
+    public static DadosEstrutura crEstrutura(String nome) {
+        File arquivo = new File(
+            Inicio.externo + "/MiniMine/estruturas/" + nome + ".minies");
+
+        if(!arquivo.exists() || arquivo.length() <= 4) {
+            if(debug) Gdx.app.log("ArquivosUtil", "[INFO] .minies não encontrado: " + arquivo.getAbsolutePath());
+            return null;
+        }
+        DataInputStream dis = null;
+        try {
+            dis = new DataInputStream(new BufferedInputStream(new FileInputStream(arquivo)));
+
+            int versao = dis.readInt();
+            if(versao != VERSAO_MINIES) {
+                Gdx.app.log("ArquivosUtil", "[AVISO] versão .minies incompatível: " + versao);
+                // tenta carregar mesmo assim, estrutura não mudou ainda
+            }
+            DadosEstrutura d = new DadosEstrutura();
+            d.nome = dis.readUTF();
+            d.larg = dis.readInt();
+            d.alt = dis.readInt();
+            d.prof = dis.readInt();
+            d.ancX = dis.readInt();
+            d.ancY = dis.readInt();
+            d.ancZ = dis.readInt();
+
+            int total = dis.readInt();
+            d.lx = new int[total];
+            d.ly = new int[total];
+            d.lz = new int[total];
+            d.ids = new String[total];
+
+            for(int i = 0; i < total; i++) {
+                d.lx[i] = dis.readInt();
+                d.ly[i] = dis.readInt();
+                d.lz[i] = dis.readInt();
+                d.ids[i] = dis.readUTF();
+				dis.readInt();
+            }
+            if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] estrutura carregada: " + nome + " (" + total + " blocos)");
+            return d;
+        } catch(Throwable t) {
+            Gdx.app.log("ArquivosUtil", "[ERRO] falha ao ler .minies '" + nome + "': " + t.getMessage());
+            return null;
+        } finally {
+            try {
+				if(dis != null) dis.close();
+			} catch(Throwable t) {}
+        }
+    }
+
+    // DadosEstrutura: dados retornados por crEstrutura()
+    public static final class DadosEstrutura {
+        public String nome;
+        public int larg, alt, prof;
+        public int ancX, ancY, ancZ;
+        // coordenadas locais de cada bloco
+        public int[] lx, ly, lz;
+        // id de string de cada bloco
+        public String[] ids;
+        /*
+         * coloca a estrutura no mundo com origem em(ox, oy, oz)
+         * a ancora é descontada: o bloco de ancora fica em(ox, oy, oz)
+         * blocos de ar(ids[i] == null ou "ar") são ignorados
+         * pra sobrescrever tudo inclusive ar, chame colocarMundo(ox,oy,oz,true)
+         */
+        public void colocarMundo(int ox, int oy, int oz) {
+            colocarMundo(ox, oy, oz, false);
+        }
+
+        public void colocarMundo(int ox, int oy, int oz, boolean sobrescreverTudo) {
+            if(lx == null) return;
+            for(int i = 0; i < lx.length; i++) {
+                int vx = ox + (lx[i] - ancX);
+                int vy = oy + (ly[i] - ancY);
+                int vz = oz + (lz[i] - ancZ);
+                String id = ids[i];
+                if(!sobrescreverTudo && (id == null || "ar".equals(id))) continue;
+                Mundo.defBlocoMundo(vx, vy, vz, id);
+            }
+        }
+    }
+	
+    // utilitarios:
     public static void criar(String caminho) {   
         caminho = caminho.replace("/", File.separator);
 		int ultimoPasso = caminho.lastIndexOf(File.separator);    
@@ -495,3 +694,4 @@ public class ArquivosUtil {
 		}    
 	}
 }
+

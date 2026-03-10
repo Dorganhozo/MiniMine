@@ -42,8 +42,8 @@ public class CaixaDialogo extends Componente {
     }
 
     public void criarInterface() {
-        // titulo no topo(50 de altura)
-        painelTitulo = new Painel(visual, 0, altura - 50, largura, 50, escala);
+        // titulo flutua acima do painel principal
+        painelTitulo = new Painel(visual, 0, altura*1.1f, largura, 50, escala);
         painelTitulo.corFundo = new Color(0.3f, 0.5f, 0.8f, 1f);
 
         rotuloTitulo = new Rotulo("", fonte, escala);
@@ -58,12 +58,12 @@ public class CaixaDialogo extends Componente {
         // calcula quanto sobra pra mensagem
         // se houver componentes extras(entrada de texto), reduzimos ainda mais a altura
         float espacoOcupado = 50 + 60 + 20; // titulo + botoes + margens
-        
+
         // reduz a escala pra 0.6f pra garantir que o texto não fique gigante
         rotulomsg = new RotuloMultilinha("", fonte, escala * 0.6f);
         rotulomsg.x = 20;
         rotulomsg.largura = largura - 40;
-        
+
         // posiciona o texto logo abaixo do titulo
         rotulomsg.y = 70; // sobe a base do texto pra não bater nos botões
         rotulomsg.altura = altura - espacoOcupado; 
@@ -78,22 +78,20 @@ public class CaixaDialogo extends Componente {
         rotuloTitulo.texto = titulo;
         rotulomsg.texto = msg;
 
-        float alturaExtra = 0;
-        // identifica se ha um CampoTexto pra reservar espaço
-        for (Componente c : componentes) {
-            if (c instanceof CampoTexto) {
-                alturaExtra = c.altura + 15; 
-                // Posiciona o campo logo acima dos botões
-                c.y = painelBotoes.altura + 10;
-            }
+        // calcula o topo do componente mais alto para posicionar o rotulomsg acima
+        // não mexe nas posições dos componentes, o chamador é responsavel pela tela
+        float topoMaximo = 0;
+        for(Componente c : componentes) {
+            float topo = c.y + c.altura;
+            if(topo > topoMaximo) topoMaximo = topo;
         }
-        // se houver campo, o texto da mensagem termina acima dele
-        if (alturaExtra > 0) {
-            rotulomsg.y = painelBotoes.altura + alturaExtra;
-            rotulomsg.altura = altura - painelTitulo.altura - painelBotoes.altura - alturaExtra - 15;
+
+        if(topoMaximo > 0) {
+            rotulomsg.y = topoMaximo + 10;
+            rotulomsg.altura = altura - rotulomsg.y - 10;
         } else {
             rotulomsg.y = painelBotoes.altura + 10;
-            rotulomsg.altura = altura - painelTitulo.altura - painelBotoes.altura - 20;
+            rotulomsg.altura = altura - painelBotoes.altura - 20;
         }
     }
 
@@ -201,7 +199,7 @@ public class CaixaDialogo extends Componente {
         }
         painelBotoes.desenhar(pincel, delta, desenharX, desenharY);
     }
-	
+
 	@Override
 	public void liberar() {
 		super.liberar();
@@ -209,4 +207,3 @@ public class CaixaDialogo extends Componente {
 		rotulomsg.liberar();
 	}
 }
-

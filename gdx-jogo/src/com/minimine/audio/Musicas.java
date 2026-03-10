@@ -10,6 +10,12 @@ public class Musicas {
 	public static HashMap<CharSequence, Music> musicas = new HashMap<>();
 	public static Music tocando;
 	
+	public static void iniciar() {
+		Musicas.addMusica("igor", "audio/musicas/igor.ogg");
+		Musicas.addMusica("igor-2", "audio/musicas/igor-2.ogg");
+		Musicas.addMusica("caminho-sombreado", "audio/musicas/caminho-sombreado.ogg");
+	}
+	
 	public static Music addMusica(String nome, String caminho) {
 		Music m = null;
 		if(caminho.startsWith("/")) m = Gdx.audio.newMusic(Gdx.files.absolute(Inicio.externo+"/MiniMine/mods"+caminho));

@@ -38,21 +38,8 @@ public class Inicio extends Game {
         Gdx.graphics.setVSync(false);
 		Gdx.graphics.setForegroundFPS(0); // fps ilimitado
 		
-		// blocos:
-		Audio.addSom("grama_1", "audio/blocos/grama_1.mp3");
-		Audio.addSom("terra_1", "audio/blocos/terra_1.mp3");
-		Audio.addSom("terra_2", "audio/blocos/terra_2.mp3");
-		Audio.addSom("terra_3", "audio/blocos/terra_3.mp3");
-		Audio.addSom("pedra_1", "audio/blocos/pedra_1.mp3");
-		Audio.addSom("pedra_2", "audio/blocos/pedra_2.mp3");
-		Audio.addSom("madeira_1", "audio/blocos/madeira_1.mp3");
-		Audio.addSom("madeira_2", "audio/blocos/madeira_2.mp3");
-		Audio.addSom("madeira_3", "audio/blocos/madeira_3.mp3");
-
-		// musicas
-		Musicas.addMusica("igor", "audio/musicas/igor.ogg");
-		Musicas.addMusica("igor-2", "audio/musicas/igor-2.ogg");
-		
+		Audio.iniciar();
+		Musicas.iniciar();
 		Texturas.iniciar();
 		
 		defTela(Cenas.intro);

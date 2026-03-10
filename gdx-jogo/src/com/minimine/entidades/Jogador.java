@@ -100,6 +100,7 @@ public class Jogador extends Entidade {
 					if(modo == 2) inv.addItem(bloco.nome, 1);
 					Mundo.defBlocoMundo(x, y, z, "ar");
 					Bloco.tocarSom(bloco.nome);
+					if(bloco.evento != null) bloco.evento.aoDestruir(x, y, z);
 				} else {
 					// clique direito: verificar se o bloco mira tem interface
 					if(bloco.ui != null) {
@@ -115,8 +116,12 @@ public class Jogador extends Entidade {
 						blocoHitbox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
 						attHitbox();
 						if(blocoHitbox.intersects(hitbox)) return;
+						
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, inv.itens[inv.slotSelecionado].nome);
 						Bloco.tocarSom(item);
+						Bloco blocoColocado = Bloco.texIds.get(item);
+						if(blocoColocado != null && blocoColocado.evento != null)
+							blocoColocado.evento.aoColocar(xAnt, yAnt, zAnt);
 
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
 					}
@@ -250,4 +255,5 @@ public class Jogador extends Entidade {
         if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
     }
 }
+
 

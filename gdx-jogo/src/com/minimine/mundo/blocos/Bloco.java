@@ -17,14 +17,15 @@ public class Bloco {
 	public String topo, lados, baixo;
 	public int luz;
 	public boolean transparente;
-	public boolean solido, culling, modeloX;
+	public boolean solido, liquido, culling, modeloX;
 	public static boolean ABERTO = false;
 	/*
-	 * Interface de UI associada a este bloco
+	 * interface de UI associada a este bloco
 	 * null = bloco sem interface(comportamento padrão: colocar/quebrar)
 	 * Atribuída em Bloco.iniciar() para os blocos que precisarem
 	 */
 	public InterfaceBloco ui = null;
+	public EventoBloco evento = null;
 
 	public Bloco(CharSequence nome, String topo) {this(nome, topo, topo);}
 	public Bloco(CharSequence nome, String topo, String lados) {this(nome, topo, lados, topo);}
@@ -49,7 +50,7 @@ public class Bloco {
 		numIds.put(this.tipo, this);
 		texIds.put(this.nome, this);
 	}
-	
+
 	public static void iniciar() {
 		Bloco.blocos.add(null);
         Bloco.blocos.add(new Bloco("grama", "grama_topo", "grama_lado", "terra"));
@@ -75,7 +76,17 @@ public class Bloco {
 		Bloco.blocos.add(new Bloco("iris_azul", "iris_azul", true, false, false, 1, true));
 		Bloco.blocos.add(new Bloco("arenito", "arenito"));
 		Bloco.blocos.add(new Bloco("pilar_arenito", "pilar_arenito_topo", "pilar_arenito_lado"));
-		Bloco.blocos.add(new Bloco("bloco_teste", "pedra")); // usa textura de pedra provisoriamente
+		/*
+		 * bloco_nulo: marca "ar explícito" dentro de estruturas salvas
+		 * transparente=true, solido=false, culling=false para não interferir no mundo
+		 */
+		Bloco.blocos.add(new Bloco("bloco_nulo", "nulo", true, false, false));
+		/*
+		 * bloco_estrutura: abre interface para definir e salvar estruturas .minies
+		 * usa textura de pedra provisoriamente
+		 * interface montada em iniciarInterfaces()
+		 */
+		Bloco.blocos.add(new Bloco("bloco_estrutura", "bloco_estrutura"));
 
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
@@ -91,74 +102,9 @@ public class Bloco {
 	 * cria as instâncias de InterfaceBloco e as injeta nos blocos correspondentes
 	 */
 	public static void iniciarInterfaces(final com.micro.PainelFatiado base, final com.badlogic.gdx.graphics.g2d.BitmapFont fonte) {
-		final Bloco blocoTeste = texIds.get("bloco_teste");
-		if(blocoTeste != null) {
-			final com.micro.CaixaDialogo dialogo = new com.micro.CaixaDialogo(base, fonte, 3f, new com.badlogic.gdx.graphics.glutils.ShapeRenderer());
-			dialogo.largura = 400;
-			dialogo.altura  = 240;
-
-			final com.micro.CampoTexto campo = new com.micro.CampoTexto(base, fonte, 30, 80, 340, 50, 3f);
-			campo.padrao = "Digite algo...";
-			campo.limiteCaracteres = 64;
-			dialogo.add(campo);
-
-			com.minimine.ui.UI.gerenciador.addDialogo(dialogo);
-
-			blocoTeste.ui = new InterfaceBloco() {
-				boolean aberta = false;
-				int bx, by, bz;
-
-				@Override
-				public void abrir(int x, int y, int z) {
-					Bloco.ABERTO = true;
-					if(aberta) return;
-					aberta = true;
-					bx = x; by = y; bz = z;
-					com.minimine.ui.UI.modoTexto = true;
-					com.badlogic.gdx.Gdx.input.setCursorCatched(false);
-
-					dialogo.x = com.badlogic.gdx.Gdx.graphics.getWidth()  / 2f - dialogo.largura / 2f;
-					dialogo.y = com.badlogic.gdx.Gdx.graphics.getHeight() / 2f - dialogo.altura  / 2f;
-
-					dialogo.mostrar("Bloco Teste (" + x + ", " + y + ", " + z + ")", "", new com.micro.CaixaDialogo.Fechar() {
-							@Override public void aoFechar(boolean confirmou) { fechar(); }
-					});
-				}
-
-				@Override
-				public void fechar() {
-					if(!aberta) return;
-					aberta = false;
-					com.minimine.ui.UI.modoTexto = false;
-					com.badlogic.gdx.Gdx.input.setCursorCatched(true);
-					dialogo.fechar(false);
-					Bloco.ABERTO = false;
-				}
-
-				@Override
-				public void renderizar(com.badlogic.gdx.graphics.g2d.SpriteBatch sb, com.badlogic.gdx.graphics.g2d.BitmapFont f, float delta) {
-					// o dialogo ja é desenhado pelo GerenciadorUI; espaço para extras se necessario
-				}
-				@Override public boolean aberta() { return aberta; }
-
-				@Override
-				public boolean processarToque(int x, int y, boolean pressionado) {
-					return com.minimine.ui.UI.gerenciador.processarToque(x, y, pressionado);
-				}
-				@Override public void liberar() { dialogo.liberar(); }
-			};
-			// botão salvar
-			dialogo.addBotao("Salvar", base, com.micro.Ancora.CENTRO_DIREITO, -10, new com.micro.Acao() {
-					@Override public void exec() {
-						com.badlogic.gdx.Gdx.app.log("[BlocoTeste]", "Salvo: " + campo.texto.trim());
-						blocoTeste.ui.fechar();
-					}
-				});
-			// botão fechar
-			dialogo.addBotao("Fechar", base, com.micro.Ancora.CENTRO_ESQUERDO, 10, new com.micro.Acao() {
-					@Override public void exec() { blocoTeste.ui.fechar(); }
-				});
-		}
+		// bloco_estrutura
+		BlocoEstrutura.iniciar(texIds.get("bloco_estrutura"), base, fonte);
+		BlocoEstrutura.iniciarEventos(texIds.get("bloco_estrutura"));
 	}
 
 	public String texturaId(int faceId) {
@@ -204,4 +150,3 @@ public class Bloco {
 		Bloco.sons.clear();
 	}
 }
-

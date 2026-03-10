@@ -49,6 +49,7 @@ refeito com LibGDX.
 * Estados de blocos.
 * Água fluindo.
 * Blocos de interação com interfaces.
+* Eventos de blocos.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -79,6 +80,8 @@ refeito com LibGDX.
 * Íris azul.
 * Arenito.
 * Pilar de arenito.
+* Bloco de estrutura.
+* Bloco nulo.
 
 ## Receitas:
 ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.
@@ -144,7 +147,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Travas de segurança para otimização de loops em caso de imutalidado do pacote.
 * Compilação de arquivos JSON em tempo de execução.
 * Cache de fluxo.
-* Cache de vértices nas nuvens
+* Cache de vértices nas nuvens.
 
 ## Ruídos utilitários:
 * OpenSimplex2.java
@@ -173,7 +176,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * OpenGL ES: 3.2.
 * JVM: Java VM ART 2.1.0.
 * Sistema Operacional: Android 12 64-bit.
-* FPS padrão: 40-60.
+* FPS padrão: 50-60.
 
 ## PCs:
 ### Melhor condição
@@ -184,7 +187,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * Video: Intel 4 Series(Integrada).
 * OpenGL: 2.1.
 * Sistema Operacional: Linux Mint XCFE 64-bit.
-* FPS padrão: 45-64.
+* FPS padrão: 45-72.
 
 ### Pior condição
 * Placa Mãe: PCWare IPX1800E2.
@@ -228,6 +231,10 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * Green
 * Xaniim
 * Dorganhozo
+
+**Musicas**:
+* VDLN7
+* Shiniga-OP
 
 **Efeitos sonoros**:
 * Shiniga-OP

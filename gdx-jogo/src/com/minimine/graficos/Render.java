@@ -20,6 +20,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.minimine.entidades.Entidade;
+import com.minimine.mundo.blocos.BlocoEstrutura;
 
 public class Render {
     public UI ui;
@@ -29,7 +30,7 @@ public class Render {
     public static ShapeRenderer debugCaixas;
     public static GerenciadorParticulas gp;
     public static ModelBatch mb; // gerenciador de modelos 3D de entidades
-    
+
     public static final VertexAttribute[] atriburs = new VertexAttribute[] {
         new VertexAttribute(VertexAttributes.Usage.Position, 1, "a_pos"),
         new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord"),
@@ -47,7 +48,7 @@ public class Render {
     "varying float v_texId;\n" +
     "varying vec4 v_cor;\n" +
 	"uniform vec3 u_chunkPos;\n"+
-   
+
     // descompacta posição usando operações matematicas
     "vec3 descompactarPos(float compactada) {\n" +
     // arredonda pro int mais proximo
@@ -61,7 +62,7 @@ public class Render {
     "    float z = floor(temp / 512.0);\n" +
     "    return vec3(x, y, z);\n" +
     "}\n" +
-	
+
     "void main() {\n" +
     "   vec3 posLocal = descompactarPos(a_pos);\n" +
 	"   vec3 posGlobal = posLocal + u_chunkPos;\n"+
@@ -114,7 +115,7 @@ public class Render {
     public Render(Jogador jogador, Mundo mundo) {
         this.ui = new UI(jogador);
         this.mundo = mundo;
-		
+
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glCullFace(GL20.GL_BACK);
@@ -132,7 +133,7 @@ public class Render {
 			Texturas.atlas.get("agua_a1"),
 			Texturas.atlas.get("agua_a2")
 		}, 2.5f);  // 2.5 quadros por segundo
-		
+
         // carrega as particulas
         gp = new GerenciadorParticulas(ui.jg);
 
@@ -142,7 +143,7 @@ public class Render {
         if(mundo.ciclo) CorposCelestes.iniciar();
 
         mb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
-		
+
 		mundo.iniciar();
     }
 
@@ -191,7 +192,7 @@ public class Render {
 			Texturas.blocos.bind(0);
 			shader.setUniformi("u_textura", 0);
 			Gdx.gl.glDisable(GL20.GL_BLEND);
-			
+
 			// 1. solidos:
 			for(final Chunk chunk : mundo.chunks.values()) {
 				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
@@ -202,7 +203,7 @@ public class Render {
 			// 2. transparentes:
 			Gdx.gl.glEnable(GL20.GL_BLEND);
 			Gdx.gl.glDisable(GL20.GL_CULL_FACE);
-			
+
 			for(final Chunk chunk : mundo.chunks.values()) {
 				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
 					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
@@ -214,7 +215,7 @@ public class Render {
 
 			if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
 			gp.att(delta);
-			
+
 			// renderiza os modelos 3D
 			mb.begin(ui.jg.camera);
 
@@ -223,7 +224,7 @@ public class Render {
 				e.render(mb);
 			}
 			mb.end();
-			
+
 			// renderiza o debug:
 			if(ui.debug) {
 				debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador
@@ -245,20 +246,32 @@ public class Render {
 				}
 				debugCaixas.end();
 			}
+			// raio dos bloco_estrutura: itera lista de bboxes ativas(O(n) onde n = blocos colocados)
+			if(!BlocoEstrutura.bcaixas.isEmpty()) {
+				debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
+				debugCaixas.begin(ShapeRenderer.ShapeType.Line);
+				debugCaixas.setColor(1.0f, 0.5f, 0.0f, 1f); // laranja
+				for(float[] bl : BlocoEstrutura.bcaixas) {
+					// b = { baseX, baseY, baseZ, larg, alt, prof }
+					// canto inferior, Z = baseZ + prof
+					debugCaixas.box(bl[0], bl[1], bl[2] + bl[5], bl[3], bl[4], bl[5]);
+				}
+				debugCaixas.end();
+			}
 		}
 		// renderiza a interface de usuario:
 		ui.att(delta, mundo);
     }
-	
+
 	public final static boolean frustrum(Chunk chunk, Jogador jogador) {
 		final float globalX = chunk.x << 4;
 		final float globalZ = chunk.z << 4;
-		
+
 		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
 		// (RAIO * 16) * (RAIO * 16)
 		final float raioEmPixels = Mundo.RAIO_CHUNKS << 4;
 		final float raioLimite = raioEmPixels * raioEmPixels;
-		
+
 		// dist2(distancia ao quadrado)
 		if(!(Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z) < raioLimite)) return false;
 
@@ -276,4 +289,3 @@ public class Render {
 		Animacoes2D.liberar();
     }
 }
-
