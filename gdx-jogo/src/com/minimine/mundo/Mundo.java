@@ -61,6 +61,7 @@ public class Mundo {
 
     public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
+	
 	// estados: 0 = vazia, 1 = dados Prontos, 2 = malha Pronta
 	public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
 

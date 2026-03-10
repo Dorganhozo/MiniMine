@@ -48,6 +48,7 @@ refeito com LibGDX.
 * Biomas escritos em JSON.
 * Estados de blocos.
 * Água fluindo.
+* Blocos de interação com interfaces.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -76,8 +77,8 @@ refeito com LibGDX.
 * Capim.
 * Tulipa.
 * Íris azul.
-* Arenito
-* Pilar de arenito
+* Arenito.
+* Pilar de arenito.
 
 ## Receitas:
 ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.

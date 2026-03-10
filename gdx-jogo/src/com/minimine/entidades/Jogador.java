@@ -19,6 +19,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset;
 import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 import com.minimine.cenas.Jogo;
 import com.minimine.graficos.Modelos;
+import com.minimine.mundo.blocos.InterfaceBloco;
 
 public class Jogador extends Entidade {
 	public int modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
@@ -28,9 +29,9 @@ public class Jogador extends Entidade {
 	public CharSequence item = "ar";
 	public int ALCANCE = 7;
 	public Inventario inv;
-	
+
     public ModelInstance instancia;
-    
+
     public float tempoAnimacao = 0;
 
     public Quaternion rotTemp = new Quaternion();
@@ -62,7 +63,7 @@ public class Jogador extends Entidade {
 			}, 0, 500);
 		try {
             instancia = new ModelInstance(Modelos.obterModelo("modelos/jogador.gltf"));
-			
+
             pegarNos();
             salvarRotacoes();
         } catch(Exception e) {
@@ -86,7 +87,7 @@ public class Jogador extends Entidade {
 		float dirY = raio.direction.y;
 		float dirZ = raio.direction.z;
 
-		for(float t = 0; t < ALCANCE; t += 0.10f) { // passo menor = mais preciso
+		for(float t = 0; t < ALCANCE; t += 0.10f) {
 			int x = Mat.floor(olhoX + dirX * t);
 			int y = Mat.floor(olhoY + dirY * t);
 			int z = Mat.floor(olhoZ + dirZ * t);
@@ -95,10 +96,17 @@ public class Jogador extends Entidade {
 
 			if(bloco != null) {
 				if(item.equals("ar")) {
+					// clique esquerdo: quebrar bloco normalmente
 					if(modo == 2) inv.addItem(bloco.nome, 1);
 					Mundo.defBlocoMundo(x, y, z, "ar");
 					Bloco.tocarSom(bloco.nome);
 				} else {
+					// clique direito: verificar se o bloco mira tem interface
+					if(bloco.ui != null) {
+						bloco.ui.abrir(x, y, z);
+						return; // não coloca bloco, abre a interface
+					}
+					// sem interface: comportamento padrão de colocar bloco
 					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
 					int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));
 					int zAnt = Mat.floor(olhoZ + dirZ * (t - 0.25f));
@@ -126,7 +134,7 @@ public class Jogador extends Entidade {
 		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
 		if(itemInv != null && itemInv.nome != item) item = itemInv.nome;
 		else if(itemInv == null) item = "ar";
-		
+
 		frenteV.x = camera.direction.x;
 		frenteV.z = camera.direction.z;
 		frenteV.nor();  
@@ -160,17 +168,14 @@ public class Jogador extends Entidade {
 
 		if(colideMundo()) {
 			posicao.y -= dy;
-			attHitbox(); // atualiza hitbox apos corrigir posição
-			// verifica se ta colidindo por baixo(pé no chão)
+			attHitbox();
 			if(dy < 0) {
 				noChao = true;
 			} else if(dy > 0) {
-				// colisão por cima(cabeça)
 				noChao = false;
 			}
 			velocidade.y = 0;
 		} else {
-			// se não ha colisão vertical, verifica se ta no chão usando uma verificação mais precisa
 			noChao = ehChao();
 		}
 		// agora processa movimento horizontal
@@ -195,13 +200,13 @@ public class Jogador extends Entidade {
 			attHitbox();
 		}
 		if(posicao.y < -100f) posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
-		
+
 		if(movendo) {
-			tempoAnimacao += delta * 8f; // o tempo corre enquanto anda
-			forcaMovimento = Math.min(1f, forcaMovimento + delta * 5f); // liga o balanço
+			tempoAnimacao += delta * 8f;
+			forcaMovimento = Math.min(1f, forcaMovimento + delta * 5f);
 		} else {
-			forcaMovimento = Math.max(0f, forcaMovimento - delta * 5f); // desliga o balanço
-			if(forcaMovimento == 0) tempoAnimacao = 0; // reinicia o ciclo ao parar totalmente
+			forcaMovimento = Math.max(0f, forcaMovimento - delta * 5f);
+			if(forcaMovimento == 0) tempoAnimacao = 0;
 		}
 		camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
 		camera.update();
@@ -209,24 +214,18 @@ public class Jogador extends Entidade {
 
 	public void render(ModelBatch mb) {
 		instancia.transform.set(camera.view);
-		
+
 		if(Math.abs(instancia.transform.det()) > 1e-6f) {
 			instancia.transform.inv();
 		} else {
 			camera.update();
-			return; // camera ainda não ta pronta, pula o render desse frame
+			return;
 		}
-		// calculo do balanço(oscilação)
-		// seno faz o movimento lateral(X)
 		float balancoX = (float)Math.sin(tempoAnimacao * 0.5f) * 0.05f;
-		// cosseno absoluto faz o movimento de "pulo" do passo(Y)
 		float balancoY = (float)Math.abs(Math.cos(tempoAnimacao)) * 0.05f;
 
-		// deixa o braço na tela
 		instancia.transform.translate(0.5f + balancoX, -2.15f + balancoY, -1f);
-
 		instancia.transform.rotate(Vector3.Y, 15); 
-
 		mb.render(instancia);
 	}
 
@@ -251,3 +250,4 @@ public class Jogador extends Entidade {
         if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
     }
 }
+

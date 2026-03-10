@@ -138,7 +138,6 @@ public class NuvensUtil {
     }
 
     public static void att(float delta, Vector3 pos) {
-        boolean precisaAtt = false;
         for(int i = 0; i < NUM_NUVENS; i++) {
             int base = i * 4;
             nuvensPos[base] -= VELO * delta * 60f;
@@ -147,7 +146,6 @@ public class NuvensUtil {
             float dz = nuvensPos[base + 2] - pos.z;
             if((float)Math.sqrt(dx*dx + dz*dz) > RAIO_VISIVEL) {
                 attNuvemEspalhada(i, pos);
-                precisaAtt = true;
             }
         }
         attMesh();

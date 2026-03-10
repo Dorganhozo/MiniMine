@@ -23,10 +23,12 @@ import com.minimine.graficos.Texturas;
 import com.minimine.Debugador;
 import com.minimine.Logs;
 import com.minimine.mundo.Mundo;
+import com.minimine.mundo.blocos.Bloco;
 import com.minimine.entidades.Inventario;
 import com.minimine.entidades.Jogador;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Receitas;
+import com.minimine.mundo.blocos.InterfaceBloco;
 
 import com.micro.GerenciadorUI;
 import com.micro.CaixaDialogo;
@@ -99,9 +101,12 @@ public class UI implements InputProcessor {
 
         criarDialogos();
         configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		
+
 		MenuPause.iniciar();
         MenuPause.sr = new ShapeRenderer();
+
+        // inicializa as interfaces dos blocos agora que visualBase e fonte estão prontos
+        Bloco.iniciarInterfaces(visualBase, fonte);
 
         Gdx.input.setInputProcessor(this);
         Gdx.input.setCursorCatched(true);
@@ -175,18 +180,17 @@ public class UI implements InputProcessor {
 
     // abre um dialogo de aviso com padrão ao fechar
     public static void abrirDialogo(String titulo, final CaixaDialogo.Fechar fechar) {
-        // cria um dialogo temporario de alerta para não misturar com o de chat
-        // reutiliza o gerenciador; o dialogo se auto remove ao fechar
         CaixaDialogo alerta = new CaixaDialogo(visualBase, fonte, 3f, new ShapeRenderer());
         alerta.largura = 400;
         alerta.altura  = 160;
-        alerta.x = Gdx.graphics.getWidth()  / 2f - alerta.largura / 2f;
+        alerta.x = Gdx.graphics.getWidth() / 2f - alerta.largura / 2f;
         alerta.y = Gdx.graphics.getHeight() / 2f - alerta.altura  / 2f;
         alerta.addOk(visualBase);
         gerenciador.addDialogo(alerta);
 		Gdx.input.setCursorCatched(false);
         alerta.mostrar(titulo, "", fechar != null ? fechar : new CaixaDialogo.Fechar(){@Override public void aoFechar(boolean c){Gdx.input.setCursorCatched(true);}});
     }
+
     // dpad(mantido como sprites, texturas direcionais não fazem sentido na Micro)
     public void criarBotoesDpad() {
         if(!botoesDpad.isEmpty()) return;
@@ -357,6 +361,14 @@ public class UI implements InputProcessor {
         // dialogos da Micro(chat, alertas)
         gerenciador.desenhar(sb, delta);
 
+        // interfaces de blocos abertas
+		if(Bloco.ABERTO) {
+			for(Bloco b : Bloco.blocos) {
+				if(b != null && b.ui != null && b.ui.aberta()) {
+					b.ui.renderizar(sb, fonte, delta);
+				}
+			}
+		}
         // debug
         if(debug) renderDebug(mundo);
 
@@ -392,15 +404,15 @@ public class UI implements InputProcessor {
             for(int i = 0; i < inv.rects.length; i++) {
                 float rx = inv.rects[i].x, ry = inv.rects[i].y;
                 float rv = inv.rects[i].width, rh = inv.rects[i].height;
-				
+
 				sb.draw(inv.texSlot, rx, ry, rv, rh);
 
                 if(inv.itens[i] != null) {
 					sb.draw(inv.itens[i].textura, rx + 5, ry + 5, inv.tamSlot - 5, inv.tamSlot - 5);
-                    
+
                     if(inv.itens[i].quantidade > 1) {
                         fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
-						rx + inv.tamSlot - 15, ry + 15);
+								   rx + inv.tamSlot - 15, ry + 15);
                     }
                 }
             }
@@ -409,7 +421,7 @@ public class UI implements InputProcessor {
         if(inv.itemFlutuante != null) {
 			float posX = inv.posFlutuante.x - inv.itemFlutuante.textura.getRegionWidth() / 2;
 			float posY = inv.posFlutuante.y - inv.itemFlutuante.textura.getRegionHeight() / 2;
-			
+
 			sb.draw(inv.itemFlutuante.textura, posX, posY, inv.tamSlot - 10, inv.tamSlot - 10);
             if(inv.itemFlutuante.quantidade > 1) {
                 fonte.draw(sb, String.valueOf(inv.itemFlutuante.quantidade),
@@ -429,7 +441,6 @@ public class UI implements InputProcessor {
         float tamCoracao  = 30f;
         float espCoracao  = 2f;
 
-        // posiciona acima da hotbar(ou no canto superior esquerdo se a hotbar não existir)
         float hotbarY = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
             ? jg.inv.rectsHotbar[0].y + jg.inv.tamSlot + 4f
             : 30f;
@@ -441,7 +452,7 @@ public class UI implements InputProcessor {
             float x = startX + i * (tamCoracao + espCoracao);
             float y = hotbarY;
 
-            int vidaEsseCoracao = jg.vida - i * 2; // quanta vida "sobra" pra esse coração
+            int vidaEsseCoracao = jg.vida - i * 2;
 
             TextureRegion tex;
             if(vidaEsseCoracao >= 2) tex = coracaoCompleto;
@@ -521,9 +532,19 @@ public class UI implements InputProcessor {
     public boolean touchDown(int telaX, int telaY, int p, int b) {
         int y = Gdx.graphics.getHeight() - telaY;
 
-        // dialogos do Micro tem prioridade total
+        // interfaces de blocos tem prioridade sobre tudo exceto o gerenciador
         if(gerenciador.processarToque(telaX, y, true)) return true;
-        if(modoTexto) return true;
+
+        // se tem interface de bloco aberta, ela consome o toque
+        if(modoTexto) {
+            for(Bloco bloco : Bloco.blocos) {
+                if(bloco != null && bloco.ui != null && bloco.ui.aberta()) {
+                    bloco.ui.processarToque(telaX, y, true);
+                    return true;
+                }
+            }
+            return true;
+        }
 
         // menu pause
         if(MenuPause.menuAberto) {
@@ -635,6 +656,14 @@ public class UI implements InputProcessor {
     public boolean keyDown(int p) {
         if(modoTexto) {
             gerenciador.processarTecla(p);
+            // ESC fecha a interface de bloco aberta
+            if(p == Input.Keys.ESCAPE) {
+                for(Bloco bloco : Bloco.blocos) {
+                    if(bloco != null && bloco.ui != null && bloco.ui.aberta()) {
+                        bloco.ui.fechar();
+                    }
+                }
+            }
             return true;
         }
         if(p == Input.Keys.W) jg.frente = true;
@@ -726,6 +755,4 @@ public class UI implements InputProcessor {
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
-
-
 
