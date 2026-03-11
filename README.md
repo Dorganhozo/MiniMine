@@ -50,6 +50,7 @@ refeito com LibGDX.
 * Água fluindo.
 * Blocos de interação com interfaces.
 * Eventos de blocos.
+* Menu de itens com barra de pesquisa.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam

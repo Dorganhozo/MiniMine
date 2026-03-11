@@ -382,7 +382,7 @@ public class ArquivosUtil {
 
      * arquivo: MiniMine/estruturas/<nome>.minies
      * formato: veja cabeçalho de BlocoEstrutura.java
-     */
+    */
     public static void svEstrutura(
 		String nome,
 		int larg, int alt, int prof,
@@ -479,7 +479,7 @@ public class ArquivosUtil {
     /*
      * retorna um DadosEstrutura com todos os blocos e metadados,
      * ou null se o arquivo não existir ou estiver corrompido
-     */
+    */
     public static DadosEstrutura crEstrutura(String nome) {
         File arquivo = new File(
             Inicio.externo + "/MiniMine/estruturas/" + nome + ".minies");

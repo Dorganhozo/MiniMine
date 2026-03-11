@@ -29,6 +29,7 @@ import com.minimine.entidades.Jogador;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Receitas;
 import com.minimine.mundo.blocos.InterfaceBloco;
+import com.minimine.ui.PaginaItens;
 
 import com.micro.GerenciadorUI;
 import com.micro.CaixaDialogo;
@@ -36,6 +37,7 @@ import com.micro.CampoTexto;
 import com.micro.Rotulo;
 import com.micro.PainelFatiado;
 import com.micro.Acao;
+import com.badlogic.gdx.math.Rectangle;
 
 public class UI implements InputProcessor {
     // camera 3D e renderização
@@ -71,7 +73,7 @@ public class UI implements InputProcessor {
 
     // estado
     public static Jogador jg;
-    public static boolean debug     = true;
+    public static boolean debug = true;
     public static boolean modoTexto = false;
     public static int fps = 0;
     public static Debugador debugador;
@@ -79,6 +81,8 @@ public class UI implements InputProcessor {
     public boolean chatAberto = false;
     public String  ultimaMensagem = "";
     public List<String> msgs = new ArrayList<>();
+
+    public PaginaItens paginaItens = new PaginaItens();
 
     public static Runtime rt = Runtime.getRuntime();
 
@@ -258,7 +262,12 @@ public class UI implements InputProcessor {
 				public void aoSoltar() { jg.acao = false; }
 			});
         botoesDpad.put("inv", new BotaoDpad(Texturas.atlas.get("clique"), jg.inv.tamSlot) {
-				public void aoTocar() { jg.inv.alternar(); }
+				public void aoTocar() {
+					if(jg.modo == 1 && jg.inv.aberto) {
+						jg.inv.alternar();
+					} else if(paginaItens.aberta) paginaItens.fechar();
+					else jg.inv.alternar();
+				}
 				public void aoSoltar() {}
 			});
         botoesDpad.put("receita", new BotaoDpad(Texturas.atlas.get("receita"), jg.inv.tamSlot) {
@@ -352,6 +361,9 @@ public class UI implements InputProcessor {
         // inventario
         renderizarInventario(sb, fonte, jg.inv);
 
+        // página de itens criativos
+        paginaItens.renderizar(sb, fonte);
+
         // barra de vida
         renderizarVida(sb);
 
@@ -371,7 +383,6 @@ public class UI implements InputProcessor {
 		}
         // debug
         if(debug) renderDebug(mundo);
-
         sb.end();
     }
 
@@ -429,12 +440,23 @@ public class UI implements InputProcessor {
 						   posY + 15);
             }
         }
+        // botão de catalogo criativo(acima do ultimo slot do inventario)
+        if((jg.modo == 0 || jg.modo == 1) && !paginaItens.aberta && inv.aberto) {
+            TextureRegion texAcao = Texturas.atlas.get("clique");
+            if(texAcao != null && inv.rects != null && inv.rects.length > 0) {
+                Rectangle ultimoSlot = inv.rects[inv.rects.length - 1];
+                sb.draw(texAcao,
+						ultimoSlot.x,
+						ultimoSlot.y + inv.tamSlot + 4,
+						inv.tamSlot, inv.tamSlot);
+            }
+        }
     }
 
     public void renderizarVida(SpriteBatch sb) {
         TextureRegion coracaoCompleto = Texturas.atlas.get("coracao_completo");
-        TextureRegion coracaoMetade   = Texturas.atlas.get("coracao_metade");
-        TextureRegion coracaoVazio    = Texturas.atlas.get("coracao_vazio");
+        TextureRegion coracaoMetade = Texturas.atlas.get("coracao_metade");
+        TextureRegion coracaoVazio = Texturas.atlas.get("coracao_vazio");
         if(coracaoCompleto == null || coracaoMetade == null || coracaoVazio == null) return;
 
         int totalCoracoes = jg.vidaMax >> 1; // 20 vida = 10 corações
@@ -516,6 +538,7 @@ public class UI implements InputProcessor {
         camera.update();
         sb.getProjectionMatrix().setToOrtho2D(0, 0, v, h);
         jg.inv.aoAjustar(v, h);
+        if(paginaItens.aberta) paginaItens.aoAjustar(v, h);
         configDpad(v, h);
     }
 
@@ -545,11 +568,15 @@ public class UI implements InputProcessor {
             }
             return true;
         }
-
         // menu pause
         if(MenuPause.menuAberto) {
             boolean consumido = MenuPause.processarToque(telaX, y, true);
             if(!consumido) MenuPause.fecharMenu();
+            return true;
+        }
+        // pagina de itens criativos tem prioridade se estiver aberta
+        if(paginaItens.aberta) {
+            paginaItens.aoTocar(telaX, y, jg);
             return true;
         }
         // cliques PC no mundo
@@ -580,7 +607,20 @@ public class UI implements InputProcessor {
         // inventario
         jg.inv.aoTocar(telaX, y, p);
 
-        if(pontoDir == -1) { pontoDir = p; ultimaDir.set(telaX, y); }
+        // botão catálogo criativo
+        if(jg.inv.rects != null && jg.inv.rects.length > 0) {
+            Rectangle ultimoSlot = jg.inv.rects[jg.inv.rects.length - 1];
+            float bx = ultimoSlot.x;
+            float by = ultimoSlot.y + jg.inv.tamSlot + 4;
+            if(telaX >= bx && telaX <= bx + jg.inv.tamSlot && y >= by && y <= by + jg.inv.tamSlot) {
+                paginaItens.abrir(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), jg.inv);
+                return true;
+            }
+        }
+        if(pontoDir == -1) {
+			pontoDir = p;
+			ultimaDir.set(telaX, y);
+		}
         return true;
     }
 
@@ -684,12 +724,26 @@ public class UI implements InputProcessor {
 			}
         }
         if(p == Input.Keys.E) {
-            Gdx.input.setCursorCatched(jg.inv.aberto); // inverte junto com o inventario
-            jg.inv.alternar();
+            if(paginaItens.aberta) {
+                paginaItens.fechar();
+            } else if(jg.modo == 1 && jg.inv.aberto) {
+                jg.inv.alternar();
+                paginaItens.abrir(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), jg.inv);
+            } else {
+                Gdx.input.setCursorCatched(jg.inv.aberto);
+                jg.inv.alternar();
+            }
+            return true;
         }
         if(p == Input.Keys.F1) debug = !debug;
         if(p == Input.Keys.T) abrirChat();
-        if(p == Input.Keys.ESCAPE) MenuPause.alternarMenu();
+        if(p == Input.Keys.ESCAPE) {
+            if(paginaItens.aberta) {
+				paginaItens.fechar();
+				return true;
+			}
+            MenuPause.alternarMenu();
+        }
         if(p == Input.Keys.R) Receitas.fabricar(jg.inv);
         return true;
     }
@@ -709,6 +763,7 @@ public class UI implements InputProcessor {
     @Override
     public boolean keyTyped(char p) {
         if(modoTexto) gerenciador.processarCaractere(p);
+        if(paginaItens.aberta) paginaItens.digitarCaractere(p);
         return false;
     }
 
@@ -728,7 +783,7 @@ public class UI implements InputProcessor {
     @Override
     public boolean scrolled(float x, float y) {
         if(y > 0) jg.inv.slotSelecionado = (jg.inv.slotSelecionado + 1) % jg.inv.hotbarSlots;
-        else if (y < 0) jg.inv.slotSelecionado = (jg.inv.slotSelecionado - 1 + jg.inv.hotbarSlots) % jg.inv.hotbarSlots;
+        else if(y < 0) jg.inv.slotSelecionado = (jg.inv.slotSelecionado - 1 + jg.inv.hotbarSlots) % jg.inv.hotbarSlots;
         return true;
     }
 
@@ -755,4 +810,3 @@ public class UI implements InputProcessor {
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
-
