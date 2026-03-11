@@ -217,7 +217,7 @@ public class ArquivosUtil {
                 }
             }
             dos.writeInt(totalNaoAr);
-			
+
             for(int x = 0; x < cx; x++) {
                 for(int y = 0; y < cy; y++) {
                     for(int z = 0; z < cz; z++) {
@@ -306,7 +306,7 @@ public class ArquivosUtil {
             }
 			byte[] meta = new byte[dis.readInt()];
 			for(int d = 0; d < meta.length; d++) meta[d] = dis.readByte();
-			
+
 			chunk.malha = null;
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Long, Chunk>();
             if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Long, Chunk>();
@@ -375,12 +375,11 @@ public class ArquivosUtil {
 			Gdx.app.log("ArquivosUtil", "[ERRO] ao carregar inv: "+e);
 		}
     }
-
     // svEstrutura: salva uma região do mundo como .minies
     /*
      * varre a bcaixa[baseX..baseX+larg-1, baseY..baseY+alt-1, baseZ..baseZ+prof-1],
      * descarta ar(id==0) e bloco_nulo, salva os demais com coordenadas locais
-     
+
      * arquivo: MiniMine/estruturas/<nome>.minies
      * formato: veja cabeçalho de BlocoEstrutura.java
      */
@@ -424,7 +423,7 @@ public class ArquivosUtil {
                 }
             }
             dos.writeInt(total);
-			
+
             // segundo passo: escreve blocos
             for(int lx = 0; lx < larg; lx++) {
                 for(int ly = 0; ly < alt; ly++) {
@@ -438,11 +437,10 @@ public class ArquivosUtil {
                         dos.writeInt(ly);
                         dos.writeInt(lz);
                         dos.writeUTF("" + b.nome);
-						dos.writeInt(Mundo.obterMetaMundo(baseX + lx, baseY + ly, baseZ + lz));
+						dos.writeByte(Mundo.obterMetaMundo(baseX + lx, baseY + ly, baseZ + lz));
                     }
                 }
             }
-			
             dos.flush();
         } finally {
             try {
@@ -513,13 +511,14 @@ public class ArquivosUtil {
             d.ly = new int[total];
             d.lz = new int[total];
             d.ids = new String[total];
+            d.meta = new byte[total];
 
             for(int i = 0; i < total; i++) {
                 d.lx[i] = dis.readInt();
                 d.ly[i] = dis.readInt();
                 d.lz[i] = dis.readInt();
                 d.ids[i] = dis.readUTF();
-				dis.readInt();
+                d.meta[i] = dis.readByte();
             }
             if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] estrutura carregada: " + nome + " (" + total + " blocos)");
             return d;
@@ -542,6 +541,8 @@ public class ArquivosUtil {
         public int[] lx, ly, lz;
         // id de string de cada bloco
         public String[] ids;
+        // metadado de cada bloco
+        public byte[] meta;
         /*
          * coloca a estrutura no mundo com origem em(ox, oy, oz)
          * a ancora é descontada: o bloco de ancora fica em(ox, oy, oz)
@@ -561,10 +562,11 @@ public class ArquivosUtil {
                 String id = ids[i];
                 if(!sobrescreverTudo && (id == null || "ar".equals(id))) continue;
                 Mundo.defBlocoMundo(vx, vy, vz, id);
+                Mundo.defMetaMundo(vx, vy, vz, meta[i]);
             }
         }
     }
-	
+
     // utilitarios:
     public static void criar(String caminho) {   
         caminho = caminho.replace("/", File.separator);
@@ -694,4 +696,3 @@ public class ArquivosUtil {
 		}    
 	}
 }
-

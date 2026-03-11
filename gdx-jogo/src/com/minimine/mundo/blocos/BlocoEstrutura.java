@@ -15,19 +15,20 @@ import java.util.List;
 /*
  * classe auxiliar que monta a InterfaceBloco do bloco_estrutura
  * chamada por Bloco.iniciarInterfaces()
- 
+
  * interface:
  *   - campo "Nome": nome do arquivo .minies a salvar
  *   - campos Larg/Alt/Prof: dimensões da bounding box (padrão 16x16x16)
  *   - campos AncX/Y/Z: âncora relativa ao canto da bbox (padrão 0,0,0)
  *   - botão "Salvar": varre a região, descarta ar e bloco_nulo, salva .minies
- *   - Botão "Fechar": fecha sem salvar
- 
+ *   - botão "Carregar": lê o .minies pelo nome e coloca no mundo 1 bloco à frente do bloco_estrutura
+ *   - botão "Fechar": fecha sem salvar
+
  * bloco_nulo:
  *   - marca "ar explícito" dentro da estrutura
  *   - transparente=true, solido=false, culling=false
  *   - não é gravado no .minies(descartado igual ao ar real)
- 
+
  * formato .minies(binario simples, sem ZIP):
  *   [int]versão do formato(= 1)
  *   [utf]nome
@@ -43,7 +44,8 @@ import java.util.List;
  *     [int] y local(0..altura-1)
  *     [int] z local(0..profundidade-1)
  *     [utf] id do bloco
- 
+ *     [int] meta do bloco
+
  * a area visivel começa 1 bloco à frente(+X) do bloco_estrutura
 
  * OrigemEstrutura.x/y/z é preenchido pelo abrir() e lido pelo salvar()
@@ -173,7 +175,7 @@ public class BlocoEstrutura {
 
             @Override public void liberar() { dialogo.liberar(); }
         };
-        // botão Salvar
+        // botão salvar
         dialogo.addBotao("Salvar", base, Ancora.CENTRO_DIREITO, -10, new Acao() {
 				@Override public void exec() {
 					salvar(blocoEstrutura.ui,
@@ -181,7 +183,13 @@ public class BlocoEstrutura {
 						   campoAncX, campoAncY, campoAncZ);
 				}
 			});
-        // botão Fechar
+        // botão carregar
+        dialogo.addBotao("Carregar", base, Ancora.CENTRO, 0, new Acao() {
+				@Override public void exec() {
+					carregar(blocoEstrutura.ui, campoNome);
+				}
+			});
+        // botão fechar
         dialogo.addBotao("Fechar", base, Ancora.CENTRO_ESQUERDO, 10, new Acao() {
 				@Override public void exec() { blocoEstrutura.ui.fechar(); }
 			});
@@ -213,8 +221,8 @@ public class BlocoEstrutura {
         int ancY = clamp(praInt(campoAncY.texto, 0), 0, alt  - 1);
         int ancZ = clamp(praInt(campoAncZ.texto, 0), 0, prof - 1);
 
-        // bcaixa começa 1 bloco à frente do bloco_estrutura no eixo +X
-        int baseX = OrigemEstrutura.x + 1;
+        // bcaixa começa 1 bloco a frente do bloco_estrutura no eixo +Z
+        int baseX = OrigemEstrutura.x;
         int baseY = OrigemEstrutura.y;
         int baseZ = OrigemEstrutura.z + 1;
 
@@ -226,6 +234,32 @@ public class BlocoEstrutura {
         } catch(Exception e) {
             Gdx.app.log("[BlocoEstrutura]", "[ERRO] ao salvar: " + e.getMessage());
         }
+        ui.fechar();
+    }
+
+    // carregar()
+    public static void carregar(
+		final InterfaceBloco ui,
+		final CampoTexto campoNome) {
+
+        String nome = campoNome.texto.trim();
+        if(nome.isEmpty()) {
+            Gdx.app.log("[BlocoEstrutura]", "Nome vazio: carregamento cancelado.");
+            return;
+        }
+        nome = nome.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+
+        ArquivosUtil.DadosEstrutura dados = ArquivosUtil.crEstrutura(nome);
+        if(dados == null) {
+            Gdx.app.log("[BlocoEstrutura]", "[ERRO] estrutura não encontrada: " + nome);
+            return;
+        }
+        // coloca 1 bloco à frente do bloco_estrutura no eixo +Z
+        int ox = OrigemEstrutura.x;
+        int oy = OrigemEstrutura.y;
+        int oz = OrigemEstrutura.z + 1;
+        dados.colocarMundo(ox, oy, oz);
+        Gdx.app.log("[BlocoEstrutura]", "estrutura carregada: " + nome);
         ui.fechar();
     }
 
@@ -257,3 +291,4 @@ public class BlocoEstrutura {
         return v < min ? min : (v > max ? max : v);
     }
 }
+
