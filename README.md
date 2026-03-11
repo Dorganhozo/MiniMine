@@ -149,6 +149,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Compilação de arquivos JSON em tempo de execução.
 * Cache de fluxo.
 * Cache de vértices nas nuvens.
+* Junção de quase todas as texturas do jogo em atlas.
 
 ## Ruídos utilitários:
 * OpenSimplex2.java
@@ -199,7 +200,6 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * OpenGL: 4.2.
 * Sistema Operacional: Debian GNU/Linux 12 (bookworm) i686.
 * FPS padrão: 83-142.
-
 
 ## Notebook:
 * Modelo: Aspire ES 15.

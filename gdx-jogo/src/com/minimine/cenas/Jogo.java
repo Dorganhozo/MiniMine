@@ -17,6 +17,7 @@ import com.minimine.mundo.geracao.RegistroBiomas;
 public class Jogo implements Screen {
 	public static Mundo mundo;
 	public static Jogador jogador;
+	public static int modo = 2;
 	public static Render render;
 	public static boolean musicas = true;
 	public static java.util.Timer relogio;
@@ -26,6 +27,7 @@ public class Jogo implements Screen {
 		relogio = new java.util.Timer();
 		mundo = new Mundo();
 		jogador = new Jogador();
+		jogador.modo = modo;
 		
 		mundo.chunksMod.clear();
 		

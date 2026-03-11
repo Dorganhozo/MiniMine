@@ -43,7 +43,7 @@ public class CaixaDialogo extends Componente {
 
     public void criarInterface() {
         // titulo flutua acima do painel principal
-        painelTitulo = new Painel(visual, 0, altura*1.1f, largura, 50, escala);
+        painelTitulo = new Painel(visual, 0, altura*1.25f, largura, 50, escala);
         painelTitulo.corFundo = new Color(0.3f, 0.5f, 0.8f, 1f);
 
         rotuloTitulo = new Rotulo("", fonte, escala);

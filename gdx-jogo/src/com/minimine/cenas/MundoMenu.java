@@ -52,8 +52,7 @@ public class MundoMenu implements Screen, InputProcessor {
 
     public Painel painelPrincipal;
     public PainelRolavel painelMundos;
-    public CaixaDialogo dialogoNome;
-    public CaixaDialogo dialogoSemente;
+    public CaixaDialogo dialogoCriar;
     public CampoTexto campoNome;
     public CampoTexto campoSemente;
 
@@ -145,7 +144,7 @@ public class MundoMenu implements Screen, InputProcessor {
         Acao acaoNovoMundo = new Acao() {
             public void exec() {
 				mundoEscolhido = false;
-                abrirDialogoNovoMundo();
+                abrirDialogoCriar();
             }
         };
         Botao botaoNovoMundo = new Botao("Novo Mundo", visualBotao, fonteTexto, 0, 0, 400, 70, escalaPixel * 0.8f, acaoNovoMundo);
@@ -207,88 +206,73 @@ public class MundoMenu implements Screen, InputProcessor {
     }
 
     public void criarDialogos() {
-        // dialogo para nome do mundo
-        dialogoNome = new CaixaDialogo(visualJanela, fonteTexto, escalaPixel, pincelFormas);
-        dialogoNome.largura = 500;
-        dialogoNome.altura = 300;
+        // diálogo unificado de criação de mundo
+        dialogoCriar = new CaixaDialogo(visualJanela, fonteTexto, escalaPixel, pincelFormas);
+        dialogoCriar.largura = 500;
+        dialogoCriar.altura  = 380;
 
-        campoNome = new CampoTexto(visualBotao, fonteTexto, 50, 120, 400, 50, escalaPixel);
+        // campo nome
+        campoNome = new CampoTexto(visualBotao, fonteTexto, 50, 240, 400, 50, escalaPixel);
         campoNome.padrao = "Nome do Mundo";
         campoNome.limiteCaracteres = 30;
-        dialogoNome.add(campoNome);
+        dialogoCriar.add(campoNome);
 
-        Acao acaoConfirmarNome = new Acao() {
-            public void exec() {
-                String nome = campoNome.texto.trim();
-                if(!nome.isEmpty()) {
-                    Mundo.nome = nome;
-                    dialogoNome.fechar(false);
-                    abrirDialogoSemente();
-					Gdx.input.setOnscreenKeyboardVisible(false);
-                }
-            }
+        // campo semente
+        campoSemente = new CampoTexto(visualBotao, fonteTexto, 50, 160, 400, 50, escalaPixel);
+        campoSemente.padrao = "Semente(opcional)";
+        campoSemente.limiteCaracteres = 10;
+        dialogoCriar.add(campoSemente);
+
+        // ação comum: valida nome, aplica semente e entra no jogo com o modo dado
+        // os tres botões de modo chamam entrarNoMundo(modo)
+        Acao acaoSobrevivencia = new Acao() {
+            public void exec() { entrarNoMundo(2); }
         };
-        dialogoNome.addBotao("OK", visualBotao, Ancora.CENTRO_DIREITO, -10, acaoConfirmarNome);
-
-        Acao acaoCancelarNome = new Acao() {
+        Acao acaoCriativo = new Acao() {
+            public void exec() { entrarNoMundo(1); }
+        };
+        Acao acaoEspectador = new Acao() {
+            public void exec() { entrarNoMundo(0); }
+        };
+        Acao acaoCancelar = new Acao() {
             public void exec() {
                 campoNome.texto = "";
-                dialogoNome.fechar(false);
-				Gdx.input.setOnscreenKeyboardVisible(false);
-            }
-        };
-        dialogoNome.addBotao("Cancelar", visualBotao, Ancora.CENTRO_ESQUERDO, 10, acaoCancelarNome);
-
-        gerenciadorUI.addDialogo(dialogoNome);
-
-        // dialogo para semente
-        dialogoSemente = new CaixaDialogo(visualJanela, fonteTexto, escalaPixel, pincelFormas);
-        dialogoSemente.largura = 500;
-        dialogoSemente.altura = 300;
-
-        campoSemente = new CampoTexto(visualBotao, fonteTexto, 50, 120, 400, 50, escalaPixel);
-        campoSemente.padrao = "Semente";
-        campoSemente.limiteCaracteres = 10;
-        dialogoSemente.add(campoSemente);
-
-        Acao acaoConfirmarSemente = new Acao() {
-            public void exec() {
-                String textoSemente = campoSemente.texto.trim();
-                long semente = 0;
-                try {
-                    semente = Integer.parseInt(textoSemente);
-                } catch(Exception e) {
-                    semente = 0;
-                }
-                Mundo.semente = semente;
-                dialogoSemente.fechar(false);
-				Gdx.input.setOnscreenKeyboardVisible(false);
-				mundoEscolhido = true;
-                Inicio.defTela(Cenas.jogo);
-            }
-        };
-        dialogoSemente.addBotao("OK", visualBotao, Ancora.CENTRO_DIREITO, -10, acaoConfirmarSemente);
-
-        Acao acaoCancelarSemente = new Acao() {
-            public void exec() {
                 campoSemente.texto = "";
-                dialogoSemente.fechar(false);
-				Gdx.input.setOnscreenKeyboardVisible(false);
+                dialogoCriar.fechar(false);
+                Gdx.input.setOnscreenKeyboardVisible(false);
             }
         };
-        dialogoSemente.addBotao("Cancelar", visualBotao, Ancora.CENTRO_ESQUERDO, 10, acaoCancelarSemente);
 
-        gerenciadorUI.addDialogo(dialogoSemente);
+        dialogoCriar.addBotao("Sobrevivencia", visualBotao, Ancora.INFERIOR_ESQUERDO, 10, acaoSobrevivencia);
+        dialogoCriar.addBotao("Criativo", visualBotao, Ancora.INFERIOR_CENTRO, 0, acaoCriativo);
+        dialogoCriar.addBotao("Espectador", visualBotao, Ancora.INFERIOR_DIREITO, -10, acaoEspectador);
+        dialogoCriar.addBotao("Cancelar", visualBotao, Ancora.SUPERIOR_DIREITO, -10, acaoCancelar);
+
+        gerenciadorUI.addDialogo(dialogoCriar);
     }
 
-    public void abrirDialogoNovoMundo() {
+    public void entrarNoMundo(int modo) {
+        String nome = campoNome.texto.trim();
+        if(nome.isEmpty()) return;
+
+        String textoSemente = campoSemente.texto.trim();
+        long semente = 0;
+        try { semente = Integer.parseInt(textoSemente); } catch(Exception e) { semente = 0; }
+
+        Mundo.nome   = nome;
+        Mundo.semente = semente;
+        Jogo.modo = modo;
+
+        dialogoCriar.fechar(false);
+        Gdx.input.setOnscreenKeyboardVisible(false);
+        mundoEscolhido = true;
+        Inicio.defTela(Cenas.jogo);
+    }
+
+    public void abrirDialogoCriar() {
         campoNome.texto = "";
-        dialogoNome.mostrar("Nome do Mundo", "Digite o nome:", null);
-    }
-
-    public void abrirDialogoSemente() {
         campoSemente.texto = "";
-        dialogoSemente.mostrar("Semente", "Digite a semente:", null);
+        dialogoCriar.mostrar("Novo Mundo", "", null);
     }
 
     @Override
@@ -321,7 +305,7 @@ public class MundoMenu implements Screen, InputProcessor {
     public void dispose() {
         if(liberado) return;
         liberado = true;
-        
+
         if(pincel != null) pincel.dispose();
         if(pincelFormas != null) pincelFormas.dispose();
         if(fonteTitulo != null) fonteTitulo.dispose();
@@ -382,4 +366,5 @@ public class MundoMenu implements Screen, InputProcessor {
         return false; 
     }
 }
+
 

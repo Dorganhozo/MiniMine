@@ -208,33 +208,33 @@ public class UI implements InputProcessor {
 
         float tam = MathUtils.clamp(botaoTam * Gdx.graphics.getDensity(), 50f, 150f);
 
-        botoesDpad.put("direita", new BotaoDpad(Texturas.texs.get("botao_d"),  tam) {
+        botoesDpad.put("direita", new BotaoDpad(Texturas.atlas.get("botao_d"),  tam) {
 				public void aoTocar(){jg.direita = true;}
 				public void aoSoltar(){ jg.direita = false;}
 			});
-        botoesDpad.put("esquerda", new BotaoDpad(Texturas.texs.get("botao_e"), tam) {
+        botoesDpad.put("esquerda", new BotaoDpad(Texturas.atlas.get("botao_e"), tam) {
 				public void aoTocar(){ jg.esquerda = true;}
 				public void aoSoltar(){jg.esquerda = false;}
 			});
-        botoesDpad.put("frente", new BotaoDpad(Texturas.texs.get("botao_f"), tam) {
+        botoesDpad.put("frente", new BotaoDpad(Texturas.atlas.get("botao_f"), tam) {
 				public void aoTocar(){ jg.frente = true;}
 				public void aoSoltar(){ jg.frente = false;}
 			});
-        botoesDpad.put("tras", new BotaoDpad(Texturas.texs.get("botao_t"), tam) {
+        botoesDpad.put("tras", new BotaoDpad(Texturas.atlas.get("botao_t"), tam) {
 				public void aoTocar(){jg.tras = true;}
 				public void aoSoltar(){ jg.tras = false;}
 			});
-        botoesDpad.put("cima", new BotaoDpad(Texturas.texs.get("botao_f"), tam) {
+        botoesDpad.put("cima", new BotaoDpad(Texturas.atlas.get("botao_f"), tam) {
 				public void aoTocar(){ jg.cima = true;}
 				public void aoSoltar(){ jg.cima = false;}
 			});
-        botoesDpad.put("diagDireita", new BotaoDpad(Texturas.texs.get("botao_ld"), tam) {
+        botoesDpad.put("diagDireita", new BotaoDpad(Texturas.atlas.get("botao_ld"), tam) {
 				public void aoTocar(){ jg.frente = jg.direita  = true;}
 				public void aoSoltar(){ jg.frente = jg.direita = false;}
 			});
-        botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.texs.get("botao_le"), tam) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
+        botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.atlas.get("botao_le"), tam) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
 
-        botoesDpad.put("baixo", new BotaoDpad(Texturas.texs.get("botao_t"), tam) {
+        botoesDpad.put("baixo", new BotaoDpad(Texturas.atlas.get("botao_t"), tam) {
 				public void aoTocar() {
 					jg.baixo = true;
 					if(jg.agachado) {
@@ -441,7 +441,7 @@ public class UI implements InputProcessor {
             }
         }
         // botão de catalogo criativo(acima do ultimo slot do inventario)
-        if((jg.modo == 0 || jg.modo == 1) && !paginaItens.aberta && inv.aberto) {
+        if(jg.modo == 1 && !paginaItens.aberta && inv.aberto) {
             TextureRegion texAcao = Texturas.atlas.get("clique");
             if(texAcao != null && inv.rects != null && inv.rects.length > 0) {
                 Rectangle ultimoSlot = inv.rects[inv.rects.length - 1];
@@ -501,7 +501,7 @@ public class UI implements InputProcessor {
 					   "Jogador:\nX: %.1f, Y: %.1f, Z: %.1f\nModo: %s\nSlot: %d\nItem: %s\n" +
 					   "No chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 					   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
-					   "Mundo:\nNome: %s\nBioma atual: %s\nRaio Chunks: %d\nChunks ativos: %d\n" +
+					   "Mundo:\nNome: %s\nBioma atual: %s\nRaio Chunks: %d\nChunks: %d\n" +
 					   "Chunks Alteradas: %d\nSemente: %d\nTempo: %.2f\nVelocidade do tempo: %.5f",
 					   jg.posicao.x, jg.posicao.y, jg.posicao.z,
 					   (jg.modo == 0 ? "espectador" : jg.modo == 1 ? "criativo" : "sobrevivencia"),
@@ -607,8 +607,8 @@ public class UI implements InputProcessor {
         // inventario
         jg.inv.aoTocar(telaX, y, p);
 
-        // botão catálogo criativo
-        if(jg.inv.rects != null && jg.inv.rects.length > 0) {
+        // botão catalogo de itens
+        if(jg.inv.rects != null && jg.inv.rects.length > 0 && jg.inv.aberto && jg.modo == 1) {
             Rectangle ultimoSlot = jg.inv.rects[jg.inv.rects.length - 1];
             float bx = ultimoSlot.x;
             float by = ultimoSlot.y + jg.inv.tamSlot + 4;

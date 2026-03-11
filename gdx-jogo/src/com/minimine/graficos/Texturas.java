@@ -9,10 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Texturas {
 	public static TexLista<CharSequence, Texture> texs = new TexLista<CharSequence, Texture>();
 	public static TexLista<CharSequence, TextureRegion> atlas = new TexLista<CharSequence, TextureRegion>();
-	public static Texture blocos;
-	public static Texture agua;
-	public static Texture icones;
-	public static Texture base;
+	public static Texture blocos, agua, icones, base;
 	
 	public static void iniciar() {
 		try {
@@ -63,14 +60,15 @@ public class Texturas {
 			atlas.put("coracao_metade", new TextureRegion(icones, 80, 0, 16, 16));
 			atlas.put("coracao_vazio", new TextureRegion(icones, 96, 0, 16, 16));
 			
-			texs.put("botao_f", new Texture(Gdx.files.internal("ui/botao_f.png")));
-			texs.put("botao_t", new Texture(Gdx.files.internal("ui/botao_t.png")));
-			texs.put("botao_d", new Texture(Gdx.files.internal("ui/botao_d.png")));
-			texs.put("botao_e", new Texture(Gdx.files.internal("ui/botao_e.png")));
-			texs.put("botao_ld", new Texture(Gdx.files.internal("ui/botao_ld.png")));
-			texs.put("botao_le", new Texture(Gdx.files.internal("ui/botao_le.png")));
+			atlas.put("botao_f", new TextureRegion(icones, 0, 16, 16, 16));
+			atlas.put("botao_t", new TextureRegion(icones, 16, 16, 16, 16));
+			atlas.put("botao_e", new TextureRegion(icones, 32, 16, 16, 16));
+			atlas.put("botao_d", new TextureRegion(icones, 48, 16, 16, 16));
+			atlas.put("botao_le", new TextureRegion(icones, 64, 16, 16, 16));
+			atlas.put("botao_ld", new TextureRegion(icones, 80, 16, 16, 16));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: " + e);
+			throw new RuntimeException("[Texturas]: [ERRO]: ao carregar as texturas: "+e);
 		}
 	}
 
@@ -85,6 +83,16 @@ public class Texturas {
 				throw new RuntimeException("Texturas: [ERRO] null na textura: " + chave);
 			}
 			return o;
+		}
+		
+		public void liberar(Object chave) {
+			V o = super.get(chave);
+			if(o instanceof Texture) {
+				Texture tex = (Texture)o;
+				if(tex != null) tex.dispose();
+				tex = null;
+			}
+			super.remove(chave);
 		}
 	}
 	
