@@ -325,7 +325,7 @@ public class UI implements InputProcessor {
         }
         if(spriteMira != null) {
             spriteMira.setPosition(v / 2f - spriteMira.getWidth() / 2f,
-			h / 2f - spriteMira.getHeight() / 2f);
+								   h / 2f - spriteMira.getHeight() / 2f);
             spriteMira.setAlpha(0.9f);
         }
     }
@@ -497,13 +497,24 @@ public class UI implements InputProcessor {
         int inicio = Math.max(0, logsArr.length - 15);
         for(int i = inicio; i < logsArr.length; i++) sb2.append(logsArr[i]).append("\n");
 
+        float yawNorm = ((jg.yaw % 360) + 360) % 360;
+        String direcao;
+        if(yawNorm >= 337.5f || yawNorm < 22.5f)   direcao = "Norte";
+        else if(yawNorm < 67.5f) direcao = "Nordeste";
+        else if(yawNorm < 112.5f) direcao = "Leste";
+        else if(yawNorm < 157.5f) direcao = "Sudeste";
+        else if(yawNorm < 202.5f) direcao = "Sul";
+        else if(yawNorm < 247.5f) direcao = "Sudoeste";
+        else if(yawNorm < 292.5f) direcao = "Oeste";
+        else direcao = "Noroeste";
+
         fonte.draw(sb, String.format(
-					   "Jogador:\nX: %.1f, Y: %.1f, Z: %.1f\nModo: %s\nSlot: %d\nItem: %s\n" +
+					   "Jogador:\nX: %.1f, Y: %.1f, Z: %.1f\nDireção: %s (%.1f°)\nModo: %s\nSlot: %d\nItem: %s\n" +
 					   "No chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 					   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
 					   "Mundo:\nNome: %s\nBioma atual: %s\nRaio Chunks: %d\nChunks: %d\n" +
 					   "Chunks Alteradas: %d\nSemente: %d\nTempo: %.2f\nVelocidade do tempo: %.5f",
-					   jg.posicao.x, jg.posicao.y, jg.posicao.z,
+					   jg.posicao.x, jg.posicao.y, jg.posicao.z, direcao, yawNorm,
 					   (jg.modo == 0 ? "espectador" : jg.modo == 1 ? "criativo" : "sobrevivencia"),
 					   jg.inv.slotSelecionado, jg.item, jg.noChao, jg.naAgua, jg.agachado, jg.velo, jg.altura,
 					   jg.direita, jg.esquerda, jg.frente, jg.tras, jg.cima, jg.baixo, jg.acao,
@@ -810,3 +821,4 @@ public class UI implements InputProcessor {
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
+

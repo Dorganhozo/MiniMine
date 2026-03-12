@@ -81,11 +81,11 @@ public final class GeradorTuneis {
             for(int by = y0; by <= y1; by++) {
                 if(by < MIN_Y || by >= Mundo.Y_CHUNK) continue;
                 float ddy = by - oy; float ddy2 = ddy * ddy;
-				
+
                 for(int bz = z0; bz <= z1; bz++) {
                     float ddz = bz - oz; float ddz2 = ddz * ddz;
                     if(ddy2 + ddz2 > raio2) continue; // rejeita cedo
-					
+
                     for(int bx = x0; bx <= x1; bx++) {
                         float ddx = bx - ox;
                         if(ddx*ddx + ddy2 + ddz2 > raio2) continue;
@@ -95,14 +95,10 @@ public final class GeradorTuneis {
                         int lx = bx - (cx << 4);
                         int lz = bz - (cz << 4);
 
-                        Chunk alvo;
-                        if(cx == chunkCX && cz == chunkCZ) {
-                            alvo = chunkOrigem;
-                        } else {
-                            alvo = Mundo.chunks.get(Chave.calcularChave(cx, cz));
-                            if(alvo == null || !alvo.dadosProntos) continue;
-                        }
-                        ChunkUtil.defBloco(lx, by, lz, 0, alvo);
+                        // só escava dentro da própria chunk
+                        // escrever em vizinhas causa race condition com outras threads gerando malha
+                        if(cx != chunkCX || cz != chunkCZ) continue;
+                        ChunkUtil.defBloco(lx, by, lz, 0, chunkOrigem);
                     }
                 }
             }
@@ -118,4 +114,5 @@ public final class GeradorTuneis {
         return s;
     }
 }
+
 

@@ -17,10 +17,11 @@ public class ChunkLuz {
         @Override protected byte[] initialValue() { return new byte[TOTAL_BLOCOS]; }
     };
     public static final ThreadLocal<int[]> FILA_LUZ_REUSO = new ThreadLocal<int[]>() {
-        @Override protected int[] initialValue() { return new int[TOTAL_BLOCOS * 4]; }
+        @Override protected int[] initialValue() { return new int[TOTAL_BLOCOS * 6]; }
     };
 
     public static void calcularLuz(Chunk chunk) {
+        chunk.luzFazendo = true;
         // reutiliza arrays do reuso da thread atual, zero alocação
         final byte[] luzTemp = LUZ_TEMP_REUSO.get();
         final int[] filaLuz = FILA_LUZ_REUSO.get();
@@ -117,6 +118,7 @@ public class ChunkLuz {
     }
 
     public static void attLuzCompleta(Chunk chunk) {
+        chunk.luzFazendo = true;
         // reutiliza arrays do reuso da thread atual, zero alocação
         final byte[] luzTemp = LUZ_TEMP_REUSO.get();
         final int[] filaLuz = FILA_LUZ_REUSO.get();
@@ -210,16 +212,16 @@ public class ChunkLuz {
         Chunk chunkLeste = obterChunk(chunk.x + 1, chunk.z);
         Chunk chunkOeste = obterChunk(chunk.x - 1, chunk.z);
 
-        if(chunkNorte != null && chunkNorte.dadosProntos) {
+        if(chunkNorte != null && chunkNorte.dadosProntos && !chunkNorte.luzFazendo) {
             fimFila = importarBordaNorte(chunk, chunkNorte, luzTemp, filaLuz, fimFila);
         }
-        if(chunkSul != null && chunkSul.dadosProntos) {
+        if(chunkSul != null && chunkSul.dadosProntos && !chunkSul.luzFazendo) {
             fimFila = importarBordaSul(chunk, chunkSul, luzTemp, filaLuz, fimFila);
         }
-        if(chunkLeste != null && chunkLeste.dadosProntos) {
+        if(chunkLeste != null && chunkLeste.dadosProntos && !chunkLeste.luzFazendo) {
             fimFila = importarBordaLeste(chunk, chunkLeste, luzTemp, filaLuz, fimFila);
         }
-        if(chunkOeste != null && chunkOeste.dadosProntos) {
+        if(chunkOeste != null && chunkOeste.dadosProntos && !chunkOeste.luzFazendo) {
             fimFila = importarBordaOeste(chunk, chunkOeste, luzTemp, filaLuz, fimFila);
         }
         return fimFila;
@@ -354,6 +356,10 @@ public class ChunkLuz {
         Chunk chunkSul = obterChunk(chunk.x, chunk.z + 1);
         Chunk chunkLeste = obterChunk(chunk.x + 1, chunk.z);
         Chunk chunkOeste = obterChunk(chunk.x - 1, chunk.z);
+        if(chunkNorte != null && (!chunkNorte.dadosProntos || chunkNorte.luzFazendo)) chunkNorte = null;
+        if(chunkSul != null && (!chunkSul.dadosProntos || chunkSul.luzFazendo)) chunkSul = null;
+        if(chunkLeste != null && (!chunkLeste.dadosProntos || chunkLeste.luzFazendo)) chunkLeste = null;
+        if(chunkOeste != null && (!chunkOeste.dadosProntos || chunkOeste.luzFazendo)) chunkOeste = null;
 
         if(chunkNorte != null) {
             for(int x = 0; x < 16; x++) {
@@ -393,8 +399,7 @@ public class ChunkLuz {
                     int lsV = luzVizinha >> 4;
 
                     if(lbV > 1 || lsV > 1) {
-                        int blocoId = ChunkUtil.obterBloco(x, y, 15, chunk);
-                        Bloco b = Bloco.numIds.get(blocoId);
+                        Bloco b = Bloco.numIds.get(ChunkUtil.obterBloco(x, y, 15, chunk));
                         if(b == null || b.transparente) {
                             int idcNossa = x + (15 << 4) + (y << 8);
                             int lbNova = Math.max(0, lbV - 1);
@@ -513,13 +518,25 @@ public class ChunkLuz {
 
         chunk.luzSuja = true;
         chunk.att = true;
-        if(chunkNorte != null) { chunkNorte.luzSuja = true; chunkNorte.att = true; }
-        if(chunkSul != null) { chunkSul.luzSuja = true; chunkSul.att = true; }
-        if(chunkLeste != null) { chunkLeste.luzSuja = true; chunkLeste.att = true; }
-        if(chunkOeste != null) { chunkOeste.luzSuja = true; chunkOeste.att = true; }
+        if(chunkNorte != null) {
+			chunkNorte.luzSuja = true;
+			chunkNorte.att = true;
+		}
+        if(chunkSul != null) {
+			chunkSul.luzSuja = true;
+			chunkSul.att = true;
+		}
+        if(chunkLeste != null) {
+			chunkLeste.luzSuja = true;
+			chunkLeste.att = true;
+		}
+        if(chunkOeste != null) {
+			chunkOeste.luzSuja = true;
+			chunkOeste.att = true;
+		}
     }
 
-    private static void zerarLuzBlocoChunk(Chunk chunk) {
+    public static void zerarLuzBlocoChunk(Chunk chunk) {
         for(int i = 0; i < TOTAL_BLOCOS; i++) {
             int luzAtual = chunk.luz[i] & 0xFF;
             int luzSolar = (luzAtual >> 4) & 0x0F;
@@ -543,4 +560,3 @@ public class ChunkLuz {
         return Mundo.chunks.get(Chave.calcularChave(cx, cz));
     }
 }
-

@@ -102,7 +102,7 @@ public class Mundo {
 
 		if(!carregado && estados.size() >= 1) {
 			Integer x = estados.get(Chave.calcularChave((int)jg.posicao.x >> 4, (int)jg.posicao.z >> 4));
-			if(x != null && x == 2) carregado = true;
+			if(x != null && x == 3) carregado = true;
 		}
 		if(carregado) {
 			GerenciadorEntidades.att(delta, this, jg);
@@ -363,7 +363,7 @@ public class Mundo {
 		if(chunks.containsKey(chave)) {
 			// se ja existe e precisa de malha, gera
 			int estado = estados.getOrDefault(chave, 0);
-			if(estado == 1 && !chunks.get(chave).fazendo) {
+			if(estado >= 1 && estado < 3 && !chunks.get(chave).fazendo) {
 				if(vizinhosProntos(x, z)) gerarMalha(chave);
 			}
 			return;
@@ -373,7 +373,7 @@ public class Mundo {
 		if(modificado != null) {
 			chunks.put(chave, modificado);
 			ChunkLuz.calcularLuz(modificado);
-			estados.put(chave, 1); // marca como pronta para malha
+			estados.put(chave, 2); // dados + luz prontos
 			return;
 		}
 		// 3. so se for realmente nova, gera do zero
@@ -384,17 +384,17 @@ public class Mundo {
 		estados.put(chave, 0);
 		gerarDados(chave);
 	}
+
 	// verifica se as 8 vizinhas ao redor ja tem dados de blocos
 	public boolean vizinhosProntos(int cx, int cz) {
-		for(int x = cx - 1; x <= cx + 1; x++) {
-			for(int z = cz - 1; z <= cz + 1; z++) {
-				if(x == cx && z == cz) continue;
-				long vizinha = Chave.calcularChave(x, z);
-				// se a vizinha não tem estado ou ainda ta no estado 0(sem dados)
-				if(estados.getOrDefault(vizinha, 0) < 1) return false;
-			}
-		}
-		return true;
+		long v1 = Chave.calcularChave(cx + 1, cz);
+		long v2 = Chave.calcularChave(cx - 1, cz);
+		long v3 = Chave.calcularChave(cx, cz + 1);
+		long v4 = Chave.calcularChave(cx, cz - 1);
+		return estados.getOrDefault(v1, 0) >= 2 &&
+			estados.getOrDefault(v2, 0) >= 2 &&
+			estados.getOrDefault(v3, 0) >= 2 &&
+			estados.getOrDefault(v4, 0) >= 2;
 	}
 
 	public static void gerarDados(final long chave) {
@@ -407,8 +407,11 @@ public class Mundo {
 						// pré-processa tudo antes de publicar o estado
 						motor.gerarChunk(chunk);
 						chunk.dadosProntos = true;
-						// sinal atomico: so agora o chunk é elegivel pra malha
 						estados.put(chave, 1);
+						// calcula luz imediatamente apos dados prontos
+						// seta estado 2 para que vizinhas possam importar luz desta chunk
+						ChunkLuz.calcularLuz(chunk);
+						estados.put(chave, 2);
 					} catch(final Exception e) {
 						throw new RuntimeException("[Mundo]: [ERRO]: ao gerar dados: "+e);
 					}
@@ -424,7 +427,9 @@ public class Mundo {
 		exec.submit(new Runnable() {
 				@Override
 				public void run() {
-					ChunkLuz.calcularLuz(chunk);
+					// luz ja foi calculada em gerarDados(estado 2)
+					// recalcula apenas se luzSuja
+					if(chunk.luzSuja) ChunkLuz.calcularLuz(chunk);
 
 					final FloatArrayUtil vertsGeral = ArrayReuso.obterFloatArray();
 					final ShortArrayUtil idcSolidos = ArrayReuso.obterShortArray();
@@ -464,7 +469,7 @@ public class Mundo {
 									chunk.contaTransp = idcTransp.tam;
 									chunk.fazendo = false;
 									chunk.att = false;
-									estados.put(chave, 2);
+									estados.put(chave, 3);
 								} catch(Exception e) {
 									Gdx.app.error("Mundo", "Erro ao gerar malha do chunk", e);
 								} finally {
@@ -604,4 +609,3 @@ public class Mundo {
 	    } 
     }
 }
-
