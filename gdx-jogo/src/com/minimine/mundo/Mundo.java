@@ -61,7 +61,7 @@ public class Mundo {
 
     public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
-	
+
 	// estados: 0 = vazia, 1 = dados Prontos, 2 = malha Pronta
 	public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
 
@@ -192,22 +192,22 @@ public class Mundo {
 
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 		// reinicia os metadados sempre que o bloco muda, o novo bloco começa sem estado
-		ChunkUtil.defMeta(localX, y, localZ, (byte)0, chunk);
+		ChunkUtil.defMeta(localX, y, localZ, (short)0, chunk);
 
 		boolean novoEhAgua = bloco != null && bloco.equals("agua");
 		boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
 		if(novoEhAgua) {
 			// água colocada pelo jogador: define meta como fonte e inicia propagação progressiva
-			ChunkUtil.defMeta(localX, y, localZ, (byte)FluxoAgua.NIVEL_FONTE, chunk);
+			ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
 			chunk.fluxoSujo = true;
 			chunk.att = true;
 		} else if(antigoEraAgua ||
-		FluxoAgua.eAgua(Mundo.obterBlocoMundo(x + 1, y, z)) ||
-		FluxoAgua.eAgua(Mundo.obterBlocoMundo(x - 1, y, z)) ||
-		FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z + 1)) ||
-		FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z - 1)) ||
-		FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y + 1, z)) ||
-		FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y - 1, z))) {
+				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x + 1, y, z)) ||
+				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x - 1, y, z)) ||
+				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z + 1)) ||
+				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z - 1)) ||
+				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y + 1, z)) ||
+				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y - 1, z))) {
 			// fonte removida ou bloco adjacente a água mudou: recalcula tudo imediatamente
 			// para convergir ao estado correto(água some, fluxo se ajusta)
 			FluxoAgua.recalcularFluxo(chunk);
@@ -457,7 +457,7 @@ public class Mundo {
 									// verifica se ta consistente
 									if(chunk.malha.getNumIndices() != totalIndices) {
 										Gdx.app.error("Mundo", "INCONSISTÊNCIA CRÍTICA: mesh tem " + 
-										chunk.malha.getNumIndices() + " índices, mas deveria ter " + totalIndices);
+													  chunk.malha.getNumIndices() + " índices, mas deveria ter " + totalIndices);
 									}
 									// atualiza os contadores
 									chunk.contaSolida = idcSolidos.tam;
@@ -559,14 +559,14 @@ public class Mundo {
 		}
 	}
 
-	public static byte obterMetaMundo(int x, int y, int z) {
+	public static short obterMetaMundo(int x, int y, int z) {
 		if(y < 0 || y >= Y_CHUNK) return 0;
 		Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
 		if(chunk == null) return 0;
 		return ChunkUtil.obterMeta(x & 0xF, y, z & 0xF, chunk);
 	}
 
-	public static void defMetaMundo(int x, int y, int z, byte valor) {
+	public static void defMetaMundo(int x, int y, int z, short valor) {
 		if(y < 0 || y >= Y_CHUNK) return;
 		final int chunkX = x >> 4;
 		final int chunkZ = z >> 4;
@@ -604,3 +604,4 @@ public class Mundo {
 	    } 
     }
 }
+

@@ -26,11 +26,11 @@ public class ChunkUtil {
 		chunk.luz[idc] = (byte)((chunk.luz[idc] & 0xF0) | (valor & 15));
 	}
 
-	public static byte obterMeta(int x, int y, int z, Chunk chunk) {
+	public static short obterMeta(int x, int y, int z, Chunk chunk) {
 		return chunk.meta[x + (z << 4) + (y << 8)];
 	}
 
-	public static void defMeta(int x, int y, int z, byte valor, Chunk chunk) {
+	public static void defMeta(int x, int y, int z, short valor, Chunk chunk) {
 		chunk.meta[x + (z << 4) + (y << 8)] = valor;
 	}
 
@@ -41,9 +41,9 @@ public class ChunkUtil {
 		int bloco;
 		if(chunk.usaPaleta) {
 			bloco = chunk.paleta[
-			lerPacote(x + (z << 4) + (y << 8),
-			chunk.paletaBits, chunk.blocos,
-			chunk.blocosPorInt, LOG2(chunk.blocosPorInt))
+				lerPacote(x + (z << 4) + (y << 8),
+				chunk.paletaBits, chunk.blocos,
+				chunk.blocosPorInt, LOG2(chunk.blocosPorInt))
 			];
 		} else {
 			bloco = lerPacote(x + (z << 4) + (y << 8),
@@ -54,7 +54,7 @@ public class ChunkUtil {
 	}
 
 	public static int obterBloco(int x, int y, int z, Chunk chunk) {
-		int total = x + (z << 4) + (y << 8); 
+		int total = x + (z << 4) + (y << 8);
 
 		if(chunk.blocos == null) return 0;
 
@@ -66,7 +66,7 @@ public class ChunkUtil {
 			return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
 		}
 	}
-	
+
 	public static void defBloco(int x, int y, int z, CharSequence nome, Chunk chunk) {
 		defBloco(x, y, z, nome.equals("ar") ? 0 : Bloco.texIds.get(nome).tipo, chunk);
 	}
@@ -150,8 +150,8 @@ public class ChunkUtil {
 		// isso so é verdade quando bits e {1, 2, 4, 8} -> blocosPorInt e {32, 16, 8, 4}.
 		// valores como 3, 5, 6, 7 resultam em blocosPorInt ímpar e corrompem o indice
 		if(maxId <= 1)  return 1; // 32 blocos/int
-		if(maxId <= 3)  return 2; // 16 blocos/int
-		if(maxId <= 15) return 4; //  8 blocos/int
+		else if(maxId <= 3)  return 2; // 16 blocos/int
+		else if(maxId <= 15) return 4; //  8 blocos/int
 		return 8; //  4 blocos/int
 	}
 
@@ -321,5 +321,4 @@ public class ChunkUtil {
 		chunk.blocos = novos;
 	}
 }
-
 

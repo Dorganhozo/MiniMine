@@ -6,7 +6,7 @@ public final class Chunk {
     public volatile int[] blocos; // buffer com dados empacotados(indices de paleta ou ids diretos)
     public volatile byte[] luz = new byte[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
 	// metadados dos blocos:
-	public volatile byte[] meta = new byte[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
+	public volatile short[] meta = new short[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
     public volatile com.badlogic.gdx.graphics.Mesh malha;
     public volatile int x, z, maxIds = 8;
     public volatile int paletaTam = 0;    // quantas entradas existem

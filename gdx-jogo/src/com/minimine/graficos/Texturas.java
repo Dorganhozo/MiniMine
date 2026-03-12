@@ -51,6 +51,7 @@ public class Texturas {
 			// animações:
 			atlas.put("agua_a1", new TextureRegion(agua, 0, 0, 16, 16));
 			atlas.put("agua_a2", new TextureRegion(agua, 0, 16, 16, 16));
+			atlas.put("agua_a3", new TextureRegion(agua, 0, 32, 16, 16));
 			// interface:
 			atlas.put("mira", new TextureRegion(icones, 0, 0, 16, 16));
 			atlas.put("clique", new TextureRegion(icones, 16, 0, 16, 16));

@@ -131,7 +131,8 @@ public class Render {
         Animacoes2D.add("agua", new TextureRegion[]{
 			Texturas.atlas.get("agua"),
 			Texturas.atlas.get("agua_a1"),
-			Texturas.atlas.get("agua_a2")
+			Texturas.atlas.get("agua_a2"),
+			Texturas.atlas.get("agua_a3")
 		}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas
@@ -246,15 +247,19 @@ public class Render {
 				}
 				debugCaixas.end();
 			}
-			// raio dos bloco_estrutura: itera lista de bboxes ativas(O(n) onde n = blocos colocados)
+			// raio dos bloco_estrutura: itera lista de posições ativas(O(n) onde n = blocos colocados)
 			if(!BlocoEstrutura.bcaixas.isEmpty()) {
 				debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
 				debugCaixas.begin(ShapeRenderer.ShapeType.Line);
 				debugCaixas.setColor(1.0f, 0.5f, 0.0f, 1f); // laranja
-				for(float[] bl : BlocoEstrutura.bcaixas) {
-					// b = { baseX, baseY, baseZ, larg, alt, prof }
-					// canto inferior, Z = baseZ + prof
-					debugCaixas.box(bl[0], bl[1], bl[2] + bl[5], bl[3], bl[4], bl[5]);
+				for(int[] bl : BlocoEstrutura.bcaixas) {
+					// bl = { x global, y global, z global } do bloco_estrutura
+					int bx = bl[0], by = bl[1], bz = bl[2];
+					float larg = BlocoEstrutura.obterLarg(bx, by, bz);
+					float alt  = BlocoEstrutura.obterAlt(bx, by, bz);
+					float prof = BlocoEstrutura.obterProf(bx, by, bz);
+					// caixa começa 1 bloco a frente(+X) do bloco_estrutura
+					debugCaixas.box(bx + 1, by, bz + prof, larg, alt, prof);
 				}
 				debugCaixas.end();
 			}
@@ -277,6 +282,7 @@ public class Render {
 
 		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 255, 16);
 	}
+	
     public void liberar() {
         shader.dispose();
         debugCaixas.dispose();

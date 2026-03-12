@@ -246,6 +246,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 **Pixel arte**:
 * Shiniga-OP
 * Marin
+* Rheytor
 
 **Modelagem 3D**:
 * Shiniga-OP
@@ -262,3 +263,4 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 - [VDLN7](https://youtube.com/@violetbrasilofc?si=Ip8AkZdPnDDdFjGm)
 - [Green](https://youtube.com/@greenlevelcreatordev?si=q1HhyS115FbbPhOI)
 - [Dorganhozo](https://youtube.com/@dorganzo?si=phKKbJ4P5C87TMJ0)
+- [Rheytor](https://youtube.com/@rheynnanvictorpereirasanto8808?si=DnNsy7RUy3nv8qLy)

@@ -4,22 +4,22 @@ import com.minimine.mundo.blocos.Bloco;
 import java.util.Arrays;
 /*
  * sistema de fluxo de água baseado em BFS por nivel
- 
- * o nivel de água é armazenado no byte[] meta da Chunk.java:
+
+ * o nivel de água é armazenado no short[] meta da Chunk.java:
  *   0 = fonte(nivel cheio, colocado pelo jogador ou gerado estaticamente)
  *   1 a 7 = fluxo horizontal decrescente(7 = mais fraco, some ao chegar em 8)
  *   0xFF = ausencia de água(bloco seco)
- 
+
  * FLUXO PROGRESSIVO:
  *   cada tick propaga um nivel lateral a mais que o tick anterior
  *   nivelAlvo começa em 1(primeira expansão a partir da fonte) e cresce até
  *   NIVEL_MAX_FLUXO. a fronteira é determinada pelo maior nível ja presente
  *   queda livre(Y-1) sempre propaga sem restrição
- 
+
  * REMOÇÃO:
  *   recalcularFluxo() faz BFS completo semeando só fontes reais(meta=0)
  *   blocos de fluxo não semeados somem se não alcançados
-*/
+ */
 public class FluxoAgua {
     public static final int NIVEL_AUSENTE = 0xFF;
     public static final int NIVEL_FONTE = 0;
@@ -33,7 +33,7 @@ public class FluxoAgua {
     public static final ThreadLocal<int[]> FILA_REUSO = new ThreadLocal<int[]>() {
         @Override protected int[] initialValue() { return new int[TOTAL_BLOCOS]; }
     };
-	
+
     // TICK NORMAL: avança a fronteira lateral um nivel por tick
     public static void attFluxo(Chunk chunk) {
         if(!chunk.fluxoSujo) return;
@@ -190,10 +190,10 @@ public class FluxoAgua {
         if(ehAgua) {
             int nivelAtual = Mundo.obterMetaMundo(wx, wy, wz) & 0xFF;
             if(nivelAtual == NIVEL_AUSENTE || nivelNovo >= nivelAtual) return;
-            Mundo.defMetaMundo(wx, wy, wz, (byte)nivelNovo);
+            Mundo.defMetaMundo(wx, wy, wz, (short)nivelNovo);
         } else {
             Mundo.defBlocoMundo(wx, wy, wz, "agua");
-            Mundo.defMetaMundo(wx, wy, wz, (byte)nivelNovo);
+            Mundo.defMetaMundo(wx, wy, wz, (short)nivelNovo);
         }
         marcarChunk(wx >> 4, wz >> 4);
     }
@@ -213,13 +213,13 @@ public class FluxoAgua {
                 }
                 int metaAtual = ChunkUtil.obterMeta(x, y, z, chunk) & 0xFF;
                 if(metaAtual != nivel) {
-                    ChunkUtil.defMeta(x, y, z, (byte)nivel, chunk);
+                    ChunkUtil.defMeta(x, y, z, (short)nivel, chunk);
                     mudou = true;
                 }
             } else {
                 if(eAgua(idAtual)) {
-                    ChunkUtil.defBloco(x, y, z, "ar", chunk);
-                    ChunkUtil.defMeta(x, y, z, (byte)NIVEL_AUSENTE, chunk);
+                    ChunkUtil.defBloco(x, y, z, 0, chunk);
+                    ChunkUtil.defMeta(x, y, z, (short)NIVEL_AUSENTE, chunk);
                     mudou = true;
                 }
             }
