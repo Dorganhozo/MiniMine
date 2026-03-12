@@ -12,7 +12,7 @@ public class ChunkLuz {
 
     public static final int TOTAL_BLOCOS = 16 * Mundo.Y_CHUNK * 16;
 
-    // reuso de arrays por thread — sem alocação e sem GC por chunk
+    // reuso de arrays por thread, sem alocação e sem GC por chunk
     public static final ThreadLocal<byte[]> LUZ_TEMP_REUSO = new ThreadLocal<byte[]>() {
         @Override protected byte[] initialValue() { return new byte[TOTAL_BLOCOS]; }
     };

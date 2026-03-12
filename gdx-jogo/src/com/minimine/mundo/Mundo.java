@@ -81,7 +81,7 @@ public class Mundo {
     public static final float INTERVALO_FLUXO = 0.5f; // segundos entre cada tick de água
 
     public void iniciar() {
-        semente = semente == 0 ? (System.currentTimeMillis() * MathUtils.random(2, 10)) : semente;
+        semente = semente == 0 ? (System.currentTimeMillis() ^ MathUtils.random(2, 10)) : semente;
 
 		registroCriaturas = new RegistroCriaturas();
 		registroCriaturas.carregar(Gdx.files.internal("criaturas/"));

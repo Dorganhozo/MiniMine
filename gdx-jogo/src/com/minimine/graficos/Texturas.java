@@ -97,7 +97,10 @@ public class Texturas {
 	}
 	
 	public static void liberar() {
-		for(Texture tex : texs.values()) tex.dispose();
+		for(Texture tex : texs.values()) {
+			if(tex != null) tex.dispose();
+			tex = null;
+		}
 		texs.clear();
 		atlas.clear();
 		blocos.dispose();

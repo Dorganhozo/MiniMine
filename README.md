@@ -51,6 +51,7 @@ refeito com LibGDX.
 * Blocos de interação com interfaces.
 * Eventos de blocos.
 * Menu de itens com barra de pesquisa.
+* Cavernas em tuneis.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -101,6 +102,7 @@ essas são as receitas atuais e seus resultados:
 * Umidade/temperatura/peso.
 * Camada de terreno base.
 * Canais para geração de rios.
+* Tuneis para cavernas.
 
 ## Entidades:
 * Foca: nascimento desativado temporariamente.
@@ -163,7 +165,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 FPS de 40 a 60 padrão testado com até 121 chunks ativas (raio de 5).
 
 ## uso de mémoria testada:
-50 MBs do heap java & 24 MBs do heap nativo. (121 chunks ativas)
+60-80 MBs do heap java & 24 MBs do heap nativo. (121 chunks ativas)
 
 ## Adicionais:
 

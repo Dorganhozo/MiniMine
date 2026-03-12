@@ -7,11 +7,9 @@ import com.minimine.mundo.blocos.BlocoModelo;
 
 public class ChunkMalha {
     // tamanho maximo de mascara necessaria(eixo X/Z: 16 * Y_CHUNK)
-    public static final int MASCARA_MAX = 16 * 256;
-
     // reutiliza array de mascara por thread
     public static final ThreadLocal<int[]> MASCARA_CACHE = new ThreadLocal<int[]>() {
-        @Override protected int[] initialValue() { return new int[MASCARA_MAX]; }
+        @Override protected int[] initialValue() { return new int[16 * 256]; }
     };
 
     public static void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {

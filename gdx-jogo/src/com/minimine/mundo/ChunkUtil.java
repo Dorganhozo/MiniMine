@@ -66,9 +66,12 @@ public class ChunkUtil {
 			return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
 		}
 	}
-
+	
 	public static void defBloco(int x, int y, int z, CharSequence nome, Chunk chunk) {
-		final int bloco = nome.equals("ar") ? 0 : Bloco.texIds.get(nome).tipo;
+		defBloco(x, y, z, nome.equals("ar") ? 0 : Bloco.texIds.get(nome).tipo, chunk);
+	}
+
+	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
 		final int total = x + (z << 4) + (y << 8);
 		// se ta em modo paleta, tenta usar/expandir paleta
 		if(chunk.usaPaleta) {

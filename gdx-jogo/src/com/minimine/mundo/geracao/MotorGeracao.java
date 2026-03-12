@@ -5,6 +5,7 @@ import com.minimine.mundo.ChunkUtil;
 import com.minimine.mundo.Mundo;
 import com.minimine.mundo.FluxoAgua;
 import com.minimine.utils.ruidos.OpenSimplex2;
+import com.minimine.mundo.blocos.Bloco;
 /*
  * orquestrador de geração de chunk
  * thread-segura: toda a geração opera sobre ContextoGeracao local por thread
@@ -40,6 +41,7 @@ public final class MotorGeracao {
     public final long semente;
     public final TerranoBase terreno;
     public final GeradorRios rios;
+	public final GeradorTuneis tuneis;
     public final RegistroBiomas registro;
 
     // parametros de ruidos de bioma, imutaveis, compartilhaveis
@@ -53,12 +55,15 @@ public final class MotorGeracao {
     public final ThreadLocal<ContextoGeracao> ctxLocal = new ThreadLocal<ContextoGeracao>() {
 		@Override protected ContextoGeracao initialValue() {return new ContextoGeracao(Mundo.Y_CHUNK);}
 	};
+	
+	public static int PEDRA, AGUA;
 
     public MotorGeracao(long semente, RegistroBiomas registro) {
         this.semente  = semente;
         this.registro = registro;
         this.terreno  = new TerranoBase(semente, NIVEL_MAR);
         this.rios = new GeradorRios(semente, NIVEL_MAR);
+		this.tuneis = new GeradorTuneis(semente);
 
         semCalor = semente ^ 0xCAFEBABE87654321L;
         semUmidade = semente ^ 0x4F3C2B1A9E8D7C6BL;
@@ -73,6 +78,9 @@ public final class MotorGeracao {
 		octPreen = 3;
 		perPreen = 0.7f;
 		escalaPreen = 1.2f;
+		
+		PEDRA = Bloco.texIds.get("pedra").tipo;
+		AGUA = Bloco.texIds.get("agua").tipo;
     }
 
     // === ENTRADA PRINCIPAL ===
@@ -85,6 +93,7 @@ public final class MotorGeracao {
         // ordem: persist -> base -> alt -> aSele -> subaquat -> crista -> calor -> umidade -> preenchimento
         terreno.calcularChunk(chunkX, chunkZ, ctx);
         rios.calcularChunk(chunkX, 0, chunkZ, Mundo.Y_CHUNK, ctx);
+		
         calcular2D(semCalor, espalharCalor, octCalor, perCalor, 2.0f, chunkX, chunkZ, ctx.calorMapa);
         calcular2D(semUmidade, espalharUmidade, octUmidade, perUmidade, 2.0f, chunkX, chunkZ, ctx.umidadeMapa);
         calcular2Dpreenchimento(chunkX, chunkZ, ctx.preenProfMapa);
@@ -104,13 +113,16 @@ public final class MotorGeracao {
                 if(superficieY > pedraSuperficieMaxY) pedraSuperficieMaxY = superficieY;
 
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-                    if(y <= superficieY && !rios.eCanal(x, y, z, y, superficieY, ctx)) {
-                        ChunkUtil.defBloco(x, y, z, "pedra", chunk);
+					if(y <= superficieY && !rios.eCanal(x, y, z, y, superficieY, ctx)) {
+                        ChunkUtil.defBloco(x, y, z, PEDRA, chunk);
                     }
-                }
+				}
             }
         }
-        // === FASE 3: gerar biomas ===
+		// === FASE 3: gerar vazios ===
+		tuneis.escavar(chunk, chunkX, chunkZ);
+		
+        // === FASE 4: gerar biomas ===
         // aplica topo/subtopo/interior de bioma
         // topoColuna desce até o primeiro bloco sólido real da coluna
         for(int z = 0; z < 16; z++) {
@@ -149,14 +161,14 @@ public final class MotorGeracao {
                 }
             }
         }
-        // === FASE 4: preencher água ===
+        // === FASE 5: preencher água ===
         // preenche blocos vazios abaixo do nível do mar com água estática
         // meta=0 (fonte) mas fluxoSujo permanece false — oceanos não propagam
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
                 for(int y = NIVEL_MAR; y >= 0; y--) {
                     if(ChunkUtil.obterBloco(x, y, z, chunk) == 0) {
-                        ChunkUtil.defBloco(x, y, z, "agua", chunk);
+                        ChunkUtil.defBloco(x, y, z, AGUA, chunk);
                         ChunkUtil.defMeta(x, y, z, (byte)FluxoAgua.NIVEL_FONTE, chunk);
                     }
                 }

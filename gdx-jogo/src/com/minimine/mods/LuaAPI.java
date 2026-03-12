@@ -49,8 +49,9 @@ public class LuaAPI {
 		globais = JsePlatform.standardGlobals();
 		
 		globais.set("api", CoerceJavaToLua.coerce(new LuaAPI()));
-		globais.set("biomas", CoerceJavaToLua.coerce(Jogo.render.mundo.motor));
+		globais.set("biomas", CoerceJavaToLua.coerce(render.mundo.motor));
 		globais.set("jogador", CoerceJavaToLua.coerce(render.ui.jg));
+		globais.set("texturas", CoerceJavaToLua.coerce(Texturas.class));
 		
 		aoAjustar = new LuaFunction() {
 			public LuaValue call(LuaValue arg) {
