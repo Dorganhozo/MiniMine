@@ -30,7 +30,10 @@ public class InterUtil {
 	}
 	
 	public static void liberar() {
-		for(BitmapFont b : fontes.values()) b.dispose();
+		for(BitmapFont b : fontes.values()) {
+			if(b != null) b.dispose();
+			b = null;
+		}
 		fontes.clear();
 	}
 }

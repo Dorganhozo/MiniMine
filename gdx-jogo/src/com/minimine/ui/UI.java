@@ -73,7 +73,7 @@ public class UI implements InputProcessor {
 
     // estado
     public static Jogador jg;
-    public static boolean debug = true;
+    public static boolean debug = false;
     public static boolean modoTexto = false;
     public static int fps = 0;
     public static Debugador debugador;

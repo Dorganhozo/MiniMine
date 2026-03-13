@@ -43,6 +43,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.minimine.mundo.blocos.BlocoEstrutura;
+import com.minimine.mundo.ChunkLuz;
 
 public class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
@@ -306,6 +307,7 @@ public class ArquivosUtil {
             }
 			short[] meta = new short[dis.readInt()];
 			for(int d = 0; d < meta.length; d++) meta[d] = dis.readShort();
+			chunk.meta = meta;
 
 			chunk.malha = null;
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Long, Chunk>();
@@ -316,7 +318,8 @@ public class ArquivosUtil {
 
             chunk.att = true;
 			chunk.dadosProntos = true;
-			mundo.estados.put(chave, 1);
+			ChunkLuz.calcularLuz(chunk);
+			mundo.estados.put(chave, 2);
         }
     }
 
@@ -375,6 +378,7 @@ public class ArquivosUtil {
 			Gdx.app.log("ArquivosUtil", "[ERRO] ao carregar inv: "+e);
 		}
     }
+	
     // svEstrutura: salva uma região do mundo como .minies
     /*
      * varre a bcaixa[baseX..baseX+larg-1, baseY..baseY+alt-1, baseZ..baseZ+prof-1],
@@ -555,6 +559,8 @@ public class ArquivosUtil {
 
         public void colocarMundo(int ox, int oy, int oz, boolean sobrescreverTudo) {
             if(lx == null) return;
+            // coleta chaves de chunks afetados (incluindo vizinhos de borda)
+            java.util.Set<Long> afetados = new java.util.HashSet<Long>();
             for(int i = 0; i < lx.length; i++) {
                 int vx = ox + (lx[i] - ancX);
                 int vy = oy + (ly[i] - ancY);
@@ -563,6 +569,18 @@ public class ArquivosUtil {
                 if(!sobrescreverTudo && (id == null || "ar".equals(id))) continue;
                 Mundo.defBlocoMundo(vx, vy, vz, id);
                 Mundo.defMetaMundo(vx, vy, vz, meta[i]);
+                // chunk do bloco e vizinhos laterais (faces compartilhadas entre chunks)
+                int cx = Math.floorDiv(vx, Mundo.TAM_CHUNK);
+                int cz = Math.floorDiv(vz, Mundo.TAM_CHUNK);
+                afetados.add(Chave.calcularChave(cx, cz));
+                afetados.add(Chave.calcularChave(cx + 1, cz));
+                afetados.add(Chave.calcularChave(cx - 1, cz));
+                afetados.add(Chave.calcularChave(cx, cz + 1));
+                afetados.add(Chave.calcularChave(cx, cz - 1));
+            }
+            for(long chave : afetados) {
+                Chunk c = Mundo.chunks.get(chave);
+                if(c != null) c.att = true;
             }
         }
     }
@@ -696,4 +714,3 @@ public class ArquivosUtil {
 		}    
 	}
 }
-

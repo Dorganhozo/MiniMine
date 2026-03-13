@@ -258,8 +258,11 @@ public class Render {
 					float larg = BlocoEstrutura.obterLarg(bx, by, bz);
 					float alt  = BlocoEstrutura.obterAlt(bx, by, bz);
 					float prof = BlocoEstrutura.obterProf(bx, by, bz);
-					// caixa começa 1 bloco a frente(+X) do bloco_estrutura
-					debugCaixas.box(bx + 1, by, bz + prof, larg, alt, prof);
+					int cx = BlocoEstrutura.obterCX(bx, by, bz);
+					int cy = BlocoEstrutura.obterCY(bx, by, bz);
+					int cz = BlocoEstrutura.obterCZ(bx, by, bz);
+					// z é a face traseira, profundidade negativo vai pra frente
+					debugCaixas.box(bx + cx, by + cy, bz + cz, larg, alt, -prof);
 				}
 				debugCaixas.end();
 			}
@@ -282,7 +285,7 @@ public class Render {
 
 		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 255, 16);
 	}
-	
+
     public void liberar() {
         shader.dispose();
         debugCaixas.dispose();
@@ -295,3 +298,5 @@ public class Render {
 		Animacoes2D.liberar();
     }
 }
+
+

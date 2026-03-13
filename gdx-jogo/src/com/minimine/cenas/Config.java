@@ -52,6 +52,7 @@ public class Config implements Screen, InputProcessor {
     public ItemConfig itemMusicas;
     public ItemConfig itemDistancia;
     public ItemConfig itemPOV;
+	public ItemConfig itemDebug;
 
     @Override
     public void show() {
@@ -222,6 +223,20 @@ public class Config implements Screen, InputProcessor {
             }
         );
         painelOpcoes.add(itemPOV);
+		
+		// debug:
+        itemDebug = ItemConfig.alternar(
+            5, posItem(5, alturaItem, espacamento), larguraItem, alturaItem,
+            "Modo Debug:", UI.debug ? "Ligado" : "Desligado",
+            fonteTexto, escalaItem, pixelBranco, visualBotao,
+            new Acao() {
+                public void exec() {
+                    UI.debug = !UI.debug;
+                    itemDebug.rotuloValor.texto = UI.debug ? "Ligado" : "Desligado";
+                }
+            }
+        );
+        painelOpcoes.add(itemDebug);
 
         painelPrincipal.add(painelOpcoes);
 
@@ -232,6 +247,7 @@ public class Config implements Screen, InputProcessor {
                 prefs.putFloat("sensi", UI.sensi);
                 prefs.putFloat("distancia", UI.distancia);
                 prefs.putBoolean("musicas", Jogo.musicas);
+				prefs.putBoolean("debug", UI.debug);
                 prefs.flush();
                 Inicio.defTela(Cenas.menu);
             }
