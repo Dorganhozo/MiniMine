@@ -29,6 +29,7 @@ import com.micro.Botao;
 import com.micro.Rotulo;
 import com.micro.Ancora;
 import com.micro.ItemBotao;
+import com.micro.ItemLinha;
 import com.micro.CampoTexto;
 import com.micro.PainelRolavel;
 import com.micro.CaixaDialogo;
@@ -53,12 +54,16 @@ public class MundoMenu implements Screen, InputProcessor {
     public Painel painelPrincipal;
     public PainelRolavel painelMundos;
     public CaixaDialogo dialogoCriar;
+    public CaixaDialogo dialogoConfirmarExcluir;
     public CampoTexto campoNome;
     public CampoTexto campoSemente;
 
     public List<String> nomesMundos;
     public boolean recarregarInterface, mundoEscolhido;
     public static boolean liberado = false;
+
+    // nome pendente de exclusão, preenchido quando o dialogo de confirmação abre
+    public String mundoPendenteExcluir = null;
 
     @Override
     public void show() {
@@ -67,14 +72,12 @@ public class MundoMenu implements Screen, InputProcessor {
         pincel = new SpriteBatch();
         pincelFormas = new ShapeRenderer();
 
-        // cria textura de pixel branco
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1, 1, 1, 1);
         pixmap.fill();
         pixelBranco = new Texture(pixmap);
         pixmap.dispose();
 
-        // carrega fontes
         fonteTitulo = new BitmapFont();
         fonteTitulo.getData().setScale(2.0f);
         fonteTitulo.getRegion().getTexture().setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -106,7 +109,7 @@ public class MundoMenu implements Screen, InputProcessor {
             Gdx.app.log("ERRO", "Recursos nao encontrados: " + e.getMessage());
         }
         Gdx.input.setInputProcessor(this);
-		mundoEscolhido = false;
+        mundoEscolhido = false;
         liberado = false;
     }
 
@@ -131,32 +134,27 @@ public class MundoMenu implements Screen, InputProcessor {
         painelPrincipal = new Painel(visualJanela, -400, -350, 800, 700, escalaPixel);
         painelPrincipal.defEspaco(20, 30);
 
-        // titulo
         Rotulo titulo = new Rotulo("MUNDOS", fonteTitulo, escalaPixel);
         titulo.largura = 760;
         titulo.altura = 60;
         painelPrincipal.addAncorado(titulo, Ancora.SUPERIOR_CENTRO, 0, 0);
 
-        // painel fixo para botões(não rolavel) abaixo do titulo
         Painel painelBotoes = new Painel(null, 20, 80, 760, 80, 0);
 
-        // botao novo mundo - com escala de texto reduzida para caber
         Acao acaoNovoMundo = new Acao() {
             public void exec() {
-				mundoEscolhido = false;
+                mundoEscolhido = false;
                 abrirDialogoCriar();
             }
         };
         Botao botaoNovoMundo = new Botao("Novo Mundo", visualBotao, fonteTexto, 0, 0, 400, 70, escalaPixel * 0.8f, acaoNovoMundo);
         painelBotoes.addAncorado(botaoNovoMundo, Ancora.SUPERIOR_CENTRO, 0, 0);
-
         painelPrincipal.add(painelBotoes);
 
-        // painel rolavel para lista de mundos, começa abaixo do painel de botões
+        // lista de mundos
         painelMundos = new PainelRolavel(20, 170, 760, 420);
-        painelMundos.defEspaco(0.5f); // sem espaçamento interno para aproveitar toda area
+        painelMundos.defEspaco(0.5f);
 
-        // adiciona mundos ao painel rolavel usando ItemBotao
         if(nomesMundos.isEmpty()) {
             Rotulo mensagemVazia = new Rotulo("Nenhum mundo salvo", fonteTexto, escalaPixel * 0.8f);
             mensagemVazia.x = 5;
@@ -165,33 +163,82 @@ public class MundoMenu implements Screen, InputProcessor {
             mensagemVazia.altura = 50;
             painelMundos.add(mensagemVazia);
         } else {
-            // altura de cada botão + espaçamento
-            float alturaBotao = 80;
-            float espacamento = 10;
+            float alturaLinha = 80;
+            float espacamento = 6;
+            // larguras das colunas dentro da linha (total = 750)
+            // [nome: 430][jogar: 100][editar: 100][excluir: 100] + margens internas
+            float larguraNome = 430;
+            float larguraBotaoAcao = 100;
+            float margemV = 10; // margem vertical interna do botao dentro da linha
+            float alturaItemInterno = alturaLinha - margemV * 2;
 
             for(int i = 0; i < nomesMundos.size(); i++) {
-                final String nomeMundo = Mundo.decodificarNome(nomesMundos.get(i));
+                final String nomeArquivo = nomesMundos.get(i);
+                final String nomeMundo = Mundo.decodificarNome(nomeArquivo);
 
+                float y = 5 + (i * (alturaLinha + espacamento));
+                ItemLinha linha = new ItemLinha(5, y, 750, alturaLinha, pixelBranco);
+
+                // rotulo do nome do mundo, alinhado verticalmente no centro
+                Rotulo rotuloNome = new Rotulo(nomeMundo, fonteTexto, escalaPixel * 0.75f);
+                rotuloNome.x = 10;
+                rotuloNome.y = margemV;
+                rotuloNome.largura = larguraNome - 10;
+                rotuloNome.altura = alturaItemInterno;
+                linha.addFilho(rotuloNome);
+
+                // botao jogar
+                float xJogar = larguraNome;
                 Acao acaoJogar = new Acao() {
                     public void exec() {
-						if(mundoEscolhido) return;
+                        if(mundoEscolhido) return;
                         Mundo.nome = nomeMundo;
-						mundoEscolhido = true;
+                        mundoEscolhido = true;
                         Inicio.defTela(Cenas.jogo);
                     }
                 };
-                // posicionamento simples: cada botão abaixo do anterior
-                float x = 5;
-                float y = 5 + (i * (alturaBotao + espacamento));
+                ItemBotao botaoJogar = new ItemBotao(
+                    xJogar, margemV, larguraBotaoAcao, alturaItemInterno,
+                    "Jogar", fonteTexto, escalaPixel * 0.6f, pixelBranco, acaoJogar
+                );
+                linha.addFilho(botaoJogar);
 
-                ItemBotao itemMundo = new ItemBotao(x, y, 750, alturaBotao, nomeMundo, fonteTexto, escalaPixel, pixelBranco, acaoJogar);
-                painelMundos.add(itemMundo);
+                // botao editar
+                float xEditar = larguraNome + larguraBotaoAcao + 5;
+                Acao acaoEditar = new Acao() {
+                    public void exec() {
+                        abrirDialogoEditar(nomeMundo, nomeArquivo);
+                    }
+                };
+                ItemBotao botaoEditar = new ItemBotao(
+                    xEditar, margemV, larguraBotaoAcao, alturaItemInterno,
+                    "Editar", fonteTexto, escalaPixel * 0.6f, pixelBranco, acaoEditar
+                );
+                botaoEditar.corNormal.set(0.35f, 0.45f, 0.35f, 1f);
+                botaoEditar.corPressionado.set(0.45f, 0.6f, 0.45f, 1f);
+                linha.addFilho(botaoEditar);
+
+                // botao excluir
+                float xExcluir = larguraNome + (larguraBotaoAcao + 5) * 2;
+                Acao acaoExcluir = new Acao() {
+                    public void exec() {
+                        abrirDialogoConfirmarExcluir(nomeMundo, nomeArquivo);
+                    }
+                };
+                ItemBotao botaoExcluir = new ItemBotao(
+                    xExcluir, margemV, larguraBotaoAcao, alturaItemInterno,
+                    "Excluir", fonteTexto, escalaPixel * 0.6f, pixelBranco, acaoExcluir
+                );
+                botaoExcluir.corNormal.set(0.5f, 0.25f, 0.25f, 1f);
+                botaoExcluir.corPressionado.set(0.7f, 0.3f, 0.3f, 1f);
+                linha.addFilho(botaoExcluir);
+
+                painelMundos.add(linha);
             }
         }
         painelMundos.calcularAlturaConteudo();
         painelPrincipal.add(painelMundos);
 
-        // botao voltar
         Acao acaoVoltar = new Acao() {
             public void exec() {
                 Inicio.defTela(Cenas.menu);
@@ -206,25 +253,21 @@ public class MundoMenu implements Screen, InputProcessor {
     }
 
     public void criarDialogos() {
-        // diálogo unificado de criação de mundo
+        // dialogo de criação de mundo
         dialogoCriar = new CaixaDialogo(visualJanela, fonteTexto, escalaPixel, pincelFormas);
         dialogoCriar.largura = 500;
-        dialogoCriar.altura  = 380;
+        dialogoCriar.altura = 380;
 
-        // campo nome
         campoNome = new CampoTexto(visualBotao, fonteTexto, 50, 240, 400, 50, escalaPixel);
         campoNome.padrao = "Nome do Mundo";
         campoNome.limiteCaracteres = 30;
         dialogoCriar.add(campoNome);
 
-        // campo semente
         campoSemente = new CampoTexto(visualBotao, fonteTexto, 50, 160, 400, 50, escalaPixel);
         campoSemente.padrao = "Semente(opcional)";
         campoSemente.limiteCaracteres = 10;
         dialogoCriar.add(campoSemente);
 
-        // ação comum: valida nome, aplica semente e entra no jogo com o modo dado
-        // os tres botões de modo chamam entrarNoMundo(modo)
         Acao acaoSobrevivencia = new Acao() {
             public void exec() { entrarNoMundo(2); }
         };
@@ -249,6 +292,62 @@ public class MundoMenu implements Screen, InputProcessor {
         dialogoCriar.addBotao("Cancelar", visualBotao, Ancora.SUPERIOR_DIREITO, -10, acaoCancelar);
 
         gerenciadorUI.addDialogo(dialogoCriar);
+
+        // dialogo de confirmação de exclusão
+        dialogoConfirmarExcluir = new CaixaDialogo(visualJanela, fonteTexto, escalaPixel, pincelFormas);
+        dialogoConfirmarExcluir.largura = 460;
+        dialogoConfirmarExcluir.altura = 220;
+
+        Acao acaoConfirmarExcluir = new Acao() {
+            public void exec() {
+                if(mundoPendenteExcluir != null) {
+                    excluirMundo(mundoPendenteExcluir);
+                    mundoPendenteExcluir = null;
+                }
+                dialogoConfirmarExcluir.fechar(false);
+            }
+        };
+        Acao acaoCancelarExcluir = new Acao() {
+            public void exec() {
+                mundoPendenteExcluir = null;
+                dialogoConfirmarExcluir.fechar(false);
+            }
+        };
+        dialogoConfirmarExcluir.addBotao("Excluir", visualBotao, Ancora.INFERIOR_ESQUERDO, 10, acaoConfirmarExcluir);
+        dialogoConfirmarExcluir.addBotao("Cancelar", visualBotao, Ancora.INFERIOR_DIREITO, -10, acaoCancelarExcluir);
+
+        gerenciadorUI.addDialogo(dialogoConfirmarExcluir);
+    }
+
+    public void abrirDialogoCriar() {
+        campoNome.texto = "";
+        campoSemente.texto = "";
+        dialogoCriar.mostrar("Novo Mundo", "", null);
+    }
+
+    public void abrirDialogoEditar(String nomeMundo, String nomeArquivo) {
+        // por enquanto so reabre o dialogo de criação com o nome preenchido
+        // pode ser expandido para renomear o arquivo depois
+        campoNome.texto = nomeMundo;
+        campoSemente.texto = "";
+        dialogoCriar.mostrar("Editar Mundo", "", null);
+    }
+
+    public void abrirDialogoConfirmarExcluir(String nomeMundo, String nomeArquivo) {
+        mundoPendenteExcluir = nomeArquivo;
+        dialogoConfirmarExcluir.mostrar(
+            "Excluir \"" + nomeMundo + "\"?",
+            "Isso nao pode ser desfeito.",
+            null
+        );
+    }
+
+    public void excluirMundo(String nomeArquivo) {
+        File arquivo = new File(Inicio.externo + "/MiniMine/mundos/" + nomeArquivo + ".mini");
+        if(arquivo.exists()) {
+            arquivo.delete();
+        }
+        recarregarInterface = true;
     }
 
     public void entrarNoMundo(int modo) {
@@ -259,7 +358,7 @@ public class MundoMenu implements Screen, InputProcessor {
         long semente = 0;
         try { semente = Integer.parseInt(textoSemente); } catch(Exception e) { semente = 0; }
 
-        Mundo.nome   = nome;
+        Mundo.nome = nome;
         Mundo.semente = semente;
         Jogo.modo = modo;
 
@@ -269,15 +368,8 @@ public class MundoMenu implements Screen, InputProcessor {
         Inicio.defTela(Cenas.jogo);
     }
 
-    public void abrirDialogoCriar() {
-        campoNome.texto = "";
-        campoSemente.texto = "";
-        dialogoCriar.mostrar("Novo Mundo", "", null);
-    }
-
     @Override
     public void render(float delta) {
-        // recarrega a interface se necessario
         if(recarregarInterface) {
             carregarMundos();
             gerenciadorUI.limpar();
@@ -311,13 +403,13 @@ public class MundoMenu implements Screen, InputProcessor {
         if(fonteTitulo != null) fonteTitulo.dispose();
         if(fonteTexto != null) fonteTexto.dispose();
         if(pixelBranco != null) pixelBranco.dispose();
-		gerenciadorUI.liberar();
+        gerenciadorUI.liberar();
     }
 
     @Override
     public void hide() {
-		dispose();
-	}
+        dispose();
+    }
 
     @Override
     public boolean touchDown(int x, int y, int p, int b) {
@@ -354,17 +446,16 @@ public class MundoMenu implements Screen, InputProcessor {
     @Override public void resume() {}
 
     @Override
-    public boolean keyUp(int k) { 
-        return false; 
+    public boolean keyUp(int k) {
+        return false;
     }
     @Override
-    public boolean mouseMoved(int x, int y) { 
-        return false; 
+    public boolean mouseMoved(int x, int y) {
+        return false;
     }
     @Override
-    public boolean scrolled(float a, float b) { 
-        return false; 
+    public boolean scrolled(float a, float b) {
+        return false;
     }
 }
-
 
