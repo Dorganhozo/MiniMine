@@ -10,10 +10,10 @@ import java.util.HashMap;
 public class InterUtil {
 	public static Map<String, BitmapFont> fontes = new HashMap<>();
 	
-	public static BitmapFont carregarFonte(String caminho, int tamanho) {
+	public static BitmapFont carregarFonte(String caminho, int tamanho, boolean externo) {
 		if(fontes.containsKey(caminho)) fontes.get(caminho).dispose();
 		
-		FreeTypeFontGenerator gerador = new FreeTypeFontGenerator(caminho.equals("ui/fontes/pixel.ttf") ? Gdx.files.internal(caminho) : Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho));
+		FreeTypeFontGenerator gerador = new FreeTypeFontGenerator(externo ? Gdx.files.absolute(Inicio.externo+"/MiniMine/mods/"+caminho) : Gdx.files.internal(caminho));
 		FreeTypeFontGenerator.FreeTypeFontParameter args = new FreeTypeFontGenerator.FreeTypeFontParameter();
 		args.characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_?!π√×|§°←↑↓→€¥¢£+-/×%^*#$&|=,.:;!?(){}[]<>@\"'~áãâçéêèēóõôò";
 		if(tamanho != 0) args.size = tamanho;
@@ -26,7 +26,11 @@ public class InterUtil {
 	}
 	
 	public static BitmapFont carregarFonte(String caminho) {
-		return carregarFonte(caminho, 0);
+		return carregarFonte(caminho, 0, false);
+	}
+	
+	public static BitmapFont carregarFonte(String caminho, int tamanho) {
+		return carregarFonte(caminho, tamanho, false);
 	}
 	
 	public static void liberar() {

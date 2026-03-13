@@ -9,15 +9,16 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Texturas {
 	public static TexLista<CharSequence, Texture> texs = new TexLista<CharSequence, Texture>();
 	public static TexLista<CharSequence, TextureRegion> atlas = new TexLista<CharSequence, TextureRegion>();
-	public static Texture blocos, agua, icones, base;
+	public static Texture blocos, agua, icones, base, ceu;
 	
 	public static void iniciar() {
 		try {
 			// atlas:
-			blocos = new Texture(Gdx.files.internal("blocos/blocos.png"));
-			agua = new Texture(Gdx.files.internal("blocos/anims/agua.png"));
-			icones = new Texture(Gdx.files.internal("ui/icones_16x16.png"));
-			base = new Texture(Gdx.files.internal("ui/base_botao.png"));
+			blocos = new Texture(Gdx.files.internal("texturas/blocos/blocos.png"));
+			agua = new Texture(Gdx.files.internal("texturas/blocos/anims/agua.png"));
+			icones = new Texture(Gdx.files.internal("texturas/ui/icones_16x16.png"));
+			base = new Texture(Gdx.files.internal("texturas/ui/base_botao.png"));
+			ceu = new Texture(Gdx.files.internal("texturas/sol_lua.png"));
 			// blocos:
 			atlas.put("grama_topo", new TextureRegion(blocos, 0, 0, 16, 16));
 			atlas.put("grama_lado", new TextureRegion(blocos, 16, 0, 16, 16));
@@ -67,6 +68,9 @@ public class Texturas {
 			atlas.put("botao_d", new TextureRegion(icones, 48, 16, 16, 16));
 			atlas.put("botao_le", new TextureRegion(icones, 64, 16, 16, 16));
 			atlas.put("botao_ld", new TextureRegion(icones, 80, 16, 16, 16));
+			// ambiente:
+			atlas.put("sol", new TextureRegion(ceu, 0, 0, 16, 16));
+			atlas.put("lua_completa", new TextureRegion(ceu, 0, 16, 16, 16));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: " + e);
 			throw new RuntimeException("[Texturas]: [ERRO]: ao carregar as texturas: "+e);
@@ -108,5 +112,6 @@ public class Texturas {
 		agua.dispose();
 		icones.dispose();
 		base.dispose();
+		ceu.dispose();
 	}
 }

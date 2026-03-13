@@ -106,7 +106,7 @@ public class Mundo {
 		}
 		if(carregado) {
 			GerenciadorEntidades.att(delta, this, jg);
-			if(ciclo) CorposCelestes.att(jg.camera.combined, jg.posicao);
+			if(ciclo) CorposCelestes.att(jg.camera);
 
 			// tick de fluxo de água com atraso
 			contaFluxo += delta;

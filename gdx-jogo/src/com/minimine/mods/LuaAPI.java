@@ -131,7 +131,7 @@ public class LuaAPI {
 	}
 
 	public static BitmapFont carregarFonte(String caminho, int tam) {
-		return InterUtil.carregarFonte(caminho, tam);
+		return InterUtil.carregarFonte(caminho, tam, true);
 	}
 
 	public static Sprite criarSprite(Texture textura) {

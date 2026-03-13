@@ -85,7 +85,7 @@ public class Intro implements Screen {
 
         mb = new ModelBatch();
 
-		Texture cuboTextura = new Texture(Gdx.files.internal("ui/focado.png"));
+		Texture cuboTextura = new Texture(Gdx.files.internal("texturas/ui/focado.png"));
 		Material material = new Material(new TextureAttribute(TextureAttribute.Diffuse, cuboTextura));
 		ModelBuilder mb2 = new ModelBuilder();
 
@@ -118,7 +118,7 @@ public class Intro implements Screen {
 			}
 		}
 		sb = new SpriteBatch();
-        fonte = InterUtil.carregarFonte("ui/fontes/pixel.ttf", 30);
+        fonte = InterUtil.carregarFonte("fontes/pixel.ttf", 30);
 		
 		Menu.procurarAtt();
     }

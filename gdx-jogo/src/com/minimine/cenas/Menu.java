@@ -69,7 +69,7 @@ public class Menu implements Screen, InputProcessor {
         prefs = Gdx.app.getPreferences("MiniConfig");
 
         try {
-            Texture textura = new Texture(Gdx.files.internal("ui/base.png"));
+            Texture textura = new Texture(Gdx.files.internal("texturas/ui/base.png"));
             textura.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             visualJanela = new PainelFatiado(textura);
             visualBotao = new PainelFatiado(textura);

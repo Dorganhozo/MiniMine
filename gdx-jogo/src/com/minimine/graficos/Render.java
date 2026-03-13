@@ -81,6 +81,7 @@ public class Render {
     "varying vec4 v_cor;\n" +
     "uniform sampler2D u_textura;\n" +
     "uniform float u_luzCeu;\n" +
+    "uniform vec3 u_corCeu;\n" +
     // array de vec4 contendo [uMin, vMin, uMax, vMax] pra cada ID
     "uniform vec4 u_atlasRects[256];\n" + 
     "void main() {\n" +
@@ -108,7 +109,7 @@ public class Render {
     "   float inicio = 16.0;\n" + 
     "   float fim = 64.0;\n" + 
     "   float fator = clamp((dist - inicio) / (fim - inicio), 0.0, 1.0);\n" +
-    "   vec3 corNevoa = vec3(0.4, 0.6, 0.9) * u_luzCeu;\n" + 
+    "   vec3 corNevoa = u_corCeu;\n" + 
     "   gl_FragColor = vec4(mix(texCor.rgb * iluminacaoFinal, corNevoa, fator), texCor.a);\n" +
     "}";
 
@@ -150,20 +151,14 @@ public class Render {
 
     public void att(float delta) {
 		if(!pause) {
-			float fator = DiaNoiteUtil.obterFatorTransicao();
-			float[] corNoite = {0.05f, 0.05f, 0.15f};
-			float[] corDia = {0.5f * DiaNoiteUtil.luz, 0.7f * DiaNoiteUtil.luz, 1.0f * DiaNoiteUtil.luz};
-
-			float r = corNoite[0] * (1f - fator) + corDia[0] * fator;
-			float g = corNoite[1] * (1f - fator) + corDia[1] * fator;
-			float b = corNoite[2] * (1f - fator) + corDia[2] * fator;
-
-			Gdx.gl.glClearColor(r, g, b, 1f);
+			Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
 			if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
+			if(mundo.ciclo) CorposCelestes.att(ui.jg.camera);
+
 			mundo.att(delta, ui.jg);
 
 			if(mundo.carregado) {
@@ -180,7 +175,8 @@ public class Render {
 			shader.begin();
 
 			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
-			shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz); 
+			shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz);
+			shader.setUniformf("u_corCeu", CorposCelestes.corCeuR, CorposCelestes.corCeuG, CorposCelestes.corCeuB);
 			shader.setUniformf("u_alturaSol", DiaNoiteUtil.obterFatorTransicao());
 
 			// == envia dados do atlas pro shader ===
@@ -295,8 +291,11 @@ public class Render {
         mb.dispose();
         gp.liberar();
 		if(mundo.nuvens) NuvensUtil.liberar();
+		if(mundo.ciclo) CorposCelestes.liberar();
 		Animacoes2D.liberar();
     }
 }
+
+
 
 
