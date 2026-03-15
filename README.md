@@ -52,6 +52,7 @@ refeito com LibGDX.
 * Eventos de blocos.
 * Menu de itens com barra de pesquisa.
 * Cavernas em tuneis.
+* Dano de queda.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam

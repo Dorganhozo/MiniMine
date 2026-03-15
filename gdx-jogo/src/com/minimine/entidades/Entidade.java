@@ -37,6 +37,19 @@ public class Entidade {
 
 	public String bioma = "";
 
+	// === sistema de dano ===
+	public static final int BLOCOS_QUEDA_SEGURA = 3;   // blocos sem dano
+	public static final float TICK_REGENERACAO = 5f;  // regenera 1 de vida a cada 5 segundos
+
+	public float alturaMaxQueda  = 0f; // Y mais alto registrado enquanto estava no ar
+	public boolean rastreandoQueda = false;
+
+	public float tempoInvulneravel = 0f; // segundos restantes de invulnerabilidade pós-dano
+	public static final float DURACAO_INVUL = 0.5f;
+
+	public float timerAfogamento  = 0f;
+	public float timerRegeneracao = 0f;
+
 	public void attHitbox() {
 		float x = posicao.x;
 		float y = posicao.y;
@@ -136,6 +149,18 @@ public class Entidade {
 		return false;
 	}
 
+	// aplica dano respeitando invulnerabilidade; retorna true se o dano foi aplicado
+	public boolean tomarDano(int dano) {
+		if(tempoInvulneravel > 0f) return false;
+		vida -= dano;
+		if(vida < 0) vida = 0;
+		tempoInvulneravel = DURACAO_INVUL;
+		if(vida == 0) morreu();
+		return true;
+	}
+	
+	public void morreu() {}
+
 	public void att(float delta) {
 		if(voando) velocidade.y = 0;
 
@@ -146,10 +171,10 @@ public class Entidade {
 
 		// direção da entidade
 		float desejadoX = 0, desejadoZ = 0;
-		if(frente) { desejadoX += frenteV.x;   desejadoZ += frenteV.z; }
-		if(tras) { desejadoX -= frenteV.x;   desejadoZ -= frenteV.z; }
-		if(esquerda) { desejadoX += direitaV.x;  desejadoZ += direitaV.z; }
-		if(direita) { desejadoX -= direitaV.x;  desejadoZ -= direitaV.z; }
+		if(frente) { desejadoX += frenteV.x; desejadoZ += frenteV.z; }
+		if(tras) { desejadoX -= frenteV.x; desejadoZ -= frenteV.z; }
+		if(esquerda) { desejadoX += direitaV.x; desejadoZ += direitaV.z; }
+		if(direita) { desejadoX -= direitaV.x; desejadoZ -= direitaV.z; }
 
 		// normaliza pra evitar diagonal mais rapida
 		float tam = (float)Math.sqrt(desejadoX * desejadoX + desejadoZ * desejadoZ);
@@ -163,7 +188,7 @@ public class Entidade {
 		velocidade.x += (desejadoX - velocidade.x) * Math.min(acel * delta, 1f);
 		velocidade.z += (desejadoZ - velocidade.z) * Math.min(acel * delta, 1f);
 
-		// aplica atrito quando sem entrasa(so no chão/voando)
+		// aplica atrito quando sem entrada(so no chão/voando)
 		if(desejadoX == 0 && desejadoZ == 0) {
 			float fator = Math.max(0f, 1f - atrito * delta);
 			velocidade.x *= fator;
@@ -176,9 +201,52 @@ public class Entidade {
 			}
 		}
 		if(baixo) velocidade.y = -10;
-		
+
 		movendo = noChao && (Math.abs(velocidade.x) > 1f || Math.abs(velocidade.z) > 1f);
+
+		// === ticks de dano ===
+
+		// invulnerabilidade
+		if(tempoInvulneravel > 0f) {
+			tempoInvulneravel -= delta;
+			if(tempoInvulneravel < 0f) tempoInvulneravel = 0f;
+		}
+		// rastreamento de queda: registra o Y mais alto enquanto estiver no ar
+		if(!noChao && !naAgua && !voando) {
+			if(!rastreandoQueda) {
+				// começou a cair/pular agora
+				alturaMaxQueda = posicao.y;
+				rastreandoQueda = true;
+			} else if(posicao.y > alturaMaxQueda) {
+				// ainda subindo, atualiza o pico
+				alturaMaxQueda = posicao.y;
+			}
+		} else if(noChao && rastreandoQueda) {
+			// acabou de pousar: calcula o dano
+			float blocosCaidos = alturaMaxQueda - posicao.y;
+			float blocosAlemDoSafe = blocosCaidos - BLOCOS_QUEDA_SEGURA;
+			if(blocosAlemDoSafe > 0f) {
+				int danoQueda = (int) blocosAlemDoSafe; // 1 de dano por bloco acima do limite
+				if(danoQueda > 0) tomarDano(danoQueda);
+			}
+			rastreandoQueda = false;
+		} else if(naAgua || voando) {
+			// entrou na água ou começou a voar: cancela rastreamento sem punir
+			rastreandoQueda = false;
+		}
+		// regeneração automática fora da água
+		if(!naAgua && vida > 0 && vida < vidaMax) {
+			timerRegeneracao += delta;
+			if(timerRegeneracao >= TICK_REGENERACAO) {
+				timerRegeneracao -= TICK_REGENERACAO;
+				vida++;
+				if(vida > vidaMax) vida = vidaMax;
+			}
+		} else if(naAgua) {
+			timerRegeneracao = 0f;
+		}
 	}
+
 	public void render(ModelBatch mb) {}
 	public void liberar() {}
 }

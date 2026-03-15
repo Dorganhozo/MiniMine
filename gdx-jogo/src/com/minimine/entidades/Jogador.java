@@ -76,6 +76,15 @@ public class Jogador extends Entidade {
 		instancia.calculateTransforms();
 	}
 
+	@Override
+	public void morreu() {
+		posicao = new Vector3(0f, 0f, 0f);
+		posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
+		velocidade.set(0, 0, 0);
+		vida = vidaMax;
+		tempoInvulneravel = 3f;
+	}
+
 	public void interagirBloco() {
 		Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
@@ -116,7 +125,7 @@ public class Jogador extends Entidade {
 						blocoHitbox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
 						attHitbox();
 						if(blocoHitbox.intersects(hitbox)) return;
-						
+
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, inv.itens[inv.slotSelecionado].nome);
 						Bloco.tocarSom(item);
 						Bloco blocoColocado = Bloco.texIds.get(item);
@@ -255,5 +264,4 @@ public class Jogador extends Entidade {
         if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
     }
 }
-
 
