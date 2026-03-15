@@ -14,10 +14,7 @@ import java.util.concurrent.Executors;
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.utils.Mat;
-import com.minimine.utils.NuvensUtil;
-import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.graficos.Texturas;
-import com.minimine.utils.CorposCelestes;
 // libgdx
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Pool;
@@ -106,8 +103,7 @@ public class Mundo {
 		}
 		if(carregado) {
 			GerenciadorEntidades.att(delta, this, jg);
-			if(ciclo) CorposCelestes.att(jg.camera);
-
+			
 			// tick de fluxo de água com atraso
 			contaFluxo += delta;
 			if(contaFluxo >= INTERVALO_FLUXO) {
@@ -297,15 +293,6 @@ public class Mundo {
 	}
 
     // GERAÇÃO DE DADOS:
-    public boolean deveAttChunk(int chunkX, int chunkZ, int x, int z) {
-        int distX = Mat.abs(chunkX - x);
-        int distZ = Mat.abs(chunkZ - z);
-        // prioriza chunks mais proximos
-        if(distX <= 1 && distZ <= 1) return true; // alta prioridade
-        if(distX <= RAIO_CHUNKS/2 && distZ <= RAIO_CHUNKS/2) return true; // media prioridade
-        return distX <= RAIO_CHUNKS && distZ <= RAIO_CHUNKS; // baixa prioridade
-    }
-
     public void attChunks(int x, int z) {
 		final int cx = x >> 4;
 		final int cz = z >> 4;

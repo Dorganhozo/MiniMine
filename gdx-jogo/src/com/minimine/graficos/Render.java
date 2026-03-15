@@ -12,7 +12,7 @@ import com.minimine.mundo.Chunk;
 import com.minimine.utils.NuvensUtil;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.Texture;
-import com.minimine.utils.CorposCelestes;
+import com.minimine.utils.DiaNoiteUtil;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -25,6 +25,7 @@ import com.minimine.mundo.blocos.BlocoEstrutura;
 public class Render {
     public UI ui;
     public Mundo mundo;
+	public DiaNoiteUtil diaNoite;
 	public static boolean pause = false;
     public static ShaderProgram shader;
     public static ShapeRenderer debugCaixas;
@@ -116,6 +117,7 @@ public class Render {
     public Render(Jogador jogador, Mundo mundo) {
         this.ui = new UI(jogador);
         this.mundo = mundo;
+		this.diaNoite = new DiaNoiteUtil();
 
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
@@ -124,8 +126,9 @@ public class Render {
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
         shader = new ShaderProgram(vert, frag);
+		ShaderProgram.pedantic = false;
+		
         if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
-
         debugCaixas = new ShapeRenderer();
 
         // animação da água
@@ -138,11 +141,9 @@ public class Render {
 
         // carrega as particulas
         gp = new GerenciadorParticulas(ui.jg);
-
-        ShaderProgram.pedantic = false;
-
+		
         if(mundo.nuvens) NuvensUtil.iniciar(ui.jg.posicao);
-        if(mundo.ciclo) CorposCelestes.iniciar();
+        if(mundo.ciclo) diaNoite.iniciar();
 
         mb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
 
@@ -155,10 +156,13 @@ public class Render {
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+			
+			if(ui.debug) ui.gpu.enable();
+			else ui.gpu.disable();
+			if(ui.debug) ui.gpu.reset();
 
-			if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.posicao);
-			if(mundo.ciclo) CorposCelestes.att(ui.jg.camera);
-
+			if(mundo.ciclo) diaNoite.att(ui.jg.camera, delta);
+			
 			mundo.att(delta, ui.jg);
 
 			if(mundo.carregado) {
@@ -175,16 +179,14 @@ public class Render {
 			shader.begin();
 
 			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
-			shader.setUniformf("u_luzCeu", DiaNoiteUtil.luz);
-			shader.setUniformf("u_corCeu", CorposCelestes.corCeuR, CorposCelestes.corCeuG, CorposCelestes.corCeuB);
-			shader.setUniformf("u_alturaSol", DiaNoiteUtil.obterFatorTransicao());
+			shader.setUniformf("u_luzCeu", diaNoite.luz);
+			shader.setUniformf("u_corCeu", diaNoite.corCeuR, diaNoite.corCeuG, diaNoite.corCeuB);
+			shader.setUniformf("u_alturaSol", diaNoite.obterFatorTransicao());
 
 			// == envia dados do atlas pro shader ===
 			// envia a tabela de pesquisa uma vez por frame(ou quando mudar)
 			// o 4fv envia vetores de 4 floats
-			shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4); 
-
-			DiaNoiteUtil.aplicarShader(shader);
+			if(!mundo.carregado) shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4); 
 
 			Texturas.blocos.bind(0);
 			shader.setUniformi("u_textura", 0);
@@ -209,8 +211,9 @@ public class Render {
 			}
 			Animacoes2D.att(delta);
 			shader.end();
-
-			if(mundo.nuvens) NuvensUtil.att(ui.jg.camera.combined);
+			
+			if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.camera);
+			
 			gp.att(delta);
 
 			// renderiza os modelos 3D
@@ -291,11 +294,7 @@ public class Render {
         mb.dispose();
         gp.liberar();
 		if(mundo.nuvens) NuvensUtil.liberar();
-		if(mundo.ciclo) CorposCelestes.liberar();
+		if(mundo.ciclo) diaNoite.liberar();
 		Animacoes2D.liberar();
     }
 }
-
-
-
-

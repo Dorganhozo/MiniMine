@@ -14,6 +14,7 @@ public class Musicas {
 		Musicas.addMusica("igor", "audio/musicas/igor.ogg");
 		Musicas.addMusica("igor-2", "audio/musicas/igor-2.ogg");
 		Musicas.addMusica("caminho-sombreado", "audio/musicas/caminho-sombreado.ogg");
+		Musicas.addMusica("gatitos", "audio/musicas/gatitos.ogg");
 	}
 	
 	public static Music addMusica(String nome, String caminho) {
@@ -26,12 +27,12 @@ public class Musicas {
 	
 	public static void tocarAleatorio() {
 		if(tocando == null || !tocando.isPlaying()) {
-			for(Music m : musicas.values()) {
-				double chance = Math.random();
-				if(chance > 0.5) {
+			for(Object nome : musicas.keySet()) {
+				Music m = musicas.get(nome);
+				if(Math.random() > 0.5) {
 					tocando = m;
 					m.play();
-					Gdx.app.log("[Musicas]", "Tocando com chance "+chance);
+					Gdx.app.log("Musicas", "Tocando "+nome.toString());
 					return;
 				}
 			}

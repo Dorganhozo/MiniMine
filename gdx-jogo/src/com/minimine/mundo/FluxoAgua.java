@@ -4,21 +4,17 @@ import com.minimine.mundo.blocos.Bloco;
 import java.util.Arrays;
 /*
  * sistema de fluxo de água baseado em BFS por nivel
-
+ 
  * o nivel de água é armazenado no short[] meta da Chunk.java:
  *   0 = fonte(nivel cheio, colocado pelo jogador ou gerado estaticamente)
  *   1 a 7 = fluxo horizontal decrescente(7 = mais fraco, some ao chegar em 8)
  *   0xFF = ausencia de água(bloco seco)
-
+ 
  * FLUXO PROGRESSIVO:
  *   cada tick propaga um nivel lateral a mais que o tick anterior
  *   nivelAlvo começa em 1(primeira expansão a partir da fonte) e cresce até
  *   NIVEL_MAX_FLUXO. a fronteira é determinada pelo maior nível ja presente
  *   queda livre(Y-1) sempre propaga sem restrição
-
- * REMOÇÃO:
- *   recalcularFluxo() faz BFS completo semeando só fontes reais(meta=0)
- *   blocos de fluxo não semeados somem se não alcançados
  */
 public class FluxoAgua {
     public static final int NIVEL_AUSENTE = 0xFF;
@@ -68,16 +64,18 @@ public class FluxoAgua {
         // se ja ha fluxo até nivel N, propaga nivel N+1
         final int nivelAlvo = nivelFronteira + 1;
 
-        propagar(chunk, metaTemp, fila, inicioFila, fimFila, nivelAlvo);
+        propagar(chunk, metaTemp, fila, inicioFila, fimFila, nivelAlvo, true);
         boolean mudou = aplicar(chunk, metaTemp);
 
         // continua sujo se ainda ha niveis a expandir
-        chunk.fluxoSujo = mudou && nivelAlvo <= NIVEL_MAX_FLUXO;
+        // usa < (não <=) para não agendar tick extra quando ja chegou no nivel maximo
+        chunk.fluxoSujo = mudou && (nivelAlvo < NIVEL_MAX_FLUXO);
         chunk.luzSuja = true;
         chunk.att = true;
     }
 
     // REMOÇÃO/MUDANÇA: BFS completo para convergir imediatamente
+    // não propaga para vizinhos (propagarBorda=false) para evitar ping-pong em mares
     public static void recalcularFluxo(Chunk chunk) {
         final byte[] metaTemp = META_TEMP_REUSO.get();
         final int[] fila = FILA_REUSO.get();
@@ -100,18 +98,21 @@ public class FluxoAgua {
                 }
             }
         }
-        // passa NIVEL_MAX_FLUXO+1 para desabilitar o limite lateral(BFS completo)
-        propagar(chunk, metaTemp, fila, inicioFila, fimFila, NIVEL_MAX_FLUXO + 1);
+        // NIVEL_MAX_FLUXO+1 = sem limite lateral (BFS completo)
+        // propagarBorda=false: não espalha para chunks vizinhos e evita loop infinito
+        propagar(chunk, metaTemp, fila, inicioFila, fimFila, NIVEL_MAX_FLUXO + 1, false);
         aplicar(chunk, metaTemp);
         chunk.fluxoSujo = false;
         chunk.luzSuja = true;
         chunk.att = true;
     }
+
     // BFS com limite de nivel lateral
     // nivelAlvo: nivel máximo permitido na propagação lateral deste tick
-    // NIVEL_MAX_FLUXO+1 = sem limite(BFS completo)
+    //   NIVEL_MAX_FLUXO+1 = sem limite(BFS completo)
+    // propagarBorda: se false, ignora blocos alem da borda do chunk(evita ping-pong)
     public static void propagar(Chunk chunk, byte[] metaTemp, int[] fila,
-	int inicioFila, int fimFila, int nivelAlvo) {
+		int inicioFila, int fimFila, int nivelAlvo, boolean propagarBorda) {
         final int origemX = chunk.x << 4;
         final int origemZ = chunk.z << 4;
 
@@ -144,7 +145,7 @@ public class FluxoAgua {
                             if(fimFila < fila.length) fila[fimFila++] = idc;
                         }
                     }
-                } else {
+                } else if(propagarBorda) {
                     propagarVizinho(origemX + 16, cy, origemZ + cz, nivelVizinho);
                 }
                 if(cx - 1 >= 0) {
@@ -154,7 +155,7 @@ public class FluxoAgua {
                             if(fimFila < fila.length) fila[fimFila++] = idc;
                         }
                     }
-                } else {
+                } else if(propagarBorda) {
                     propagarVizinho(origemX - 1, cy, origemZ + cz, nivelVizinho);
                 }
                 if(cz + 1 < 16) {
@@ -164,7 +165,7 @@ public class FluxoAgua {
                             if(fimFila < fila.length) fila[fimFila++] = idc;
                         }
                     }
-                } else {
+                } else if(propagarBorda) {
                     propagarVizinho(origemX + cx, cy, origemZ + 16, nivelVizinho);
                 }
                 if(cz - 1 >= 0) {
@@ -174,28 +175,28 @@ public class FluxoAgua {
                             if(fimFila < fila.length) fila[fimFila++] = idc;
                         }
                     }
-                } else {
+                } else if(propagarBorda) {
                     propagarVizinho(origemX + cx, cy, origemZ - 1, nivelVizinho);
                 }
             }
         }
     }
 
-    public static void propagarVizinho(int wx, int wy, int wz, int nivelNovo) {
-        if(wy < 0 || wy >= Mundo.Y_CHUNK) return;
-        int blocoId = Mundo.obterBlocoMundo(wx, wy, wz);
-        boolean ehAr   = blocoId == 0;
+    public static void propagarVizinho(int mx, int my, int mz, int nivelNovo) {
+        if(my < 0 || my >= Mundo.Y_CHUNK) return;
+        int blocoId = Mundo.obterBlocoMundo(mx, my, mz);
+        boolean ehAr = blocoId == 0;
         boolean ehAgua = eAgua(blocoId);
         if(!ehAr && !ehAgua) return;
         if(ehAgua) {
-            int nivelAtual = Mundo.obterMetaMundo(wx, wy, wz) & 0xFF;
+            int nivelAtual = Mundo.obterMetaMundo(mx, my, mz) & 0xFF;
             if(nivelAtual == NIVEL_AUSENTE || nivelNovo >= nivelAtual) return;
-            Mundo.defMetaMundo(wx, wy, wz, (short)nivelNovo);
+            Mundo.defMetaMundo(mx, my, mz, (short)nivelNovo);
         } else {
-            Mundo.defBlocoMundo(wx, wy, wz, "agua");
-            Mundo.defMetaMundo(wx, wy, wz, (short)nivelNovo);
+            Mundo.defBlocoMundo(mx, my, mz, "agua");
+            Mundo.defMetaMundo(mx, my, mz, (short)nivelNovo);
         }
-        marcarChunk(wx >> 4, wz >> 4);
+        marcarChunk(mx >> 4, mz >> 4);
     }
 
     public static boolean aplicar(Chunk chunk, byte[] metaTemp) {
@@ -264,8 +265,9 @@ public class FluxoAgua {
     public static void marcarChunk(int cx, int cz) {
         Chunk c = Mundo.chunks.get(Chave.calcularChave(cx, cz));
         if(c != null) {
-			c.fluxoSujo = true;
-			c.att = true;
-		}
+            c.fluxoSujo = true;
+            c.att = true;
+        }
     }
 }
+

@@ -166,8 +166,8 @@ public class ArquivosUtil {
                         lerInventario(dis, jogador);
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] inventario.bin lido");
                     } else if("ciclo.bin".equals(nome)) {
-                        DiaNoiteUtil.tempo = dis.readFloat();
-                        DiaNoiteUtil.tempo_velo = dis.readFloat();
+                        Jogo.render.diaNoite.tempo = dis.readFloat();
+                        Jogo.render.diaNoite.tempo_velo = dis.readFloat();
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] ciclo.bin lido");
                     } else {
                         // garante consumo da entrada
@@ -279,8 +279,8 @@ public class ArquivosUtil {
     }
 
     public static void gravarCiclo(DataOutputStream dos) throws IOException {
-        dos.writeFloat(DiaNoiteUtil.tempo);
-        dos.writeFloat(DiaNoiteUtil.tempo_velo);
+        dos.writeFloat(Jogo.render.diaNoite.tempo);
+        dos.writeFloat(Jogo.render.diaNoite.tempo_velo);
         dos.flush();
     }
 

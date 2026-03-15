@@ -52,35 +52,35 @@ public class Bloco {
 	}
 
 	public static void iniciar() {
-		Bloco.blocos.add(null);
-        Bloco.blocos.add(new Bloco("grama", "grama_topo", "grama_lado", "terra"));
-        Bloco.blocos.add(new Bloco("terra", "terra"));
-        Bloco.blocos.add(new Bloco("pedra", "pedra"));
-        Bloco.blocos.add(new Bloco("agua", "agua", true, false, false));
-        Bloco.blocos.add(new Bloco("areia", "areia"));
-        Bloco.blocos.add(new Bloco("tronco", "tronco_topo", "tronco_lado"));
-        Bloco.blocos.add(new Bloco("folha", "folha", true, true, false));
-        Bloco.blocos.add(new Bloco("tabua_madeira", "tabua_madeira"));
-        Bloco.blocos.add(new Bloco("cacto", "cacto_topo", "cacto_lado"));
-        Bloco.blocos.add(new Bloco("vidro", "vidro", true, true, false));
-        Bloco.blocos.add(new Bloco("tocha", "tocha", false, true, true, 13));
-		Bloco.blocos.add(new Bloco("pedregulho", "pedregulho"));
-		Bloco.blocos.add(new Bloco("cascalho", "cascalho"));
-		Bloco.blocos.add(new Bloco("gelo", "gelo"));
-		Bloco.blocos.add(new Bloco("neve", "neve"));
-		Bloco.blocos.add(new Bloco("coral_rosa", "coral_rosa"));
-		Bloco.blocos.add(new Bloco("coral_azul", "coral_azul"));
-		Bloco.blocos.add(new Bloco("coral_amarelo", "coral_amarelo"));
-		Bloco.blocos.add(new Bloco("capim", "capim", true, false, false, 0, true));
-		Bloco.blocos.add(new Bloco("tulipa", "tulipa", true, false, false, 3, true));
-		Bloco.blocos.add(new Bloco("iris_azul", "iris_azul", true, false, false, 1, true));
-		Bloco.blocos.add(new Bloco("arenito", "arenito"));
-		Bloco.blocos.add(new Bloco("pilar_arenito", "pilar_arenito_topo", "pilar_arenito_lado"));
+		Bloco.add(null);
+        Bloco.add(new Bloco("grama", "grama_topo", "grama_lado", "terra"));
+        Bloco.add(new Bloco("terra", "terra"));
+        Bloco.add(new Bloco("pedra", "pedra"));
+        Bloco.add(new Bloco("agua", "agua", true, false, false)).liquido = true;
+        Bloco.add(new Bloco("areia", "areia"));
+        Bloco.add(new Bloco("tronco", "tronco_topo", "tronco_lado"));
+        Bloco.add(new Bloco("folha", "folha", true, true, false));
+        Bloco.add(new Bloco("tabua_madeira", "tabua_madeira"));
+        Bloco.add(new Bloco("cacto", "cacto_topo", "cacto_lado"));
+        Bloco.add(new Bloco("vidro", "vidro", true, true, false));
+        Bloco.add(new Bloco("tocha", "tocha", false, true, true, 13));
+		Bloco.add(new Bloco("pedregulho", "pedregulho"));
+		Bloco.add(new Bloco("cascalho", "cascalho"));
+		Bloco.add(new Bloco("gelo", "gelo"));
+		Bloco.add(new Bloco("neve", "neve"));
+		Bloco.add(new Bloco("coral_rosa", "coral_rosa"));
+		Bloco.add(new Bloco("coral_azul", "coral_azul"));
+		Bloco.add(new Bloco("coral_amarelo", "coral_amarelo"));
+		Bloco.add(new Bloco("capim", "capim", true, false, false, 0, true));
+		Bloco.add(new Bloco("tulipa", "tulipa", true, false, false, 3, true));
+		Bloco.add(new Bloco("iris_azul", "iris_azul", true, false, false, 1, true));
+		Bloco.add(new Bloco("arenito", "arenito"));
+		Bloco.add(new Bloco("pilar_arenito", "pilar_arenito_topo", "pilar_arenito_lado"));
 		/*
 		 * bloco_nulo: marca "ar explícito" dentro de estruturas salvas
 		 * transparente=true, solido=false, culling=false para não interferir no mundo
 		 */
-		Bloco.blocos.add(new Bloco("bloco_nulo", "nulo", true, false, false));
+		Bloco.add(new Bloco("bloco_nulo", "nulo", true, false, false));
 		/*
 		 * bloco_estrutura: abre interface para definir e salvar estruturas .minies
 		 * usa textura de pedra provisoriamente
@@ -114,6 +114,11 @@ public class Bloco {
             default: return lados;
         }
     }
+	
+	public static Bloco add(Bloco b) {
+		blocos.add(b);
+		return b;
+	}
 
 	public static void addSom(String bloco, String... sonoros) {
 		sons.put(bloco, sonoros);

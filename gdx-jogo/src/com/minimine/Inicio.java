@@ -8,7 +8,7 @@ import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.Gdx;
 import com.minimine.ui.UI;
 import com.minimine.utils.NuvensUtil;
-import com.minimine.utils.CorposCelestes;
+import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.mundo.Mundo;
 import com.minimine.audio.Audio;
 import com.minimine.audio.Musicas;
@@ -64,7 +64,6 @@ public class Inicio extends Game {
 		super.dispose();
 		try {
 			Texturas.liberar();
-			CorposCelestes.liberar();
 			Audio.liberar();
 			Musicas.liberar();
 			Modelos.liberar();

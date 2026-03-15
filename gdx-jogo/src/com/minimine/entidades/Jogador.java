@@ -95,10 +95,10 @@ public class Jogador extends Entidade {
 			Bloco bloco = Bloco.numIds.get(Mundo.obterBlocoMundo(x, y, z));
 
 			if(bloco != null) {
-				if(item.equals("ar")) {
+				if(item.equals("ar") || bloco.liquido) {
 					// clique esquerdo: quebrar bloco normalmente
 					if(modo == 2) inv.addItem(bloco.nome, 1);
-					Mundo.defBlocoMundo(x, y, z, "ar");
+					Mundo.defBlocoMundo(x, y, z, item);
 					Bloco.tocarSom(bloco.nome);
 					if(bloco.evento != null) bloco.evento.aoDestruir(x, y, z);
 				} else {

@@ -41,13 +41,6 @@ public class Jogo implements Screen {
 			new java.util.TimerTask() {
 				@Override
 				public void run() {
-					if(mundo.ciclo) DiaNoiteUtil.att();
-				}
-			}, 0, 120);
-		relogio.schedule(
-			new java.util.TimerTask() {
-				@Override
-				public void run() {
 					if(musicas) Musicas.tocarAleatorio();
 				}
 			}, 0, 1000);

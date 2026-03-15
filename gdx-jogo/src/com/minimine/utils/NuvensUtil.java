@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.Gdx;
 import com.minimine.mundo.Mundo;
+import com.badlogic.gdx.graphics.PerspectiveCamera;
 
 public class NuvensUtil {
     public static Mesh malha;
@@ -137,18 +138,24 @@ public class NuvensUtil {
         malha.setVertices(verticesCache);
     }
 
-    public static void att(float delta, Vector3 pos) {
+    public static void att(float delta, PerspectiveCamera camera) {
         for(int i = 0; i < NUM_NUVENS; i++) {
             int base = i * 4;
             nuvensPos[base] -= VELO * delta * 60f;
             
-            float dx = nuvensPos[base] - pos.x;
-            float dz = nuvensPos[base + 2] - pos.z;
+            float dx = nuvensPos[base] - camera.position.x;
+            float dz = nuvensPos[base + 2] - camera.position.z;
             if((float)Math.sqrt(dx*dx + dz*dz) > RAIO_VISIVEL) {
-                attNuvemEspalhada(i, pos);
+                attNuvemEspalhada(i, camera.position);
             }
         }
         attMesh();
+		if(!Mundo.nuvens || malha == null) return;
+
+        shader.begin();
+        shader.setUniformMatrix("u_projPos", camera.combined);
+        malha.render(shader, GL20.GL_TRIANGLES);
+        shader.end();
     }
 
     public static void attNuvemEspalhada(int idc, Vector3 posJogador) {
@@ -164,15 +171,6 @@ public class NuvensUtil {
         nuvensPos[base + 1] = ALTURA_NUVENS + (float)Math.random() * 20f; // altura
         nuvensPos[base + 2] = posJogador.z + (float)Math.sin(Math.toRadians(angulo)) * dis;
         nuvensPos[base + 3] = 6f + (float)Math.random() * 10f; // tamanho
-    }
-
-    public static void att(Matrix4 matrizCamera) {
-        if(!Mundo.nuvens || malha == null) return;
-
-        shader.begin();
-        shader.setUniformMatrix("u_projPos", matrizCamera);
-        malha.render(shader, GL20.GL_TRIANGLES);
-        shader.end();
     }
 
     public static void liberar() {

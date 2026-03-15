@@ -38,6 +38,8 @@ import com.micro.Rotulo;
 import com.micro.PainelFatiado;
 import com.micro.Acao;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.graphics.profiling.GLProfiler;
+import com.minimine.cenas.Jogo;
 
 public class UI implements InputProcessor {
     // camera 3D e renderização
@@ -85,6 +87,7 @@ public class UI implements InputProcessor {
     public PaginaItens paginaItens = new PaginaItens();
 
     public static Runtime rt = Runtime.getRuntime();
+	public static GLProfiler gpu;
 
     public UI(Jogador jogador) {
         camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -114,6 +117,7 @@ public class UI implements InputProcessor {
 
         Gdx.input.setInputProcessor(this);
         Gdx.input.setCursorCatched(true);
+		gpu = new GLProfiler(Gdx.graphics);
     }
 
     // === criação de componentes Micro ===
@@ -346,7 +350,7 @@ public class UI implements InputProcessor {
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
         Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-
+		
         sb.begin();
 
         // mira
@@ -519,13 +523,17 @@ public class UI implements InputProcessor {
 					   jg.inv.slotSelecionado, jg.item, jg.noChao, jg.naAgua, jg.agachado, jg.velo, jg.altura,
 					   jg.direita, jg.esquerda, jg.frente, jg.tras, jg.cima, jg.baixo, jg.acao,
 					   mundo.nome, jg.bioma, mundo.RAIO_CHUNKS, mundo.chunks.size(),
-					   mundo.chunksMod.size(), mundo.semente, DiaNoiteUtil.tempo, DiaNoiteUtil.tempo_velo),
+					   mundo.chunksMod.size(), mundo.semente, Jogo.render.diaNoite.tempo, Jogo.render.diaNoite.tempo_velo),
 				   50, Gdx.graphics.getHeight() - 100);
         fonte.draw(sb, String.format(
-					   "FPS: %d\nThreads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\n" +
+					   "FPS: %d\nGPU:\nDesenhos: %d\nVértices: %.0f\n" +
+					   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\n" +
 					   "Memória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\n" +
 					   "Memória nativa usada: %.1f MB\n\nLogs:\n%s",
-					   fps, Thread.activeCount(), livre, total, total - livre,
+					   fps,
+					   gpu.getDrawCalls(),
+					   gpu.getVertexCount().total,
+					   Thread.activeCount(), livre, total, total - livre,
 					   nativaLivre, nativaTotal, nativaTotal - nativaLivre,
 					   sb2.toString()),
 				   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
@@ -700,6 +708,7 @@ public class UI implements InputProcessor {
             if(antigo != null) { antigo.aoSoltar(); antigo.sprite.setAlpha(0.9f); }
             toquesDpad.put(p, null);
         }
+		camera.update();
         return true;
     }
 
@@ -788,6 +797,7 @@ public class UI implements InputProcessor {
             jg.tom -= Gdx.input.getDeltaY() * sensi;
             jg.tom = MathUtils.clamp(jg.tom, -89f, 89f);
         }
+		camera.update();
         return true;
     }
 
