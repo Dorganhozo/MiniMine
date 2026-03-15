@@ -181,12 +181,11 @@ public class Render {
 			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
 			shader.setUniformf("u_luzCeu", diaNoite.luz);
 			shader.setUniformf("u_corCeu", diaNoite.corCeuR, diaNoite.corCeuG, diaNoite.corCeuB);
-			shader.setUniformf("u_alturaSol", diaNoite.obterFatorTransicao());
-
+			
 			// == envia dados do atlas pro shader ===
 			// envia a tabela de pesquisa uma vez por frame(ou quando mudar)
 			// o 4fv envia vetores de 4 floats
-			if(!mundo.carregado) shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4); 
+			shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4); 
 
 			Texturas.blocos.bind(0);
 			shader.setUniformi("u_textura", 0);
