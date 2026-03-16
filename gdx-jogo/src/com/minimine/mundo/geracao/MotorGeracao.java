@@ -239,12 +239,16 @@ public final class MotorGeracao {
      * blocos fora são escritos na chunk vizinha se ela existir e tiver dadosProntos
      */
     private void colocarEstrutura(DadosBioma.EntradaEstrutura e, int ox, int oy, int oz, Chunk chunk) {
+		int posX = ox - (e.larg >> 1);
+		int posZ = oz - (e.prof >> 1);
+		
         for(int i = 0; i < e.lx.length; i++) {
             int id = e.blocoIds[i];
             if(id < 0) continue;
-            int bx = ox + (e.lx[i] - e.ancX);
+            int bx = posX + (e.lx[i] - e.ancX);
             int by = oy + (e.ly[i] - e.ancY);
-            int bz = oz + (e.lz[i] - e.ancZ);
+            int bz = posZ + (e.lz[i] - e.ancZ);
+			
             if(by < 0 || by >= Mundo.Y_CHUNK) continue;
             if(bx >= 0 && bx <= 15 && bz >= 0 && bz <= 15) {
                 ChunkUtil.defBloco(bx, by, bz, id, chunk);
@@ -271,7 +275,7 @@ public final class MotorGeracao {
         float freq = 1.0f / espalhar;
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
-                saida[(z << 4) * x] = OpenSimplex2.ruido2Fractal(
+                saida[(z << 4) + x] = OpenSimplex2.ruido2Fractal(
                     sem, (origemX + x) * freq, (origemZ + z) * freq, oct, persist, lac);
             }
         }

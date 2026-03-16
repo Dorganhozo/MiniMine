@@ -66,12 +66,13 @@ public final class DadosBioma {
         public final short[] blocoMeta;
         public final int[] lx, ly, lz;
         public final int ancX, ancY, ancZ;
+		public final int larg, prof;
 		public final int blocoBaixo;
 
         public EntradaEstrutura(String nome, float chance,
 		int[] blocoIds, short[] blocoMeta,
 		int[] lx, int[] ly, int[] lz,
-		int ancX, int ancY, int ancZ, int blocoBaixo) {
+		int ancX, int ancY, int ancZ, int larg, int prof, int blocoBaixo) {
             this.nome = nome;
             this.chance = chance;
             this.blocoIds = blocoIds;
@@ -82,6 +83,8 @@ public final class DadosBioma {
             this.ancX = ancX;
             this.ancY = ancY;
             this.ancZ = ancZ;
+			this.larg = larg;
+			this.prof = prof;
 			this.blocoBaixo = blocoBaixo;
         }
     }
@@ -195,11 +198,22 @@ public final class DadosBioma {
                 }
                 blocoMeta[j] = d.meta[j];
             }
+			int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
+			int minZ = Integer.MAX_VALUE, maxZ = Integer.MIN_VALUE;
+			for(int j = 0; j < total; j++) {
+				if(d.lx[j] < minX) minX = d.lx[j];
+				if(d.lx[j] > maxX) maxX = d.lx[j];
+				if(d.lz[j] < minZ) minZ = d.lz[j];
+				if(d.lz[j] > maxZ) maxZ = d.lz[j];
+			}
+			int larg = maxX - minX + 1;
+			int prof = maxZ - minZ + 1;
             resultado[conta++] = new EntradaEstrutura(
                 nomeArq, chance,
                 blocoIds, blocoMeta,
                 d.lx, d.ly, d.lz,
                 d.ancX, d.ancY, d.ancZ,
+				larg, prof,
                 blocoBaixo != null && Bloco.texIds.get(blocoBaixo) != null ? Bloco.texIds.get(blocoBaixo).tipo : -1
             );
         }
