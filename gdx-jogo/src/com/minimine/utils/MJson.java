@@ -84,8 +84,7 @@ public final class MJson {
 		if(v instanceof Number) {
 			return ((Number) v).intValue();
 		}
-
-		// Se não for número, retorna padrão e loga o aviso
+		// Se não for numero, retorna padrão e loga o aviso
 		System.out.println("AVISO: campo '" + chave + "' não é número, é: " + tipo(v));
 		return valorPadrao;
 	}
@@ -110,38 +109,55 @@ public final class MJson {
 
     // === estado interno do analisador ===
     public static final class Estado {
-        public final String codigo;
-        public int pos;
-		
-        Estado(String codigo) {
+		public final String codigo;
+		public int pos;
+
+		Estado(String codigo) {
 			this.codigo = codigo;
 			this.pos = 0;
 		}
 
-        char atual() {
-            if(pos >= codigo.length()) throw new RuntimeException("fim inesperado do JSON");
-            return codigo.charAt(pos);
-        }
+		char atual() {
+			if (pos >= codigo.length()) throw erro("Fim inesperado do JSON");
+			return codigo.charAt(pos);
+		}
 
-        char consumir() {
-            char c = atual();
-            pos++;
-            return c;
-        }
+		char consumir() {
+			char c = atual();
+			pos++;
+			return c;
+		}
 
-        void consumirEsperado(char esperado) {
-            char c = consumir();
-            if(c != esperado) throw new RuntimeException("esperado '" + esperado + "', encontrado '" + c + "' na posicao " + (pos - 1));
-        }
+		void consumirEsperado(char esperado) {
+			char c = consumir();
+			if (c != esperado) {
+				throw erro("Esperado '" + esperado + "', mas encontrei '" + c + "'");
+			}
+		}
 
-        void pularEspacos() {
-            while(pos < codigo.length()) {
-                char c = codigo.charAt(pos);
-                if(c == ' ' || c == '\t' || c == '\n' || c == '\r') pos++;
-                else break;
-            }
-        }
-    }
+		void pularEspacos() {
+			while (pos < codigo.length()) {
+				char c = codigo.charAt(pos);
+				if (c == ' ' || c == '\t' || c == '\n' || c == '\r') pos++;
+				else break;
+			}
+		}
+
+		// O segredo está aqui: calcula linha e coluna na hora do erro
+		public RuntimeException erro(String mensagem) {
+			int linha = 1;
+			int coluna = 1;
+			for (int i = 0; i < pos; i++) {
+				if (codigo.charAt(i) == '\n') {
+					linha++;
+					coluna = 1;
+				} else {
+					coluna++;
+				}
+			}
+			return new RuntimeException(mensagem + " [Linha: " + linha + ", Coluna: " + coluna + "]");
+		}
+	}
 
     // === analisadores internos ===
     public static Object lerValor(Estado e) {
@@ -153,7 +169,7 @@ public final class MJson {
         if(c == 't' || c == 'f') return lerBoolean(e);
         if(c == 'n') return lerNull(e);
         if(c == '-' || (c >= '0' && c <= '9')) return lerNumero(e);
-        throw new RuntimeException("caractere inesperado '" + c + "' na posicao " + e.pos);
+        throw e.erro("caractere inesperado '" + c + "' ");
     }
 
     public static Map<String, Object> lerObjeto(Estado e) {
@@ -179,7 +195,7 @@ public final class MJson {
 				e.consumir();
 				continue;
 			}
-            throw new RuntimeException("esperado ',' ou '}', encontrado '" + prox + "' na posicao " + e.pos);
+            throw e.erro("esperado ',' ou '}', encontrado '" + prox + "'");
         }
         return mapa;
     }
@@ -202,7 +218,7 @@ public final class MJson {
 				e.consumir();
 				continue;
 			}
-            throw new RuntimeException("esperado ',' ou ']', encontrado '" + prox + "' na posicao " + e.pos);
+            throw e.erro("esperado ',' ou ']', encontrado '" + prox + "'");
         }
         return lista;
     }
@@ -225,7 +241,7 @@ public final class MJson {
                     case 'b':  sb.append('\b'); break;
                     case 'f':  sb.append('\f'); break;
                     case 'u':  sb.append(lerUnicode(e)); break;
-                    default: throw new RuntimeException("escape invalido: \\" + esc);
+                    default: throw e.erro("escape invalido: \\" + esc);
                 }
             } else {
                 sb.append(c);
@@ -240,7 +256,7 @@ public final class MJson {
         try {
             return (char)Integer.parseInt(hex.toString(), 16);
         } catch(NumberFormatException ex) {
-            throw new RuntimeException("sequencia unicode invalida: \\u" + hex);
+            throw e.erro("sequencia unicode invalida: \\u" + hex);
         }
     }
 
@@ -262,7 +278,7 @@ public final class MJson {
             if(decimal) return Double.parseDouble(s);
             return Long.parseLong(s);
         } catch(NumberFormatException ex) {
-            throw new RuntimeException("numero invalido: " + s);
+            throw e.erro("numero invalido: " + s);
         }
     }
 
@@ -275,7 +291,7 @@ public final class MJson {
 			e.pos += 5;
 			return false;
 		}
-        throw new RuntimeException("valor invalido na posicao " + e.pos);
+        throw e.erro("valor invalido");
     }
 
     public static Object lerNull(Estado e) {
@@ -283,7 +299,7 @@ public final class MJson {
 			e.pos += 4;
 			return null;
 		}
-        throw new RuntimeException("valor invalido na posicao " + e.pos);
+        throw e.erro("valor invalido");
     }
 
     // === utilitarios ===

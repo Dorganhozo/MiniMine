@@ -17,13 +17,16 @@
     "fundo_rio_bloco": "areia",
     "prof_fundo_pedra": 0
   },
-  "arvores": {
-    "tipo": "normal",
-    "limite": 0.55
-  },
-  "plantas": {
-    "limite": 0.2,
-    "limite_flor": 0.55,
-    "lista": ["capim", "tulipa", "iris_azul"]
-  }
+  
+  "vegetacao": [
+      { "nome": "capim", "chance": 0.4 },
+      { "nome": "tupila", "chance": 0.05 },
+      { "nome": "iris_azul", "chance": 0.05 }
+  ],
+  
+  "estruturas": [
+      { "nome": "natural/arvore_1", "chance": 0.05, "blocoBaixo": "grama" },
+      { "nome": "natural/arvore_2", "chance": 0.05, "blocoBaixo": "grama" },
+      { "nome": "natural/arvore_3", "chance": 0.01, "blocoBaixo": "grama" }
+  ]
 }

@@ -43,6 +43,7 @@ import com.minimine.entidades.Entidade;
 import com.minimine.mundo.blocos.BlocoModelo;
 import com.minimine.mundo.geracao.MotorGeracao;
 import com.minimine.mundo.geracao.RegistroBiomas;
+import com.minimine.mundo.geracao.ContextoGeracao;
 import com.minimine.entidades.RegistroCriaturas;
 
 public class Mundo {
@@ -59,7 +60,7 @@ public class Mundo {
     public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
 
-	// estados: 0 = vazia, 1 = dados Prontos, 2 = malha Pronta
+	// estados: 0 = vazia, 1 = dados prontos, 2 = decoração + luz prontos, 3 = malha pronta
 	public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 256;
@@ -103,7 +104,7 @@ public class Mundo {
 		}
 		if(carregado) {
 			GerenciadorEntidades.att(delta, this, jg);
-			
+
 			// tick de fluxo de água com atraso
 			contaFluxo += delta;
 			if(contaFluxo >= INTERVALO_FLUXO) {
@@ -322,10 +323,12 @@ public class Mundo {
 					if(chunk.malha != null) praLiberar.add(chunk);
 				}
 				praRemover.add(chave);
-			} else if(chunk.att && !chunk.fazendo && estados.getOrDefault(chave, 0) >= 1) {
-				// so atualiza se os dados ja estão prontos, evita gerar malha de chunk ainda em geração
+			} else if(chunk.att && !chunk.fazendo && estados.getOrDefault(chave, 0) >= 2) {
+				// so atualiza se decoração e luz já foram feitas
 				if(chunk.luzSuja) ChunkLuz.attLuz(chunk);
 				if(vizinhosProntos(chunk.x, chunk.z)) gerarMalha(chave);
+			} else if(estados.getOrDefault(chave, 0) == 1 && vizinhosComDados(chunk.x, chunk.z)) {
+				decorarDados(chave);
 			}
 		}
 		if(!praLiberar.isEmpty() || !praRemover.isEmpty()) {
@@ -348,9 +351,10 @@ public class Mundo {
 		final long chave = Chave.calcularChave(x, z);
 		// 1. verifica se ja ta carregada no mapa ativo
 		if(chunks.containsKey(chave)) {
-			// se ja existe e precisa de malha, gera
 			int estado = estados.getOrDefault(chave, 0);
-			if(estado >= 1 && estado < 3 && !chunks.get(chave).fazendo) {
+			if(estado == 1 && vizinhosComDados(x, z)) {
+				decorarDados(chave);
+			} else if(estado >= 2 && estado < 3 && !chunks.get(chave).fazendo) {
 				if(vizinhosProntos(x, z)) gerarMalha(chave);
 			}
 			return;
@@ -391,16 +395,62 @@ public class Mundo {
 				@Override
 				public void run() {
 					try {
-						// pré-processa tudo antes de publicar o estado
 						motor.gerarChunk(chunk);
 						chunk.dadosProntos = true;
 						estados.put(chave, 1);
-						// calcula luz imediatamente apos dados prontos
-						// seta estado 2 para que vizinhas possam importar luz desta chunk
+					} catch(final Exception e) {
+						throw new RuntimeException("[Mundo]: [ERRO]: ao gerar dados: "+e);
+					}
+				}
+			});
+	}
+
+	// verifica se os 4 vizinhos cardinais tem estado >= 1(dados prontos)
+	public static boolean vizinhosComDados(int cx, int cz) {
+		return estados.getOrDefault(Chave.calcularChave(cx + 1, cz), 0) >= 1 &&
+			estados.getOrDefault(Chave.calcularChave(cx - 1, cz), 0) >= 1 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz + 1), 0) >= 1 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz - 1), 0) >= 1;
+	}
+	/*
+	 * decorarDados: roda decoração e luz apos vizinhos atingirem estado >= 1
+	 * ctx reconstruido via ThreadLocal do executor: sem alocação extra
+	 * seta estado 2 ao concluir
+	 */
+	public static void decorarDados(final long chave) {
+		final Chunk chunk = chunks.get(chave);
+		if(chunk == null) return;
+		if(!estados.replace(chave, 1, 10)) return; // 10 transitorio, evita disparo duplo
+
+		exec.submit(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						final int chunkX = chunk.x << 4;
+						final int chunkZ = chunk.z << 4;
+						final ContextoGeracao ctx = motor.ctxLocal.get();
+						motor.calcular2D(motor.semCalor,   motor.espalharCalor,   motor.octCalor,   motor.perCalor,   2.0f, chunkX, chunkZ, ctx.calorMapa);
+						motor.calcular2D(motor.semUmidade, motor.espalharUmidade, motor.octUmidade, motor.perUmidade, 2.0f, chunkX, chunkZ, ctx.umidadeMapa);
+						for(int i = 0; i < 256; i++) {
+							ctx.calorMapa[i]   = Math.max(0f, Math.min(1f, ctx.calorMapa[i]   * 0.5f + 0.5f));
+							ctx.umidadeMapa[i] = Math.max(0f, Math.min(1f, ctx.umidadeMapa[i] * 0.5f + 0.5f));
+						}
+						for(int z = 0; z < 16; z++) {
+							for(int x = 0; x < 16; x++) {
+								int idc = z * 16 + x;
+								int topo = Mundo.Y_CHUNK - 1;
+								while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
+								float calor = ctx.calorMapa[idc];
+								float umidade = ctx.umidadeMapa[idc];
+								calor = Math.max(0f, Math.min(1f, calor - (float)((topo - MotorGeracao.NIVEL_MAR) * 0.004)));
+								ctx.biomaMapa[idc] = registroBiomas.selecionar(calor, umidade, topo);
+							}
+						}
+						motor.decorar(chunk, chunkX, chunkZ, ctx);
 						ChunkLuz.calcularLuz(chunk);
 						estados.put(chave, 2);
 					} catch(final Exception e) {
-						throw new RuntimeException("[Mundo]: [ERRO]: ao gerar dados: "+e);
+						throw new RuntimeException("[Mundo]: [ERRO]: ao decorar dados: "+e);
 					}
 				}
 			});

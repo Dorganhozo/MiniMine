@@ -44,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.minimine.mundo.blocos.BlocoEstrutura;
 import com.minimine.mundo.ChunkLuz;
+import com.badlogic.gdx.files.FileHandle;
 
 public class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
@@ -479,22 +480,25 @@ public class ArquivosUtil {
         if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] estrutura salva: " + destino.getAbsolutePath());
     }
 
-    // crEstrutura — carrega um .minies e retorna os dados
+    // crEstrutura: carrega um .minies e retorna os dados
     /*
      * retorna um DadosEstrutura com todos os blocos e metadados,
      * ou null se o arquivo não existir ou estiver corrompido
-	 */
-    public static DadosEstrutura crEstrutura(String nome) {
-        File arquivo = new File(
-            Inicio.externo + "/MiniMine/estruturas/" + nome + ".minies");
+	*/
+	public static DadosEstrutura crEstrutura(String nome) {
+		return crEstrutura(nome, true);
+	}
+	
+    public static DadosEstrutura crEstrutura(String nome, boolean externo) {
+        FileHandle arquivo = externo ? Gdx.files.absolute(Inicio.externo + "/MiniMine/estruturas/" + nome + ".minies") : Gdx.files.internal("estruturas/"+nome+".minies");
 
         if(!arquivo.exists() || arquivo.length() <= 4) {
-            if(debug) Gdx.app.log("ArquivosUtil", "[INFO] .minies não encontrado: " + arquivo.getAbsolutePath());
+            if(debug) Gdx.app.log("ArquivosUtil", "[INFO] .minies não encontrado: " + arquivo.path());
             return null;
         }
         DataInputStream dis = null;
         try {
-            dis = new DataInputStream(new BufferedInputStream(new FileInputStream(arquivo)));
+            dis = new DataInputStream(new BufferedInputStream(externo ? new FileInputStream(arquivo.file()) : arquivo.read()));
 
             int versao = dis.readInt();
             if(versao != VERSAO_MINIES) {

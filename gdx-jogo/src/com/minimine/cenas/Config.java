@@ -170,7 +170,7 @@ public class Config implements Screen, InputProcessor {
                 public void exec() {
                     Jogo.musicas = !Jogo.musicas;
                     itemMusicas.rotuloValor.texto = Jogo.musicas ? "Ligado" : "Desligado";
-                    com.minimine.audio.Musicas.pausarTodas();
+                    com.minimine.audio.Musicas.pausar();
                 }
             }
         );

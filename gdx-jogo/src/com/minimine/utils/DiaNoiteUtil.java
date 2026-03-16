@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.minimine.graficos.Texturas;
 
 public class DiaNoiteUtil {
-
     // cor do horizonte lida pelo Render para nevoa dos blocos
     public float corCeuR, corCeuG, corCeuB;
 

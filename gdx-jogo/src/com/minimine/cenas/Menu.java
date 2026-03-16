@@ -31,6 +31,7 @@ import com.micro.Ancora;
 import com.micro.CaixaDialogo;
 import com.micro.PainelFatiado;
 import com.micro.GerenciadorUI;
+import com.minimine.audio.Musicas;
 
 public class Menu implements Screen, InputProcessor {
     public SpriteBatch pincel;
@@ -103,6 +104,7 @@ public class Menu implements Screen, InputProcessor {
                 }
             );
         }
+		Musicas.pausar();
     }
 
     public static void procurarAtt() {

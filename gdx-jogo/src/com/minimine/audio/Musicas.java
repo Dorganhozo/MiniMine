@@ -7,7 +7,7 @@ import java.util.HashMap;
 import com.badlogic.gdx.audio.Music;
 
 public class Musicas {
-	public static HashMap<CharSequence, Music> musicas = new HashMap<>();
+	public static HashMap<CharSequence, String> musicas = new HashMap<>();
 	public static Music tocando;
 	
 	public static void iniciar() {
@@ -15,21 +15,19 @@ public class Musicas {
 		Musicas.addMusica("igor-2", "audio/musicas/igor-2.ogg");
 		Musicas.addMusica("caminho-sombreado", "audio/musicas/caminho-sombreado.ogg");
 		Musicas.addMusica("gatitos", "audio/musicas/gatitos.ogg");
+		Musicas.addMusica("noite-estrelada", "audio/musicas/noite-estrelada.ogg");
 	}
 	
-	public static Music addMusica(String nome, String caminho) {
-		Music m = null;
-		if(caminho.startsWith("/")) m = Gdx.audio.newMusic(Gdx.files.absolute(Inicio.externo+"/MiniMine/mods"+caminho));
-		else m = Gdx.audio.newMusic(Gdx.files.internal(caminho));
-		musicas.put(nome, m);
-		return m;
+	public static void addMusica(String nome, String caminho) {
+		musicas.put(nome, caminho);
 	}
 	
 	public static void tocarAleatorio() {
 		if(tocando == null || !tocando.isPlaying()) {
 			for(Object nome : musicas.keySet()) {
-				Music m = musicas.get(nome);
 				if(Math.random() > 0.5) {
+					Music m = null;
+					m = Gdx.audio.newMusic(Gdx.files.internal(musicas.get(nome)));
 					tocando = m;
 					m.play();
 					Gdx.app.log("Musicas", "Tocando "+nome.toString());
@@ -39,16 +37,14 @@ public class Musicas {
 		}
 	}
 	
-	public static void pausarTodas() {
-		for(Music m : musicas.values()) m.pause();
-		tocando = null;
-	}
-	
-	public static void defVolume(int volume) {
-		for(Music m : musicas.values()) m.setVolume(volume);
+	public static void pausar() {
+		if(tocando == null) return;
+		tocando.pause();
+		liberar();
 	}
 
 	public static void liberar() {
-		for(Music m : musicas.values()) m.dispose();
+		tocando.dispose();
+		tocando = null;
 	}
 }
