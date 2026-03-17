@@ -108,18 +108,21 @@ essas são as receitas atuais e seus resultados:
 * Vegetação/estruturas com JSON.
 
 ## Entidades:
-* Foca: nascimento desativado temporariamente.
+* Foca: Tundra.
 * Capivara: Costa/Rio.
 
 ## Biomas:
 
 ```
+[DadosBioma]: carregado: colinas_deserto
 [DadosBioma]: carregado: costa
+[DadosBioma]: carregado: deserto
 [DadosBioma]: carregado: floresta
-[DadosBioma]: carregado: montanha
+[DadosBioma]: carregado: montanha_nevada
 [DadosBioma]: carregado: oceano
 [DadosBioma]: carregado: planicie
 [DadosBioma]: carregado: rio
+[DadosBioma]: carregado: selva
 ```
 em log mesmo porque eu to com preguiça de ficar listando.
 
