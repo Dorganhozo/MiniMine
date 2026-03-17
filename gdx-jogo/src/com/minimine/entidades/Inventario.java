@@ -204,8 +204,10 @@ public class Inventario {
                 itemFlutuante = null;
                 slotOrigemFlutuante = -1;
             }
+            Gdx.input.setCursorCatched(true);
         } else {
             aberto = true;
+            Gdx.input.setCursorCatched(false);
         }
     }
 

@@ -89,6 +89,8 @@ public class UI implements InputProcessor {
     public static Runtime rt = Runtime.getRuntime();
 	public static GLProfiler gpu;
 
+    public boolean gui = true;
+
     public UI(Jogador jogador) {
         camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 18f, 10f);
@@ -346,6 +348,8 @@ public class UI implements InputProcessor {
     public void att(float delta, Mundo mundo) {
         attCamera(camera.direction, jg.yaw, jg.tom);
         camera.up.set(0, 1, 0);
+
+        if(!gui) return;
 
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
         Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
@@ -744,18 +748,14 @@ public class UI implements InputProcessor {
 			}
         }
         if(p == Input.Keys.E) {
-            if(paginaItens.aberta) {
-                paginaItens.fechar();
-            } else if(jg.modo == 1 && jg.inv.aberto) {
+            if(jg.modo == 1 && jg.inv.aberto) {
                 jg.inv.alternar();
-                paginaItens.abrir(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), jg.inv);
-            } else {
-                Gdx.input.setCursorCatched(jg.inv.aberto);
-                jg.inv.alternar();
-            }
+            } else if(paginaItens.aberta) paginaItens.fechar();
+            else jg.inv.alternar();
             return true;
         }
         if(p == Input.Keys.F1) debug = !debug;
+        if(p == Input.Keys.F3) gui = !gui;
         if(p == Input.Keys.T) abrirChat();
         if(p == Input.Keys.ESCAPE) {
             if(paginaItens.aberta) {

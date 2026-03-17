@@ -106,6 +106,7 @@ public class PaginaItens {
         digitando = false;
         filtro = "";
         Gdx.input.setOnscreenKeyboardVisible(false);
+        Gdx.input.setCursorCatched(true);
     }
 
     // reconstroi a lista filtrada e recalcula totalPaginas
