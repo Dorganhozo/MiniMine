@@ -183,21 +183,21 @@ public class Mundo {
 		if(blocoAntigoId != 0 && bloco != null) {
 			Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
 		}
-		// se era emissor, zera luz antes de remover o bloco
-		// isso evita que chunks importem luz antiga durante recalculo
-		if(eraEmissor) ChunkLuz.zerarLuz(chunk);
 
-        ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-		// reinicia os metadados sempre que o bloco muda, o novo bloco começa sem estado
+		// remove o bloco primeiro — zerarLuz lê os blocos da chunk,
+		// se o emissor ainda estiver lá ao zerar, preserva b.luz e cria emissor fantasma
+		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
 		ChunkUtil.defMeta(localX, y, localZ, (short)0, chunk);
+
+		// zera o nibble de luz de bloco na chunk e vizinhas antes de recalcular,
+		// agora o emissor já foi removido dos dados então não deixa rastro
+		if(eraEmissor) ChunkLuz.zerarLuz(chunk);
 
 		boolean novoEhAgua = bloco != null && bloco.equals("agua");
 		boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
 		if(novoEhAgua) {
-			// água colocada pelo jogador: define meta como fonte e inicia propagação progressiva
 			ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
 			chunk.fluxoSujo = true;
-			chunk.att = true;
 		} else if(antigoEraAgua ||
 				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x + 1, y, z)) ||
 				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x - 1, y, z)) ||
@@ -205,29 +205,15 @@ public class Mundo {
 				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z - 1)) ||
 				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y + 1, z)) ||
 				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y - 1, z))) {
-			// fonte removida ou bloco adjacente a água mudou: recalcula tudo imediatamente
-			// para convergir ao estado correto(água some, fluxo se ajusta)
 			FluxoAgua.recalcularFluxo(chunk);
-			// marca vizinhas como sujas para recalcularem tambem
 			FluxoAgua.marcarSujo(chunkX, chunkZ);
 		}
-		// se não era emissor, marca chunk e vizinhas normalmente
-		if(!eraEmissor) {
-			Chunk cn = ChunkLuz.obterChunk(chunkX, chunkZ - 1);
-			Chunk cs = ChunkLuz.obterChunk(chunkX, chunkZ + 1);
-			Chunk cl = ChunkLuz.obterChunk(chunkX + 1, chunkZ);
-			Chunk co = ChunkLuz.obterChunk(chunkX - 1, chunkZ);
-			if(cn != null) { cn.luzSuja = true; }
-			if(cs != null) { cs.luzSuja = true; }
-			if(cl != null) { cl.luzSuja = true; }
-			if(co != null) { co.luzSuja = true; }
-			chunk.luzSuja = true;
-		}
-        chunk.att = true;
+		// recalcula luz da chunk central e das 4 vizinhas em ordem garantida:
+		// cada vizinha relê a borda já atualizada, sem depender da ordem do mapa
+		ChunkLuz.attLuzVizinhas(chunk);
 
+		// marca vizinhas de borda pra reconstruir malha
 		Chunk chunkAdj;
-
-        // marca chunks vizinhas pra atualizar malha se o bloco ta na borda
         if(localX == 0) {
             chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
@@ -243,21 +229,6 @@ public class Mundo {
         if(localZ == TAM_CHUNK - 1) {
             chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
             if(chunkAdj != null) chunkAdj.att = true;
-        }
-        // marca as 4 vizinhas diretas como luzSuja
-        // porque a luz pode viajar até elas independente de onde o bloco ta
-        if(!eraEmissor) {
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
-            if(chunkAdj != null) chunkAdj.luzSuja = true;
-
-			chunkAdj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
-            if(chunkAdj != null) chunkAdj.luzSuja = true;
-
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
-            if(chunkAdj != null) chunkAdj.luzSuja = true;
-
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
-            if(chunkAdj != null) chunkAdj.luzSuja = true;
         }
         chunksMod.put(chave, chunk);
     }
@@ -420,7 +391,7 @@ public class Mundo {
 	/*
 	 * decorarDados: roda decoração e luz apos vizinhos atingirem estado >= 1
 	 * ctx reconstruido via ThreadLocal do executor: sem alocação extra
-	 * seta estado 2 ao concluir
+	 * define estado 2 ao concluir
 	 */
 	public static void decorarDados(final long chave) {
 		final Chunk chunk = chunks.get(chave);
@@ -437,7 +408,7 @@ public class Mundo {
 						motor.calcular2D(motor.semCalor,   motor.espalharCalor,   motor.octCalor,   motor.perCalor,   2.0f, chunkX, chunkZ, ctx.calorMapa);
 						motor.calcular2D(motor.semUmidade, motor.espalharUmidade, motor.octUmidade, motor.perUmidade, 2.0f, chunkX, chunkZ, ctx.umidadeMapa);
 						for(int i = 0; i < 256; i++) {
-							ctx.calorMapa[i]   = Math.max(0f, Math.min(1f, ctx.calorMapa[i]   * 0.5f + 0.5f));
+							ctx.calorMapa[i] = Math.max(0f, Math.min(1f, ctx.calorMapa[i]   * 0.5f + 0.5f));
 							ctx.umidadeMapa[i] = Math.max(0f, Math.min(1f, ctx.umidadeMapa[i] * 0.5f + 0.5f));
 						}
 						for(int z = 0; z < 16; z++) {
