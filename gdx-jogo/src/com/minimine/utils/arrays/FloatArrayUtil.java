@@ -28,26 +28,7 @@ public class FloatArrayUtil {
         arr[tam++] = f;
     }
 
-    // adiciona múltiplos valores de uma vez
-    public void addAll(float... valores) {
-        int necessario = tam + valores.length;
-        if(necessario > arr.length) {
-            int novoTam = Math.max(necessario, arr.length + (arr.length >> 1));
-            float[] n = new float[novoTam];
-            System.arraycopy(arr, 0, n, 0, tam);
-            arr = n;
-        }
-        System.arraycopy(valores, 0, arr, tam, valores.length);
-        tam += valores.length;
-    }
-
-    public float[] praArray() {
-        float[] r = new float[tam];
-        System.arraycopy(arr, 0, r, 0, tam);
-        return r;
-    }
-
-    // retorna o uso de memória atual em KB
+    // retorna o uso de memoria atual em KB
     public float memoriaMB() {
         return (arr.length * 4f) / (1024f * 1024f);
     }

@@ -190,7 +190,7 @@ public final class MotorGeracao {
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
                 int idc2d = z * 16 + x;
-                DadosBioma bioma = ctx.biomaMapa[idc2d];
+                final DadosBioma bioma = ctx.biomaMapa[idc2d];
                 if(bioma == null) continue;
 
                 // topo sólido da coluna
@@ -200,7 +200,7 @@ public final class MotorGeracao {
                 // não decora sob água
                 if(topo <= NIVEL_MAR) continue;
                 // posição de colocação: bloco acima do topo solido
-                int yDec = topo + 1;
+                final int yDec = topo + 1;
                 if(yDec >= Mundo.Y_CHUNK) continue;
 
                 // seed determinística por coluna
@@ -254,9 +254,14 @@ public final class MotorGeracao {
                 ChunkUtil.defBloco(bx, by, bz, id, chunk);
                 if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(bx, by, bz, e.blocoMeta[i], chunk);
             } else {
-                int gx = (chunk.x << 4) + bx;
-                int gz = (chunk.z << 4) + bz;
-                Chunk alvo = Mundo.chunks.get(Chave.calcularChave(gx >> 4, gz >> 4));
+                final int gx = (chunk.x << 4) + bx;
+                final int gz = (chunk.z << 4) + bz;
+				
+				final long vizinhoChave = Chave.calcularChave(gx >> 4, gz >> 4);
+				// se a vizinha foi modificada pelo jogador, não contamina
+				if(Mundo.chunksMod.containsKey(vizinhoChave)) continue;
+				
+                final Chunk alvo = Mundo.chunks.get(vizinhoChave);
                 if(alvo == null || !alvo.dadosProntos) continue;
                 ChunkUtil.defBloco(gx & 0xF, by, gz & 0xF, id, alvo);
                 if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(gx & 0xF, by, gz & 0xF, e.blocoMeta[i], alvo);

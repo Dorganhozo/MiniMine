@@ -475,8 +475,8 @@ public class Mundo {
 					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
 
 					final short[] idcFinal = new short[idcSolidos.tam + idcTransp.tam];
-					System.arraycopy(idcSolidos.praArray(), 0, idcFinal, 0, idcSolidos.tam);
-					System.arraycopy(idcTransp.praArray(), 0, idcFinal, idcSolidos.tam, idcTransp.tam);
+					System.arraycopy(idcSolidos.arr, 0, idcFinal, 0, idcSolidos.tam);
+					System.arraycopy(idcTransp.arr, 0, idcFinal, idcSolidos.tam, idcTransp.tam);
 
 					// armazena o tamanho real do buffer de indices
 					final int totalIndices = idcFinal.length;
@@ -493,7 +493,7 @@ public class Mundo {
 
 									// usa totalIndices pra evitar crash
 									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
-									chunk.malha.setVertices(vertsGeral.praArray());
+									chunk.malha.setVertices(vertsGeral.arr, 0, vertsGeral.tam);
 									chunk.malha.setIndices(idcFinal);
 
 									// verifica se ta consistente
@@ -538,8 +538,8 @@ public class Mundo {
 					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
 
 					final short[] idcFinal = new short[idcSolidos.tam + idcTransp.tam];
-					System.arraycopy(idcSolidos.praArray(), 0, idcFinal, 0, idcSolidos.tam);
-					System.arraycopy(idcTransp.praArray(), 0, idcFinal, idcSolidos.tam, idcTransp.tam);
+					System.arraycopy(idcSolidos.arr, 0, idcFinal, 0, idcSolidos.tam);
+					System.arraycopy(idcTransp.arr, 0, idcFinal, idcSolidos.tam, idcTransp.tam);
 
 					// guarda o total de indices pra não perder a referencia
 					final int totalIndices = idcFinal.length;
@@ -556,7 +556,7 @@ public class Mundo {
 
 									// usa totalIndices
 									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
-									chunk.malha.setVertices(vertsGeral.praArray());
+									chunk.malha.setVertices(vertsGeral.arr, 0, vertsGeral.tam);
 									chunk.malha.setIndices(idcFinal);
 
 									// atualiza os contadores

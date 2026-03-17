@@ -28,12 +28,6 @@ public class ShortArrayUtil {
         arr[tam++] = s;
     }
 
-    public short[] praArray() {
-        short[] r = new short[tam];
-        System.arraycopy(arr, 0, r, 0, tam);
-        return r;
-    }
-
     public float memoriaMB() {
         return (arr.length * 2f) / (1024f * 1024f);
     }

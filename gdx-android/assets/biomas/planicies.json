@@ -17,13 +17,7 @@
     "fundo_rio_bloco": "areia",
     "prof_fundo_pedra": 0
   },
-  "arvores": {
-    "tipo": "normal",
-    "limite": 0.82
-  },
-  "plantas": {
-    "limite": 0.3,
-    "limite_flor": 0.65,
-    "lista": ["capim", "tulipa", "iris_azul"]
-  }
+  "vegetacao": [
+    { "nome": "capim", "chance": 0.1}
+  ]
 }
