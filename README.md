@@ -104,6 +104,7 @@ essas são as receitas atuais e seus resultados:
 * Camada de terreno base.
 * Canais para geração de rios.
 * Tuneis para cavernas.
+* Vegetação/estruturas com JSON.
 
 ## Entidades:
 * Foca: nascimento desativado temporariamente.
@@ -153,6 +154,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Cache de fluxo.
 * Cache de vértices nas nuvens.
 * Junção de quase todas as texturas do jogo em atlas.
+* Carregamento e descarregamento de músicas dinamico.
 
 ## Ruídos utilitários:
 * OpenSimplex2.java

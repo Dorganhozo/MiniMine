@@ -118,7 +118,9 @@ public class Render {
         this.ui = new UI(jogador);
         this.mundo = mundo;
 		this.diaNoite = new DiaNoiteUtil();
-
+	}
+	
+	public void iniciar() {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         Gdx.gl.glCullFace(GL20.GL_BACK);
@@ -133,10 +135,10 @@ public class Render {
 
         // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-			Texturas.atlas.get("agua"),
 			Texturas.atlas.get("agua_a1"),
 			Texturas.atlas.get("agua_a2"),
-			Texturas.atlas.get("agua_a3")
+			Texturas.atlas.get("agua_a3"),
+			Texturas.atlas.get("agua_a4")
 		}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas

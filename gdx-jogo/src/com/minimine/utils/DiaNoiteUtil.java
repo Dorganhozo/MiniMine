@@ -16,7 +16,7 @@ public class DiaNoiteUtil {
     // cor do horizonte lida pelo Render para nevoa dos blocos
     public float corCeuR, corCeuG, corCeuB;
 
-    // ângulo do ciclo (0 = amanhecer, PI/2 = meio-dia, PI = entardecer, 3PI/2 = meia-noite)
+    // angulo do ciclo(0 = amanhecer, PI/2 = meio-dia, PI = entardecer, 3PI/2 = meia-noite)
     public float tempo = MathUtils.PI * 0.75f;
     public float tempo_velo = 1f / 20f;
     public float luz = 1f;
@@ -29,28 +29,30 @@ public class DiaNoiteUtil {
     public ShaderProgram shaderDomo;
 
     public static final String DOMO_VERT =
-	    "attribute vec3 a_pos;\n" +
-        "uniform mat4 u_proj;\n" +
-        "uniform vec3 u_posCamera;\n" +
-        "varying float v_alt;\n" +
-        "void main() {\n" +
-        "  v_alt = a_pos.y;\n" +
-        "  gl_Position = u_proj * vec4(a_pos + u_posCamera, 1.0);\n" +
-        "}";
+	"attribute vec3 a_pos;\n" +
+	"uniform mat4 u_proj;\n" +
+	"uniform vec3 u_posCamera;\n" +
+	"varying float v_alt;\n" +
+	
+	"void main() {\n" +
+	"  v_alt = a_pos.y;\n" +
+	"  gl_Position = u_proj * vec4(a_pos + u_posCamera, 1.0);\n" +
+	"}";
 
-    // só interpola 2 cores por altitude + tint de pôr do sol no horizonte inteiro
+    // so interpola 2 cores por altitude + tint de por do sol no horizonte inteiro
     public static final String DOMO_FRAG =
-        "#ifdef GL_ES\n" +
-        "precision mediump float;\n" +
-        "#endif\n" +
-        "varying float v_alt;\n" +
-        "uniform vec3 u_corTopo;\n" +
-        "uniform vec3 u_corHorizonte;\n" +
-        "void main() {\n" +
-        "  float t = clamp(v_alt / 0.5, 0.0, 1.0);\n" +
-        "  t = t * t;\n" +
-        "  gl_FragColor = vec4(mix(u_corHorizonte, u_corTopo, t), 1.0);\n" +
-        "}";
+	"#ifdef GL_ES\n" +
+	"precision mediump float;\n" +
+	"#endif\n" +
+	"varying float v_alt;\n" +
+	"uniform vec3 u_corTopo;\n" +
+	"uniform vec3 u_corHorizonte;\n" +
+	
+	"void main() {\n" +
+	"  float t = clamp(v_alt / 0.5, 0.0, 1.0);\n" +
+	"  t = t * t;\n" +
+	"  gl_FragColor = vec4(mix(u_corHorizonte, u_corTopo, t), 1.0);\n" +
+	"}";
 
     // === ESTRELAS(GL_POINTS, quadrados nativos) ===
     public Mesh malhaEstrelas;
@@ -58,61 +60,104 @@ public class DiaNoiteUtil {
     public static final int NUM_ESTRELAS = 800;
 
     public static final String ESTRELAS_VERT =
-        "attribute vec3 a_pos;\n" +
-        "attribute float a_brilho;\n" +
-        "uniform mat4 u_proj;\n" +
-        "uniform vec3 u_posCamera;\n" +
-        "uniform float u_alfa;\n" +
-        "varying float v_brilho;\n" +
-        "void main() {\n" +
-        "  v_brilho = a_brilho;\n" +
-        "  gl_Position = u_proj * vec4(a_pos + u_posCamera, 1.0);\n" +
-        "  gl_PointSize = 2.0;\n" +
-        "}";
+	"attribute vec3 a_pos;\n" +
+	"attribute float a_brilho;\n" +
+	"uniform mat4 u_proj;\n" +
+	"uniform vec3 u_posCamera;\n" +
+	"uniform float u_alfa;\n" +
+	"varying float v_brilho;\n" +
+	
+	"void main() {\n" +
+	"  v_brilho = a_brilho;\n" +
+	"  gl_Position = u_proj * vec4(a_pos + u_posCamera, 1.0);\n" +
+	"  gl_PointSize = 2.0;\n" +
+	"}";
 
     public static final String ESTRELAS_FRAG =
-        "#ifdef GL_ES\n" +
-        "precision mediump float;\n" +
-        "#endif\n" +
-        "varying float v_brilho;\n" +
-        "uniform float u_alfa;\n" +
-        "void main() {\n" +
-        "  gl_FragColor = vec4(1.0, 1.0, 1.0, v_brilho * u_alfa);\n" +
-        "}";
+	"#ifdef GL_ES\n" +
+	"precision mediump float;\n" +
+	"#endif\n" +
+	"varying float v_brilho;\n" +
+	"uniform float u_alfa;\n" +
+	
+	"void main() {\n" +
+	"  gl_FragColor = vec4(1.0, 1.0, 1.0, v_brilho * u_alfa);\n" +
+	"}";
+
+    // === HALO sol/lua (GL_POINTS, gl_PointCoord garante círculo) ===
+    public Mesh malhaHalo;
+    public ShaderProgram shaderHalo;
+
+    public static final String HALO_VERT =
+	"attribute vec3 a_pos;\n" +
+	"attribute vec2 a_uv;\n" +
+	"uniform mat4 u_proj;\n" +
+	"uniform vec3 u_centro;\n" +
+	"uniform float u_tam;\n" +
+	"uniform vec3 u_camD;\n" +
+	"varying vec2 v_uv;\n" +
+	
+	"void main() {\n" +
+	"  v_uv = a_uv;\n" +
+	"  vec3 mundoCima = vec3(0.0, 1.0, 0.0);\n" +
+	"  vec3 r = normalize(cross(u_camD, mundoCima));\n" +
+	"  vec3 u = cross(r, u_camD);\n" +
+	"  vec3 p = u_centro + r * a_pos.x * u_tam + u * a_pos.y * u_tam;\n" +
+	"  gl_Position = u_proj * vec4(p, 1.0);\n" +
+	"}";
+
+    public static final String HALO_FRAG =
+	"#ifdef GL_ES\n" +
+	"precision mediump float;\n" +
+	"#endif\n" +
+	"varying vec2 v_uv;\n" +
+	"uniform vec3 u_corHalo;\n" +
+	
+	"void main() {\n" +
+	"  vec2 uv = v_uv * 2.0 - 1.0;\n" +
+	"  float d = length(uv);\n" +
+	"  float brilho = 0.06 / (d * d + 0.04);\n" +
+	"  float borda = 1.0 - smoothstep(0.5, 1.0, d);\n" +
+	"  float a = clamp(brilho * borda, 0.0, 1.0);\n" +
+	"  if(a < 0.005) discard;\n" +
+	"  gl_FragColor = vec4(u_corHalo, a * 0.5);\n" +
+	"}";
 
     // === BILLBOARD sol/lua ===
     public Mesh malhaBillboard;
     public ShaderProgram shaderBillboard;
 
     public static final String BILL_VERT =
-        "attribute vec3 a_pos;\n" +
-        "attribute vec2 a_uv;\n" +
-        "uniform mat4 u_proj;\n" +
-        "uniform vec3 u_centro;\n" +
-        "uniform float u_tam;\n" +
-        "uniform vec3 u_camD;\n" +
-        "uniform vec4 u_uvRegiao;\n" +
-        "varying vec2 v_uv;\n" +
-        "void main() {\n" +
-        "  v_uv = mix(u_uvRegiao.xy, u_uvRegiao.zw, a_uv);\n" +
-        "  vec3 mundoCima = vec3(0.0, 1.0, 0.0);\n" +
-        "  vec3 r = normalize(cross(u_camD, mundoCima));\n" +
-        "  vec3 u = cross(r, u_camD);\n" +
-        "  vec3 p = u_centro + r * a_pos.x * u_tam + u * a_pos.y * u_tam;\n" +
-        "  gl_Position = u_proj * vec4(p, 1.0);\n" +
-        "}";
+	"attribute vec3 a_pos;\n" +
+	"attribute vec2 a_uv;\n" +
+	"uniform mat4 u_proj;\n" +
+	"uniform vec3 u_centro;\n" +
+	"uniform float u_tam;\n" +
+	"uniform vec3 u_camD;\n" +
+	"uniform vec4 u_uvRegiao;\n" +
+	"varying vec2 v_uv;\n" +
+	
+	"void main() {\n" +
+	"  v_uv = mix(u_uvRegiao.xy, u_uvRegiao.zw, a_uv);\n" +
+	"  vec3 mundoCima = vec3(0.0, 1.0, 0.0);\n" +
+	"  vec3 r = normalize(cross(u_camD, mundoCima));\n" +
+	"  vec3 u = cross(r, u_camD);\n" +
+	"  vec3 p = u_centro + r * a_pos.x * u_tam + u * a_pos.y * u_tam;\n" +
+	"  gl_Position = u_proj * vec4(p, 1.0);\n" +
+	"}";
 
     public static final String BILL_FRAG =
-        "#ifdef GL_ES\n" +
-        "precision mediump float;\n" +
-        "#endif\n" +
-        "varying vec2 v_uv;\n" +
-        "uniform sampler2D u_tex;\n" +
-        "void main() {\n" +
-        "  vec4 c = texture2D(u_tex, v_uv);\n" +
-        "  if(c.a < 0.05) discard;\n" +
-        "  gl_FragColor = vec4(c.rgb, c.a * 1.0);\n" +
-        "}";
+	"#ifdef GL_ES\n" +
+	"precision mediump float;\n" +
+	"#endif\n" +
+	"varying vec2 v_uv;\n" +
+	"uniform sampler2D u_tex;\n" +
+	
+	"void main() {\n" +
+	"  vec4 c = texture2D(u_tex, v_uv);\n" +
+	"  if(c.a < 0.05) discard;\n" +
+	"  gl_FragColor = vec4(c.rgb, c.a);\n" +
+	"}";
 
     public final float RAIO_VISUAL = 100f;
     public final float TAM_SOL = 8f;
@@ -137,6 +182,10 @@ public class DiaNoiteUtil {
         if(!shaderEstrelas.isCompiled())
             Gdx.app.log("DiaNoite", "[ERRO] estrelas: " + shaderEstrelas.getLog());
 
+        shaderHalo = new ShaderProgram(HALO_VERT, HALO_FRAG);
+        if(!shaderHalo.isCompiled())
+            Gdx.app.log("DiaNoite", "[ERRO] halo: " + shaderHalo.getLog());
+
         shaderBillboard = new ShaderProgram(BILL_VERT, BILL_FRAG);
         if(!shaderBillboard.isCompiled())
             Gdx.app.log("DiaNoite", "[ERRO] billboard: " + shaderBillboard.getLog());
@@ -144,16 +193,28 @@ public class DiaNoiteUtil {
         malhaDomo = criarDomo(20, 8);
         malhaEstrelas = criarEstrelas();
 
+        malhaHalo = new Mesh(true, 4, 6,
+		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
+		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"));
+		
+        malhaHalo.setVertices(new float[]{
+			-0.5f, -0.5f, 0, 0, 1,
+			0.5f, -0.5f, 0, 1, 1,
+			0.5f,  0.5f, 0, 1, 0,
+			-0.5f,  0.5f, 0, 0, 0
+		});
+        malhaHalo.setIndices(new short[]{0, 1, 2, 2, 3, 0});
+
         malhaBillboard = new Mesh(true, 4, 6,
-            new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
-            new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv")
-        );
+		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
+		new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_uv"));
+		
         malhaBillboard.setVertices(new float[]{
-            -0.5f, -0.5f, 0, 0, 1,
-            0.5f, -0.5f, 0, 1, 1,
-            0.5f,  0.5f, 0, 1, 0,
-            -0.5f,  0.5f, 0, 0, 0
-        });
+			-0.5f, -0.5f, 0, 0, 1,
+			0.5f, -0.5f, 0, 1, 1,
+			0.5f,  0.5f, 0, 1, 0,
+			-0.5f,  0.5f, 0, 0, 0
+		});
         malhaBillboard.setIndices(new short[]{0, 1, 2, 2, 3, 0});
     }
 
@@ -188,7 +249,7 @@ public class DiaNoiteUtil {
         corCeuR = mix(corCeuR, COR_POENTE[0], poente * 0.85f);
         corCeuG = mix(corCeuG, COR_POENTE[1], poente * 0.85f);
         corCeuB = mix(corCeuB, COR_POENTE[2], poente * 0.85f);
-		
+
         // alfa das estrelas: so a noite, some quando o sol ta subindo
         float alfaEstrelas = 1f - dia;
 
@@ -220,15 +281,40 @@ public class DiaNoiteUtil {
         }
         // sol e lua
         Gdx.gl.glEnable(GL20.GL_BLEND);
+
+        // halos: quad 5x maior que o sprite, brilho 1/d² dissipa nas bordas
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+        shaderHalo.begin();
+        shaderHalo.setUniformMatrix("u_proj", camera.combined);
+        shaderHalo.setUniformf("u_camD", camera.direction);
+        // halo do sol
+        shaderHalo.setUniformf("u_centro",
+		camera.position.x + dirSol.x * RAIO_VISUAL,
+		camera.position.y + dirSol.y * RAIO_VISUAL,
+		camera.position.z + dirSol.z * RAIO_VISUAL);
+		
+        shaderHalo.setUniformf("u_tam", TAM_SOL * 5f);
+        shaderHalo.setUniformf("u_corHalo", 1.0f, 0.85f, 0.3f);
+        malhaHalo.render(shaderHalo, GL20.GL_TRIANGLES);
+        // halo da lua
+        shaderHalo.setUniformf("u_centro",
+		camera.position.x + dirLua.x * RAIO_VISUAL,
+		camera.position.y + dirLua.y * RAIO_VISUAL,
+		camera.position.z + dirLua.z * RAIO_VISUAL);
+		
+        shaderHalo.setUniformf("u_tam", TAM_LUA * 5f);
+        shaderHalo.setUniformf("u_corHalo", 0.6f, 0.75f, 1.0f);
+        malhaHalo.render(shaderHalo, GL20.GL_TRIANGLES);
+        shaderHalo.end();
+
+        // sprites: blend normal por cima
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
         shaderBillboard.begin();
         shaderBillboard.setUniformMatrix("u_proj", camera.combined);
         shaderBillboard.setUniformi("u_tex", 0);
         Texturas.ceu.bind(0);
-
         renderBillboard(dirSol, camera, TAM_SOL, Texturas.atlas.get("sol"));
-		renderBillboard(dirLua, camera, TAM_LUA, Texturas.atlas.get("lua_completa"));
-        
+        renderBillboard(dirLua, camera, TAM_LUA, Texturas.atlas.get("lua_completa"));
         shaderBillboard.end();
         Gdx.gl.glDisable(GL20.GL_BLEND);
 
@@ -245,7 +331,6 @@ public class DiaNoiteUtil {
         shaderBillboard.setUniformf("u_tam", tam);
         shaderBillboard.setUniformf("u_camD", camera.direction);
         shaderBillboard.setUniformf("u_uvRegiao", regiao.getU(), regiao.getV(), regiao.getU2(), regiao.getV2());
-        shaderBillboard.setUniformf("u_uvRegiao", regiao.getU(), regiao.getV(), regiao.getU2(), regiao.getV2());
         malhaBillboard.render(shaderBillboard, GL20.GL_TRIANGLES);
     }
 
@@ -257,9 +342,9 @@ public class DiaNoiteUtil {
 
         int v = 0;
         for(int a = 0; a <= aneis; a++) {
-            double phi = Math.PI / 2.0 - a * (Math.PI * 1.1 / aneis);
+            float phi = MathUtils.PI / 2.0f - a * (MathUtils.PI * 1.1f / aneis);
             for(int s = 0; s <= setores; s++) {
-                double theta = 2.0 * Math.PI * s / setores;
+                float theta = 2.0f * MathUtils.PI * s / setores;
                 verts[v++] = (float)(Math.cos(phi) * Math.cos(theta));
                 verts[v++] = (float)Math.sin(phi);
                 verts[v++] = (float)(Math.cos(phi) * Math.sin(theta));
@@ -279,16 +364,16 @@ public class DiaNoiteUtil {
             }
         }
         Mesh malha = new Mesh(true, numVerts, numidc,
-            new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"));
+		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"));
         malha.setVertices(verts);
         malha.setIndices(idc);
         return malha;
     }
 
     public Mesh criarEstrelas() {
-        // posição (x,y,z) + brilho
+        // posição(x,y,z) + brilho
         float[] verts = new float[NUM_ESTRELAS * 4];
-        // gerador congruencial simples, sem java.util.Random
+        // gerador congruencial simples
         long semente = 0x3F2A1B;
         int v = 0;
         int geradas = 0;
@@ -302,10 +387,10 @@ public class DiaNoiteUtil {
 
             // distribuição uniforme na esfera
             float theta = u1 * MathUtils.PI2;
-            float phi = (float)Math.acos(2f * u2 - 1f);
-            float x = (float)(Math.sin(phi) * Math.cos(theta));
-            float y = (float)(Math.sin(phi) * Math.sin(theta));
-            float z = (float)Math.cos(phi);
+            float phi = MathUtils.acos(2f * u2 - 1f);
+            float x = MathUtils.sin(phi) * MathUtils.cos(theta);
+            float y = MathUtils.sin(phi) * MathUtils.sin(theta);
+            float z = MathUtils.cos(phi);
 
             verts[v++] = x;
             verts[v++] = y;
@@ -314,9 +399,9 @@ public class DiaNoiteUtil {
             geradas++;
         }
         Mesh malha = new Mesh(true, NUM_ESTRELAS, 0,
-            new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
-            new VertexAttribute(VertexAttributes.Usage.Generic, 1, "a_brilho")
-        );
+		new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_pos"),
+		new VertexAttribute(VertexAttributes.Usage.Generic, 1, "a_brilho"));
+		
         malha.setVertices(verts);
         return malha;
     }
@@ -334,6 +419,8 @@ public class DiaNoiteUtil {
     }
 
     public void liberar() {
+        if(malhaHalo != null) malhaHalo.dispose();
+        if(shaderHalo != null) shaderHalo.dispose();
         if(malhaDomo != null) malhaDomo.dispose();
         if(malhaEstrelas != null) malhaEstrelas.dispose();
         if(malhaBillboard != null) malhaBillboard.dispose();
@@ -342,4 +429,3 @@ public class DiaNoiteUtil {
         if(shaderBillboard != null) shaderBillboard.dispose();
     }
 }
-

@@ -24,60 +24,41 @@ public class Animacoes2D {
         public int destX, destY;
 
         public InfoAnimacao(String nomeDestino, TextureRegion[] regioes, float fps) {
-            this.nomeDestino = nomeDestino;
-            this.totalQuadros = regioes.length;
-            this.tempoPorQuadro = 1f / fps;
-            this.quadros = new Pixmap[totalQuadros];
+			this.nomeDestino = nomeDestino;
+			this.totalQuadros = regioes.length;
+			this.tempoPorQuadro = 1f / fps;
+			this.quadros = new Pixmap[totalQuadros];
 
-            // 1. descobrir onde desenhar no atlas principal (Texturas.blocos)
-            TextureRegion destino = Texturas.atlas.obter(nomeDestino);
-            if(destino == null) {
-                Gdx.app.log("Animacoes2D", "[ERRO] Destino não encontrado: " + nomeDestino);
-                return;
-            }
-            // converte coordenadas UV(0..1) para Pixels(0..Largura)
-            this.destX = (int)(destino.getU() * destino.getTexture().getWidth());
-            this.destY = (int)(destino.getV() * destino.getTexture().getHeight());
+			TextureRegion destino = Texturas.atlas.obter(nomeDestino);
+			if(destino == null) {
+				Gdx.app.log("Animacoes2D", "[ERRO] Destino não encontrado: " + nomeDestino);
+				return;
+			}
+			this.destX = (int)(destino.getU() * destino.getTexture().getWidth());
+			this.destY = (int)(destino.getV() * destino.getTexture().getHeight());
 
-            // 2. extrai os pixels de cada quadro
-            for(int i = 0; i < totalQuadros; i++) {
-                this.quadros[i] = extrairPixmap(regioes[i]);
-            }
-        }
+			// uma passagem por textura de origem
+			java.util.Map<Texture, Pixmap> cache = new java.util.IdentityHashMap<Texture, Pixmap>();
+			for(int i = 0; i < totalQuadros; i++) {
+				Texture t = regioes[i].getTexture();
+				if(!cache.containsKey(t)) {
+					if(!t.getTextureData().isPrepared()) t.getTextureData().prepare();
+					cache.put(t, t.getTextureData().consumePixmap());
+				}
+				Pixmap fonte = cache.get(t);
+				TextureRegion r = regioes[i];
+				Pixmap recorte = new Pixmap(r.getRegionWidth(), r.getRegionHeight(), fonte.getFormat());
+				recorte.drawPixmap(fonte, 0, 0, r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight());
+				this.quadros[i] = recorte;
+			}
+			// os pixmaps do cache não precisam de dispose, são internos das texturas
+		}
 
         public void liberar() {
             for(Pixmap p : quadros) {
                 if(p != null) p.dispose();
             }
         }
-    }
-    /**
-     * extrai os dados de pixel de uma TextureRegion
-     * necessario pra copiar da textura de origem pra memória
-     */
-    public static Pixmap extrairPixmap(TextureRegion region) {
-        Texture textura = region.getTexture();
-        if(!textura.getTextureData().isPrepared()) {
-            textura.getTextureData().prepare();
-        }
-        Pixmap pixmapCompleto = textura.getTextureData().consumePixmap();
-
-        // cria um novo Pixmap so com o pedaço
-        Pixmap recorte = new Pixmap(region.getRegionWidth(), region.getRegionHeight(), pixmapCompleto.getFormat());
-
-        // copia a area específica
-        recorte.drawPixmap(pixmapCompleto, 
-		0, 0, // destino x, y
-		region.getRegionX(), region.getRegionY(), // origem x, y
-		region.getRegionWidth(), region.getRegionHeight() // largura, altura
-		);
-        // o consumePixmap pode não retornar um novo se for FileTextureData, 
-        // mas se a textura for gerenciada pelo AssetManager ou carregada manualmente,
-        // é seguro descartar se tiver certeza que criou uma copia
-        // no caso do GDX padrão, consumePixmap retorna o pixmap interno, então não deve dar dispose no pixmapCompleto
-        // a menos que tenha certeza absoluta, pra segurança, deixa o GC ou o dispose da textura lidar com isso,
-        // ja que so le os dados
-        return recorte;
     }
 
     public static void add(String nomeDestino, TextureRegion[] frames, float fps) {
