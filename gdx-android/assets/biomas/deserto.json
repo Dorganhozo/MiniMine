@@ -1,0 +1,20 @@
+{
+  "nome": "deserto",
+  "peso": 1.0,
+  "alt_min": 63,
+  "alt_max": 74,
+
+  "clima": {
+    "calor": 0.85,
+    "umidade": 0.15
+  },
+  "superficie": {
+    "topo": "areia",
+    "subtopo": "areia",
+    "prof_topo": 1,
+    "prof_subtopo": 4,
+    "interior": "arenito",
+    "fundo_rio_bloco": "areia",
+    "prof_fundo_pedra": 0
+  }
+}

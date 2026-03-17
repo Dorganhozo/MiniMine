@@ -212,7 +212,17 @@ public class Mundo {
 			FluxoAgua.marcarSujo(chunkX, chunkZ);
 		}
 		// se não era emissor, marca chunk e vizinhas normalmente
-		if(!eraEmissor) chunk.luzSuja = true;
+		if(!eraEmissor) {
+			Chunk cn = ChunkLuz.obterChunk(chunkX, chunkZ - 1);
+			Chunk cs = ChunkLuz.obterChunk(chunkX, chunkZ + 1);
+			Chunk cl = ChunkLuz.obterChunk(chunkX + 1, chunkZ);
+			Chunk co = ChunkLuz.obterChunk(chunkX - 1, chunkZ);
+			if(cn != null) { cn.luzSuja = true; }
+			if(cs != null) { cs.luzSuja = true; }
+			if(cl != null) { cl.luzSuja = true; }
+			if(co != null) { co.luzSuja = true; }
+			chunk.luzSuja = true;
+		}
         chunk.att = true;
 
 		Chunk chunkAdj;
@@ -332,18 +342,13 @@ public class Mundo {
 			}
 		}
 		if(!praLiberar.isEmpty() || !praRemover.isEmpty()) {
-			Gdx.app.postRunnable(new Runnable() {
-					@Override
-					public void run() {
-						for(Chunk c : praLiberar) {
-							if(c.malha != null) {
-								c.malha.dispose();
-								c.malha = null;
-							}
-						}
-						for(long c : praRemover) chunks.remove(c);
-					}
-				});
+			for(Chunk c : praLiberar) {
+				if(c.malha != null) {
+					c.malha.dispose();
+					c.malha = null;
+				}
+			}
+			for(long c : praRemover) chunks.remove(c);
 		}
 	}
 
@@ -464,10 +469,6 @@ public class Mundo {
 		exec.submit(new Runnable() {
 				@Override
 				public void run() {
-					// luz ja foi calculada em gerarDados(estado 2)
-					// recalcula apenas se luzSuja
-					if(chunk.luzSuja) ChunkLuz.calcularLuz(chunk);
-
 					final FloatArrayUtil vertsGeral = ArrayReuso.obterFloatArray();
 					final ShortArrayUtil idcSolidos = ArrayReuso.obterShortArray();
 					final ShortArrayUtil idcTransp = ArrayReuso.obterShortArray();
@@ -592,10 +593,12 @@ public class Mundo {
 					chunks.put(vizinhaChave, v);
 				}
 				// se os blocos ainda não foram gerados(biomas não escolhidos)
-				if(!v.dadosProntos) {
-					motor.gerarChunk(v);
-					ChunkLuz.calcularLuz(v);
-					v.dadosProntos = true;
+				synchronized(v) {
+					if(!v.dadosProntos) {
+						motor.gerarChunk(v);
+						ChunkLuz.calcularLuz(v);
+						v.dadosProntos = true;
+					}
 				}
 			}
 		}

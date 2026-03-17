@@ -20,7 +20,8 @@
   
   "vegetacao": [
       { "nome": "capim", "chance": 0.4 },
-      { "nome": "tupila", "chance": 0.05 },
+      { "nome": "tulipa", "chance": 0.05 },
+      { "nome": "tulipa_luminosa", "chance": 0.03 },
       { "nome": "iris_azul", "chance": 0.05 }
   ],
   

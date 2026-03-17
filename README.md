@@ -85,6 +85,7 @@ refeito com LibGDX.
 * Pilar de arenito.
 * Bloco de estrutura.
 * Bloco nulo.
+* Tulipa luminosa.
 
 ## Receitas:
 ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.

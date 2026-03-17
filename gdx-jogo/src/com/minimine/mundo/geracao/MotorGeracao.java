@@ -263,8 +263,10 @@ public final class MotorGeracao {
 				
                 final Chunk alvo = Mundo.chunks.get(vizinhoChave);
                 if(alvo == null || !alvo.dadosProntos) continue;
-                ChunkUtil.defBloco(gx & 0xF, by, gz & 0xF, id, alvo);
-                if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(gx & 0xF, by, gz & 0xF, e.blocoMeta[i], alvo);
+                synchronized(alvo) {
+					ChunkUtil.defBloco(gx & 0xF, by, gz & 0xF, id, alvo);
+					if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(gx & 0xF, by, gz & 0xF, e.blocoMeta[i], alvo);
+				}
             }
         }
     }

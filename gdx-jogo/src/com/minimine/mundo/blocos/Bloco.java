@@ -72,7 +72,8 @@ public class Bloco {
 		Bloco.add(new Bloco("coral_azul", "coral_azul"));
 		Bloco.add(new Bloco("coral_amarelo", "coral_amarelo"));
 		Bloco.add(new Bloco("capim", "capim", true, false, false, 0, true));
-		Bloco.add(new Bloco("tulipa", "tulipa", true, false, false, 3, true));
+		Bloco.add(new Bloco("tulipa", "tulipa", true, false, false, 0, true));
+		Bloco.add(new Bloco("tulipa_luminosa", "tulipa", true, false, false, 5, true));
 		Bloco.add(new Bloco("iris_azul", "iris_azul", true, false, false, 1, true));
 		Bloco.add(new Bloco("arenito", "arenito"));
 		Bloco.add(new Bloco("pilar_arenito", "pilar_arenito_topo", "pilar_arenito_lado"));

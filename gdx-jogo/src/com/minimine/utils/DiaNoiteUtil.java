@@ -18,7 +18,7 @@ public class DiaNoiteUtil {
 
     // angulo do ciclo(0 = amanhecer, PI/2 = meio-dia, PI = entardecer, 3PI/2 = meia-noite)
     public float tempo = MathUtils.PI * 0.75f;
-    public float tempo_velo = 1f / 20f;
+    public float tempo_velo = MathUtils.PI2 / 1200f; // dia/noite de 20 minutos
     public float luz = 1f;
 
     public final Vector3 dirSol = new Vector3();
