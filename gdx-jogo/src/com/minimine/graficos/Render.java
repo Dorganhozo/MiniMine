@@ -119,7 +119,7 @@ public class Render {
         this.mundo = mundo;
 		this.diaNoite = new DiaNoiteUtil();
 	}
-	
+
 	public void iniciar() {
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());  
         Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
@@ -129,21 +129,21 @@ public class Render {
 
         shader = new ShaderProgram(vert, frag);
 		ShaderProgram.pedantic = false;
-		
+
         if(!shader.isCompiled()) Gdx.app.log("shader", "[ERRO]: "+shader.getLog());
         debugCaixas = new ShapeRenderer();
 
         // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-			Texturas.atlas.get("agua_a1"),
-			Texturas.atlas.get("agua_a2"),
-			Texturas.atlas.get("agua_a3"),
-			Texturas.atlas.get("agua_a4")
-		}, 2.5f);  // 2.5 quadros por segundo
+							Texturas.atlas.get("agua_a1"),
+							Texturas.atlas.get("agua_a2"),
+							Texturas.atlas.get("agua_a3"),
+							Texturas.atlas.get("agua_a4")
+						}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas
         gp = new GerenciadorParticulas(ui.jg);
-		
+
         if(mundo.nuvens) NuvensUtil.iniciar(ui.jg.posicao);
         if(mundo.ciclo) diaNoite.iniciar();
 
@@ -152,19 +152,61 @@ public class Render {
 		mundo.iniciar();
     }
 
+    // passo por atributo de vertice: a_pos(1) + a_texCoord(2) + a_texId(1) + a_cor(1) = 5 floats = 20 bytes
+    public static final int PASSO = 20;
+
+    // faz bind dos atributos do VBO e desenha usando o IBO do chunk
+    public static void renderChunk(Chunk chunk, int iboId, int posIndices, int contaIndices) {
+        Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, chunk.vboId);
+        Gdx.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, iboId);
+
+        int posLoc = shader.getAttributeLocation("a_pos");
+        int texCoordLoc = shader.getAttributeLocation("a_texCoord");
+        int texIdLoc = shader.getAttributeLocation("a_texId");
+        int corLoc = shader.getAttributeLocation("a_cor");
+
+        if(posLoc >= 0) {
+            Gdx.gl.glEnableVertexAttribArray(posLoc);
+            Gdx.gl.glVertexAttribPointer(posLoc, 1, GL20.GL_FLOAT, false, PASSO, 0);
+        }
+        if(texCoordLoc >= 0) {
+            Gdx.gl.glEnableVertexAttribArray(texCoordLoc);
+            Gdx.gl.glVertexAttribPointer(texCoordLoc, 2, GL20.GL_FLOAT, false, PASSO, 4);
+        }
+        if(texIdLoc >= 0) {
+            Gdx.gl.glEnableVertexAttribArray(texIdLoc);
+            Gdx.gl.glVertexAttribPointer(texIdLoc, 1, GL20.GL_FLOAT, false, PASSO, 12);
+        }
+        if(corLoc >= 0) {
+            Gdx.gl.glEnableVertexAttribArray(corLoc);
+            // a_cor é 4 bytes sem sinal normalizados num float
+            Gdx.gl.glVertexAttribPointer(corLoc, 4, GL20.GL_UNSIGNED_BYTE, true, PASSO, 16);
+        }
+        // posição em bytes: cada indice é um short(2 bytes)
+        Gdx.gl20.glDrawElements(GL20.GL_TRIANGLES, contaIndices, GL20.GL_UNSIGNED_SHORT, posIndices * 2);
+
+        if(posLoc >= 0) Gdx.gl.glDisableVertexAttribArray(posLoc);
+        if(texCoordLoc >= 0) Gdx.gl.glDisableVertexAttribArray(texCoordLoc);
+        if(texIdLoc >= 0) Gdx.gl.glDisableVertexAttribArray(texIdLoc);
+        if(corLoc >= 0) Gdx.gl.glDisableVertexAttribArray(corLoc);
+
+        Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0);
+        Gdx.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+
     public void att(float delta) {
 		if(!pause) {
 			Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-			
+
 			if(ui.debug) ui.gpu.enable();
 			else ui.gpu.disable();
 			if(ui.debug) ui.gpu.reset();
 
 			if(mundo.ciclo) diaNoite.att(ui.jg.camera, delta);
-			
+
 			mundo.att(delta, ui.jg);
 
 			if(mundo.carregado) {
@@ -183,7 +225,7 @@ public class Render {
 			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
 			shader.setUniformf("u_luzCeu", diaNoite.luz);
 			shader.setUniformf("u_corCeu", diaNoite.corCeuR, diaNoite.corCeuG, diaNoite.corCeuB);
-			
+
 			// == envia dados do atlas pro shader ===
 			// envia a tabela de pesquisa uma vez por frame(ou quando mudar)
 			// o 4fv envia vetores de 4 floats
@@ -195,9 +237,9 @@ public class Render {
 
 			// 1. solidos:
 			for(final Chunk chunk : mundo.chunks.values()) {
-				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaSolida > 0) {
+				if(frustrum(chunk, ui.jg) && chunk.gpuPronta && chunk.contaSolida > 0) {
 					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
-					chunk.malha.render(shader, GL20.GL_TRIANGLES, 0, chunk.contaSolida);
+					renderChunk(chunk, chunk.iboId, 0, chunk.contaSolida);
 				}
 			}
 			// 2. transparentes:
@@ -205,25 +247,24 @@ public class Render {
 			Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 
 			for(final Chunk chunk : mundo.chunks.values()) {
-				if(frustrum(chunk, ui.jg) && chunk.malha != null && chunk.contaTransp > 0) {
+				if(frustrum(chunk, ui.jg) && chunk.gpuPronta && chunk.contaTransp > 0) {
 					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
-					chunk.malha.render(shader, GL20.GL_TRIANGLES, chunk.contaSolida, chunk.contaTransp);
+					renderChunk(chunk, chunk.iboTranspId, 0, chunk.contaTransp);
 				}
 			}
 			Animacoes2D.att(delta);
 			shader.end();
-			
+
 			if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.camera);
-			
+
 			gp.att(delta);
 
 			// renderiza os modelos 3D
 			mb.begin(ui.jg.camera);
 
 			if(ui.gui) ui.jg.render(mb);
-			for(Entidade e : mundo.entidades) {
-				e.render(mb);
-			}
+			for(Entidade e : mundo.entidades) e.render(mb);
+
 			mb.end();
 
 			// renderiza o debug:
@@ -299,3 +340,5 @@ public class Render {
 		Animacoes2D.liberar();
     }
 }
+
+

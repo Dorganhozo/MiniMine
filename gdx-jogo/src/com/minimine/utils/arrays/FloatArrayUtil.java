@@ -1,36 +1,59 @@
 package com.minimine.utils.arrays;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 /*
- * array dinamico de floats otimizado para economizar memória
- * começa pequeno(256 elementos = ~1KB) e cresce conforme necessario
- * economia: ~98% de RAM em chunks vazias/esparsas
+ * buffer dinamico de floats em memoria nativa(fora do heap Java)
+ * cresce 1.5x quando cheio, igual ao anterior
+ * tam = quantidade de floats escritos
  */
 public class FloatArrayUtil {
-    public static final int TAM_INICIAL = 256; // ~1KB
-    public float[] arr;
-    public int tam = 0;
+    public static final int TAM_INICIAL = 256; // floats
+
+    public ByteBuffer buf;
+    public FloatBuffer floatBuf; // visão sobre buf, pra putFloat rapido
+    public int tam = 0; // floats escritos
 
     public FloatArrayUtil() {
-        this.arr = new float[TAM_INICIAL];
+        buf = ByteBuffer.allocateDirect(TAM_INICIAL * 4).order(ByteOrder.nativeOrder());
+        floatBuf = buf.asFloatBuffer();
     }
+
     public FloatArrayUtil(int tamInicial) {
-        this.arr = new float[Math.max(tamInicial, TAM_INICIAL)];
+        int cap = Math.max(tamInicial, TAM_INICIAL);
+        buf = ByteBuffer.allocateDirect(cap * 4).order(ByteOrder.nativeOrder());
+        floatBuf = buf.asFloatBuffer();
     }
 
     public void add(float f) {
-        if(tam == arr.length) {
-            // cresce 1.5x
-            int novoTam = arr.length + (arr.length >> 1);
-            float[] n = new float[novoTam];
-            System.arraycopy(arr, 0, n, 0, arr.length);
-            arr = n;
-        }
-        arr[tam++] = f;
+        if(tam == floatBuf.capacity()) crescer();
+        floatBuf.put(tam, f);
+        tam++;
     }
 
-    // retorna o uso de memoria atual em KB
+    private void crescer() {
+        int novoTam = floatBuf.capacity() + (floatBuf.capacity() >> 1);
+        ByteBuffer novo = ByteBuffer.allocateDirect(novoTam * 4).order(ByteOrder.nativeOrder());
+        // copia conteudo nativo para o novo buffer
+        buf.position(0);
+        buf.limit(tam * 4);
+        novo.put(buf);
+        novo.position(0);
+        buf.limit(buf.capacity());
+        buf = novo;
+        floatBuf = buf.asFloatBuffer();
+    }
+
+    // prepara o buf para leitura do inicio até tam floats
+    public ByteBuffer bufPronto() {
+        buf.position(0);
+        buf.limit(tam * 4);
+        return buf;
+    }
+
     public float memoriaMB() {
-        return (arr.length * 4f) / (1024f * 1024f);
+        return (floatBuf.capacity() * 4f) / (1024f * 1024f);
     }
 }
 

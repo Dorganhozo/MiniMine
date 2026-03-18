@@ -24,12 +24,12 @@ public class ChunkMalha {
         if(cXN != null && !cXN.dadosProntos) cXN = null;
         if(cZP != null && !cZP.dadosProntos) cZP = null;
         if(cZN != null && !cZN.dadosProntos) cZN = null;
-        // luz usa estado >= 2 — garante que calcularLuz ja rodou na vizinha
+        // luz usa estado >= 3 garante que calcularLuz ja rodou na vizinha
         // se nao tiver luz pronta, usa padrão 0 e refaz quando estiver pronta
-        Chunk lXP = (cXP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x + 1, chunk.z), 0) >= 2) ? cXP : null;
-        Chunk lXN = (cXN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x - 1, chunk.z), 0) >= 2) ? cXN : null;
-        Chunk lZP = (cZP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z + 1), 0) >= 2) ? cZP : null;
-        Chunk lZN = (cZN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z - 1), 0) >= 2) ? cZN : null;
+        Chunk lXP = (cXP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x + 1, chunk.z), 0) >= 3) ? cXP : null;
+        Chunk lXN = (cXN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x - 1, chunk.z), 0) >= 3) ? cXN : null;
+        Chunk lZP = (cZP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z + 1), 0) >= 3) ? cZP : null;
+        Chunk lZN = (cZN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z - 1), 0) >= 3) ? cZN : null;
 
         final int[] mascara = MASCARA_CACHE.get();
 
@@ -93,7 +93,7 @@ public class ChunkMalha {
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nx < 0 || nx >= 16))) {
                                     Chunk lC = (nx >= 16) ? lXP : (nx < 0) ? lXN : chunk;
-                                    byte luz = ChunkUtil.obterLuzCompleta(tx, y, z, lC != null ? lC : chunk);
+                                    byte luz = lC != null ? ChunkUtil.obterLuzCompleta(tx, y, z, lC) : 0;
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -130,7 +130,7 @@ public class ChunkMalha {
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nz < 0 || nz >= 16))) {
                                     Chunk lC = (nz >= 16) ? lZP : (nz < 0) ? lZN : chunk;
-                                    byte luz = ChunkUtil.obterLuzCompleta(x, y, tz, lC != null ? lC : chunk);
+                                    byte luz = lC != null ? ChunkUtil.obterLuzCompleta(x, y, tz, lC) : 0;
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -233,3 +233,4 @@ public class ChunkMalha {
         return true;
     }
 }
+

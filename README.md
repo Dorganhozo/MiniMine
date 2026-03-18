@@ -159,6 +159,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Cache de vértices nas nuvens.
 * Junção de quase todas as texturas do jogo em atlas.
 * Carregamento e descarregamento de músicas dinamico.
+* Alocação de memória nativa real com biblioteca.so própria.
 
 ## Ruídos utilitários:
 * OpenSimplex2.java
@@ -172,10 +173,9 @@ em log mesmo porque eu to com preguiça de ficar listando.
 FPS de 40 a 60 padrão testado com até 121 chunks ativas (raio de 5).
 
 ## uso de mémoria testada:
-60-80 MBs do heap java & 24 MBs do heap nativo. (121 chunks ativas)
+61 MBs do heap java & 47 MBs do heap nativo. (121 chunks ativas)
 
 ## Adicionais:
-
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados.
 
 ## Dispositivos usados para testes:
@@ -187,7 +187,7 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * OpenGL ES: 3.2.
 * JVM: Java VM ART 2.1.0.
 * Sistema Operacional: Android 12 64-bit.
-* FPS padrão: 50-60.
+* FPS padrão: 40-60.
 
 ## PCs:
 ### Melhor condição

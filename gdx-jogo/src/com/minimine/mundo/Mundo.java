@@ -2,218 +2,227 @@ package com.minimine.mundo;
 // java
 import java.util.Map;
 import java.util.List;
-import java.util.HashMap;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-// utils
-import com.minimine.utils.arrays.FloatArrayUtil;
-import com.minimine.utils.arrays.ShortArrayUtil;
-import com.minimine.utils.Mat;
-import com.minimine.graficos.Texturas;
-// libgdx
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.utils.Pool;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-// blocos
-import com.minimine.mundo.blocos.Bloco;
-// graficos
-import com.minimine.graficos.Render;
-import com.minimine.graficos.Animacoes2D;
-import com.minimine.entidades.Jogador;
-import java.util.Random;
 import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+// utils
+import com.minimine.utils.arrays.FloatArrayUtil;
+import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.utils.arrays.ArrayReuso;
-import com.minimine.entidades.Entidade;
+import com.minimine.utils.Mat;
+import com.minimine.graficos.Texturas;
+import com.minimine.graficos.Render;
+import com.minimine.graficos.Animacoes2D;
+// libgdx
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.graphics.GL20;
+// blocos
+import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.blocos.BlocoModelo;
+// entidades
+import com.minimine.entidades.Jogador;
+import com.minimine.entidades.Entidade;
+import com.minimine.entidades.RegistroCriaturas;
+// geração
 import com.minimine.mundo.geracao.MotorGeracao;
 import com.minimine.mundo.geracao.RegistroBiomas;
 import com.minimine.mundo.geracao.ContextoGeracao;
-import com.minimine.entidades.RegistroCriaturas;
+import com.minimine.mundo.geracao.EstruturaPendente;
+import com.minimine.utils.MemNativa;
 
 public class Mundo {
     public static String nome = "novo mundo";
 
-	public static List<Entidade> entidades = new ArrayList<>();
-	public static RegistroCriaturas registroCriaturas;
+    public static List<Entidade> entidades = new ArrayList<>();
+    public static RegistroCriaturas registroCriaturas;
 
-	public static float GRAVIDADE = -30f;
+    public static float GRAVIDADE = -30f;
 
-	public static final List<Chunk> praLiberar = new ArrayList<>();
-	public static final List<Long> praRemover = new ArrayList<>();
+    public static final List<Chunk> praLiberar = new ArrayList<>();
+    public static final List<Long> praRemover = new ArrayList<>();
 
     public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
-
-	// estados: 0 = vazia, 1 = dados prontos, 2 = decoração + luz prontos, 3 = malha pronta
-	public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
+    /*
+     * estados:
+     *   0  = vazia, sem dados
+     *   1  = dados prontos(terreno + vegetação)
+     *   11 = transitório: processando estruturas(evita disparo duplo)
+     *   2  = estruturas prontas
+     *   3  = luz pronta
+     *   4  = malha pronta
+     */
+    public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
+    /*
+     * filaEstrutura: estruturas que extrapolaram os limites de uma chunk durante a
+     * geração e precisam ser aplicadas quando a chunk alvo atingir estado 1
+     * chave = chunk alvo, valor = lista de blocos pendentes para escrever nela
+     */
+    // fila compacta: 5 ints por entrada (lx, ly, lz, id, meta), sem objetos EstruturaPendente
+    public static final Map<Long, int[]> filaEstrutura = new ConcurrentHashMap<>();
+    // tamanho atual (entradas, não ints) de cada fila — separado do array pra crescimento sem realocar o mapa
+    public static final Map<Long, int[]> filaTam = new ConcurrentHashMap<>();
+    private static final int FILA_CAMPOS = 5;
+    private static final int FILA_CAP_INICIAL = 32; // entradas
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 256;
     public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK;
     public static long semente = 0;
-	public static int RAIO_CHUNKS = 5;
+    public static int RAIO_CHUNKS = 5;
 
     public static boolean carregado = false, ciclo = true, nuvens = true;
 
     public static ExecutorService exec;
 
-	public static MotorGeracao motor;
-	public static RegistroBiomas registroBiomas;
+    public static MotorGeracao motor;
+    public static RegistroBiomas registroBiomas;
 
-	public static float contaFluxo = 0f;
-    public static final float INTERVALO_FLUXO = 0.5f; // segundos entre cada tick de água
+    public static float contaFluxo = 0f;
+    public static final float INTERVALO_FLUXO = 0.5f;
+
+    // buffer nativo reutilizavel pra glGenBuffers, alocado uma vez, usado na thread GL
+    public static final java.nio.IntBuffer GL_BUFFER =
+	java.nio.ByteBuffer.allocateDirect(12).order(java.nio.ByteOrder.nativeOrder()).asIntBuffer();
 
     public void iniciar() {
         semente = semente == 0 ? (System.currentTimeMillis() ^ MathUtils.random(2, 10)) : semente;
 
-		registroCriaturas = new RegistroCriaturas();
-		registroCriaturas.carregar(Gdx.files.internal("criaturas/"));
+        registroCriaturas = new RegistroCriaturas();
+        registroCriaturas.carregar(Gdx.files.internal("criaturas/"));
 
-		registroBiomas = new RegistroBiomas();
-		registroBiomas.carregarBiomas(Gdx.files.internal("biomas/"));
+        registroBiomas = new RegistroBiomas();
+        registroBiomas.carregarBiomas(Gdx.files.internal("biomas/"));
 
-		motor = new MotorGeracao(semente, registroBiomas);
+        motor = new MotorGeracao(semente, registroBiomas);
 
         if(exec == null || exec.isShutdown()) exec = Executors.newFixedThreadPool(8);
     }
 
-    // chamado em render:
+    // chamado em render
     public void att(float delta, Jogador jg) {
-		if(exec.isShutdown()) return;
+        if(exec.isShutdown()) return;
 
-		attChunks((int)jg.posicao.x, (int)jg.posicao.z);
+        attChunks((int)jg.posicao.x, (int)jg.posicao.z);
 
-		if(!carregado && estados.size() >= 1) {
-			Integer x = estados.get(Chave.calcularChave((int)jg.posicao.x >> 4, (int)jg.posicao.z >> 4));
-			if(x != null && x == 3) carregado = true;
-		}
-		if(carregado) {
-			GerenciadorEntidades.att(delta, this, jg);
+        if(!carregado && estados.size() >= 1) {
+            Integer est = estados.get(Chave.calcularChave((int)jg.posicao.x >> 4, (int)jg.posicao.z >> 4));
+            if(est != null && est == 4) carregado = true;
+        }
+        if(carregado) {
+            GerenciadorEntidades.att(delta, this, jg);
 
-			// tick de fluxo de água com atraso
-			contaFluxo += delta;
-			if(contaFluxo >= INTERVALO_FLUXO) {
-				contaFluxo -= INTERVALO_FLUXO;
-
-				for(Chunk chunk : chunks.values()) {
-					if(chunk.fluxoSujo && chunk.dadosProntos) {
-						FluxoAgua.attFluxo(chunk);
-					}
-				}
-			}
-		}
-    }
-
-    // chamado em dispose:
-    public void liberar() {
-        for(Chunk chunk : chunks.values()) {
-            if(chunk.malha != null) {
-                chunk.malha.dispose();
-				chunk.malha = null;
+            contaFluxo += delta;
+            if(contaFluxo >= INTERVALO_FLUXO) {
+                contaFluxo -= INTERVALO_FLUXO;
+                for(Chunk chunk : chunks.values()) {
+                    if(chunk.fluxoSujo && chunk.dadosProntos) {
+                        FluxoAgua.attFluxo(chunk);
+                    }
+                }
             }
         }
-		for(Chunk chunk : chunksMod.values()) {
-            if(chunk.malha != null) {
-				chunk.malha = null;
-            }
-		}
-        for(Entidade e : entidades) {
-			e.liberar();
-			e = null;
-		}
-		chunksMod.clear();
-        chunks.clear();
-		estados.clear();
-		entidades.clear();
-        exec.shutdown();
-		if(com.minimine.ui.UI.debug) Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
-		ArrayReuso.limparPools();
     }
 
+    // libera VBO+IBO de uma chunk da GPU(deve ser chamado na thread GL)
+    public static void liberarGpu(Chunk chunk) {
+        if(!chunk.gpuPronta) return;
+        Gdx.gl.glDeleteBuffer(chunk.vboId);
+        Gdx.gl.glDeleteBuffer(chunk.iboId);
+        Gdx.gl.glDeleteBuffer(chunk.iboTranspId);
+        chunk.vboId = 0;
+        chunk.iboId = 0;
+        chunk.iboTranspId = 0;
+        chunk.gpuPronta = false;
+    }
+
+    // chamado em dispose
+    public void liberar() {
+        for(Chunk chunk : chunks.values()) {
+            liberarGpu(chunk);
+            if(chunk.meta != 0) {
+				MemNativa.liberar(chunk.meta);
+				chunk.meta = 0;
+			}
+        }
+        for(Chunk chunk : chunksMod.values()) {
+            if(chunk.meta != 0 && !chunks.containsValue(chunk)) {
+                MemNativa.liberar(chunk.meta);
+                chunk.meta = 0;
+            }
+        }
+        for(Entidade e : entidades) e.liberar();
+        chunksMod.clear();
+        chunks.clear();
+        estados.clear();
+        filaEstrutura.clear();
+        filaTam.clear();
+        entidades.clear();
+        exec.shutdown();
+        if(com.minimine.ui.UI.debug) Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
+        ArrayReuso.limparPools();
+    }
+
+    // === ACESSO ===
     public static int obterBlocoMundo(int x, int y, int z) {
-        if(y < 0 || y >= Y_CHUNK) return 0; // ar(fora dos limites)
-
+        if(y < 0 || y >= Y_CHUNK) return 0;
         Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
-
         if(chunk == null) return 0;
-
         return ChunkUtil.obterBloco(x & 0xF, y, z & 0xF, chunk);
     }
 
     public static void defBlocoMundo(int x, int y, int z, CharSequence bloco) {
-        if(y < 0 || y >= Y_CHUNK) return; // fora dos limites
+        if(y < 0 || y >= Y_CHUNK) return;
 
         final int chunkX = x >> 4;
         final int chunkZ = z >> 4;
-
-		final long chave = Chave.calcularChave(chunkX, chunkZ);
+        final long chave = Chave.calcularChave(chunkX, chunkZ);
 
         Chunk chunk = chunks.get(chave);
         if(chunk == null) {
-			Gdx.app.log("Mundo", "chunk null na posição X: "+chunkX+", Z: "+chunkZ);
-			return;
-		}
+            Gdx.app.log("Mundo", "chunk null na posição X: " + chunkX + ", Z: " + chunkZ);
+            return;
+        }
         int localX = x & 0xF;
         int localZ = z & 0xF;
 
-		int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
+        int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
 
-		// detecta se o bloco antigo era um emissor de luz
-		boolean eraEmissor = false;
-		if(blocoAntigoId != 0) {
-			if(Bloco.numIds.get(blocoAntigoId).luz > 0) {
-				eraEmissor = true;
-			}
-		}
-		if(blocoAntigoId != 0 && bloco != null) {
-			Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
-		}
+        boolean eraEmissor = blocoAntigoId != 0 && Bloco.numIds.get(blocoAntigoId).luz > 0;
 
-		// remove o bloco primeiro — zerarLuz lê os blocos da chunk,
-		// se o emissor ainda estiver lá ao zerar, preserva b.luz e cria emissor fantasma
-		ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-		ChunkUtil.defMeta(localX, y, localZ, (short)0, chunk);
+        if(blocoAntigoId != 0 && bloco != null) {
+            Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
+        }
+        ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
+        ChunkUtil.defMeta(localX, y, localZ, (short)0, chunk);
 
-		// zera o nibble de luz de bloco na chunk e vizinhas antes de recalcular,
-		// agora o emissor já foi removido dos dados então não deixa rastro
-		if(eraEmissor) ChunkLuz.zerarLuz(chunk);
+        if(eraEmissor) ChunkLuz.zerarLuz(chunk);
 
-		boolean novoEhAgua = bloco != null && bloco.equals("agua");
-		boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
-		if(novoEhAgua) {
-			ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
-			chunk.fluxoSujo = true;
-		} else if(antigoEraAgua ||
-				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x + 1, y, z)) ||
-				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x - 1, y, z)) ||
-				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z + 1)) ||
-				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y, z - 1)) ||
-				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y + 1, z)) ||
-				  FluxoAgua.eAgua(Mundo.obterBlocoMundo(x, y - 1, z))) {
-			FluxoAgua.recalcularFluxo(chunk);
-			FluxoAgua.marcarSujo(chunkX, chunkZ);
-		}
-		// recalcula luz da chunk central e das 4 vizinhas em ordem garantida:
-		// cada vizinha relê a borda já atualizada, sem depender da ordem do mapa
-		ChunkLuz.attLuzVizinhas(chunk);
+        boolean novoEhAgua = bloco != null && bloco.equals("agua");
+        boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
+        if(novoEhAgua) {
+            ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
+            chunk.fluxoSujo = true;
+        } else if(antigoEraAgua ||
+                  FluxoAgua.eAgua(obterBlocoMundo(x + 1, y, z)) ||
+                  FluxoAgua.eAgua(obterBlocoMundo(x - 1, y, z)) ||
+                  FluxoAgua.eAgua(obterBlocoMundo(x, y, z + 1)) ||
+                  FluxoAgua.eAgua(obterBlocoMundo(x, y, z - 1)) ||
+                  FluxoAgua.eAgua(obterBlocoMundo(x, y + 1, z)) ||
+                  FluxoAgua.eAgua(obterBlocoMundo(x, y - 1, z))) {
+            FluxoAgua.recalcularFluxo(chunk);
+            FluxoAgua.marcarSujo(chunkX, chunkZ);
+        }
+        ChunkLuz.attLuzVizinhas(chunk);
 
-		// marca vizinhas de borda pra reconstruir malha
-		Chunk chunkAdj;
+        // marca vizinhas de borda pra reconstruir malha
+        Chunk chunkAdj;
         if(localX == 0) {
             chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
             if(chunkAdj != null) chunkAdj.att = true;
@@ -233,141 +242,182 @@ public class Mundo {
         chunksMod.put(chave, chunk);
     }
 
-	public static void defLuzMundo(int x, int y, int z, byte novaLuz) {
-		if(y < 0 || y >= Y_CHUNK) return;
+    public static void defLuzMundo(int x, int y, int z, byte novaLuz) {
+        if(y < 0 || y >= Y_CHUNK) return;
+        Chunk alvo = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+        if(alvo != null) {
+            int idc = (x & 0xF) + ((z & 0xF) << 4) + (y << 8);
+            alvo.luz[idc] = novaLuz;
+            alvo.luzSuja = true;
+            alvo.att = true;
+        }
+    }
 
-		// localiza a chunk alvo pelas coordenadas globais
-		Chunk alvo = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+    public static byte obterLuzMundo(int x, int y, int z) {
+        if(y < 0 || y >= Y_CHUNK) return 0;
+        Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+        if(chunk == null) return 0;
+        return chunk.luz[(x & 0xF) + ((z & 0xF) << 4) + (y << 8)];
+    }
 
-		if(alvo != null) {
-			int lx = x & 0xF;
-			int lz = z & 0xF;
-			int idc = lx + (lz << 4) + (y << 8);
-			alvo.luz[idc] = novaLuz;
-			alvo.luzSuja = true; // marca pra reconstruir a malha
-			alvo.att = true;
-		}
-	}
+    public static short obterMetaMundo(int x, int y, int z) {
+        if(y < 0 || y >= Y_CHUNK) return 0;
+        Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+        if(chunk == null) return 0;
+        return ChunkUtil.obterMeta(x & 0xF, y, z & 0xF, chunk);
+    }
 
-	public static byte obterLuzMundo(int x, int y, int z) {
-		if(y < 0 || y >= Y_CHUNK) return 0;
+    public static void defMetaMundo(int x, int y, int z, short valor) {
+        if(y < 0 || y >= Y_CHUNK) return;
+        final int chunkX = x >> 4;
+        final int chunkZ = z >> 4;
+        Chunk chunk = chunks.get(Chave.calcularChave(chunkX, chunkZ));
+        if(chunk == null) return;
+        int localX = x & 0xF;
+        int localZ = z & 0xF;
+        ChunkUtil.defMeta(localX, y, localZ, valor, chunk);
+        chunk.att = true;
+        if(localX == 0) {
+            Chunk adj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
+            if(adj != null) adj.att = true;
+        }
+        if(localX == TAM_CHUNK - 1) {
+            Chunk adj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
+            if(adj != null) adj.att = true;
+        }
+        if(localZ == 0) {
+            Chunk adj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
+            if(adj != null) adj.att = true;
+        }
+        if(localZ == TAM_CHUNK - 1) {
+            Chunk adj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
+            if(adj != null) adj.att = true;
+        }
+    }
 
-		Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+    public static int obterAlturaChao(int x, int z) {
+        for(int y = Y_CHUNK - 1; y > 0; y--) {
+            if(obterBlocoMundo(x, y, z) != 0) return y + 1;
+        }
+        return 80;
+    }
 
-		if(chunk == null) return 0;
-
-		int localX = x & 0xF;
-		int localZ = z & 0xF;
-		int idc = localX + (localZ << 4) + (y << 8);
-
-		return chunk.luz[idc];
-	}
-
-	public static int obterAlturaChao(int x, int z) {
-		// começa do topo do mundo(Y_CHUNK - 1) e desce
-		for(int y = Y_CHUNK - 1; y > 0; y--) {
-			int blocoId = obterBlocoMundo(x, y, z);
-			if(blocoId != 0) {
-				return y + 1; // retorna a posição logo acima do bloco encontrado
-			}
-		}
-		return 80; // caso de segurança: se o mundo estiver vazio, nasce no 80
-	}
-
-    // GERAÇÃO DE DADOS:
+    // === GERAÇÃO DE CHUNKS ===
     public void attChunks(int x, int z) {
-		final int cx = x >> 4;
-		final int cz = z >> 4;
-		limparChunks(cx, cz);
+        final int cx = x >> 4;
+        final int cz = z >> 4;
+        limparChunks(cx, cz);
 
-		// gera em ordem de distancia crescente(centro primeiro)
-		for(int dx = -RAIO_CHUNKS; dx <= RAIO_CHUNKS; dx++) {
-			for(int dz = -RAIO_CHUNKS; dz <= RAIO_CHUNKS; dz++) {
-				tentarGerarChunk(cx + dx, cz + dz);
-			}
-		}
-	}
+        for(int dx = -RAIO_CHUNKS; dx <= RAIO_CHUNKS; dx++) {
+            for(int dz = -RAIO_CHUNKS; dz <= RAIO_CHUNKS; dz++) {
+                tentarGerarChunk(cx + dx, cz + dz);
+            }
+        }
+    }
 
     public void limparChunks(int chunkX, int chunkZ) {
-		praLiberar.clear();
-		praRemover.clear();
+        praLiberar.clear();
+        praRemover.clear();
 
-		for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
-			long chave = e.getKey();
-			int distX = Mat.abs(Chave.x(chave) - chunkX);
-			int distZ = Mat.abs(Chave.z(chave) - chunkZ);
-			Chunk chunk = e.getValue();
+        for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
+            long chave = e.getKey();
+            int distX = Mat.abs(Chave.x(chave) - chunkX);
+            int distZ = Mat.abs(Chave.z(chave) - chunkZ);
+            Chunk chunk = e.getValue();
+            int estado = estados.getOrDefault(chave, 0);
 
-			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
-				if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
-				if(chunk != null) {
-					if(chunk.malha != null) praLiberar.add(chunk);
-				}
-				praRemover.add(chave);
-			} else if(chunk.att && !chunk.fazendo && estados.getOrDefault(chave, 0) >= 2) {
-				// so atualiza se decoração e luz já foram feitas
-				if(chunk.luzSuja) ChunkLuz.attLuz(chunk);
-				if(vizinhosProntos(chunk.x, chunk.z)) gerarMalha(chave);
-			} else if(estados.getOrDefault(chave, 0) == 1 && vizinhosComDados(chunk.x, chunk.z)) {
-				decorarDados(chave);
-			}
-		}
-		if(!praLiberar.isEmpty() || !praRemover.isEmpty()) {
-			for(Chunk c : praLiberar) {
-				if(c.malha != null) {
-					c.malha.dispose();
-					c.malha = null;
-				}
-			}
-			for(long c : praRemover) chunks.remove(c);
-		}
-	}
+            if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
+                if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
+                if(chunk != null && chunk.gpuPronta) praLiberar.add(chunk);
+                praRemover.add(chave);
+            } else if(chunk.att && !chunk.fazendo && estado >= 3) {
+                // so atualiza malha se estruturas e luz jaforam feitas
+                if(chunk.luzSuja) ChunkLuz.attLuz(chunk);
+                if(vizinhosProntos(chunk.x, chunk.z)) gerarMalha(chave);
+            } else if(estado == 1 && vizinhosComDados(chunk.x, chunk.z)) {
+                processarEstruturas(chave);
+            } else if(estado == 2 && vizinhosComEstruturas(chunk.x, chunk.z)) {
+                calcularLuz(chave);
+            }
+        }
+        if(!praLiberar.isEmpty() || !praRemover.isEmpty()) {
+            for(Chunk c : praLiberar) liberarGpu(c);
+            for(long chave : praRemover) {
+                Chunk removida = chunks.remove(chave);
+                filaEstrutura.remove(chave);
+                filaTam.remove(chave);
+                if(removida != null && removida.meta != 0 && !chunksMod.containsKey(chave)) {
+                    MemNativa.liberar(removida.meta);
+                    removida.meta = 0;
+                }
+            }
+        }
+    }
 
-	public void tentarGerarChunk(int x, int z) {
-		final long chave = Chave.calcularChave(x, z);
-		// 1. verifica se ja ta carregada no mapa ativo
-		if(chunks.containsKey(chave)) {
-			int estado = estados.getOrDefault(chave, 0);
-			if(estado == 1 && vizinhosComDados(x, z)) {
-				decorarDados(chave);
-			} else if(estado >= 2 && estado < 3 && !chunks.get(chave).fazendo) {
-				if(vizinhosProntos(x, z)) gerarMalha(chave);
-			}
-			return;
-		}
-		// 2. se não ta no ativo, verifica se ela existe no chunksMod de modificadas
-		Chunk modificado = chunksMod.get(chave);
-		if(modificado != null) {
-			chunks.put(chave, modificado);
-			ChunkLuz.calcularLuz(modificado);
-			estados.put(chave, 2); // dados + luz prontos
-			return;
-		}
-		// 3. so se for realmente nova, gera do zero
-		Chunk novo = new Chunk();
-		novo.x = x; novo.z = z;
-		ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(novo.maxIds), novo);
-		chunks.put(chave, novo);
-		estados.put(chave, 0);
-		gerarDados(chave);
-	}
+    public void tentarGerarChunk(int x, int z) {
+        final long chave = Chave.calcularChave(x, z);
 
-	// verifica se as 8 vizinhas ao redor ja tem dados de blocos
-	public boolean vizinhosProntos(int cx, int cz) {
-		long v1 = Chave.calcularChave(cx + 1, cz);
-		long v2 = Chave.calcularChave(cx - 1, cz);
-		long v3 = Chave.calcularChave(cx, cz + 1);
-		long v4 = Chave.calcularChave(cx, cz - 1);
-		return estados.getOrDefault(v1, 0) >= 2 &&
-			estados.getOrDefault(v2, 0) >= 2 &&
-			estados.getOrDefault(v3, 0) >= 2 &&
-			estados.getOrDefault(v4, 0) >= 2;
-	}
+        if(chunks.containsKey(chave)) {
+            int estado = estados.getOrDefault(chave, 0);
+            if(estado == 1 && vizinhosComDados(x, z)) {
+                processarEstruturas(chave);
+            } else if(estado == 2 && vizinhosComEstruturas(x, z)) {
+                calcularLuz(chave);
+            } else if(estado == 3 && !chunks.get(chave).fazendo) {
+                if(vizinhosProntos(x, z)) gerarMalha(chave);
+            }
+            return;
+        }
+        // chunk modificada pelo jogador: recarrega com luz recalculada
+        Chunk modificado = chunksMod.get(chave);
+        if(modificado != null) {
+            chunks.put(chave, modificado);
+            ChunkLuz.calcularLuz(modificado);
+            estados.put(chave, 3); // dados + estruturas + luz prontos
+            return;
+        }
+        // nova chunk: gera do zero
+        Chunk novo = new Chunk();
+        novo.x = x;
+		novo.z = z;
+        novo.meta = MemNativa.alocarZerado(Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK);
+        ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(novo.maxIds), novo);
+        chunks.put(chave, novo);
+        estados.put(chave, 0);
+        gerarDados(chave);
+    }
 
-	public static void gerarDados(final long chave) {
-		final Chunk chunk = chunks.get(chave);
+    // === VERIFICAÇÕES DE ESTADO DE VIZINHOS ===
+    // 4 vizinhos cardinais com estado >= 1(dados prontos)
+    public static boolean vizinhosComDados(int cx, int cz) {
+        return estados.getOrDefault(Chave.calcularChave(cx + 1, cz), 0) >= 1 &&
+			estados.getOrDefault(Chave.calcularChave(cx - 1, cz), 0) >= 1 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz + 1), 0) >= 1 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz - 1), 0) >= 1;
+    }
 
-		exec.submit(new Runnable() {
+    // 4 vizinhos cardinais com estado >= 2(estruturas prontas)
+    public static boolean vizinhosComEstruturas(int cx, int cz) {
+        return estados.getOrDefault(Chave.calcularChave(cx + 1, cz), 0) >= 2 &&
+			estados.getOrDefault(Chave.calcularChave(cx - 1, cz), 0) >= 2 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz + 1), 0) >= 2 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz - 1), 0) >= 2;
+    }
+
+    // 4 vizinhos cardinais com estado >= 3(luz pronta) necessario pra malha correta
+    public boolean vizinhosProntos(int cx, int cz) {
+        return estados.getOrDefault(Chave.calcularChave(cx + 1, cz), 0) >= 3 &&
+			estados.getOrDefault(Chave.calcularChave(cx - 1, cz), 0) >= 3 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz + 1), 0) >= 3 &&
+			estados.getOrDefault(Chave.calcularChave(cx, cz - 1), 0) >= 3;
+    }
+
+    // === GERAÇÃO ===
+    // estado 0 -> 1: gera terreno + vegetação
+    public static void gerarDados(final long chave) {
+        final Chunk chunk = chunks.get(chave);
+
+        exec.submit(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -375,36 +425,34 @@ public class Mundo {
 						chunk.dadosProntos = true;
 						estados.put(chave, 1);
 					} catch(final Exception e) {
-						throw new RuntimeException("[Mundo]: [ERRO]: ao gerar dados: "+e);
+						throw new RuntimeException("[Mundo] erro ao gerar dados: " + e);
 					}
 				}
 			});
-	}
+    }
+    /*
+     * estado 1 -> 2: processa estruturas da chunk e aplica fila de pendentes recebida
 
-	// verifica se os 4 vizinhos cardinais tem estado >= 1(dados prontos)
-	public static boolean vizinhosComDados(int cx, int cz) {
-		return estados.getOrDefault(Chave.calcularChave(cx + 1, cz), 0) >= 1 &&
-			estados.getOrDefault(Chave.calcularChave(cx - 1, cz), 0) >= 1 &&
-			estados.getOrDefault(Chave.calcularChave(cx, cz + 1), 0) >= 1 &&
-			estados.getOrDefault(Chave.calcularChave(cx, cz - 1), 0) >= 1;
-	}
-	/*
-	 * decorarDados: roda decoração e luz apos vizinhos atingirem estado >= 1
-	 * ctx reconstruido via ThreadLocal do executor: sem alocação extra
-	 * define estado 2 ao concluir
-	 */
-	public static void decorarDados(final long chave) {
-		final Chunk chunk = chunks.get(chave);
-		if(chunk == null) return;
-		if(!estados.replace(chave, 1, 10)) return; // 10 transitorio, evita disparo duplo
+     * regra de escrita de estruturas:
+     *   vizinha em estado 1 -> escreve diretamente(ainda na fase de dados)
+     *   vizinha em estado 0 ou >= 2 -> enfileira em filaEstrutura[vizinha]
 
-		exec.submit(new Runnable() {
+     * transitorio 11 evita disparo duplo da mesma chunk por duas threads
+   */
+    public static void processarEstruturas(final long chave) {
+        final Chunk chunk = chunks.get(chave);
+        if(chunk == null) return;
+        if(!estados.replace(chave, 1, 11)) return; // 11 = transitorio
+
+        exec.submit(new Runnable() {
 				@Override
 				public void run() {
 					try {
 						final int chunkX = chunk.x << 4;
 						final int chunkZ = chunk.z << 4;
 						final ContextoGeracao ctx = motor.ctxLocal.get();
+
+						// reconstroi biomas para as estruturas
 						motor.calcular2D(motor.semCalor,   motor.espalharCalor,   motor.octCalor,   motor.perCalor,   2.0f, chunkX, chunkZ, ctx.calorMapa);
 						motor.calcular2D(motor.semUmidade, motor.espalharUmidade, motor.octUmidade, motor.perUmidade, 2.0f, chunkX, chunkZ, ctx.umidadeMapa);
 						for(int i = 0; i < 256; i++) {
@@ -416,71 +464,114 @@ public class Mundo {
 								int idc = z * 16 + x;
 								int topo = Mundo.Y_CHUNK - 1;
 								while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
+								ctx.topoMapa[idc] = topo;
 								float calor = ctx.calorMapa[idc];
 								float umidade = ctx.umidadeMapa[idc];
 								calor = Math.max(0f, Math.min(1f, calor - (float)((topo - MotorGeracao.NIVEL_MAR) * 0.004)));
 								ctx.biomaMapa[idc] = registroBiomas.selecionar(calor, umidade, topo);
 							}
 						}
-						motor.decorar(chunk, chunkX, chunkZ, ctx);
-						ChunkLuz.calcularLuz(chunk);
+						// 1. aplica estruturas pendentes que outras chunks enfileiraram pra esta
+						int[] pendentes;
+						int[] tamArr;
+						synchronized(filaEstrutura) {
+							pendentes = filaEstrutura.remove(chave);
+							tamArr    = filaTam.remove(chave);
+						}
+						if(pendentes != null && tamArr != null) {
+							int total = tamArr[0];
+							for(int i = 0; i < total; i++) {
+								int base = i * FILA_CAMPOS;
+								int lx = pendentes[base];
+								int ly = pendentes[base + 1];
+								int lz = pendentes[base + 2];
+								int id = pendentes[base + 3];
+								short meta = (short) pendentes[base + 4];
+								if(ly >= 0 && ly < 256) {
+									ChunkUtil.defBloco(lx, ly, lz, id, chunk);
+									if(meta != 0) ChunkUtil.defMeta(lx, ly, lz, meta, chunk);
+								}
+							}
+						}
+						// 2. gera as estruturas desta chunk(vegetação ja foi feita em gerarDados)
+						motor.colocarEstruturas(chunk, chunkX, chunkZ, ctx);
+
 						estados.put(chave, 2);
 					} catch(final Exception e) {
-						throw new RuntimeException("[Mundo]: [ERRO]: ao decorar dados: "+e);
+						throw new RuntimeException("[Mundo] erro ao processar estruturas: " + e);
 					}
 				}
 			});
-	}
+    }
+    /*
+     * estado 2 -> 3: calcula luz
+     * exige vizinhosComEstruturas para que a luz não vaze em buracos de estruturas
+     * que ainda não chegaram nas vizinhas
+    */
+    public static void calcularLuz(final long chave) {
+        final Chunk chunk = chunks.get(chave);
+        if(chunk == null) return;
+        if(!estados.replace(chave, 2, 12)) return; // 12 = transitorio
 
-	public static void gerarMalha(final long chave) {
-		final Chunk chunk = chunks.get(chave);
-		if(chunk == null) return;
-		chunk.fazendo = true;
+        exec.submit(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						ChunkLuz.calcularLuz(chunk);
+						estados.put(chave, 3);
+					} catch(final Exception e) {
+						throw new RuntimeException("[Mundo] erro ao calcular luz: " + e);
+					}
+				}
+			});
+    }
+    // estado 3 -> 4: gera malha na thread do executor, envia para GPU na thread GL
+    public static void gerarMalha(final long chave) {
+        final Chunk chunk = chunks.get(chave);
+        if(chunk == null) return;
+        chunk.fazendo = true;
 
-		exec.submit(new Runnable() {
+        exec.submit(new Runnable() {
 				@Override
 				public void run() {
 					final FloatArrayUtil vertsGeral = ArrayReuso.obterFloatArray();
 					final ShortArrayUtil idcSolidos = ArrayReuso.obterShortArray();
-					final ShortArrayUtil idcTransp = ArrayReuso.obterShortArray();
+					final ShortArrayUtil idcTransp  = ArrayReuso.obterShortArray();
 
 					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
-
-					final short[] idcFinal = new short[idcSolidos.tam + idcTransp.tam];
-					System.arraycopy(idcSolidos.arr, 0, idcFinal, 0, idcSolidos.tam);
-					System.arraycopy(idcTransp.arr, 0, idcFinal, idcSolidos.tam, idcTransp.tam);
-
-					// armazena o tamanho real do buffer de indices
-					final int totalIndices = idcFinal.length;
 
 					Gdx.app.postRunnable(new Runnable() {
 							@Override
 							public void run() {
 								try {
-									if(chunk.malha != null) {
-										chunk.malha.dispose();
-										chunk.malha = null;
-									}
-									final int numVerts = vertsGeral.tam / 5;
+									liberarGpu(chunk);
 
-									// usa totalIndices pra evitar crash
-									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
-									chunk.malha.setVertices(vertsGeral.arr, 0, vertsGeral.tam);
-									chunk.malha.setIndices(idcFinal);
+									GL_BUFFER.clear();
+									Gdx.gl20.glGenBuffers(3, GL_BUFFER);
+									chunk.vboId = GL_BUFFER.get(0);
+									chunk.iboId = GL_BUFFER.get(1);
+									chunk.iboTranspId = GL_BUFFER.get(2);
 
-									// verifica se ta consistente
-									if(chunk.malha.getNumIndices() != totalIndices) {
-										Gdx.app.error("Mundo", "INCONSISTÊNCIA CRÍTICA: mesh tem " + 
-													  chunk.malha.getNumIndices() + " índices, mas deveria ter " + totalIndices);
-									}
-									// atualiza os contadores
+									Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, chunk.vboId);
+									Gdx.gl.glBufferData(GL20.GL_ARRAY_BUFFER, vertsGeral.tam * 4, vertsGeral.bufPronto(), GL20.GL_STATIC_DRAW);
+
+									Gdx.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, chunk.iboId);
+									Gdx.gl.glBufferData(GL20.GL_ELEMENT_ARRAY_BUFFER, idcSolidos.tam * 2, idcSolidos.bufPronto(), GL20.GL_STATIC_DRAW);
+
+									Gdx.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, chunk.iboTranspId);
+									Gdx.gl.glBufferData(GL20.GL_ELEMENT_ARRAY_BUFFER, idcTransp.tam * 2, idcTransp.bufPronto(), GL20.GL_STATIC_DRAW);
+
+									Gdx.gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0);
+									Gdx.gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+									chunk.gpuPronta = true;
 									chunk.contaSolida = idcSolidos.tam;
 									chunk.contaTransp = idcTransp.tam;
 									chunk.fazendo = false;
 									chunk.att = false;
-									estados.put(chave, 3);
-								} catch(Exception e) {
-									Gdx.app.error("Mundo", "Erro ao gerar malha do chunk", e);
+									estados.put(chave, 4);
+								} catch(final Exception e) {
+									Gdx.app.error("Mundo", "erro ao gerar malha", e);
 								} finally {
 									ArrayReuso.devolver(vertsGeral);
 									ArrayReuso.devolver(idcSolidos);
@@ -490,133 +581,63 @@ public class Mundo {
 						});
 				}
 			});
-	}
+    }
+    // === FILA DE ESTRUTURAS PENDENTES ===
+    /*
+     * enfileira ou aplica imediatamente um bloco de estrutura para a chunk alvo
+     * chamado por MotorGeracao.colocarEstruturas quando a vizinha não ta em estado 1
 
-	public static void gerarChunk(final long chave) {
-		final Chunk chunk = chunks.get(chave);
-		chunk.x = Chave.x(chave);
-		chunk.z = Chave.z(chave);
-		chunk.fazendo = true;
+     * se a chunk alvo ainda não chegou ao estado 2: enfileira para aplicar em processarEstruturas
+     * se a chunk alvo ja passou do estado 1(>= 2): aplica imediatamente e marca para
+     *   recalcular luz e malha: o bloco chegou atrasado mas ainda pode ser corrigido
+     */
+    public static void enfileirarEstrutura(long chaveAlvo, EstruturaPendente pendente) {
+        int estadoAlvo = estados.getOrDefault(chaveAlvo, 0);
+        if(estadoAlvo >= 2) {
+            // chunk alvo ja passou de processarEstruturas: aplica agora e marca suja
+            Chunk alvo = chunks.get(chaveAlvo);
+            if(alvo != null) {
+                pendente.aplicar(alvo);
+                alvo.luzSuja = true;
+                alvo.att = true;
+            }
+            return;
+        }
+        // chunk alvo ainda não processou estruturas: enfileira no buffer compacto
+        synchronized(filaEstrutura) {
+            int[] tam = filaTam.get(chaveAlvo);
+            int[] buf = filaEstrutura.get(chaveAlvo);
+            if(buf == null) {
+                buf = new int[FILA_CAP_INICIAL * FILA_CAMPOS];
+                tam = new int[]{ 0 };
+                filaEstrutura.put(chaveAlvo, buf);
+                filaTam.put(chaveAlvo, tam);
+            }
+            int n = tam[0];
+            if(n * FILA_CAMPOS >= buf.length) {
+                // cresce 1.5x
+                int[] novo = new int[buf.length + (buf.length >> 1)];
+                System.arraycopy(buf, 0, novo, 0, buf.length);
+                buf = novo;
+                filaEstrutura.put(chaveAlvo, buf);
+            }
+            int base = n * FILA_CAMPOS;
+            buf[base] = pendente.lx;
+            buf[base + 1] = pendente.ly;
+            buf[base + 2] = pendente.lz;
+            buf[base + 3] = pendente.id;
+            buf[base + 4] = pendente.meta;
+            tam[0]++;
+        }
+    }
 
-		exec.submit(new Runnable() {
-				@Override
-				public void run() {
-					prepararDadosVizinhos(chunk.x, chunk.z);
-
-					final FloatArrayUtil vertsGeral = ArrayReuso.obterFloatArray();
-					final ShortArrayUtil idcSolidos = ArrayReuso.obterShortArray();
-					final ShortArrayUtil idcTransp = ArrayReuso.obterShortArray();
-
-					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
-
-					final short[] idcFinal = new short[idcSolidos.tam + idcTransp.tam];
-					System.arraycopy(idcSolidos.arr, 0, idcFinal, 0, idcSolidos.tam);
-					System.arraycopy(idcTransp.arr, 0, idcFinal, idcSolidos.tam, idcTransp.tam);
-
-					// guarda o total de indices pra não perder a referencia
-					final int totalIndices = idcFinal.length;
-
-					Gdx.app.postRunnable(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									if(chunk.malha != null) {
-										chunk.malha.dispose();
-										chunk.malha = null;
-									}
-									final int numVerts = vertsGeral.tam / 5;
-
-									// usa totalIndices
-									chunk.malha = new Mesh(true, numVerts, totalIndices, Render.atriburs);
-									chunk.malha.setVertices(vertsGeral.arr, 0, vertsGeral.tam);
-									chunk.malha.setIndices(idcFinal);
-
-									// atualiza os contadores
-									chunk.contaSolida = idcSolidos.tam;
-									chunk.contaTransp = idcTransp.tam;
-									chunk.fazendo = false;
-									chunk.att = false;
-								} catch(Exception e) {
-									Gdx.app.error("Mundo", "Erro em gerarChunk", e);
-								} finally {
-									ArrayReuso.devolver(vertsGeral);
-									ArrayReuso.devolver(idcSolidos);
-									ArrayReuso.devolver(idcTransp);
-								}
-							}
-						});
-				}
-			});
-	}
-
-	public static void prepararDadosVizinhos(int cx, int cz) {
-		// define um raio de vizinhos necessarios(pelo menos as 4 direções)
-		for(int x = cx - 1; x <= cx + 1; x++) {
-			for(int z = cz - 1; z <= cz + 1; z++) {
-				long vizinhaChave = Chave.calcularChave(x, z);
-				Chunk v = chunks.get(vizinhaChave);
-
-				// se a chunk vizinha não existe, cria ela apenas com dados(sem malha ainda)
-				if(v == null) {
-					v = new Chunk();
-					v.x = x; v.z = z;
-					ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(v.maxIds), v);
-					chunks.put(vizinhaChave, v);
-				}
-				// se os blocos ainda não foram gerados(biomas não escolhidos)
-				synchronized(v) {
-					if(!v.dadosProntos) {
-						motor.gerarChunk(v);
-						ChunkLuz.calcularLuz(v);
-						v.dadosProntos = true;
-					}
-				}
-			}
-		}
-	}
-
-	public static short obterMetaMundo(int x, int y, int z) {
-		if(y < 0 || y >= Y_CHUNK) return 0;
-		Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
-		if(chunk == null) return 0;
-		return ChunkUtil.obterMeta(x & 0xF, y, z & 0xF, chunk);
-	}
-
-	public static void defMetaMundo(int x, int y, int z, short valor) {
-		if(y < 0 || y >= Y_CHUNK) return;
-		final int chunkX = x >> 4;
-		final int chunkZ = z >> 4;
-		Chunk chunk = chunks.get(Chave.calcularChave(chunkX, chunkZ));
-		if(chunk == null) return;
-		int localX = x & 0xF;
-		int localZ = z & 0xF;
-		ChunkUtil.defMeta(localX, y, localZ, valor, chunk);
-		chunk.att = true;
-		// se o bloco é borda, marca vizinha tambem pra reconstruir malha
-		if(localX == 0) {
-			Chunk adj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
-			if(adj != null) adj.att = true;
-		}
-		if(localX == TAM_CHUNK - 1) {
-			Chunk adj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
-			if(adj != null) adj.att = true;
-		}
-		if(localZ == 0) {
-			Chunk adj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
-			if(adj != null) adj.att = true;
-		}
-		if(localZ == TAM_CHUNK - 1) {
-			Chunk adj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
-			if(adj != null) adj.att = true;
-		}
-	}
-
-	public static String decodificarNome(String nome){
-	    try {
-	    	return URLDecoder.decode(nome, StandardCharsets.UTF_8.name());
-	    } catch(UnsupportedEncodingException e) {
-			Gdx.app.error("[Mundo]", "erro ao decodificar nome: "+e);
-			return "Desconhecido";
-	    } 
+    // === UTIL ===
+    public static String decodificarNome(String nome) {
+        try {
+            return URLDecoder.decode(nome, StandardCharsets.UTF_8.name());
+        } catch(UnsupportedEncodingException e) {
+            Gdx.app.error("[Mundo]", "erro ao decodificar nome: " + e);
+            return "Desconhecido";
+        }
     }
 }

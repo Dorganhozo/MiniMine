@@ -21,7 +21,7 @@
     { "nome": "capim", "chance": 0.05 }
   ],
   "estruturas": [
-    { "nome": "natural/arvore_1", "chance": 0.04, "blocoBaixo": "neve" },
-    { "nome": "natural/arvore_2", "chance": 0.04, "blocoBaixo": "neve" }
+    { "nome": "natural/arvore_1", "chance": 0.01, "blocoBaixo": "neve" },
+    { "nome": "natural/arvore_2", "chance": 0.03, "blocoBaixo": "neve" }
   ]
 }

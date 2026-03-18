@@ -19,15 +19,15 @@
   },
   
   "vegetacao": [
-      { "nome": "capim", "chance": 0.4 },
-      { "nome": "tulipa", "chance": 0.05 },
-      { "nome": "tulipa_luminosa", "chance": 0.03 },
-      { "nome": "iris_azul", "chance": 0.05 }
+      { "nome": "capim", "chance": 0.1 },
+      { "nome": "tulipa", "chance": 0.03 },
+      { "nome": "tulipa_luminosa", "chance": 0.01 },
+      { "nome": "iris_azul", "chance": 0.03 }
   ],
   
   "estruturas": [
-      { "nome": "natural/arvore_1", "chance": 0.05, "blocoBaixo": "grama" },
-      { "nome": "natural/arvore_2", "chance": 0.05, "blocoBaixo": "grama" },
-      { "nome": "natural/arvore_3", "chance": 0.01, "blocoBaixo": "grama" }
+      { "nome": "natural/arvore_1", "chance": 0.01, "blocoBaixo": "grama" },
+      { "nome": "natural/arvore_2", "chance": 0.01, "blocoBaixo": "grama" },
+      { "nome": "natural/arvore_3", "chance": 0.004, "blocoBaixo": "grama" }
   ]
 }

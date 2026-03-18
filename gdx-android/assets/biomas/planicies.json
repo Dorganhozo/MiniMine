@@ -18,6 +18,6 @@
     "prof_fundo_pedra": 0
   },
   "vegetacao": [
-    { "nome": "capim", "chance": 0.1}
+    { "nome": "capim", "chance": 0.1 }
   ]
 }

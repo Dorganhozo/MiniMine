@@ -56,7 +56,7 @@ public class UI implements InputProcessor {
     public static final HashMap<String, BotaoDpad> botoesDpad = new HashMap<>();
     public static final HashMap<Integer, String> toquesDpad = new HashMap<>();
 
-    public static float botaoTam = 70f;
+    public static float botaoTam = 60f;
     public static float espaco = 60f;
 
     public Sprite spriteMira;
@@ -68,7 +68,7 @@ public class UI implements InputProcessor {
 
     // dialogo de chat/alertas genericos
     public static CaixaDialogo dialogoChat;
-    public static CampoTexto   campoChatTexto;
+    public static CampoTexto campoChatTexto;
 
     // rotulos dinamicos acessiveis externamente
     public static final HashMap<String, Rotulo> rotulos = new HashMap<>();

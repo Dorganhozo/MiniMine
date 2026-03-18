@@ -10,39 +10,19 @@ import com.minimine.mundo.blocos.Bloco;
 /*
  * orquestrador de geração de chunk
  * thread-segura: toda a geração opera sobre ContextoGeracao local por thread
-
+ 
  * MotorGeracao, TerranoBase e GeradorRios são imutaveis após construção
  * contem apenas parametros e sementes
- * multiplas threads podem chamar
- * gerarChunk() simultaneamente sem concorrencia porque cada chamada usa seu proprio
- * ContextoGeracao via ThreadLocal
-
- *  fase 1: pré-calculo de ruido arrays
- *     persist -> base -> alt -> aSele -> subaquat -> crista -> calor -> umidade -> preenchimento
- *     todos os arrays populados antes de qualquer loop de blocos
-
- *   fase 2:
- *     for(z) for(x) for(y): pedra | escava canal de rio
-
- *   fase 3:
- *     passagem separada, por coluna: bioma por calor/umidade/altura, topo/subtopo/interior
- *     popula ctx.biomaMapa[] para uso futuro por GeradorDecoracoes
-
- *   fase 4:
- *     preenche água em blocos vazios abaixo do nível do mar
-
- *   fase 5: (antiga fase 3 de tuneis)
- *     escava tuneis
-
- *   fase 6: decoração
- *     por coluna acima do topo sólido:
- *       vegetacao: PseudoAleatorio por coluna, chance, ChunkUtil.defBloco direto
- *       estruturas: idem, coloca blocos com ids pré-resolvidos, apenas dentro do chunk
-
- * parametros de bioma
- *   aquecer: pos=0, escala=1, espalhar=1000, oct=3, persist=0.5, lac=2.0
- *   umidade: pos=0, escala=1, espalhar=1000, oct=3, persist=0.5, lac=2.0
- *   preenchimento_profundidade: pos=0, escala=1.2, espalhar=150, oct=3, persist=0.7, lac=2.0
+ * multiplas threads podem chamar gerarChunk() simultaneamente sem concorrencia
+ * porque cada chamada usa seu proprio ContextoGeracao via ThreadLocal
+ 
+ * pipeline de estados:
+ *   0 -> 1  gerarChunk: terreno + biomas + agua + vegetacao(so escrita local)
+ *   1 -> 2  colocarEstruturas: estruturas proprias + aplica pendentes recebidas
+ *              vizinha estado 1  -> escreve direto
+ *              vizinha outro est -> enfileira em Mundo.filaEstrutura
+ *   2 -> 3  calcularLuz:  propagação de luz
+ *   3 -> 4  gerarMalha: malha de renderização
  */
 public final class MotorGeracao {
     public static final int NIVEL_MAR = 62;
@@ -60,17 +40,17 @@ public final class MotorGeracao {
     public final float perCalor, perUmidade, perPreen;
     public final float escalaPreen;
 
-    // ContextoGeracao por thread, elimina alocação por chunk e race conditions
+    // ContextoGeracao por thread, elimina alocação por chunk e concorrencia
     public final ThreadLocal<ContextoGeracao> ctxLocal = new ThreadLocal<ContextoGeracao>() {
-        @Override protected ContextoGeracao initialValue() {return new ContextoGeracao(Mundo.Y_CHUNK);}
+        @Override protected ContextoGeracao initialValue() { return new ContextoGeracao(Mundo.Y_CHUNK); }
     };
 
     public static int PEDRA, AGUA;
 
     public MotorGeracao(long semente, RegistroBiomas registro) {
-        this.semente  = semente;
+        this.semente = semente;
         this.registro = registro;
-        this.terreno  = new TerranoBase(semente, NIVEL_MAR);
+        this.terreno = new TerranoBase(semente, NIVEL_MAR);
         this.rios = new GeradorRios(semente, NIVEL_MAR);
         this.tuneis = new GeradorTuneis(semente);
 
@@ -83,16 +63,16 @@ public final class MotorGeracao {
         espalharUmidade = 1000f;
 		octUmidade = 3;
 		perUmidade = 0.5f;
-        espalharPreen = 150f; 
+        espalharPreen = 150f;
 		octPreen = 3;
 		perPreen = 0.7f;
         escalaPreen = 1.2f;
 
         PEDRA = Bloco.texIds.get("pedra").tipo;
-        AGUA = Bloco.texIds.get("agua").tipo;
+        AGUA  = Bloco.texIds.get("agua").tipo;
     }
 
-    // === ENTRADA PRINCIPAL ===
+    // ESTADO 0 -> 1: terreno + biomas + água + vegetação
     public void gerarChunk(Chunk chunk) {
         final int chunkX = chunk.x << 4;
         final int chunkZ = chunk.z << 4;
@@ -102,22 +82,19 @@ public final class MotorGeracao {
         terreno.calcularChunk(chunkX, chunkZ, ctx);
         rios.calcularChunk(chunkX, 0, chunkZ, Mundo.Y_CHUNK, ctx);
 
-        calcular2D(semCalor, espalharCalor, octCalor, perCalor, 2.0f, chunkX, chunkZ, ctx.calorMapa);
-        calcular2D(semUmidade, espalharUmidade,  octUmidade, perUmidade, 2.0f, chunkX, chunkZ, ctx.umidadeMapa);
+        calcular2D(semCalor,    espalharCalor,    octCalor,    perCalor,    2.0f, chunkX, chunkZ, ctx.calorMapa);
+        calcular2D(semUmidade,  espalharUmidade,  octUmidade,  perUmidade,  2.0f, chunkX, chunkZ, ctx.umidadeMapa);
         calcular2Dpreenchimento(chunkX, chunkZ, ctx.preenProfMapa);
 
         // normaliza calor e umidade para [0,1]
         for(int i = 0; i < 16 * 16; i++) {
-            ctx.calorMapa[i] = Math.max(0f, Math.min(1f, ctx.calorMapa[i] * 0.5f + 0.5f));
+            ctx.calorMapa[i]   = Math.max(0f, Math.min(1f, ctx.calorMapa[i]   * 0.5f + 0.5f));
             ctx.umidadeMapa[i] = Math.max(0f, Math.min(1f, ctx.umidadeMapa[i] * 0.5f + 0.5f));
         }
-
         // === FASE 2: gerar terreno ===
-        int pedraSuperficieMaxY = 0;
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
                 int superficieY = terreno.obterAltura(x, z, ctx);
-                if(superficieY > pedraSuperficieMaxY) pedraSuperficieMaxY = superficieY;
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
                     if(y <= superficieY && !rios.eCanal(x, y, z, y, superficieY, ctx)) {
                         ChunkUtil.defBloco(x, y, z, PEDRA, chunk);
@@ -125,7 +102,7 @@ public final class MotorGeracao {
                 }
             }
         }
-        // === FASE 3: gerar vazios ===
+        // === FASE 3: escavar tuneis ===
         tuneis.escavar(chunk, chunkX, chunkZ);
 
         // === FASE 4: gerar biomas ===
@@ -136,7 +113,7 @@ public final class MotorGeracao {
                 int topoColuna = terreno.obterAltura(x, z, ctx);
                 while(topoColuna > 0 && ChunkUtil.obterBloco(x, topoColuna, z, chunk) == 0) topoColuna--;
 
-                float calor = ctx.calorMapa[idc2d];
+                float calor   = ctx.calorMapa[idc2d];
                 float umidade = ctx.umidadeMapa[idc2d];
                 calor = Math.max(0f, Math.min(1f, calor - (float)((topoColuna - NIVEL_MAR) * 0.004)));
 
@@ -144,8 +121,8 @@ public final class MotorGeracao {
                 ctx.biomaMapa[idc2d] = bioma;
 
                 final DadosBioma.Superficie s = bioma.superficie;
-                float preenchimentoVal = Math.max(0f, ctx.preenProfMapa[idc2d]);
-                int profpreenchimento = s.profTopo + s.profSubtopo + (int)preenchimentoVal;
+                float preenchimentoVal  = Math.max(0f, ctx.preenProfMapa[idc2d]);
+                int profpreenchimento   = s.profTopo + s.profSubtopo + (int)preenchimentoVal;
 
                 int profAtual = 0;
                 for(int y = topoColuna; y >= 1; y--) {
@@ -176,37 +153,35 @@ public final class MotorGeracao {
                 }
             }
         }
-        // === FASE 6: decoração executada externamente por Mundo.decorarDados()
-        // após vizinhos atingirem estado >= 1, permitindo escrita em chunks vizinhas
+        // === FASE 6: vegetação(1 bloco, so escrita local, seguro aqui) ===
+        colocarVegetacao(chunk, chunkX, chunkZ, ctx);
+
         chunk.dadosProntos = true;
     }
+
     /*
-     * decorar: coloca vegetação e estruturas sobre a superficie do chunk
-     * opera APENAS dentro dos limites locais [0..15] x [0..Y_CHUNK-1] x [0..15]
-     * sem Mundo.defBlocoMundo: nenhum efeito colateral fora do chunk
-     * semente por coluna derivada deterministicamente de(semente ^ x ^ z*31)
+     * coloca vegetação de 1 bloco por coluna escrita puramente local, sem acessar vizinhas
+     * chamado ao fim de gerarChunk (estado 0->1)
+     * precalcula topoMapa para reuso em colocarEstruturas
      */
-    public void decorar(Chunk chunk, int chunkX, int chunkZ, ContextoGeracao ctx) {
+    private void colocarVegetacao(Chunk chunk, int chunkX, int chunkZ, ContextoGeracao ctx) {
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
                 int idc2d = z * 16 + x;
                 final DadosBioma bioma = ctx.biomaMapa[idc2d];
                 if(bioma == null) continue;
 
-                // topo sólido da coluna
+                // calcula e guarda topo para reuso em colocarEstruturas
                 int topo = Mundo.Y_CHUNK - 1;
                 while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
+                ctx.topoMapa[idc2d] = topo;
 
-                // não decora sob água
                 if(topo <= NIVEL_MAR) continue;
-                // posição de colocação: bloco acima do topo solido
                 final int yDec = topo + 1;
                 if(yDec >= Mundo.Y_CHUNK) continue;
 
-                // seed determinística por coluna
                 long semCol = semente ^ ((chunkX + x) * 374761393L) ^ ((chunkZ + z) * 668265263L);
 
-                // === vegetação ===
                 DadosBioma.EntradaVegetacao[] veg = bioma.vegetacao;
                 for(int i = 0; i < veg.length; i++) {
                     semCol = lcg(semCol);
@@ -216,15 +191,38 @@ public final class MotorGeracao {
                         break; // so uma vegetação por coluna
                     }
                 }
-                // === estruturas ===
+            }
+        }
+    }
+
+    // ESTADO 1 -> 2: estruturas
+    // chamado por Mundo.processarEstruturas apos vizinhos atingirem estado >= 1
+    // ctx.topoMapa e ctx.biomaMapa ja recalculados por Mundo.processarEstruturas
+    public void colocarEstruturas(Chunk chunk, int chunkX, int chunkZ, ContextoGeracao ctx) {
+        for(int z = 0; z < 16; z++) {
+            for(int x = 0; x < 16; x++) {
+                int idc2d = z * 16 + x;
+                final DadosBioma bioma = ctx.biomaMapa[idc2d];
+                if(bioma == null) continue;
+
+                final int topo = ctx.topoMapa[idc2d];
+                if(topo <= NIVEL_MAR) continue;
+                final int yDec = topo + 1;
+                if(yDec >= Mundo.Y_CHUNK) continue;
+
+                // semente deterministica por coluna mesma derivação da vegetação
+                long semCol = semente ^ ((chunkX + x) * 374761393L) ^ ((chunkZ + z) * 668265263L);
+
+                // avança o lcg pelo numero de entradas de vegetação para manter sequencia consistente
+                DadosBioma.EntradaVegetacao[] veg = bioma.vegetacao;
+                for(int i = 0; i < veg.length; i++) semCol = lcg(semCol);
+
                 DadosBioma.EntradaEstrutura[] estr = bioma.estruturas;
                 for(int i = 0; i < estr.length; i++) {
                     semCol = lcg(semCol);
                     float r = (semCol >>> 1) / (float)(Long.MAX_VALUE);
                     if(r < estr[i].chance) {
-                        // bloco de superficie deve ser o esperado pela estrutura
                         if(estr[i].blocoBaixo >= 0 && ChunkUtil.obterBloco(x, topo, z, chunk) != estr[i].blocoBaixo) break;
-                        // yDec deve estar livre (galhos de outra arvore vizinha podem ja ocupar)
                         if(ChunkUtil.obterBloco(x, yDec, z, chunk) != 0) break;
                         colocarEstrutura(estr[i], x, topo, z, chunk);
                         break;
@@ -235,38 +233,82 @@ public final class MotorGeracao {
     }
     /*
      * coloca uma estrutura a partir da ancora(ox, oy, oz) em coordenadas locais do chunk
-     * blocos dentro do chunk são escritos diretamente
-     * blocos fora são escritos na chunk vizinha se ela existir e tiver dadosProntos
+     
+     * regra de escrita para blocos que extrapolam:
+     *   vizinha em estado 1 exatamente -> escreve direto(ainda na janela de dados)
+     *   vizinha em qualquer outro estado -> enfileira em Mundo.filaEstrutura
+     
+     * chunks modificadas pelo jogador (chunksMod) nunca recebem escrita de geração
      */
-    private void colocarEstrutura(DadosBioma.EntradaEstrutura e, int ox, int oy, int oz, Chunk chunk) {
-		int posX = ox - (e.larg >> 1);
-		int posZ = oz - (e.prof >> 1);
-		
+    public void colocarEstrutura(DadosBioma.EntradaEstrutura e, int ox, int oy, int oz, Chunk chunk) {
+        int posX = ox - (e.larg >> 1);
+        int posZ = oz - (e.prof >> 1);
+
+        // pré-carrega estado e referencia das 8 vizinhas
+        // índice = (dcx+1)*3+(dcz+1), dcx/dcz em {-1,0,1}, indice 4 = propria(não usado)
+        final Chunk[] vizinhos = new Chunk[9];
+        final boolean[] ehFila = new boolean[9]; // true = deve enfileirar, false = escreve direto
+        final boolean[] vizinhoMod = new boolean[9];
+
+        for(int dcx = -1; dcx <= 1; dcx++) {
+            for(int dcz = -1; dcz <= 1; dcz++) {
+                if(dcx == 0 && dcz == 0) continue;
+                int idc = (dcx + 1) * 3 + (dcz + 1);
+                long chave = Chave.calcularChave(chunk.x + dcx, chunk.z + dcz);
+                vizinhoMod[idc] = Mundo.chunksMod.containsKey(chave);
+                if(!vizinhoMod[idc]) {
+                    final Chunk c  = Mundo.chunks.get(chave);
+                    int estado = Mundo.estados.getOrDefault(chave, 0);
+                    if(c != null && estado == 1) {
+                        // vizinha ainda na janela de dados: escreve direto
+                        vizinhos[idc] = c;
+                        ehFila[idc]   = false;
+                    } else {
+                        // vizinha não existe ou ja passou do estado 1: enfileira
+                        vizinhos[idc] = c; // pode ser null, Mundo.enfileirarEstrutura usa so a chave
+                        ehFila[idc]   = true;
+                    }
+                }
+            }
+        }
         for(int i = 0; i < e.lx.length; i++) {
             int id = e.blocoIds[i];
             if(id < 0) continue;
             int bx = posX + (e.lx[i] - e.ancX);
             int by = oy + (e.ly[i] - e.ancY);
             int bz = posZ + (e.lz[i] - e.ancZ);
-			
+
             if(by < 0 || by >= Mundo.Y_CHUNK) continue;
+
             if(bx >= 0 && bx <= 15 && bz >= 0 && bz <= 15) {
+                // bloco dentro da própria chunk: escreve direto sempre
                 ChunkUtil.defBloco(bx, by, bz, id, chunk);
                 if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(bx, by, bz, e.blocoMeta[i], chunk);
             } else {
+                int dcx = bx < 0 ? -1 : (bx > 15 ? 1 : 0);
+                int dcz = bz < 0 ? -1 : (bz > 15 ? 1 : 0);
+                int idc = (dcx + 1) * 3 + (dcz + 1);
+
+                // nunca escreve em chunk modificada pelo jogador
+                if(vizinhoMod[idc]) continue;
+
+                // coordenadas locais na chunk alvo
                 final int gx = (chunk.x << 4) + bx;
                 final int gz = (chunk.z << 4) + bz;
-				
-				final long vizinhoChave = Chave.calcularChave(gx >> 4, gz >> 4);
-				// se a vizinha foi modificada pelo jogador, não contamina
-				if(Mundo.chunksMod.containsKey(vizinhoChave)) continue;
-				
-                final Chunk alvo = Mundo.chunks.get(vizinhoChave);
-                if(alvo == null || !alvo.dadosProntos) continue;
-                synchronized(alvo) {
-					ChunkUtil.defBloco(gx & 0xF, by, gz & 0xF, id, alvo);
-					if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(gx & 0xF, by, gz & 0xF, e.blocoMeta[i], alvo);
-				}
+                final int lx = gx & 0xF;
+                final int lz = gz & 0xF;
+
+                if(ehFila[idc]) {
+                    // vizinha não está em estado 1: enfileira para aplicar depois
+                    long chaveAlvo = Chave.calcularChave(chunk.x + dcx, chunk.z + dcz);
+                    Mundo.enfileirarEstrutura(chaveAlvo, new EstruturaPendente(lx, by, lz, id, e.blocoMeta[i]));
+                } else {
+                    // vizinha em estado 1: escreve direto
+                    final Chunk alvo = vizinhos[idc];
+                    if(alvo == null) continue;
+                    ChunkUtil.defBloco(lx, by, lz, id, alvo);
+                    if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(lx, by, lz, e.blocoMeta[i], alvo);
+                }
             }
         }
     }
@@ -276,7 +318,7 @@ public final class MotorGeracao {
         return s * 6364136223846793005L + 1442695040888963407L;
     }
 
-    // === UTILITARIOS ===
+    // === UTIL ===
     public void calcular2D(long sem, float espalhar, int oct, float persist, float lac,
 	int origemX, int origemZ, float[] saida) {
         float freq = 1.0f / espalhar;
@@ -332,5 +374,4 @@ public final class MotorGeracao {
         return new int[]{0, 0};
     }
 }
-
 

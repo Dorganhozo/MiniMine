@@ -1,12 +1,12 @@
 package com.minimine.mundo.geracao;
 /*
  * arrays de trabalho por chamada de gerarChunk()
- 
+
  * MotorGeracao, TerranoBase e GeradorRios são compartilhados entre threads
  * contem apenas parametros e objetos MapaRuido imutaveis apos construção
  * os arrays resultado[] do MapaRuido são o unico estado mutavel que causava
  * condição de corrida quando multiplas threads chamavam gerarChunk() simultaneamente
- 
+
  * ContextoGeracao é alocado uma vez por thread via ThreadLocal em MotorGeracao
  * e passado explicitamente por todos os metodos de geração. Cada thread tem
  * seus proprios arrays, eliminando a concorrencia
@@ -33,8 +33,10 @@ public final class ContextoGeracao {
     // biomaMapa exposto pra uso futuro por GeradorDecoracoes
     public final DadosBioma[] biomaMapa = new DadosBioma[16 * 16];
 
+    // topoMapa: topo solido de cada coluna, calculado em decorarDados e reutilizado em decorar
+    public final int[] topoMapa = new int[16 * 16];
+
     public ContextoGeracao(int yChunk) {
         cristaMapa = new float[16 * yChunk * 16];
     }
 }
-

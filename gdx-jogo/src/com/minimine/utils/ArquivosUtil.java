@@ -44,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.minimine.mundo.blocos.BlocoEstrutura;
 import com.minimine.mundo.ChunkLuz;
+import com.minimine.utils.MemNativa;
 import com.badlogic.gdx.files.FileHandle;
 
 public class ArquivosUtil {
@@ -234,9 +235,9 @@ public class ArquivosUtil {
                     }
                 }
             }
-			short[] meta = chunk.meta;
-			dos.writeInt(meta.length);
-			for(int i = 0; i < meta.length; i++) dos.writeShort(meta[i]);
+			int metaTam = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
+			dos.writeInt(metaTam);
+			for(int i = 0; i < metaTam; i++) dos.writeShort((short) MemNativa.lerInt(chunk.meta, i));
         }
         dos.flush();
     }
@@ -294,6 +295,7 @@ public class ArquivosUtil {
             long chave = dis.readLong();
 
             Chunk chunk = new Chunk();
+            chunk.meta = MemNativa.alocarZerado(Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK);
             ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
             chunk.x = Chave.x(chave);
             chunk.z = Chave.z(chave);
@@ -306,11 +308,10 @@ public class ArquivosUtil {
                 CharSequence id = dis.readUTF();
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
-			short[] meta = new short[dis.readInt()];
-			for(int d = 0; d < meta.length; d++) meta[d] = dis.readShort();
-			chunk.meta = meta;
+			int metaTam = dis.readInt();
+			chunk.meta = MemNativa.alocarZerado(metaTam);
+			for(int d = 0; d < metaTam; d++) MemNativa.gravarInt(chunk.meta, d, dis.readShort());
 
-			chunk.malha = null;
             if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Long, Chunk>();
             if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Long, Chunk>();
 
@@ -379,7 +380,7 @@ public class ArquivosUtil {
 			Gdx.app.log("ArquivosUtil", "[ERRO] ao carregar inv: "+e);
 		}
     }
-	
+
     // svEstrutura: salva uma região do mundo como .minies
     /*
      * varre a bcaixa[baseX..baseX+larg-1, baseY..baseY+alt-1, baseZ..baseZ+prof-1],
@@ -387,7 +388,7 @@ public class ArquivosUtil {
 
      * arquivo: MiniMine/estruturas/<nome>.minies
      * formato: veja cabeçalho de BlocoEstrutura.java
-	 */
+	*/
     public static void svEstrutura(
 		String nome,
 		int larg, int alt, int prof,
@@ -484,11 +485,11 @@ public class ArquivosUtil {
     /*
      * retorna um DadosEstrutura com todos os blocos e metadados,
      * ou null se o arquivo não existir ou estiver corrompido
-	*/
+	 */
 	public static DadosEstrutura crEstrutura(String nome) {
 		return crEstrutura(nome, true);
 	}
-	
+
     public static DadosEstrutura crEstrutura(String nome, boolean externo) {
         FileHandle arquivo = externo ? Gdx.files.absolute(Inicio.externo + "/MiniMine/estruturas/" + nome + ".minies") : Gdx.files.internal("estruturas/"+nome+".minies");
 
@@ -556,14 +557,14 @@ public class ArquivosUtil {
          * a ancora é descontada: o bloco de ancora fica em(ox, oy, oz)
          * blocos de ar(ids[i] == null ou "ar") são ignorados
          * pra sobrescrever tudo inclusive ar, chame colocarMundo(ox,oy,oz,true)
-         */
+        */
         public void colocarMundo(int ox, int oy, int oz) {
             colocarMundo(ox, oy, oz, false);
         }
 
         public void colocarMundo(int ox, int oy, int oz, boolean sobrescreverTudo) {
             if(lx == null) return;
-            // coleta chaves de chunks afetados (incluindo vizinhos de borda)
+            // coleta chaves de chunks afetados(incluindo vizinhos de borda)
             java.util.Set<Long> afetados = new java.util.HashSet<Long>();
             for(int i = 0; i < lx.length; i++) {
                 int vx = ox + (lx[i] - ancX);
@@ -573,7 +574,7 @@ public class ArquivosUtil {
                 if(!sobrescreverTudo && (id == null || "ar".equals(id))) continue;
                 Mundo.defBlocoMundo(vx, vy, vz, id);
                 Mundo.defMetaMundo(vx, vy, vz, meta[i]);
-                // chunk do bloco e vizinhos laterais (faces compartilhadas entre chunks)
+                // chunk do bloco e vizinhos laterais(faces compartilhadas entre chunks)
                 int cx = Math.floorDiv(vx, Mundo.TAM_CHUNK);
                 int cz = Math.floorDiv(vz, Mundo.TAM_CHUNK);
                 afetados.add(Chave.calcularChave(cx, cz));
@@ -718,3 +719,4 @@ public class ArquivosUtil {
 		}    
 	}
 }
+

@@ -1,6 +1,7 @@
 package com.minimine.mundo;
 
 import com.minimine.mundo.blocos.Bloco;
+import com.minimine.utils.MemNativa;
 
 public class ChunkUtil {
 	public static final int LOG2(final int i) {
@@ -13,57 +14,61 @@ public class ChunkUtil {
 
 	public static byte obterLuzCompleta(int x, int y, int z, Chunk chunk) {
 		final int idc = x + (z << 4) + (y << 8);
-		return chunk.luz[idc];
+		synchronized(chunk) { return chunk.luz[idc]; }
 	}
 
 	public static byte obterLuzBloco(int x, int y, int z, Chunk chunk) {
 		final int idc = x + (z << 4) + (y << 8);
-		return (byte)(chunk.luz[idc] & 15);
+		synchronized(chunk) { return (byte)(chunk.luz[idc] & 15); }
 	}
 
 	public static void defLuzBloco(int x, int y, int z, byte valor, Chunk chunk) {
 		final int idc = x + (z << 4) + (y << 8);
-		chunk.luz[idc] = (byte)((chunk.luz[idc] & 0xF0) | (valor & 15));
+		synchronized(chunk) { chunk.luz[idc] = (byte)((chunk.luz[idc] & 0xF0) | (valor & 15)); }
 	}
 
 	public static short obterMeta(int x, int y, int z, Chunk chunk) {
-		return chunk.meta[x + (z << 4) + (y << 8)];
+		synchronized(chunk) { return (short) MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)); }
 	}
 
 	public static void defMeta(int x, int y, int z, short valor, Chunk chunk) {
-		chunk.meta[x + (z << 4) + (y << 8)] = valor;
+		synchronized(chunk) { MemNativa.gravarInt(chunk.meta, x + (z << 4) + (y << 8), valor); }
 	}
 
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x < 0 || x >= 16 || y < 0 || y >= 256 || z < 0 || z >= 16) {
 			return false;
 		}
-		int bloco;
-		if(chunk.usaPaleta) {
-			bloco = chunk.paleta[
-				lerPacote(x + (z << 4) + (y << 8),
-				chunk.paletaBits, chunk.blocos,
-				chunk.blocosPorInt, LOG2(chunk.blocosPorInt))
-			];
-		} else {
-			bloco = lerPacote(x + (z << 4) + (y << 8),
-			chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt,
-			LOG2(chunk.blocosPorInt));
+		synchronized(chunk) {
+			int bloco;
+			if(chunk.usaPaleta) {
+				bloco = chunk.paleta[
+					lerPacote(x + (z << 4) + (y << 8),
+							  chunk.paletaBits, chunk.blocos,
+							  chunk.blocosPorInt, LOG2(chunk.blocosPorInt))
+					];
+			} else {
+				bloco = lerPacote(x + (z << 4) + (y << 8),
+								  chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt,
+								  LOG2(chunk.blocosPorInt));
+			}
+			return bloco != 0;
 		}
-		return bloco != 0;
 	}
 
 	public static int obterBloco(int x, int y, int z, Chunk chunk) {
-		int total = x + (z << 4) + (y << 8);
+		synchronized(chunk) {
+			int total = x + (z << 4) + (y << 8);
 
-		if(chunk.blocos == null) return 0;
+			if(chunk.blocos == null) return 0;
 
-		if(chunk.usaPaleta) {
-			int idc = lerPacote(total, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
-			if(idc < 0 || idc >= chunk.paletaTam) return 0;
-			return chunk.paleta[idc];
-		} else {
-			return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
+			if(chunk.usaPaleta) {
+				int idc = lerPacote(total, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
+				if(idc < 0 || idc >= chunk.paletaTam) return 0;
+				return chunk.paleta[idc];
+			} else {
+				return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
+			}
 		}
 	}
 
@@ -72,6 +77,13 @@ public class ChunkUtil {
 	}
 
 	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
+		synchronized(chunk) {
+			defBlocoInterno(x, y, z, bloco, chunk);
+		}
+	}
+
+	// chamado apenas dentro de synchronized(chunk)
+	private static void defBlocoInterno(int x, int y, int z, int bloco, Chunk chunk) {
 		final int total = x + (z << 4) + (y << 8);
 		// se ta em modo paleta, tenta usar/expandir paleta
 		if(chunk.usaPaleta) {
@@ -180,9 +192,8 @@ public class ChunkUtil {
 		int blocosPorIntAntigo = chunk.blocosPorInt;
 
 		// nem precisa repacotar
-		if(bitsAntigo == novosBits) {
-			return; // nada muda
-		}
+		if(bitsAntigo == novosBits) return; // nada muda
+
 		int[] antigos = chunk.blocos;
 
 		chunk.paletaBits = novosBits;
@@ -321,4 +332,3 @@ public class ChunkUtil {
 		chunk.blocos = novos;
 	}
 }
-

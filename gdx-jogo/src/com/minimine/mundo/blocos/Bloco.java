@@ -59,7 +59,7 @@ public class Bloco {
         Bloco.add(new Bloco("agua", "agua", true, false, false)).liquido = true;
         Bloco.add(new Bloco("areia", "areia"));
         Bloco.add(new Bloco("tronco", "tronco_topo", "tronco_lado"));
-        Bloco.add(new Bloco("folha", "folha", true, true, false));
+        Bloco.add(new Bloco("folha", "folha", false, true, false));
         Bloco.add(new Bloco("tabua_madeira", "tabua_madeira"));
         Bloco.add(new Bloco("cacto", "cacto_topo", "cacto_lado"));
         Bloco.add(new Bloco("vidro", "vidro", true, true, false));
