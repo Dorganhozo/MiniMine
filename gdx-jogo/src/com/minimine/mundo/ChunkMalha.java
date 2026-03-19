@@ -4,6 +4,7 @@ import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.blocos.BlocoModelo;
+import com.minimine.graficos.TipoRender;
 
 public class ChunkMalha {
     // tamanho maximo de mascara necessaria(eixo X/Z: 16 * Y_CHUNK)
@@ -213,7 +214,7 @@ public class ChunkMalha {
                             fv = v; fh = h;
 							break;
                     }
-                    ShortArrayUtil lista = b.transparente ? idcTransp : idcSolidos;
+                    ShortArrayUtil lista = (b.render != TipoRender.OPACO) ? idcTransp : idcSolidos;
                     BlocoModelo.addFace(faceId, b.texturaId(faceId), x, y, z, fv, fh, lb, ls, verts, lista);
 
                     i += v;
@@ -229,8 +230,9 @@ public class ChunkMalha {
     public static boolean deveRenderFace(Bloco atual, Bloco vizinho) {
         if(vizinho == null) return true;
         if(atual.tipo == vizinho.tipo) return false;
-        if(!vizinho.transparente) return false;
+        if(vizinho.render == TipoRender.OPACO) return false;
         return true;
     }
 }
+
 

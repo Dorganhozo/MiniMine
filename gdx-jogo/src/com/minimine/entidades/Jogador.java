@@ -7,6 +7,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.collision.Ray;
 import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
+import com.minimine.graficos.TipoRender;
 import com.minimine.audio.Audio;
 import com.minimine.mundo.Mundo;
 import com.badlogic.gdx.graphics.GL20;
@@ -104,7 +105,7 @@ public class Jogador extends Entidade {
 			Bloco bloco = Bloco.numIds.get(Mundo.obterBlocoMundo(x, y, z));
 
 			if(bloco != null) {
-				if(item.equals("ar") || bloco.liquido) {
+				if(item.equals("ar") || bloco.render == TipoRender.LIQUIDO) {
 					// clique esquerdo: quebrar bloco normalmente
 					if(modo == 2) inv.addItem(bloco.nome, 1);
 					Mundo.defBlocoMundo(x, y, z, item);
@@ -264,4 +265,5 @@ public class Jogador extends Entidade {
         if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
     }
 }
+
 

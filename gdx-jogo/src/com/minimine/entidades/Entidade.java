@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.minimine.mundo.Mundo;
 import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
+import com.minimine.graficos.TipoRender;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 
 public class Entidade {
@@ -81,8 +82,10 @@ public class Entidade {
 						minVec.set(x, y, z),
 						maxVec.set(x + 1, y + 1, z + 1)
 					);
-					if(!b.solido) {
+					if(b.render == TipoRender.LIQUIDO) {
 						naAgua = true;
+						continue;
+					} else if(b.render == TipoRender.RECORTE) {
 						continue;
 					} else {
 						if(hitbox.intersects(blocoHitbox)) return true;
@@ -158,7 +161,7 @@ public class Entidade {
 		if(vida == 0) morreu();
 		return true;
 	}
-	
+
 	public void morreu() {}
 
 	public void att(float delta) {
@@ -234,7 +237,7 @@ public class Entidade {
 			// entrou na água ou começou a voar: cancela rastreamento sem punir
 			rastreandoQueda = false;
 		}
-		// regeneração automática fora da água
+		// regeneração automatica fora da água
 		if(!naAgua && vida > 0 && vida < vidaMax) {
 			timerRegeneracao += delta;
 			if(timerRegeneracao >= TICK_REGENERACAO) {
@@ -250,4 +253,3 @@ public class Entidade {
 	public void render(ModelBatch mb) {}
 	public void liberar() {}
 }
-

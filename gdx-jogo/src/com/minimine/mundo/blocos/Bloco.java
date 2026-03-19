@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import com.minimine.audio.Audio;
+import com.minimine.graficos.TipoRender;
 import com.badlogic.gdx.audio.Music;
 
 public class Bloco {
@@ -16,33 +17,31 @@ public class Bloco {
 	public int tipo;
 	public String topo, lados, baixo;
 	public int luz;
-	public boolean transparente;
-	public boolean solido, liquido, culling, modeloX;
+	public TipoRender render;
+	public boolean solido, culling, modeloX;
 	public static boolean ABERTO = false;
 	/*
 	 * interface de UI associada a este bloco
 	 * null = bloco sem interface(comportamento padrão: colocar/quebrar)
-	 * Atribuída em Bloco.iniciar() para os blocos que precisarem
+	 * atribuida em Bloco.iniciar() para os blocos que precisarem
 	 */
 	public InterfaceBloco ui = null;
 	public EventoBloco evento = null;
 
 	public Bloco(CharSequence nome, String topo) {this(nome, topo, topo);}
 	public Bloco(CharSequence nome, String topo, String lados) {this(nome, topo, lados, topo);}
-	public Bloco(CharSequence nome, String topo, String lados, String baixo) {this(nome,topo, lados, baixo, false);}
-	public Bloco(CharSequence nome, String topo, boolean transparente, boolean solido, boolean culling, int luz) {this(nome, topo, topo, topo, transparente, solido, culling, luz, false);}
-	public Bloco(CharSequence nome, String topo, boolean transparente) {this(nome, topo, topo, topo, transparente);}
-	public Bloco(CharSequence nome, String topo, boolean transparente, boolean solido) {this(nome, topo, topo, topo, transparente, solido);}
-	public Bloco(CharSequence nome, String topo, String lados, String baixo, boolean transparente) {this(nome, topo, lados, baixo, transparente, true);}
-	public Bloco(CharSequence nome, String topo, String lados, String baixo, boolean transparente, boolean solido) {this(nome, topo, lados, baixo, transparente, solido, true, 0, false);}
-	public Bloco(CharSequence nome, String topo, boolean transparente, boolean solido, boolean culling) {this(nome, topo, topo, topo, transparente, solido, culling, 0, false);}
-	public Bloco(CharSequence nome, String topo, boolean transparente, boolean solido, boolean culling, int luz, boolean formaX) {this(nome, topo, topo, topo, transparente, solido, culling, luz, formaX);}
+	public Bloco(CharSequence nome, String topo, String lados, String baixo) {this(nome, topo, lados, baixo, TipoRender.OPACO, true, true, 0, false);}
+	public Bloco(CharSequence nome, String topo, TipoRender render) {this(nome, topo, topo, topo, render, true, true, 0, false);}
+	public Bloco(CharSequence nome, String topo, TipoRender render, boolean solido) {this(nome, topo, topo, topo, render, solido, true, 0, false);}
+	public Bloco(CharSequence nome, String topo, TipoRender render, boolean solido, boolean culling) {this(nome, topo, topo, topo, render, solido, culling, 0, false);}
+	public Bloco(CharSequence nome, String topo, TipoRender render, boolean solido, boolean culling, int luz) {this(nome, topo, topo, topo, render, solido, culling, luz, false);}
+	public Bloco(CharSequence nome, String topo, TipoRender render, boolean solido, boolean culling, int luz, boolean formaX) {this(nome, topo, topo, topo, render, solido, culling, luz, formaX);}
 
-	public Bloco(CharSequence nome, String topo, String lados, String baixo, boolean transparente, boolean solido, boolean culling, int luz, boolean formaX) {
+	public Bloco(CharSequence nome, String topo, String lados, String baixo, TipoRender render, boolean solido, boolean culling, int luz, boolean formaX) {
 		this.nome = nome;
 		this.tipo = blocos.size();
 		this.topo = topo; this.lados = lados; this.baixo = baixo;
-		this.transparente = transparente;
+		this.render = render;
 		this.solido = solido;
 		this.culling = culling;
 		this.luz = luz;
@@ -56,14 +55,14 @@ public class Bloco {
         Bloco.add(new Bloco("grama", "grama_topo", "grama_lado", "terra"));
         Bloco.add(new Bloco("terra", "terra"));
         Bloco.add(new Bloco("pedra", "pedra"));
-        Bloco.add(new Bloco("agua", "agua", true, false, false)).liquido = true;
+        Bloco.add(new Bloco("agua", "agua", TipoRender.LIQUIDO, false, false)).solido = false;
         Bloco.add(new Bloco("areia", "areia"));
         Bloco.add(new Bloco("tronco", "tronco_topo", "tronco_lado"));
-        Bloco.add(new Bloco("folha", "folha", false, true, false));
+        Bloco.add(new Bloco("folha", "folha", TipoRender.RECORTE, true, false));
         Bloco.add(new Bloco("tabua_madeira", "tabua_madeira"));
         Bloco.add(new Bloco("cacto", "cacto_topo", "cacto_lado"));
-        Bloco.add(new Bloco("vidro", "vidro", true, true, false));
-        Bloco.add(new Bloco("tocha", "tocha", false, true, true, 13));
+        Bloco.add(new Bloco("vidro", "vidro", TipoRender.TRANSLUCIDO, true, false));
+        Bloco.add(new Bloco("tocha", "tocha", TipoRender.RECORTE, true, true, 13));
 		Bloco.add(new Bloco("pedregulho", "pedregulho"));
 		Bloco.add(new Bloco("cascalho", "cascalho"));
 		Bloco.add(new Bloco("gelo", "gelo"));
@@ -71,23 +70,14 @@ public class Bloco {
 		Bloco.add(new Bloco("coral_rosa", "coral_rosa"));
 		Bloco.add(new Bloco("coral_azul", "coral_azul"));
 		Bloco.add(new Bloco("coral_amarelo", "coral_amarelo"));
-		Bloco.add(new Bloco("capim", "capim", true, false, false, 0, true));
-		Bloco.add(new Bloco("tulipa", "tulipa", true, false, false, 0, true));
-		Bloco.add(new Bloco("tulipa_luminosa", "tulipa", true, false, false, 5, true));
-		Bloco.add(new Bloco("iris_azul", "iris_azul", true, false, false, 1, true));
+		Bloco.add(new Bloco("capim", "capim", TipoRender.RECORTE, false, false, 0, true));
+		Bloco.add(new Bloco("tulipa", "tulipa", TipoRender.RECORTE, false, false, 0, true));
+		Bloco.add(new Bloco("tulipa_luminosa", "tulipa", TipoRender.RECORTE, false, false, 5, true));
+		Bloco.add(new Bloco("iris_azul", "iris_azul", TipoRender.RECORTE, false, false, 1, true));
 		Bloco.add(new Bloco("arenito", "arenito"));
 		Bloco.add(new Bloco("pilar_arenito", "pilar_arenito_topo", "pilar_arenito_lado"));
-		/*
-		 * bloco_nulo: marca "ar explícito" dentro de estruturas salvas
-		 * transparente=true, solido=false, culling=false para não interferir no mundo
-		 */
-		Bloco.add(new Bloco("bloco_nulo", "nulo", true, false, false));
-		/*
-		 * bloco_estrutura: abre interface para definir e salvar estruturas .minies
-		 * usa textura de pedra provisoriamente
-		 * interface montada em iniciarInterfaces()
-		 */
-		Bloco.blocos.add(new Bloco("bloco_estrutura", "bloco_estrutura"));
+		Bloco.add(new Bloco("bloco_nulo", "nulo", TipoRender.AR, false, false));
+		Bloco.add(new Bloco("bloco_estrutura", "bloco_estrutura"));
 
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("terra", "terra_1", "terra_2", "terra_3");
@@ -115,7 +105,7 @@ public class Bloco {
             default: return lados;
         }
     }
-	
+
 	public static Bloco add(Bloco b) {
 		blocos.add(b);
 		return b;
@@ -135,8 +125,7 @@ public class Bloco {
 					return;
 				}
 			}
-			Music m = Audio.sons.get(sonoros[0]);
-			m.play();
+			Audio.sons.get(sonoros[0]).play();
 		} else {
 			tocarSom("pedra");
 		}
@@ -156,3 +145,4 @@ public class Bloco {
 		Bloco.sons.clear();
 	}
 }
+

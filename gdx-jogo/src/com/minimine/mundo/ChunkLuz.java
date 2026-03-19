@@ -1,6 +1,7 @@
 package com.minimine.mundo;
 
 import com.minimine.mundo.blocos.Bloco;
+import com.minimine.graficos.TipoRender;
 import java.util.Arrays;
 
 public class ChunkLuz {
@@ -41,7 +42,7 @@ public class ChunkLuz {
                     int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
 
-                    if(b != null && !b.transparente) luzSolarAtual = 0;
+                    if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
 
                     luzTemp[idc] = (byte)(luzSolarAtual << 4);
 
@@ -94,7 +95,7 @@ public class ChunkLuz {
                         int blocoIdV = ChunkUtil.obterBloco(nx, ny, nz, chunk);
                         Bloco bV = Bloco.numIds.get(blocoIdV);
 
-                        if(bV == null || bV.transparente) {
+                        if(bV == null || bV.render != TipoRender.OPACO) {
                             if(fimFila < filaLuz.length) {
                                 filaLuz[fimFila++] = idcVizinho;
                             }
@@ -138,15 +139,15 @@ public class ChunkLuz {
                     int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
 
-                    if(b != null && !b.transparente) luzSolarAtual = 0;
+                    if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
 
-                    luzTemp[idc] = (byte) (luzSolarAtual << 4);
+                    luzTemp[idc] = (byte)(luzSolarAtual << 4);
 
                     if(luzSolarAtual > 0) {
                         filaLuz[fimFila++] = idc;
                     }
                     if(b != null && b.luz > 0) {
-                        luzTemp[idc] |= (byte) (b.luz & 0x0F);
+                        luzTemp[idc] |= (byte)(b.luz & 0x0F);
                         if(luzSolarAtual <= 0) {
                             filaLuz[fimFila++] = idc;
                         }
@@ -191,7 +192,7 @@ public class ChunkLuz {
                         int blocoIdV = ChunkUtil.obterBloco(nx, ny, nz, chunk);
                         Bloco bV = Bloco.numIds.get(blocoIdV);
 
-                        if(bV == null || bV.transparente) {
+                        if(bV == null || bV.render != TipoRender.OPACO) {
                             if(fimFila < filaLuz.length) {
                                 filaLuz[fimFila++] = idcVizinho;
                             }
@@ -269,7 +270,7 @@ public class ChunkLuz {
                 if(lbV > 1 || lsV > 1) {
                     int blocoId = ChunkUtil.obterBloco(x, y, 0, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
-                    if(b == null || b.transparente) {
+                    if(b == null || b.render != TipoRender.OPACO) {
                         int idcNossa = x + (0 << 4) + (y << 8);
                         int lbNova = Math.max(0, lbV - 1);
                         int lsNova = Math.max(0, lsV - 1);
@@ -300,7 +301,7 @@ public class ChunkLuz {
                 if(lbV > 1 || lsV > 1) {
                     int blocoId = ChunkUtil.obterBloco(x, y, 15, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
-                    if(b == null || b.transparente) {
+                    if(b == null || b.render != TipoRender.OPACO) {
                         int idcNossa = x + (15 << 4) + (y << 8);
                         int lbNova = Math.max(0, lbV - 1);
                         int lsNova = Math.max(0, lsV - 1);
@@ -331,7 +332,7 @@ public class ChunkLuz {
                 if(lbV > 1 || lsV > 1) {
                     int blocoId = ChunkUtil.obterBloco(15, y, z, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
-                    if(b == null || b.transparente) {
+                    if(b == null || b.render != TipoRender.OPACO) {
                         int idcNossa = 15 + (z << 4) + (y << 8);
                         int lbNova = Math.max(0, lbV - 1);
                         int lsNova = Math.max(0, lsV - 1);
@@ -362,7 +363,7 @@ public class ChunkLuz {
                 if(lbV > 1 || lsV > 1) {
                     int blocoId = ChunkUtil.obterBloco(0, y, z, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
-                    if(b == null || b.transparente) {
+                    if(b == null || b.render != TipoRender.OPACO) {
                         int idcNossa = 0 + (z << 4) + (y << 8);
                         int lbNova = Math.max(0, lbV - 1);
                         int lsNova = Math.max(0, lsV - 1);
@@ -403,7 +404,7 @@ public class ChunkLuz {
                     if(lbV > 1 || lsV > 1) {
                         int blocoId = ChunkUtil.obterBloco(x, y, 0, chunk);
                         Bloco b = Bloco.numIds.get(blocoId);
-                        if(b == null || b.transparente) {
+                        if(b == null || b.render != TipoRender.OPACO) {
                             int idcNossa = x + (0 << 4) + (y << 8);
                             int lbNova = Math.max(0, lbV - 1);
                             int lsNova = Math.max(0, lsV - 1);
@@ -431,7 +432,7 @@ public class ChunkLuz {
 
                     if(lbV > 1 || lsV > 1) {
                         Bloco b = Bloco.numIds.get(ChunkUtil.obterBloco(x, y, 15, chunk));
-                        if(b == null || b.transparente) {
+                        if(b == null || b.render != TipoRender.OPACO) {
                             int idcNossa = x + (15 << 4) + (y << 8);
                             int lbNova = Math.max(0, lbV - 1);
                             int lsNova = Math.max(0, lsV - 1);
@@ -459,7 +460,7 @@ public class ChunkLuz {
 
                     if(lbV > 1 || lsV > 1) {
                         Bloco b = Bloco.numIds.get(ChunkUtil.obterBloco(15, y, z, chunk));
-                        if(b == null || b.transparente) {
+                        if(b == null || b.render != TipoRender.OPACO) {
                             int idcNossa = 15 + (z << 4) + (y << 8);
                             int lbNova = Math.max(0, lbV - 1);
                             int lsNova = Math.max(0, lsV - 1);
@@ -487,7 +488,7 @@ public class ChunkLuz {
 
                     if(lbV > 1 || lsV > 1) {
                         Bloco b = Bloco.numIds.get(ChunkUtil.obterBloco(0, y, z, chunk));
-                        if(b == null || b.transparente) {
+                        if(b == null || b.render != TipoRender.OPACO) {
                             int idcNossa = 0 + (z << 4) + (y << 8);
                             int lbNova = Math.max(0, lbV - 1);
                             int lsNova = Math.max(0, lsV - 1);
@@ -565,3 +566,4 @@ public class ChunkLuz {
         return Mundo.chunks.get(Chave.calcularChave(cx, cz));
     }
 }
+
