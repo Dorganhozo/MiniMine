@@ -47,12 +47,9 @@ public class Config implements Screen, InputProcessor {
     public Painel painelPrincipal;
 
     // referencias aos itens para atualizar valores no render
-    public ItemConfig itemRaio;
-    public ItemConfig itemSensi;
-    public ItemConfig itemMusicas;
-    public ItemConfig itemDistancia;
-    public ItemConfig itemPOV;
-	public ItemConfig itemDebug;
+    public ItemConfig itemRaio, itemSensi,
+	itemMusicas, itemDistancia, itemPOV,
+	itemDebug, itemBotoesTam;
 
     @Override
     public void show() {
@@ -237,6 +234,29 @@ public class Config implements Screen, InputProcessor {
             }
         );
         painelOpcoes.add(itemDebug);
+		
+		itemBotoesTam = ItemConfig.numerico(
+            5, posItem(4, alturaItem, espacamento), larguraItem, alturaItem,
+            "Tamanho dos Botões:", String.valueOf(UI.botoesTam),
+            fonteTexto, escalaItem, pixelBranco, visualBotao,
+            new Acao() {
+                public void exec() {
+                    if(UI.pov > 0) {
+                        UI.botoesTam -= 8;
+                        itemBotoesTam.rotuloValor.texto = String.valueOf(UI.botoesTam);
+                    }
+                }
+            },
+            new Acao() {
+                public void exec() {
+                    if(UI.botoesTam < 64) {
+                        UI.botoesTam += 8;
+                        itemBotoesTam.rotuloValor.texto = String.valueOf(UI.botoesTam);
+                    }
+                }
+            }
+        );
+        painelOpcoes.add(itemBotoesTam);
 
         painelPrincipal.add(painelOpcoes);
 
@@ -248,6 +268,7 @@ public class Config implements Screen, InputProcessor {
                 prefs.putFloat("distancia", UI.distancia);
                 prefs.putBoolean("musicas", Jogo.musicas);
 				prefs.putBoolean("debug", UI.debug);
+				prefs.putInteger("botoesTam", UI.botoesTam);
                 prefs.flush();
                 Inicio.defTela(Cenas.menu);
             }

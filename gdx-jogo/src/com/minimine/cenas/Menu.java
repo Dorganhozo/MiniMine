@@ -90,6 +90,7 @@ public class Menu implements Screen, InputProcessor {
         UI.distancia = prefs.getFloat("distancia", UI.distancia);
         Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
 		UI.debug = prefs.getBoolean("debug", UI.debug);
+		UI.botoesTam = prefs.getInteger("botoesTam", UI.botoesTam);
         Gdx.input.setCursorCatched(false);
 
         if(atualizar) {

@@ -56,8 +56,7 @@ public class UI implements InputProcessor {
     public static final HashMap<String, BotaoDpad> botoesDpad = new HashMap<>();
     public static final HashMap<Integer, String> toquesDpad = new HashMap<>();
 
-    public static float botaoTam = 60f;
-    public static float espaco = 60f;
+    public static int botoesTam = 48; // 48dp tamanho fisico minimo confortavel pro dedo
 
     public Sprite spriteMira;
     public int pontoDir = -1;
@@ -114,7 +113,7 @@ public class UI implements InputProcessor {
 		MenuPause.iniciar();
         MenuPause.sr = new ShapeRenderer();
 
-        // inicializa as interfaces dos blocos agora que visualBase e fonte estão prontos
+        // inicia as interfaces dos blocos agora que visualBase e fonte estão prontos
         Bloco.iniciarInterfaces(visualBase, fonte);
 
         Gdx.input.setInputProcessor(this);
@@ -182,7 +181,7 @@ public class UI implements InputProcessor {
 				@Override
 				public void aoFechar(boolean confirmou) {
 					chatAberto = false;
-					modoTexto  = false;
+					modoTexto = false;
 					Gdx.input.setCursorCatched(true);
 				}
 			});
@@ -201,7 +200,7 @@ public class UI implements InputProcessor {
         alerta.mostrar(titulo, "", fechar != null ? fechar : new CaixaDialogo.Fechar(){@Override public void aoFechar(boolean c){Gdx.input.setCursorCatched(true);}});
     }
 
-    // dpad(mantido como sprites, texturas direcionais não fazem sentido na Micro)
+    // dpad(sprites, texturas direcionais não fazem sentido na Micro)
     public void criarBotoesDpad() {
         if(!botoesDpad.isEmpty()) return;
 
@@ -212,35 +211,33 @@ public class UI implements InputProcessor {
 
         if(Gdx.app.getType() == com.badlogic.gdx.Application.ApplicationType.Desktop) return;
 
-        float tam = MathUtils.clamp(botaoTam * Gdx.graphics.getDensity(), 50f, 150f);
-
-        botoesDpad.put("direita", new BotaoDpad(Texturas.atlas.get("botao_d"),  tam) {
+        botoesDpad.put("direita", new BotaoDpad(Texturas.atlas.get("botao_d"),  0) {
 				public void aoTocar(){jg.direita = true;}
 				public void aoSoltar(){ jg.direita = false;}
 			});
-        botoesDpad.put("esquerda", new BotaoDpad(Texturas.atlas.get("botao_e"), tam) {
+        botoesDpad.put("esquerda", new BotaoDpad(Texturas.atlas.get("botao_e"), 0) {
 				public void aoTocar(){ jg.esquerda = true;}
 				public void aoSoltar(){jg.esquerda = false;}
 			});
-        botoesDpad.put("frente", new BotaoDpad(Texturas.atlas.get("botao_f"), tam) {
+        botoesDpad.put("frente", new BotaoDpad(Texturas.atlas.get("botao_f"), 0) {
 				public void aoTocar(){ jg.frente = true;}
 				public void aoSoltar(){ jg.frente = false;}
 			});
-        botoesDpad.put("tras", new BotaoDpad(Texturas.atlas.get("botao_t"), tam) {
+        botoesDpad.put("tras", new BotaoDpad(Texturas.atlas.get("botao_t"), 0) {
 				public void aoTocar(){jg.tras = true;}
 				public void aoSoltar(){ jg.tras = false;}
 			});
-        botoesDpad.put("cima", new BotaoDpad(Texturas.atlas.get("botao_f"), tam) {
+        botoesDpad.put("cima", new BotaoDpad(Texturas.atlas.get("botao_f"), 0) {
 				public void aoTocar(){ jg.cima = true;}
 				public void aoSoltar(){ jg.cima = false;}
 			});
-        botoesDpad.put("diagDireita", new BotaoDpad(Texturas.atlas.get("botao_ld"), tam) {
+        botoesDpad.put("diagDireita", new BotaoDpad(Texturas.atlas.get("botao_ld"), 0) {
 				public void aoTocar(){ jg.frente = jg.direita  = true;}
 				public void aoSoltar(){ jg.frente = jg.direita = false;}
 			});
-        botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.atlas.get("botao_le"), tam) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
+        botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.atlas.get("botao_le"), 0) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
 
-        botoesDpad.put("baixo", new BotaoDpad(Texturas.atlas.get("botao_t"), tam) {
+        botoesDpad.put("baixo", new BotaoDpad(Texturas.atlas.get("botao_t"), 0) {
 				public void aoTocar() {
 					jg.baixo = true;
 					if(jg.agachado) {
@@ -254,7 +251,7 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar(){jg.baixo = false;}
 			});
-        botoesDpad.put("acao", new BotaoDpad(Texturas.atlas.get("clique"), tam) {
+        botoesDpad.put("acao", new BotaoDpad(Texturas.atlas.get("clique"), 0) {
 				public void aoTocar() {
 					if(jg.inv.itens[jg.inv.slotSelecionado] != null) jg.item = jg.inv.itens[jg.inv.slotSelecionado].nome;
 					else jg.item = "ar";
@@ -263,7 +260,7 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar() { jg.acao = false; }
 			});
-        botoesDpad.put("ataque", new BotaoDpad(Texturas.atlas.get("ataque"), tam) {
+        botoesDpad.put("ataque", new BotaoDpad(Texturas.atlas.get("ataque"), 0) {
 				public void aoTocar() { jg.item = "ar"; jg.interagirBloco(); }
 				public void aoSoltar() { jg.acao = false; }
 			});
@@ -280,7 +277,7 @@ public class UI implements InputProcessor {
 				public void aoTocar() { Receitas.fabricar(jg.inv); }
 				public void aoSoltar() {}
 			});
-        botoesDpad.put("menu_principal", new BotaoDpad(Texturas.atlas.get("receita"), tam) {
+        botoesDpad.put("menu_principal", new BotaoDpad(Texturas.atlas.get("receita"), 0) {
 				public void aoTocar()  { MenuPause.alternarMenu(); }
 				public void aoSoltar() {}
 			});
@@ -292,26 +289,69 @@ public class UI implements InputProcessor {
             defPosMira(v, h);
             return;
         }
-        float tam = MathUtils.clamp(botaoTam * Gdx.graphics.getDensity(), 50f, 150f);
-        float centroX = espaco + tam * 1.5f;
-        float centroY = espaco + tam * 1.5f;
+        float dp = Gdx.graphics.getDensity();
+        float tam = botoesTam * dp;
+        float gap = 4 * dp; // 4dp de espaço entre botões
+        float passo = tam + gap;
+        float marg = (botoesTam - 16) * dp; // 16dp de margem das bordas
 
-        defPosDpad("direita", centroX + espaco, centroY - tam / 2);
-        defPosDpad("esquerda", centroX - tam - espaco,  centroY - tam / 2);
-        defPosDpad("frente", centroX - tam / 2, centroY + espaco);
-        defPosDpad("tras", centroX - tam / 2, centroY - tam - espaco);
-        defPosDpad("cima", v - tam * 1.5f, centroY + espaco);
-        defPosDpad("baixo", v - tam * 1.5f, centroY - tam - espaco);
-        defPosDpad("diagDireita",  centroX + espaco, centroY + espaco);
-        defPosDpad("diagEsquerda", centroX - tam - espaco, centroY + espaco);
-        defPosDpad("acao", v - tam * 1.5f, centroY * 2 + espaco);
-        defPosDpad("ataque", v - tam * 2.5f, centroY * 2 + espaco);
-        defPosDpad("receita", v - tam, h - tam);
+        // redimensiona todos os botões pro tamanho dp correto
+        redimensionarBotoes(tam);
 
+        // === DPad de movimento canto inferior esquerdo ===
+        // ancora: borda esquerda + margem, borda inferior + margem
+        float dX = marg;
+        float dY = marg;
+
+        defPosDpad("diagEsquerda", dX, dY + passo * 2);
+        defPosDpad("frente", dX + passo, dY + passo * 2);
+        defPosDpad("diagDireita",  dX + passo * 2, dY + passo * 2);
+        defPosDpad("esquerda", dX, dY + passo);
+        defPosDpad("direita", dX + passo * 2, dY + passo);
+        defPosDpad("tras", dX + passo, dY);
+
+        // === DPad de ações canto inferior direito ===
+        float aX = v - marg - passo * 2 - tam;
+        float aY = marg;
+
+        defPosDpad("cima", aX + passo, aY + passo * 2);
+        defPosDpad("ataque", aX, aY + passo);
+        defPosDpad("acao", aX + passo * 2, aY + passo);
+        defPosDpad("baixo", aX + passo, aY);
+
+        // === inv e receita colados a hotbar ===
         int hotbarX = v / 2 - (jg.inv.hotbarSlots * jg.inv.tamSlot) / 2;
         defPosDpad("inv", hotbarX + jg.inv.hotbarSlots * jg.inv.tamSlot, jg.inv.hotbarY);
+        defPosDpad("receita", hotbarX - jg.inv.tamSlot, jg.inv.hotbarY);
+
+        // === menu pause canto superior direito ===
+        defPosDpad("menu_principal", v - tam - marg, h - tam - marg);
 
         defPosMira(v, h);
+    }
+
+    // redimensiona todos os BotaoDpad pro tamanho dp calculado
+    public void redimensionarBotoes(float tam) {
+        for(BotaoDpad b : botoesDpad.values()) {
+            b.sprite.setSize(tam, tam);
+            b.hitbox.width  = tam;
+            b.hitbox.height = tam;
+        }
+        // inv e receita usam tamSlot: não redimensiona
+        BotaoDpad bInv = botoesDpad.get("inv");
+        BotaoDpad bReceita = botoesDpad.get("receita");
+        float ts = jg.inv.tamSlot;
+		
+        if(bInv != null) {
+			bInv.sprite.setSize(ts, ts);
+			bInv.hitbox.width = ts;
+			bInv.hitbox.height = ts;
+		}
+        if(bReceita != null) {
+			bReceita.sprite.setSize(ts, ts);
+			bReceita.hitbox.width = ts;
+			bReceita.hitbox.height = ts;
+		}
     }
 
     public void defPosDpad(String nome, float x, float y) {
@@ -331,7 +371,7 @@ public class UI implements InputProcessor {
         }
         if(spriteMira != null) {
             spriteMira.setPosition(v / 2f - spriteMira.getWidth() / 2f,
-								   h / 2f - spriteMira.getHeight() / 2f);
+			h / 2f - spriteMira.getHeight() / 2f);
             spriteMira.setAlpha(0.9f);
         }
     }
@@ -354,7 +394,7 @@ public class UI implements InputProcessor {
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE1);
         Gdx.gl.glBindTexture(GL20.GL_TEXTURE_2D, 0);
         Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0);
-		
+
         sb.begin();
 
         // mira
@@ -414,7 +454,7 @@ public class UI implements InputProcessor {
 				sb.draw(inv.itens[i].textura, rx + 5, ry + 5, inv.tamSlot - 10, inv.tamSlot - 10);
                 if(inv.itens[i].quantidade > 1) {
                     fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
-							   rx + inv.tamSlot - 15, ry + 15);
+					rx + inv.tamSlot - 15, ry + 15);
                 }
             }
         }
@@ -431,7 +471,7 @@ public class UI implements InputProcessor {
 
                     if(inv.itens[i].quantidade > 1) {
                         fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
-								   rx + inv.tamSlot - 15, ry + 15);
+						rx + inv.tamSlot - 15, ry + 15);
                     }
                 }
             }
@@ -444,8 +484,7 @@ public class UI implements InputProcessor {
 			sb.draw(inv.itemFlutuante.textura, posX, posY, inv.tamSlot - 10, inv.tamSlot - 10);
             if(inv.itemFlutuante.quantidade > 1) {
                 fonte.draw(sb, String.valueOf(inv.itemFlutuante.quantidade),
-						   posX + inv.tamSlot - 15,
-						   posY + 15);
+				posX + inv.tamSlot - 15, posY + 15);
             }
         }
         // botão de catalogo criativo(acima do ultimo slot do inventario)
@@ -831,4 +870,3 @@ public class UI implements InputProcessor {
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
-
