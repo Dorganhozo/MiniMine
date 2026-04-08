@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.nio.charset.StandardCharsets;
@@ -58,7 +57,7 @@ public class Mundo {
      *   2  = estruturas prontas
      *   3  = luz pronta
      *   4  = malha pronta
-     */
+    */
     public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
     /*
      * filaEstrutura: estruturas que extrapolaram os limites de uma chunk durante a
@@ -178,6 +177,10 @@ public class Mundo {
     }
 
     public static void defBlocoMundo(int x, int y, int z, CharSequence bloco) {
+		Bloco b = Bloco.texIds.get(bloco);
+		defBlocoMundo(x, y, z, b != null ? b.tipo : 0);
+	}
+	public static void defBlocoMundo(int x, int y, int z, int bloco) {
         if(y < 0 || y >= Y_CHUNK) return;
 
         final int chunkX = x >> 4;
@@ -196,7 +199,7 @@ public class Mundo {
 
         boolean eraEmissor = blocoAntigoId != 0 && Bloco.numIds.get(blocoAntigoId).luz > 0;
 
-        if(blocoAntigoId != 0 && bloco != null) {
+        if(blocoAntigoId != 0 && bloco != 0) {
             Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
         }
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
@@ -204,7 +207,7 @@ public class Mundo {
 
         if(eraEmissor) ChunkLuz.zerarLuz(chunk);
 
-        boolean novoEhAgua = bloco != null && bloco.equals("agua");
+        boolean novoEhAgua = bloco != 0 && bloco== Bloco.AGUA;
         boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
         if(novoEhAgua) {
             ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
@@ -461,7 +464,7 @@ public class Mundo {
 						}
 						for(int z = 0; z < 16; z++) {
 							for(int x = 0; x < 16; x++) {
-								int idc = z * 16 + x;
+								int idc = (z << 4) + x;
 								int topo = Mundo.Y_CHUNK - 1;
 								while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
 								ctx.topoMapa[idc] = topo;
@@ -476,7 +479,7 @@ public class Mundo {
 						int[] tamArr;
 						synchronized(filaEstrutura) {
 							pendentes = filaEstrutura.remove(chave);
-							tamArr    = filaTam.remove(chave);
+							tamArr = filaTam.remove(chave);
 						}
 						if(pendentes != null && tamArr != null) {
 							int total = tamArr[0];
@@ -486,7 +489,7 @@ public class Mundo {
 								int ly = pendentes[base + 1];
 								int lz = pendentes[base + 2];
 								int id = pendentes[base + 3];
-								short meta = (short) pendentes[base + 4];
+								short meta = (short)pendentes[base + 4];
 								if(ly >= 0 && ly < 256) {
 									ChunkUtil.defBloco(lx, ly, lz, id, chunk);
 									if(meta != 0) ChunkUtil.defMeta(lx, ly, lz, meta, chunk);
@@ -590,7 +593,11 @@ public class Mundo {
      * se a chunk alvo ainda não chegou ao estado 2: enfileira para aplicar em processarEstruturas
      * se a chunk alvo ja passou do estado 1(>= 2): aplica imediatamente e marca para
      *   recalcular luz e malha: o bloco chegou atrasado mas ainda pode ser corrigido
-     */
+    */
+	public static ThreadLocal<int[]> filaBuffer = new ThreadLocal<int[]>() {
+		public int[] initialValue() { return new int[FILA_CAP_INICIAL * FILA_CAMPOS]; }
+	};
+	
     public static void enfileirarEstrutura(long chaveAlvo, EstruturaPendente pendente) {
         int estadoAlvo = estados.getOrDefault(chaveAlvo, 0);
         if(estadoAlvo >= 2) {
@@ -608,8 +615,8 @@ public class Mundo {
             int[] tam = filaTam.get(chaveAlvo);
             int[] buf = filaEstrutura.get(chaveAlvo);
             if(buf == null) {
-                buf = new int[FILA_CAP_INICIAL * FILA_CAMPOS];
-                tam = new int[]{ 0 };
+                buf = filaBuffer.get();
+				tam[0] = 0;
                 filaEstrutura.put(chaveAlvo, buf);
                 filaTam.put(chaveAlvo, tam);
             }

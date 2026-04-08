@@ -17,6 +17,7 @@ public final class Chunk {
 	public volatile int[] paleta = new int[1 << this.paletaBits]; // array de valores reais(ids de blocos)
 	public volatile boolean usaPaleta = true; // controla se estamos no modo paleta
 	public volatile boolean fazendo = false;
+	public volatile boolean fluxoProcessando = true;
 	public volatile boolean att = false;
 	public volatile boolean luzFazendo = false;
 	public volatile boolean luzSuja = true;

@@ -82,6 +82,21 @@ public class ChunkUtil {
 		}
 	}
 
+	// escreve bloco e meta atomicamente no mesmo synchronized
+	// usado por FluxoAgua.propagarVizinho para evitar race condition entre
+	// defBloco e defMeta que permitia attFluxo ler água com meta=NIVEL_AUSENTE
+	public static void defBlocoEMeta(int x, int y, int z, Chunk chunk, int nivelNovo, boolean jaEhAgua) {
+		synchronized(chunk) {
+			if(jaEhAgua) {
+				int nivelAtual = (int) MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)) & 0xFF;
+				if(nivelAtual != 0xFF && nivelNovo >= nivelAtual) return;
+			} else {
+				defBlocoInterno(x, y, z, com.minimine.mundo.blocos.Bloco.texIds.get("agua").tipo, chunk);
+			}
+			MemNativa.gravarInt(chunk.meta, x + (z << 4) + (y << 8), nivelNovo);
+		}
+	}
+
 	// chamado apenas dentro de synchronized(chunk)
 	private static void defBlocoInterno(int x, int y, int z, int bloco, Chunk chunk) {
 		final int total = x + (z << 4) + (y << 8);
@@ -332,3 +347,4 @@ public class ChunkUtil {
 		chunk.blocos = novos;
 	}
 }
+

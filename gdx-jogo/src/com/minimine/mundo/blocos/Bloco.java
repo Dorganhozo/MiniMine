@@ -12,6 +12,7 @@ public class Bloco {
 	public static HashMap<CharSequence, Bloco> texIds = new HashMap<>();
 	public static HashMap<Integer, Bloco> numIds = new HashMap<>();
 	public static HashMap<String, String[]> sons = new HashMap<>();
+	public static int AGUA;
 
 	public CharSequence nome;
 	public int tipo;
@@ -87,6 +88,8 @@ public class Bloco {
 		Bloco.addSom("folha", "terra_1", "terra_2", "terra_3");
 		Bloco.addSom("tabua_madeira", "madeira_1", "madeira_2", "madeira_3");
 		Bloco.addSom("tocha", "madeira_1", "madeira_2", "madeira_3");
+		
+		AGUA = texIds.get("agua").tipo;
 	}
 	/*
 	 * chamado dentro do construtor de UI, apos visualBase e fonte estarem prontos

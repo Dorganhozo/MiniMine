@@ -1,10 +1,9 @@
 package com.minimine.audio;
 
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.Gdx;
 import com.minimine.Inicio;
-import java.util.HashMap;
 import com.badlogic.gdx.audio.Music;
+import java.util.HashMap;
 
 public class Audio {
 	public static HashMap<CharSequence, Music> sons = new HashMap<>();

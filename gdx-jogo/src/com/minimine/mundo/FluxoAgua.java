@@ -20,7 +20,6 @@ public class FluxoAgua {
     public static final int NIVEL_AUSENTE = 0xFF;
     public static final int NIVEL_FONTE = 0;
     public static final int NIVEL_MAX_FLUXO = 7;
-
     public static final int TOTAL_BLOCOS = 16 * Mundo.Y_CHUNK * 16;
 
     public static final ThreadLocal<byte[]> META_TEMP_REUSO = new ThreadLocal<byte[]>() {
@@ -193,7 +192,7 @@ public class FluxoAgua {
             if(nivelAtual == NIVEL_AUSENTE || nivelNovo >= nivelAtual) return;
             Mundo.defMetaMundo(mx, my, mz, (short)nivelNovo);
         } else {
-            Mundo.defBlocoMundo(mx, my, mz, "agua");
+            Mundo.defBlocoMundo(mx, my, mz, Bloco.AGUA);
             Mundo.defMetaMundo(mx, my, mz, (short)nivelNovo);
         }
         marcarChunk(mx >> 4, mz >> 4);
@@ -209,7 +208,7 @@ public class FluxoAgua {
             int idAtual = ChunkUtil.obterBloco(x, y, z, chunk);
             if(nivel != NIVEL_AUSENTE) {
                 if(idAtual == 0) {
-                    ChunkUtil.defBloco(x, y, z, "agua", chunk);
+                    ChunkUtil.defBloco(x, y, z, Bloco.AGUA, chunk);
                     mudou = true;
                 }
                 int metaAtual = ChunkUtil.obterMeta(x, y, z, chunk) & 0xFF;
@@ -249,9 +248,7 @@ public class FluxoAgua {
     }
 
     public static boolean eAgua(int blocoId) {
-        if(blocoId == 0) return false;
-        Bloco b = Bloco.numIds.get(blocoId);
-        return b != null && "agua".equals(b.nome.toString());
+        return Bloco.AGUA == blocoId;
     }
 
     public static void marcarSujo(int chunkX, int chunkZ) {
