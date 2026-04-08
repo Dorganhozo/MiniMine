@@ -95,7 +95,7 @@ public class UI implements InputProcessor {
         camera.position.set(10f, 18f, 10f);
         camera.lookAt(0, 0, 0);
         camera.near = aprox;
-        camera.far  = distancia;
+        camera.far = distancia;
         camera.update();
 
         sb = new SpriteBatch();
@@ -105,7 +105,7 @@ public class UI implements InputProcessor {
         this.jg.camera = camera;
 
         gerenciador = new GerenciadorUI();
-        visualBase  = new PainelFatiado(Texturas.base);
+        visualBase = new PainelFatiado(Texturas.base);
 
         criarDialogos();
         configDpad(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -169,7 +169,7 @@ public class UI implements InputProcessor {
     public void abrirChat() {
         if(chatAberto) return;
         chatAberto = true;
-        modoTexto  = true;
+        modoTexto = true;
         Gdx.input.setCursorCatched(false);
 
         float cx = Gdx.graphics.getWidth()  / 2f - dialogoChat.largura / 2f;
@@ -191,7 +191,7 @@ public class UI implements InputProcessor {
     public static void abrirDialogo(String titulo, final CaixaDialogo.Fechar fechar) {
         CaixaDialogo alerta = new CaixaDialogo(visualBase, fonte, 3f, new ShapeRenderer());
         alerta.largura = 400;
-        alerta.altura  = 160;
+        alerta.altura = 160;
         alerta.x = Gdx.graphics.getWidth() / 2f - alerta.largura / 2f;
         alerta.y = Gdx.graphics.getHeight() / 2f - alerta.altura  / 2f;
         alerta.addOk(visualBase);
@@ -232,7 +232,7 @@ public class UI implements InputProcessor {
 				public void aoSoltar(){ jg.cima = false;}
 			});
         botoesDpad.put("diagDireita", new BotaoDpad(Texturas.atlas.get("botao_ld"), 0) {
-				public void aoTocar(){ jg.frente = jg.direita  = true;}
+				public void aoTocar(){ jg.frente = jg.direita = true;}
 				public void aoSoltar(){ jg.frente = jg.direita = false;}
 			});
         botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.atlas.get("botao_le"), 0) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
@@ -241,7 +241,8 @@ public class UI implements InputProcessor {
 				public void aoTocar() {
 					jg.baixo = true;
 					if(jg.agachado) {
-						jg.velo *= 2;  jg.altura *= 1.2f;
+						jg.velo *= 2;
+						jg.altura *= 1.2f;
 						jg.agachado = false;
 					} else {
 						jg.velo /= 2; 
@@ -249,7 +250,18 @@ public class UI implements InputProcessor {
 						jg.agachado = true;
 					}
 				}
-				public void aoSoltar(){jg.baixo = false;}
+				public void aoSoltar() {
+					jg.baixo = false;
+					if(jg.agachado) {
+						jg.velo *= 2;
+						jg.altura *= 1.2f;
+						jg.agachado = false;
+					} else {
+						jg.velo /= 2; 
+						jg.altura /= 1.2f;
+						jg.agachado = true;
+					}
+				}
 			});
         botoesDpad.put("acao", new BotaoDpad(Texturas.atlas.get("clique"), 0) {
 				public void aoTocar() {
@@ -334,7 +346,7 @@ public class UI implements InputProcessor {
     public void redimensionarBotoes(float tam) {
         for(BotaoDpad b : botoesDpad.values()) {
             b.sprite.setSize(tam, tam);
-            b.hitbox.width  = tam;
+            b.hitbox.width = tam;
             b.hitbox.height = tam;
         }
         // inv e receita usam tamSlot: não redimensiona

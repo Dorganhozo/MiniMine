@@ -337,6 +337,12 @@ public class ArquivosUtil {
 		jogador.velo = dis.readFloat();
 		jogador.agachado = dis.readBoolean();
 		jogador.nasceu = dis.readBoolean();
+		
+		if(jogador.agachado) {
+			jogador.velo *= 2;
+			jogador.altura *= 1.2f;
+			jogador.agachado = false;
+		}
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {

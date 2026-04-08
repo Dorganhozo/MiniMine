@@ -170,7 +170,7 @@ public class Entidade {
 		// escolhe aceleração e atrito dependendo de onde está
 		boolean noControle = noChao || voando || naAgua;
 		float acel  = noControle ? aceleracaoChao : aceleracaoAr;
-		float atrito = noControle ? atritoChao    : atritoAr;
+		float atrito = noControle ? atritoChao : atritoAr;
 
 		// direção da entidade
 		float desejadoX = 0, desejadoZ = 0;

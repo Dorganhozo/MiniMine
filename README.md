@@ -1,5 +1,4 @@
 # MiniMine
-
 refeito com LibGDX.
 
 ## Requisitos mínimos(testados):
