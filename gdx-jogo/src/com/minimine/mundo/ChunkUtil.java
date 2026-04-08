@@ -88,7 +88,7 @@ public class ChunkUtil {
 	public static void defBlocoEMeta(int x, int y, int z, Chunk chunk, int nivelNovo, boolean jaEhAgua) {
 		synchronized(chunk) {
 			if(jaEhAgua) {
-				int nivelAtual = (int) MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)) & 0xFF;
+				int nivelAtual = MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)) & 0xFF;
 				if(nivelAtual != 0xFF && nivelNovo >= nivelAtual) return;
 			} else {
 				defBlocoInterno(x, y, z, com.minimine.mundo.blocos.Bloco.texIds.get("agua").tipo, chunk);

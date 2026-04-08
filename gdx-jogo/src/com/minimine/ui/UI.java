@@ -40,6 +40,7 @@ import com.micro.Acao;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.minimine.cenas.Jogo;
+import com.badlogic.gdx.utils.TimeUtils;
 
 public class UI implements InputProcessor {
     // camera 3D e renderização
@@ -228,7 +229,18 @@ public class UI implements InputProcessor {
 				public void aoSoltar(){ jg.tras = false;}
 			});
         botoesDpad.put("cima", new BotaoDpad(Texturas.atlas.get("botao_f"), 0) {
-				public void aoTocar(){ jg.cima = true;}
+				public void aoTocar() {
+					jg.cima = true;
+					if(jg.modo == 1) { // so conta pulo se estava no chão
+						if(jg.tempoDuploPulo > 0f) {
+							jg.voando = !jg.voando;
+							if(jg.voando) jg.velocidade.y = 0;
+							jg.tempoDuploPulo = 0f;
+						} else {
+							jg.tempoDuploPulo = Jogador.JANELA_DUPLO_PULO;
+						}
+					}
+				}
 				public void aoSoltar(){ jg.cima = false;}
 			});
         botoesDpad.put("diagDireita", new BotaoDpad(Texturas.atlas.get("botao_ld"), 0) {
@@ -569,13 +581,14 @@ public class UI implements InputProcessor {
 
         fonte.draw(sb, String.format(
 					   "Jogador:\nX: %.1f, Y: %.1f, Z: %.1f\nDireção: %s (%.1f°)\nModo: %s\nSlot: %d\nItem: %s\n" +
-					   "No chão: %b\nNa água: %b\nAgachado: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
+					   "No chão: %b\nNa água: %b\nAgachado: %b\nVoando: %b\n\nStatus:\nVelocidade: %.2f\nAltura: %.2f\n\n" +
 					   "Controles:\nDireita: %b, Esquerda: %b\nFrente: %b, Trás: %b\nCima: %b\nBaixo: %b\nAção: %b\n\n" +
 					   "Mundo:\nNome: %s\nBioma atual: %s\nRaio Chunks: %d\nChunks: %d\n" +
 					   "Chunks Alteradas: %d\nSemente: %d\nTempo: %.2f\nVelocidade do tempo: %.5f",
 					   jg.posicao.x, jg.posicao.y, jg.posicao.z, direcao, yawNorm,
 					   (jg.modo == 0 ? "espectador" : jg.modo == 1 ? "criativo" : "sobrevivencia"),
-					   jg.inv.slotSelecionado, jg.item, jg.noChao, jg.naAgua, jg.agachado, jg.velo, jg.altura,
+					   jg.inv.slotSelecionado, jg.item, jg.noChao, jg.naAgua, jg.agachado, jg.voando,
+					   jg.velo, jg.altura,
 					   jg.direita, jg.esquerda, jg.frente, jg.tras, jg.cima, jg.baixo, jg.acao,
 					   mundo.nome, jg.bioma, mundo.RAIO_CHUNKS, mundo.chunks.size(),
 					   mundo.chunksMod.size(), mundo.semente, Jogo.render.diaNoite.tempo, Jogo.render.diaNoite.tempo_velo),
@@ -785,7 +798,18 @@ public class UI implements InputProcessor {
         if(p == Input.Keys.S) jg.tras = true;
         if(p == Input.Keys.A) jg.esquerda = true;
         if(p == Input.Keys.D) jg.direita = true;
-        if(p == Input.Keys.SPACE) jg.cima = true;
+        if(p == Input.Keys.SPACE) {
+			jg.cima = true;
+			if(jg.modo == 1) { // so conta pulo se estava no chão
+				if(jg.tempoDuploPulo > 0f) {
+					jg.voando = !jg.voando;
+					if(jg.voando) jg.velocidade.y = 0;
+					jg.tempoDuploPulo = 0f;
+				} else {
+					jg.tempoDuploPulo = Jogador.JANELA_DUPLO_PULO;
+				}
+			}
+		}
         if(p == Input.Keys.SHIFT_LEFT) {
             jg.baixo = true;
             if(jg.agachado) {

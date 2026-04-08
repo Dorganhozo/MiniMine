@@ -34,6 +34,8 @@ public class Jogador extends Entidade {
     public ModelInstance instancia;
 
     public float tempoAnimacao = 0;
+	public float tempoDuploPulo = 0f; // conta regressiva, > 0 significa "aguardando segundo toque"
+	public static final float JANELA_DUPLO_PULO = 0.3f;
 
     public Quaternion rotTemp = new Quaternion();
     public Vector3 eulerTemp = new Vector3();
@@ -143,7 +145,8 @@ public class Jogador extends Entidade {
 
 	@Override
 	public void att(float delta) {
-		if(modo != 2) voando = true;
+		if(modo == 0) voando = true;
+		if(tempoDuploPulo > 0f) tempoDuploPulo -= delta;
 		super.att(delta);
 
 		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
@@ -160,7 +163,7 @@ public class Jogador extends Entidade {
 		if(naAgua) Mundo.GRAVIDADE = -10;
 		else Mundo.GRAVIDADE = -30;
 
-		if(modo == 2 && !noChao || naAgua) { 
+		if(!voando && !noChao || naAgua) { 
 			this.velocidade.y += Mundo.GRAVIDADE * delta;
 
 			if(this.velocidade.y < VELO_MAX_QUEDA) {

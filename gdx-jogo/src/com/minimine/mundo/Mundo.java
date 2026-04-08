@@ -51,12 +51,12 @@ public class Mundo {
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
     /*
      * estados:
-     *   0  = vazia, sem dados
-     *   1  = dados prontos(terreno + vegetação)
+     *   0 = vazia, sem dados
+     *   1 = dados prontos(terreno + vegetação)
      *   11 = transitório: processando estruturas(evita disparo duplo)
-     *   2  = estruturas prontas
-     *   3  = luz pronta
-     *   4  = malha pronta
+     *   2 = estruturas prontas
+     *   3 = luz pronta
+     *   4 = malha pronta
     */
     public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
     /*
@@ -66,7 +66,7 @@ public class Mundo {
      */
     // fila compacta: 5 ints por entrada (lx, ly, lz, id, meta), sem objetos EstruturaPendente
     public static final Map<Long, int[]> filaEstrutura = new ConcurrentHashMap<>();
-    // tamanho atual (entradas, não ints) de cada fila — separado do array pra crescimento sem realocar o mapa
+    // tamanho atual(entradas, não ints) de cada fila, separado do array pra crescimento sem realocar o mapa
     public static final Map<Long, int[]> filaTam = new ConcurrentHashMap<>();
     private static final int FILA_CAMPOS = 5;
     private static final int FILA_CAP_INICIAL = 32; // entradas
