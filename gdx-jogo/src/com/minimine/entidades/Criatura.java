@@ -36,7 +36,7 @@ public class Criatura extends Entidade {
     public String animAtual = "";
 
     public Vector3 direcaoSuave = new Vector3();
-
+	
     public Criatura(DadosCriatura dados, float x, float y, float z) {
         super();
         this.dados = dados;
@@ -59,7 +59,7 @@ public class Criatura extends Entidade {
 
         try {
             instancia = new ModelInstance(Modelos.obterModelo(dados.modelo));
-            animCtr   = new AnimationController(instancia);
+            animCtr = new AnimationController(instancia);
         } catch(Exception e) {
             Gdx.app.error("[Criatura]", "Erro no modelo " + dados.modelo + ": " + e.getMessage());
         }
@@ -211,6 +211,8 @@ public class Criatura extends Entidade {
             );
         }
         instancia.transform.setTranslation(posicao);
+        instancia.userData = dadosLuz;
         mb.render(instancia);
     }
 }
+

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import com.minimine.audio.Audio;
 import com.minimine.graficos.TipoRender;
 import com.badlogic.gdx.audio.Music;
+import com.minimine.inventario.ItemRegistro;
+import com.minimine.graficos.Texturas;
 
 public class Bloco {
 	public static List<Bloco> blocos = new ArrayList<>();
@@ -25,7 +27,7 @@ public class Bloco {
 	 * interface de UI associada a este bloco
 	 * null = bloco sem interface(comportamento padrão: colocar/quebrar)
 	 * atribuida em Bloco.iniciar() para os blocos que precisarem
-	 */
+	*/
 	public InterfaceBloco ui = null;
 	public EventoBloco evento = null;
 
@@ -49,6 +51,7 @@ public class Bloco {
 		this.modeloX = formaX;
 		numIds.put(this.tipo, this);
 		texIds.put(this.nome, this);
+		ItemRegistro.registrar(this.nome, this.lados);
 	}
 
 	public static void iniciar() {

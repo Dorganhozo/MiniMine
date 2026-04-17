@@ -12,13 +12,13 @@ public class Musicas {
 	public static Music tocando;
 	
 	public static void iniciar() {
-		Musicas.addMusica("igor", "audio/musicas/igor.ogg");
 		Musicas.addMusica("igor-2", "audio/musicas/igor-2.ogg");
 		Musicas.addMusica("caminho-sombreado", "audio/musicas/caminho-sombreado.ogg");
 		Musicas.addMusica("gatitos", "audio/musicas/gatitos.ogg");
 		Musicas.addMusica("noite-estrelada", "audio/musicas/noite-estrelada.ogg");
 		Musicas.addMusica("flor", "audio/musicas/flor.ogg");
 		Musicas.addMusica("liminar", "audio/musicas/liminar.ogg");
+		Musicas.addMusica("esperança", "audio/musicas/esperança.ogg");
 	}
 	
 	public static void addMusica(String nome, String caminho) {

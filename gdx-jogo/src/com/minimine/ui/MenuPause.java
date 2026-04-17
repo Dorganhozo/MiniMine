@@ -62,7 +62,7 @@ public class MenuPause {
 			new Acao() {
 				@Override
 				public void exec() {
-					salvarJogo();
+					ArquivosUtil.svMundo(Jogo.mundo, Jogo.render.ui.jg);
 					fecharMenu();
 					UI.abrirDialogo("Jogo salvo!", null);
 				}
@@ -75,7 +75,7 @@ public class MenuPause {
 			new Acao() {
 				@Override
 				public void exec() {
-					salvarJogo();
+					ArquivosUtil.svMundo(Jogo.mundo, Jogo.render.ui.jg);
 					fecharMenu();
 					Inicio.defTela(Cenas.menu);
 				}
@@ -103,16 +103,6 @@ public class MenuPause {
         menuAberto = false;
         Gdx.input.setCursorCatched(true);
         Gdx.app.log("MenuPause", "===== MENU FECHADO =====");
-    }
-
-    public static void salvarJogo() {
-        new Thread(new Runnable() {
-				@Override
-				public void run() {
-					ArquivosUtil.svMundo(Jogo.mundo, Jogo.render.ui.jg);
-				}
-			}).start();
-        Gdx.app.log("MenuPause", "Salvando o jogo...");
     }
 
     public static void renderizar(SpriteBatch sb, BitmapFont fonte) {

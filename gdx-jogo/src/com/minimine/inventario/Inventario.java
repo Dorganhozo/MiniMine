@@ -1,4 +1,4 @@
-package com.minimine.entidades;
+package com.minimine.inventario;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.minimine.mundo.ChunkUtil;
 import com.minimine.mundo.blocos.Bloco;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.minimine.entidades.Jogador;
 
 public class Inventario {
     public Jogador jogador;
@@ -115,10 +116,10 @@ public class Inventario {
         for(int i = 0; i < itens.length; i++) {
             if(itens[i] == null) {
                 TextureRegion textura = null;
-                for(Bloco b : Bloco.blocos) {
+                for(ItemRegistro.Item b : ItemRegistro.todos()) {
                     if(b == null) continue;
                     if(b.nome.equals(nome)) {
-                        textura = Texturas.atlas.obter(b.lados);
+                        textura = Texturas.atlas.obter(b.textura);
                         break;
                     }
                 }

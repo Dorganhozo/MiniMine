@@ -24,7 +24,7 @@ import java.util.List;
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.badlogic.gdx.graphics.Texture;
-import com.minimine.entidades.Inventario;
+import com.minimine.inventario.Inventario;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import java.util.zip.ZipInputStream;
@@ -46,6 +46,7 @@ import com.minimine.mundo.blocos.BlocoEstrutura;
 import com.minimine.mundo.ChunkLuz;
 import com.minimine.utils.MemNativa;
 import com.badlogic.gdx.files.FileHandle;
+import com.minimine.inventario.ItemRegistro;
 
 public class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
@@ -124,6 +125,7 @@ public class ArquivosUtil {
         } catch(Throwable t) {
             Gdx.app.log("ArquivosUtil", "[ERRO] falha ao salvar mundo: " + t.getMessage());
             if(tmp.exists()) tmp.delete();
+			throw new RuntimeException("[ERRO] falha ao salvar mundo: ");
         }
     }
     // carrega o mundo, nao marca Mundo.carregado a menos que o carregamento seja concluído com sucesso
@@ -177,8 +179,9 @@ public class ArquivosUtil {
                         while(zis.read(pularBuf) > 0) {}
                         if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] entrada desconhecida: " + nome);
                     }
-                } catch(Throwable inner) {
-                    Gdx.app.log("ArquivosUtil", "[ERRO] falha ao processar entrada '" + nome + "': " + inner.getMessage());
+                } catch(Throwable i) {
+                    Gdx.app.log("ArquivosUtil", "[ERRO] falha ao processar entrada '" + nome + "': " + i.getMessage());
+					throw new RuntimeException("[ERRO] falha ao carregar mundo: ");
                     // continua pra tentar carregar o maximo possivel
                 } finally {
                     try { zis.closeEntry(); } catch(Throwable t) {}
@@ -258,26 +261,22 @@ public class ArquivosUtil {
     }
 
     public static void gravarInventario(DataOutputStream dos, Jogador jogador) throws IOException {
-		try {
-			if(jogador.inv == null || jogador.inv.itens == null) {
-				dos.writeInt(0);
-				dos.flush();
-				return;
-			}
-			dos.writeInt(jogador.inv.itens.length);
-			for(int i = 0; i < jogador.inv.itens.length; i++) {
-				if(jogador.inv.itens[i] == null) {
-					dos.writeBoolean(false);
-				} else {
-					dos.writeBoolean(true);
-					dos.writeUTF(jogador.inv.itens[i].nome+"");
-					dos.writeInt(jogador.inv.itens[i].quantidade);
-				}
-			}
+		if(jogador.inv == null || jogador.inv.itens == null) {
+			dos.writeInt(0);
 			dos.flush();
-		} catch(Exception e) {
-			Gdx.app.log("ArquivosUtil", "[ERRO] ao gravar inv: "+e);
+			return;
 		}
+		dos.writeInt(jogador.inv.itens.length);
+		for(int i = 0; i < jogador.inv.itens.length; i++) {
+			if(jogador.inv.itens[i] == null) {
+				dos.writeBoolean(false);
+			} else {
+				dos.writeBoolean(true);
+				dos.writeUTF(jogador.inv.itens[i].nome+"");
+				dos.writeInt(jogador.inv.itens[i].quantidade);
+			}
+		}
+		dos.flush();
     }
 
     public static void gravarCiclo(DataOutputStream dos) throws IOException {
@@ -346,44 +345,40 @@ public class ArquivosUtil {
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {
-		try {
-			int total = dis.readInt();
-			if(jogador.inv == null || total == 0) jogador.inv = new Inventario(jogador);
-			if(jogador.inv.itens == null || (jogador.inv.itens.length != total && total != 0)) jogador.inv.itens = new Inventario.Item[total];
+		int total = dis.readInt();
+		if(jogador.inv == null || total == 0) jogador.inv = new Inventario(jogador);
+		if(jogador.inv.itens == null || (jogador.inv.itens.length != total && total != 0)) jogador.inv.itens = new Inventario.Item[total];
 
-			for(int i = 0; i < total; i++) {
-				boolean temItem = false;
-				try {
-					temItem = dis.readBoolean();
-				} catch(Throwable t) {
-					Gdx.app.log("ArquivosUtil", "[ERRO] falha ao ler marcação de item slot " + i + ": " + t.getMessage());
-					jogador.inv.itens[i] = null;
-					continue;
-				}
-				if(temItem) {
-					String nome = dis.readUTF();
-					int quantidade = dis.readInt();
-
-					TextureRegion textura = null;
-
-					for(Bloco b : Bloco.blocos) {
-                        if(b == null) continue;
-                        if(b.nome.equals(nome)) {
-                            textura = Texturas.atlas.obter(b.lados);
-                            break;
-                        }
-                    }
-                    if(textura == null) {
-                        Gdx.app.log("[Inventario]", "textura não encontrada para: " + nome);
-                        textura = Texturas.atlas.obter("terra");
-                    }
-					jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
-				} else {
-					jogador.inv.itens[i] = null;
-				}
+		for(int i = 0; i < total; i++) {
+			boolean temItem = false;
+			try {
+				temItem = dis.readBoolean();
+			} catch(Throwable t) {
+				Gdx.app.log("ArquivosUtil", "[ERRO] falha ao ler marcação de item slot " + i + ": " + t.getMessage());
+				jogador.inv.itens[i] = null;
+				continue;
 			}
-		} catch(Exception e) {
-			Gdx.app.log("ArquivosUtil", "[ERRO] ao carregar inv: "+e);
+			if(temItem) {
+				String nome = dis.readUTF();
+				int quantidade = dis.readInt();
+
+				TextureRegion textura = null;
+
+				for(ItemRegistro.Item b : ItemRegistro.todos()) {
+					if(b == null) continue;
+					if(b.nome.equals(nome)) {
+						textura = Texturas.atlas.obter(b.textura);
+						break;
+					}
+				}
+				if(textura == null) {
+					Gdx.app.log("[Inventario]", "textura não encontrada para: " + nome);
+					textura = Texturas.atlas.obter("terra");
+				}
+				jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
+			} else {
+				jogador.inv.itens[i] = null;
+			}
 		}
     }
 

@@ -318,7 +318,7 @@ public class Mundo {
         }
     }
 
-    public void limparChunks(int chunkX, int chunkZ) {
+    public static void limparChunks(int chunkX, int chunkZ) {
         praLiberar.clear();
         praRemover.clear();
 
@@ -408,7 +408,7 @@ public class Mundo {
     }
 
     // 4 vizinhos cardinais com estado >= 3(luz pronta) necessario pra malha correta
-    public boolean vizinhosProntos(int cx, int cz) {
+    public static boolean vizinhosProntos(int cx, int cz) {
         return estados.getOrDefault(Chave.calcularChave(cx + 1, cz), 0) >= 3 &&
 			estados.getOrDefault(Chave.calcularChave(cx - 1, cz), 0) >= 3 &&
 			estados.getOrDefault(Chave.calcularChave(cx, cz + 1), 0) >= 3 &&

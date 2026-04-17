@@ -14,10 +14,17 @@
         "peso": 65.0,
         "pulo": 12.0
     },
+    
+    "animacoes": ["andando", "fazendonada", "degustando"],
 
     "variaveis": {
         "sede": {
             "valor": 0,
+            "min": 0,
+            "max": 100
+        },
+        "fome": {
+            "valor": 100,
             "min": 0,
             "max": 100
         }
@@ -27,9 +34,50 @@
         {
             "condicao": ["noChao", "andando"],
             "exec": {
-                "recompensa": 0.05
+                "recompensa": 0.05,
+                "tocarAnim": "andando",
+                "operacao": {
+                    "variavel": "fome",
+                    "operador": "-",
+                    "valor": 1
+                }
             }
         },
+        
+        {
+            "condicao": ["naAgua", "andando"],
+            "exec": {
+                "recompensa": 0.04,
+                "tocarAnim": "andando",
+                "operacao": {
+                    "variavel": "fome",
+                    "operador": "-",
+                    "valor": 5
+                }
+            }
+        },
+        
+        {
+            "condicao": ["noChao", "parado"],
+            "exec": {
+              "recompensa": 0.02,
+              "tocarAnim": "fazendonada"
+            }
+        },
+        
+        {
+            "condicao": ["fome", "<", 1],
+            "exec": {
+                "recompensa": -0.05,
+                "tocarAnim": "degustando",
+                "operacao": {
+                   "variavel": "fome",
+                   "operador": "=",
+                   "valor": 100
+               }
+            }
+        },
+        
         {
             "condicao": ["sede", ">", 85],
             "exec": {

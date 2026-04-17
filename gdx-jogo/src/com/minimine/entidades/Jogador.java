@@ -21,6 +21,11 @@ import net.mgsx.gltf.loaders.gltf.GLTFLoader;
 import com.minimine.cenas.Jogo;
 import com.minimine.graficos.Modelos;
 import com.minimine.mundo.blocos.InterfaceBloco;
+import com.minimine.inventario.Inventario;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.minimine.inventario.ItemRegistro;
+import com.minimine.graficos.Texturas;
 
 public class Jogador extends Entidade {
 	public int modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
@@ -31,7 +36,7 @@ public class Jogador extends Entidade {
 	public int ALCANCE = 7;
 	public Inventario inv;
 
-    public ModelInstance instancia;
+    public ModelInstance instancia, itemModelo;
 
     public float tempoAnimacao = 0;
 	public float tempoDuploPulo = 0f; // conta regressiva, > 0 significa "aguardando segundo toque"
@@ -41,7 +46,7 @@ public class Jogador extends Entidade {
     public Vector3 eulerTemp = new Vector3();
 
     // referencias dos nos
-    public Node cabeca, tronco, bracoDir, bracoEsq, pernaDir, pernaEsq;
+    public Node cabeca, tronco, bracoDir, bracoEsq, pernaDir, pernaEsq, itemPos;
 
     // rotações originais
     public Quaternion rotCabeca = new Quaternion();
@@ -77,21 +82,30 @@ public class Jogador extends Entidade {
 		// rotaciona 90 graus no eixo X
 		bracoDir.rotation.mul(new Quaternion(Vector3.X, 100f));
 		instancia.calculateTransforms();
+
+		itemModelo = new ModelInstance(Modelos.obterModelo("modelos/item.gltf"));
 	}
 
 	@Override
 	public void morreu() {
 		posicao = new Vector3(0f, 0f, 0f);
+
 		posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
+
+		Mundo.limparChunks(0, 0);
+
+		Mundo.carregado = false;
+
 		velocidade.set(0, 0, 0);
 		vida = vidaMax;
 		tempoInvulneravel = 3f;
 	}
 
 	public void interagirBloco() {
-		Ray raio = camera.getPickRay(
+		final Ray raio = camera.getPickRay(
 			Gdx.graphics.getWidth() / 2f,
-			Gdx.graphics.getHeight() / 2f);
+			Gdx.graphics.getHeight() / 2f
+		);
 		float olhoX = raio.origin.x;
 		float olhoY = raio.origin.y;
 		float olhoZ = raio.origin.z;
@@ -178,7 +192,7 @@ public class Jogador extends Entidade {
 			return;
 		}
 		float dx = velocidade.x * delta;
-		float dy = velocidade.y * delta;
+		final float dy = velocidade.y * delta;
 		float dz = velocidade.z * delta;
 		// primeiro verifica colisão vertical
 		posicao.y += dy;
@@ -228,6 +242,10 @@ public class Jogador extends Entidade {
 		}
 		camera.position.set(posicao.x, posicao.y + altura * 0.9f, posicao.z);
 		camera.update();
+
+		// atualiza a luz na posição dos olhos do jogador
+		instancia.userData = dadosLuz;
+		itemModelo.userData = dadosLuz;
 	}
 
 	public void render(ModelBatch mb) {
@@ -239,12 +257,20 @@ public class Jogador extends Entidade {
 			camera.update();
 			return;
 		}
-		float balancoX = (float)Math.sin(tempoAnimacao * 0.5f) * 0.05f;
-		float balancoY = (float)Math.abs(Math.cos(tempoAnimacao)) * 0.05f;
+		float balancoX = MathUtils.sin(tempoAnimacao * 0.5f) * 0.05f;
+		float balancoY = Math.abs(MathUtils.cos(tempoAnimacao)) * 0.05f;
 
 		instancia.transform.translate(0.5f + balancoX, -2.15f + balancoY, -1f);
-		instancia.transform.rotate(Vector3.Y, 15); 
+		instancia.transform.rotate(Vector3.Y, 15);
+
+		instancia.calculateTransforms();
+
+		itemModelo.transform.set(instancia.transform).mul(itemPos.globalTransform);
+
+		itemModelo.calculateTransforms();
+
 		mb.render(instancia);
+		mb.render(itemModelo);
 	}
 
     public void pegarNos() {
@@ -254,6 +280,7 @@ public class Jogador extends Entidade {
         bracoEsq = instancia.getNode("braco_esq", true);
         pernaDir = instancia.getNode("perna_dir", true);
         pernaEsq = instancia.getNode("perna_esq", true);
+		itemPos = instancia.getNode("item", true);
 
 		instancia.nodes.clear();
 		instancia.nodes.add(bracoDir);
@@ -268,5 +295,4 @@ public class Jogador extends Entidade {
         if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
     }
 }
-
 

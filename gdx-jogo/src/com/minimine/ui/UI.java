@@ -24,12 +24,12 @@ import com.minimine.Debugador;
 import com.minimine.Logs;
 import com.minimine.mundo.Mundo;
 import com.minimine.mundo.blocos.Bloco;
-import com.minimine.entidades.Inventario;
+import com.minimine.inventario.Inventario;
 import com.minimine.entidades.Jogador;
 import com.minimine.utils.DiaNoiteUtil;
 import com.minimine.utils.Receitas;
 import com.minimine.mundo.blocos.InterfaceBloco;
-import com.minimine.ui.PaginaItens;
+import com.minimine.inventario.PaginaItens;
 
 import com.micro.GerenciadorUI;
 import com.micro.CaixaDialogo;

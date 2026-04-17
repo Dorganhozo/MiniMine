@@ -21,6 +21,9 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.minimine.entidades.Entidade;
 import com.minimine.mundo.blocos.BlocoEstrutura;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
+import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.Renderable;
 
 public class Render {
     public UI ui;
@@ -135,11 +138,9 @@ public class Render {
 
         // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-							Texturas.atlas.get("agua_a1"),
-							Texturas.atlas.get("agua_a2"),
-							Texturas.atlas.get("agua_a3"),
-							Texturas.atlas.get("agua_a4")
-						}, 2.5f);  // 2.5 quadros por segundo
+				Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
+				Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
+		}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas
         gp = new GerenciadorParticulas(ui.jg);
@@ -147,8 +148,12 @@ public class Render {
         if(mundo.nuvens) NuvensUtil.iniciar(ui.jg.posicao);
         if(mundo.ciclo) diaNoite.iniciar();
 
-        mb = new ModelBatch(); // carrega o gerenciador de modelos das entidades
-
+		mb = new ModelBatch(new DefaultShaderProvider() {
+				@Override
+				protected Shader createShader(Renderable r) {
+					return new ShaderBranco();
+				}
+			});
 		mundo.iniciar();
     }
 
@@ -201,10 +206,10 @@ public class Render {
 			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-			if(ui.debug) ui.gpu.enable();
-			else ui.gpu.disable();
-			if(ui.debug) ui.gpu.reset();
-
+			if(ui.debug) {
+				ui.gpu.enable();
+				ui.gpu.reset();
+			}
 			if(mundo.ciclo) diaNoite.att(ui.jg.camera, delta);
 
 			mundo.att(delta, ui.jg);

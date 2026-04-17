@@ -9,7 +9,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Texturas {
 	public static TexLista<CharSequence, Texture> texs = new TexLista<CharSequence, Texture>();
 	public static TexLista<CharSequence, TextureRegion> atlas = new TexLista<CharSequence, TextureRegion>();
-	public static Texture blocos, agua, icones, base, ceu;
+	public static Texture blocos, agua, icones, base, ceu, ferramentas,
+	palito;
 	
 	public static void iniciar() {
 		try {
@@ -19,6 +20,8 @@ public class Texturas {
 			icones = new Texture(Gdx.files.internal("texturas/ui/icones_16x16.png"));
 			base = new Texture(Gdx.files.internal("texturas/ui/base_botao.png"));
 			ceu = new Texture(Gdx.files.internal("texturas/sol_lua.png"));
+			ferramentas = new Texture(Gdx.files.internal("texturas/itens/ferramentas.png"));
+			palito = new Texture(Gdx.files.internal("texturas/itens/madeira/palito.png"));
 			// blocos:
 			atlas.put("grama_topo", new TextureRegion(blocos, 0, 0, 16, 16));
 			atlas.put("grama_lado", new TextureRegion(blocos, 16, 0, 16, 16));
@@ -72,6 +75,14 @@ public class Texturas {
 			// ambiente:
 			atlas.put("sol", new TextureRegion(ceu, 0, 0, 16, 16));
 			atlas.put("lua_completa", new TextureRegion(ceu, 0, 16, 16, 16));
+			// itens:
+			atlas.put("espada_madeira", new TextureRegion(ferramentas, 0, 0, 16, 16));
+			atlas.put("picareta_madeira", new TextureRegion(ferramentas, 16, 0, 16, 16));
+			atlas.put("machado_madeira", new TextureRegion(ferramentas, 32, 0, 16, 16));
+			atlas.put("pa_madeira", new TextureRegion(ferramentas, 48, 0, 16, 16));
+			atlas.put("enxada_madeira", new TextureRegion(ferramentas, 64, 0, 16, 16));
+			
+			atlas.put("palito", new TextureRegion(palito, 0, 0, 16, 16));
 		} catch(Exception e) {
 			Gdx.app.log("Texturas", "[ERRO]: " + e);
 			throw new RuntimeException("[Texturas]: [ERRO]: ao carregar as texturas: "+e);
@@ -114,5 +125,6 @@ public class Texturas {
 		icones.dispose();
 		base.dispose();
 		ceu.dispose();
+		palito.dispose();
 	}
 }

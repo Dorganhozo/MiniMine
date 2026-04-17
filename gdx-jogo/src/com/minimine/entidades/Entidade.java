@@ -7,6 +7,8 @@ import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.graficos.TipoRender;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.minimine.mundo.Chunk;
+import com.minimine.mundo.Chave;
 
 public class Entidade {
 	public int vida;
@@ -48,8 +50,9 @@ public class Entidade {
 	public float tempoInvulneravel = 0f; // segundos restantes de invulnerabilidade pós-dano
 	public static final float DURACAO_INVUL = 0.5f;
 
-	public float timerAfogamento  = 0f;
-	public float timerRegeneracao = 0f;
+	public float tempoRegen = 0f;
+	
+	public float[] dadosLuz = new float[]{15f, 0f};
 
 	public void attHitbox() {
 		float x = posicao.x;
@@ -207,6 +210,17 @@ public class Entidade {
 
 		movendo = noChao && (Math.abs(velocidade.x) > 1f || Math.abs(velocidade.z) > 1f);
 
+		int _bx = Mat.floor(posicao.x);
+		int _by = Mat.floor(posicao.y + altura * 0.9f);
+		int _bz = Mat.floor(posicao.z);
+		Chunk _chunk = Mundo.chunks.get(Chave.calcularChave(_bx >> 4, _bz >> 4));
+		if(_chunk != null && _by >= 0 && _by < Mundo.Y_CHUNK) {
+			int _lx = _bx & 0xF, _lz = _bz & 0xF;
+			int _idc = _lx + (_lz << 4) + (_by << 8);
+			int _luzTotal = _chunk.luz[_idc] & 0xFF;
+			dadosLuz[0] = _luzTotal >> 4;
+			dadosLuz[1] = _luzTotal & 0x0F;
+		}
 		// === ticks de dano ===
 
 		// invulnerabilidade
@@ -239,17 +253,18 @@ public class Entidade {
 		}
 		// regeneração automatica fora da água
 		if(!naAgua && vida > 0 && vida < vidaMax) {
-			timerRegeneracao += delta;
-			if(timerRegeneracao >= TICK_REGENERACAO) {
-				timerRegeneracao -= TICK_REGENERACAO;
+			tempoRegen += delta;
+			if(tempoRegen >= TICK_REGENERACAO) {
+				tempoRegen -= TICK_REGENERACAO;
 				vida++;
 				if(vida > vidaMax) vida = vidaMax;
 			}
 		} else if(naAgua) {
-			timerRegeneracao = 0f;
+			tempoRegen = 0f;
 		}
 	}
 
 	public void render(ModelBatch mb) {}
 	public void liberar() {}
 }
+

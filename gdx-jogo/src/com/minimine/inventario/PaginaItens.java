@@ -1,11 +1,10 @@
-package com.minimine.ui;
+package com.minimine.inventario;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
-import com.minimine.entidades.Inventario;
 import com.minimine.entidades.Jogador;
 import com.minimine.mundo.blocos.Bloco;
 
@@ -19,7 +18,7 @@ import com.minimine.graficos.Texturas;
  * campo de pesquisa filtra em todos os blocos e remonta as paginas com os resultados
  * setas < > navegam entre páginas
  * clicar num bloco adiciona 64 unidades ao inventario do jogador
-*/
+ */
 public class PaginaItens {
     public static final int COLUNAS = 6;
     public static final int LINHAS = 5;
@@ -39,7 +38,7 @@ public class PaginaItens {
     public int totalPaginas = 1;
 
     // lista filtrada de blocos(remontada sempre que filtro ou blocos mudam)
-    public final List<Bloco> filtrados = new ArrayList<>();
+    public final List<ItemRegistro.Item> filtrados = new ArrayList<>();
 
     // rects dos 30 slots visíveis
     public final Rectangle[] rects = new Rectangle[POR_PAGINA];
@@ -60,6 +59,10 @@ public class PaginaItens {
     public static final int ALTURA_PAINEL = 44 + 8 + ALTURA_GRADE + 8 + 36;
 
     public PaginaItens() {
+		ItemRegistro.registrar("palito", "palito");
+		ItemRegistro.registrar("espada_madeira", "espada_madeira");
+		ItemRegistro.registrar("picareta_madeira", "picareta_madeira");
+		ItemRegistro.registrar("machado_madeira", "machado_madeira");
         for(int i = 0; i < POR_PAGINA; i++) rects[i] = new Rectangle();
     }
 
@@ -113,7 +116,7 @@ public class PaginaItens {
     public void reconstruirFiltro() {
         filtrados.clear();
         String q = filtro.toLowerCase().trim();
-        for(Bloco b : Bloco.blocos) {
+        for(ItemRegistro.Item b : ItemRegistro.todos()) {
             if(b == null) continue;
             if(q.isEmpty() || ("" + b.nome).toLowerCase().contains(q)) {
                 filtrados.add(b);
@@ -163,7 +166,7 @@ public class PaginaItens {
             if(rects[i].contains(telaX, telaY)) {
                 int idc = base + i;
                 if(idc < filtrados.size()) {
-                    Bloco b = filtrados.get(idc);
+                    ItemRegistro.Item b = filtrados.get(idc);
                     jogador.inv.addItem(b.nome, 64);
                 }
                 return true;
@@ -179,15 +182,16 @@ public class PaginaItens {
 
         // fundo semitransparente dos slots
         for(int i = 0; i < POR_PAGINA; i++) {
-            int idx = base + i;
+            int idc = base + i;
             sb.draw(Texturas.base, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-            if(idx < filtrados.size()) {
-                Bloco b = filtrados.get(idx);
-                TextureRegion tex = Texturas.atlas.obter(b.lados);
+            if(idc < filtrados.size()) {
+                ItemRegistro.Item b = filtrados.get(idc);
+                TextureRegion tex = Texturas.atlas.obter(b.textura);
                 if(tex != null) {
                     sb.draw(tex,
-					rects[i].x + 4, rects[i].y + 4,
-					TAM_SLOT - 8,   TAM_SLOT - 8);
+							rects[i].x + 4, rects[i].y + 4,
+							TAM_SLOT - 8,   TAM_SLOT - 8
+					);
                 }
             }
         }
@@ -206,7 +210,7 @@ public class PaginaItens {
         // indicador de pagina centralizado
         String indicador = (pagina + 1) + "/" + totalPaginas;
         fonte.draw(sb, indicador,
-		rectAnterior.x + LARGURA_GRADE / 2f - 10,
-		rectAnterior.y + rectAnterior.height - 8);
+				   rectAnterior.x + LARGURA_GRADE / 2f - 10,
+				   rectAnterior.y + rectAnterior.height - 8);
     }
 }

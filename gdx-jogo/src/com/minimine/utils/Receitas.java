@@ -1,5 +1,5 @@
 package com.minimine.utils;
-import com.minimine.entidades.Inventario;
+import com.minimine.inventario.Inventario;
 import com.badlogic.gdx.Gdx;
 
 public class Receitas {
