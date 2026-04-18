@@ -267,8 +267,8 @@ public class Render {
 			// renderiza os modelos 3D
 			mb.begin(ui.jg.camera);
 
-			if(ui.gui) ui.jg.render(mb);
 			for(Entidade e : mundo.entidades) e.render(mb);
+			if(ui.gui) ui.jg.render(mb);
 
 			mb.end();
 

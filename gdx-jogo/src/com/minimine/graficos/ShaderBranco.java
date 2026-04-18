@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.minimine.utils.DiaNoiteUtil;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.GL20;
 
 public class ShaderBranco implements Shader {
 	public static final String VERT =
@@ -51,6 +52,8 @@ public class ShaderBranco implements Shader {
 	@Override public void begin(com.badlogic.gdx.graphics.Camera cam, RenderContext ctx) {
 		prog.begin();
 		prog.setUniformMatrix("u_projVisao", cam.combined);
+		ctx.setDepthTest(GL20.GL_LEQUAL);
+		ctx.setDepthMask(true);
 	}
 
 	@Override public void render(Renderable r) {

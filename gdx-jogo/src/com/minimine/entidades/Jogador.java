@@ -26,6 +26,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.minimine.inventario.ItemRegistro;
 import com.minimine.graficos.Texturas;
+import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 
 public class Jogador extends Entidade {
 	public int modo = 2; // 0 = espectador, 1 = criativo, 2 = sobrevivencia
@@ -266,8 +267,10 @@ public class Jogador extends Entidade {
 		instancia.calculateTransforms();
 
 		itemModelo.transform.set(instancia.transform).mul(itemPos.globalTransform);
-
 		itemModelo.calculateTransforms();
+
+		mb.flush();
+		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 
 		mb.render(instancia);
 		mb.render(itemModelo);
