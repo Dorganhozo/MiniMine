@@ -49,6 +49,8 @@ public class Mundo {
 
     public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
     public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
+	
+	public static Chunk[] chunkCache = new Chunk[4];
     /*
      * estados:
      *   0 = vazia, sem dados
@@ -171,8 +173,11 @@ public class Mundo {
     // === ACESSO ===
     public static int obterBlocoMundo(int x, int y, int z) {
         if(y < 0 || y >= Y_CHUNK) return 0;
-        Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
-        if(chunk == null) return 0;
+		int posX = x >> 4;
+		int posZ = z >> 4;
+		
+		Chunk chunk = obterChunk(posX, posZ);
+        if(chunk == null) return Bloco.texIds.get("pedra").tipo;
         return ChunkUtil.obterBloco(x & 0xF, y, z & 0xF, chunk);
     }
 
@@ -187,7 +192,8 @@ public class Mundo {
         final int chunkZ = z >> 4;
         final long chave = Chave.calcularChave(chunkX, chunkZ);
 
-        Chunk chunk = chunks.get(chave);
+		final Chunk chunk = obterChunk(chunkX, chunkZ);
+		
         if(chunk == null) {
             Gdx.app.log("Mundo", "chunk null na posição X: " + chunkX + ", Z: " + chunkZ);
             return;
@@ -227,19 +233,19 @@ public class Mundo {
         // marca vizinhas de borda pra reconstruir malha
         Chunk chunkAdj;
         if(localX == 0) {
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX - 1, chunkZ));
+            chunkAdj = obterChunk(chunkX - 1, chunkZ);
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localX == TAM_CHUNK - 1) {
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX + 1, chunkZ));
+            chunkAdj = obterChunk(chunkX + 1, chunkZ);
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localZ == 0) {
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ - 1));
+            chunkAdj = obterChunk(chunkX, chunkZ - 1);
             if(chunkAdj != null) chunkAdj.att = true;
         }
         if(localZ == TAM_CHUNK - 1) {
-            chunkAdj = chunks.get(Chave.calcularChave(chunkX, chunkZ + 1));
+            chunkAdj = obterChunk(chunkX, chunkZ + 1);
             if(chunkAdj != null) chunkAdj.att = true;
         }
         chunksMod.put(chave, chunk);
@@ -247,7 +253,7 @@ public class Mundo {
 
     public static void defLuzMundo(int x, int y, int z, byte novaLuz) {
         if(y < 0 || y >= Y_CHUNK) return;
-        Chunk alvo = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+        Chunk alvo = obterChunk(x >> 4, z >> 4);
         if(alvo != null) {
             int idc = (x & 0xF) + ((z & 0xF) << 4) + (y << 8);
             alvo.luz[idc] = novaLuz;
@@ -258,14 +264,14 @@ public class Mundo {
 
     public static byte obterLuzMundo(int x, int y, int z) {
         if(y < 0 || y >= Y_CHUNK) return 0;
-        Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+        Chunk chunk = obterChunk(x >> 4, z >> 4);
         if(chunk == null) return 0;
         return chunk.luz[(x & 0xF) + ((z & 0xF) << 4) + (y << 8)];
     }
 
     public static short obterMetaMundo(int x, int y, int z) {
         if(y < 0 || y >= Y_CHUNK) return 0;
-        Chunk chunk = chunks.get(Chave.calcularChave(x >> 4, z >> 4));
+        Chunk chunk = obterChunk(x >> 4, z >> 4);
         if(chunk == null) return 0;
         return ChunkUtil.obterMeta(x & 0xF, y, z & 0xF, chunk);
     }
@@ -274,7 +280,7 @@ public class Mundo {
         if(y < 0 || y >= Y_CHUNK) return;
         final int chunkX = x >> 4;
         final int chunkZ = z >> 4;
-        Chunk chunk = chunks.get(Chave.calcularChave(chunkX, chunkZ));
+        Chunk chunk = obterChunk(chunkX, chunkZ);
         if(chunk == null) return;
         int localX = x & 0xF;
         int localZ = z & 0xF;
@@ -304,6 +310,27 @@ public class Mundo {
         }
         return 80;
     }
+	
+	public static int proximo = 0;
+
+	public static Chunk obterChunk(int x, int z) {
+		if(chunkCache[0] != null && chunkCache[0].x == x && chunkCache[0].z == z)
+			return chunkCache[0];
+		if(chunkCache[1] != null && chunkCache[1].x == x && chunkCache[1].z == z)
+			return chunkCache[1];
+		if(chunkCache[2] != null && chunkCache[2].x == x && chunkCache[2].z == z)
+			return chunkCache[2];
+		if(chunkCache[3] != null && chunkCache[3].x == x && chunkCache[3].z == z)
+			return chunkCache[3];
+
+		Chunk chunk = chunks.get(Chave.calcularChave(x, z));
+		if(chunk == null) return null;
+
+		chunkCache[proximo] = chunk;
+		proximo = (proximo + 1) % 4;
+
+		return chunk;
+	}
 
     // === GERAÇÃO DE CHUNKS ===
     public void attChunks(int x, int z) {

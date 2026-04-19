@@ -17,12 +17,14 @@ public class Entidade {
 	public float peso = 65f; // 65 kg
 
 	// constantes de movimento
-	public float aceleracaoChao = 60f; // quão rapido chega na velocidade maxima no chão
-	public float atritoChao = 20f;  // quão rapido freia no chão quando solta a tecla
-	public float aceleracaoAr = 5f;  // controle aereo reduzido
-	public float atritoAr = 1.5f; // quase sem frenagem no ar
-	public boolean esquerda = false, frente = false, tras = false, direita = false, cima = false, baixo = false, acao = false;
-	public boolean movendo = false, noChao = true, naAgua = false, agachado = false, nasceu = false, voando = false;
+	public float aceleracaoChao = 0.45f; // impulso por frame no chão(0.0~1.0)
+	public float atritoChao = 0.55f; // fator multiplicativo ao frear no chão(0.0~1.0)
+	public float aceleracaoAr = 0.04f; // controle aéreo reduzido
+	public float atritoAr = 0.98f; // quase sem frenagem no ar
+	public boolean esquerda = false, frente = false, tras = false,
+	direita = false, cima = false, baixo = false, acao = false;
+	public boolean movendo = false, noChao = true, naAgua = false,
+	agachado = false, nasceu = false, voando = false, correndo = false;
 
 	public Vector3 posicao = new Vector3(1, 80, 1), velocidade = new Vector3();
 	public final Vector3 frenteV = new Vector3(0, 0, 0), direitaV = new Vector3(0, 0, 0);
@@ -42,7 +44,7 @@ public class Entidade {
 
 	// === sistema de dano ===
 	public static final int BLOCOS_QUEDA_SEGURA = 3;   // blocos sem dano
-	public static final float TICK_REGENERACAO = 5f;  // regenera 1 de vida a cada 5 segundos
+	public static final float TICK_REGEN = 5f;  // regenera 1 de vida a cada 5 segundos
 
 	public float alturaMaxQueda  = 0f; // Y mais alto registrado enquanto estava no ar
 	public boolean rastreandoQueda = false;
@@ -51,9 +53,11 @@ public class Entidade {
 	public static final float DURACAO_INVUL = 0.5f;
 
 	public float tempoRegen = 0f;
-	
+
 	public float[] dadosLuz = new float[]{15f, 0f};
 
+	public Chunk chunkCache = null;
+	
 	public void attHitbox() {
 		float x = posicao.x;
 		float y = posicao.y;
@@ -190,15 +194,14 @@ public class Entidade {
 		desejadoX *= veloAlvo;
 		desejadoZ *= veloAlvo;
 
-		// acelera em direção ao alvo
-		velocidade.x += (desejadoX - velocidade.x) * Math.min(acel * delta, 1f);
-		velocidade.z += (desejadoZ - velocidade.z) * Math.min(acel * delta, 1f);
+		// impulso fixo em direção ao alvo (estilo Minecraft: fração do erro, independente de delta)
+		velocidade.x += (desejadoX - velocidade.x) * acel;
+		velocidade.z += (desejadoZ - velocidade.z) * acel;
 
-		// aplica atrito quando sem entrada(so no chão/voando)
+		// atrito multiplicativo por frame quando sem entrada
 		if(desejadoX == 0 && desejadoZ == 0) {
-			float fator = Math.max(0f, 1f - atrito * delta);
-			velocidade.x *= fator;
-			velocidade.z *= fator;
+			velocidade.x *= atrito;
+			velocidade.z *= atrito;
 		}
 		if(cima) {
 			if(voando || noChao || naAgua) {
@@ -210,14 +213,19 @@ public class Entidade {
 
 		movendo = noChao && (Math.abs(velocidade.x) > 1f || Math.abs(velocidade.z) > 1f);
 
-		int _bx = Mat.floor(posicao.x);
-		int _by = Mat.floor(posicao.y + altura * 0.9f);
-		int _bz = Mat.floor(posicao.z);
-		Chunk _chunk = Mundo.chunks.get(Chave.calcularChave(_bx >> 4, _bz >> 4));
-		if(_chunk != null && _by >= 0 && _by < Mundo.Y_CHUNK) {
-			int _lx = _bx & 0xF, _lz = _bz & 0xF;
-			int _idc = _lx + (_lz << 4) + (_by << 8);
-			int _luzTotal = _chunk.luz[_idc] & 0xFF;
+		final int _bx = Mat.floor(posicao.x);
+		final int _by = Mat.floor(posicao.y + altura * 0.9f);
+		final int _bz = Mat.floor(posicao.z);
+		final int posX = _bx >> 4;
+		final int posZ = _bz >> 4;
+
+		if(chunkCache == null || posX != chunkCache.x || posZ != chunkCache.z) {
+			chunkCache = Mundo.chunks.get(Chave.calcularChave(posX, posZ));
+		}
+		if(chunkCache != null && _by >= 0 && _by < Mundo.Y_CHUNK) {
+			final int _lx = _bx & 0xF, _lz = _bz & 0xF;
+			final int _idc = _lx + (_lz << 4) + (_by << 8);
+			final int _luzTotal = chunkCache.luz[_idc] & 0xFF;
 			dadosLuz[0] = _luzTotal >> 4;
 			dadosLuz[1] = _luzTotal & 0x0F;
 		}
@@ -254,8 +262,8 @@ public class Entidade {
 		// regeneração automatica fora da água
 		if(!naAgua && vida > 0 && vida < vidaMax) {
 			tempoRegen += delta;
-			if(tempoRegen >= TICK_REGENERACAO) {
-				tempoRegen -= TICK_REGENERACAO;
+			if(tempoRegen >= TICK_REGEN) {
+				tempoRegen -= TICK_REGEN;
 				vida++;
 				if(vida > vidaMax) vida = vidaMax;
 			}
@@ -267,4 +275,3 @@ public class Entidade {
 	public void render(ModelBatch mb) {}
 	public void liberar() {}
 }
-
