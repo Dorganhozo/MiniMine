@@ -14,42 +14,44 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.minimine.inventario.ItemRegistro;
 
 public class Modelos {
 	public static final HashMap<String, SceneAsset> modelosGltf = new HashMap<>();
 	public static final HashMap<CharSequence, Model> modelosItens = new HashMap<>();
-	
-	public static final float TAM_ITEM = 0.35f;
-	public static final int COLUNAS_TEX = 16;
-	public static final float ESPESSURA = TAM_ITEM / COLUNAS_TEX;
 
+	public static final float TAM_ITEM = 0.35f;
+	public static final int PIXELS = 16;
+	public static final float TAM_PIXEL = TAM_ITEM / PIXELS;
+
+	// posição do item no espaço de camera
+	// aplicados via transformação em Jogador.render()
 	public static final float ITEM_OX = 0.10f;
 	public static final float ITEM_OY = -0.45f;
 	public static final float ITEM_OZ = -0.55f;
-	
+
 	public static Model obterModelo(String caminho, boolean interno) {
 		if(modelosGltf.containsKey(caminho)) return modelosGltf.get(caminho).scene.model;
-		
 		SceneAsset ativoCena = new GLTFLoader().load(interno ? Gdx.files.internal(caminho) : Gdx.files.absolute(caminho));
-		 modelosGltf.put(caminho, ativoCena);
-		 
-		 return modelosGltf.get(caminho).scene.model;
+		modelosGltf.put(caminho, ativoCena);
+		return modelosGltf.get(caminho).scene.model;
 	}
-	
+
 	public static Model obterModelo(String caminho) {
 		return obterModelo(caminho, true);
 	}
-	
-	// reconstroi o modelo do item quando muda
-	// geometria: 16 quads frontais (uma fatia por coluna de pixel) + 16 quads laterais
-	// cada quad frontal cobre uma coluna da textura
-	// cada quad lateral da a espessura daquela coluna
-	// ordem dos vertices: BL, BR, TR, TL (anti-horario visto de frente, normal apontando pra camera)
-	// igual face +Z do BlocoModelo: {0,0,TAM},{TAM,0,TAM},{TAM,TAM,TAM},{0,TAM,TAM}
+
+	// le a textura pixel a pixel(16x16) e constroi um modelo voxel 2.5D:
+	// - pixels transparentes(alfa < 128) são ignorados
+	// - para cada pixel visivel, gera apenas as faces cujo vizinho é transparente
+	// - 6 faces possíveis por pixel: frente(+Z), tras(-Z), esquerda(-X), direita(+X), topo(+Y), base(-Y)
+	// - UV de cada face aponta pro pixel correto no atlas
+	// - malha centrada em(0,0,0); posição e rotação aplicadas via transform em Jogador.render()
 	public static ModelInstance modeloItem(CharSequence item) {
 		if(modelosItens.containsKey(item)) return new ModelInstance(modelosItens.get(item));
-		
+
 		if(item.equals("ar")) return null;
 
 		ItemRegistro.Item reg = ItemRegistro.obter(item);
@@ -58,140 +60,297 @@ public class Modelos {
 		TextureRegion tex = Texturas.atlas.get(reg.textura);
 		if(tex == null) return null;
 
-		float uMin = tex.getU();
-		float uMax = tex.getU2();
-		float vMin = tex.getV();
-		float vMax = tex.getV2();
-		float uPasso = (uMax - uMin) / COLUNAS_TEX;
+		// le os pixels da textura
+		Texture textura = tex.getTexture();
+		if(!textura.getTextureData().isPrepared()) textura.getTextureData().prepare();
+		Pixmap pixmap = textura.getTextureData().consumePixmap();
 
-		// inclinacao 45 graus no eixo Y
-		float cos = 0.7071f;
-		float sin = 0.7071f;
+		// coordenadas do tile no pixmap(em pixels inteiros)
+		int tileX = (int)(tex.getU() * pixmap.getWidth());
+		int tileY = (int)(tex.getV() * pixmap.getHeight());
+		int tileW = (int)((tex.getU2() - tex.getU()) * pixmap.getWidth());
+		int tileH = (int)((tex.getV2() - tex.getV()) * pixmap.getHeight());
 
-		// eixo direita do item em espaco de camera
-		float rdx = cos;
-		float rdz = sin;
-		// eixo de profundidade da fatia (perpendicular ao eixo direita, no plano XZ)
-		float fdx = -sin;
-		float fdz = cos;
-
-		int totalQuads = COLUNAS_TEX * 2;
-		int totalVertices = totalQuads * 4;
-		int totalIndices = totalQuads * 6;
-
-		float[] verts = new float[totalVertices * 5];
-		short[] indices = new short[totalIndices];
-
-		int vi = 0;
-		int ii = 0;
-
-		for(int col = 0; col < COLUNAS_TEX; col++) {
-			float t0 = (float)col / COLUNAS_TEX;
-			float t1 = (float)(col + 1) / COLUNAS_TEX;
-
-			float px0 = ITEM_OX + rdx * TAM_ITEM * t0;
-			float pz0 = ITEM_OZ + rdz * TAM_ITEM * t0;
-			float px1 = ITEM_OX + rdx * TAM_ITEM * t1;
-			float pz1 = ITEM_OZ + rdz * TAM_ITEM * t1;
-
-			float uCol0 = uMin + uPasso * col;
-			float uCol1 = uMin + uPasso * (col + 1);
-			float uColMeio = (uCol0 + uCol1) * 0.5f;
-
-			// quad frontal
-			short base = (short)(vi / 5);
-			verts[vi++] = px0;
-			verts[vi++] = ITEM_OY;
-			verts[vi++] = pz0;
-			verts[vi++] = uCol0;
-			verts[vi++] = vMax;
-			verts[vi++] = px0;
-			verts[vi++] = ITEM_OY + TAM_ITEM;
-			verts[vi++] = pz0;
-			verts[vi++] = uCol0;
-			verts[vi++] = vMin;
-			
-			verts[vi++] = px1;
-			verts[vi++] = ITEM_OY + TAM_ITEM;
-			verts[vi++] = pz1;
-			verts[vi++] = uCol1;
-			verts[vi++] = vMin;
-			verts[vi++] = px1;
-			verts[vi++] = ITEM_OY;
-			verts[vi++] = pz1;
-			verts[vi++] = uCol1;
-			verts[vi++] = vMax;
-
-			indices[ii++] = base;
-			indices[ii++] = (short)(base + 1);
-			indices[ii++] = (short)(base + 2);
-			indices[ii++] = (short)(base + 2);
-			indices[ii++] = (short)(base + 3);
-			indices[ii++] = base;
-
-			// quad lateral: espessura da fatia
-			float lx1 = px0 + fdx * ESPESSURA;
-			float lz1 = pz0 + fdz * ESPESSURA;
-
-			base = (short)(vi / 5);
-			verts[vi++] = lx1;
-			verts[vi++] = ITEM_OY;
-			verts[vi++] = lz1;
-			verts[vi++] = uColMeio;
-			verts[vi++] = vMax;
-			verts[vi++] = px0;
-			verts[vi++] = ITEM_OY;
-			verts[vi++] = pz0;
-			verts[vi++] = uColMeio;
-			verts[vi++] = vMax;
-			
-			verts[vi++] = px0;
-			verts[vi++] = ITEM_OY + TAM_ITEM;
-			verts[vi++] = pz0;
-			verts[vi++] = uColMeio;
-			verts[vi++] = vMin;
-			verts[vi++] = lx1;
-			verts[vi++] = ITEM_OY + TAM_ITEM;
-			verts[vi++] = lz1;
-			verts[vi++] = uColMeio;
-			verts[vi++] = vMin;
-
-			indices[ii++] = base;
-			indices[ii++] = (short)(base + 1);
-			indices[ii++] = (short)(base + 2);
-			indices[ii++] = (short)(base + 2);
-			indices[ii++] = (short)(base + 3);
-			indices[ii++] = base;
+		// le a grade de alfa: verdadeiro = pixel visivel
+		boolean[][] visivel = new boolean[PIXELS][PIXELS];
+		for(int py = 0; py < PIXELS; py++) {
+			for(int px = 0; px < PIXELS; px++) {
+				int imgX = tileX + px * tileW / PIXELS;
+				int imgY = tileY + py * tileH / PIXELS;
+				int cor = pixmap.getPixel(imgX, imgY);
+				visivel[px][py] = (cor & 0xFF) >= 128; // canal alfa
+			}
 		}
+		pixmap.dispose();
 
-		Mesh mesh = new Mesh(true, totalVertices, totalIndices,
-			new VertexAttribute(VertexAttributes.Usage.Position, 3, "a_position"),
-			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates, 2, "a_texCoord0")
+		// UV de cada pixel no atlas
+		float uMin = tex.getU();
+		float vMin = tex.getV();
+		float uPasso = (tex.getU2() - uMin) / PIXELS;
+		float vPasso = (tex.getV2() - vMin) / PIXELS;
+
+		// origem da malha para centralizar em(0,0,0)
+		float origem = -TAM_ITEM * 0.5f;
+
+		// pré-aloca generosamente: no pior caso PIXELS*PIXELS*6 faces
+		int maxQuads = PIXELS * PIXELS * 6;
+		float[] verts = new float[maxQuads * 4 * 5]; // 4 verts * 5 floats
+		short[] indices = new short[maxQuads * 6];
+		int vi = 0, ii = 0;
+
+		for(int py = 0; py < PIXELS; py++) {
+			for(int px = 0; px < PIXELS; px++) {
+				if(!visivel[px][py]) continue;
+
+				// UV deste pixel no atlas
+				float u0 = uMin + uPasso * px;
+				float u1 = u0 + uPasso;
+				// V: py=0 é topo da imagem, vMax é baixo
+				float v0 = vMin + vPasso * py;
+				float v1 = v0 + vPasso;
+
+				// posição 3D deste voxel-pixel
+				// X cresce pra direita, Y cresce pra cima(py=0 é topo → Y maximo)
+				float x0 = origem + TAM_PIXEL * px;
+				float x1 = x0 + TAM_PIXEL;
+				float y1 = -origem - TAM_PIXEL * py; // topo do pixel
+				float y0 = y1 - TAM_PIXEL; // base do pixel
+				float z0 = origem; // face traseira
+				float z1 = origem + TAM_PIXEL; // face frontal(espessura = 1 pixel)
+
+				// helper inline: adiciona quad e indices
+				// normal +Z(frente): visível se não tem vizinho na frente, sempre exposta pois é a face do item
+				// normal -Z(trás): idem
+				// normais X e Y: so emite se o vizinho nessa direção for transparente
+
+				// === face +Z(frente) ===
+				// sempre visivel
+				{
+					short b = (short)(vi / 5);
+					// BL
+					verts[vi++]=x0;
+					verts[vi++]=y0;
+					verts[vi++]=z1;
+					verts[vi++]=u0;
+					verts[vi++]=v1;
+					// TL
+					verts[vi++]=x0;
+					verts[vi++]=y1;
+					verts[vi++]=z1;
+					verts[vi++]=u0;
+					verts[vi++]=v0;
+					// TR
+					verts[vi++]=x1;
+					verts[vi++]=y1;
+					verts[vi++]=z1;
+					verts[vi++]=u1;
+					verts[vi++]=v0;
+					// BR
+					verts[vi++]=x1;
+					verts[vi++]=y0;
+					verts[vi++]=z1;
+					verts[vi++]=u1;
+					verts[vi++]=v1;
+					indices[ii++]=b;
+					indices[ii++]=(short)(b+1);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+3);
+					indices[ii++]=b;
+				}
+				// === face -Z(tras) ===
+				{
+					short b = (short)(vi / 5);
+					// BR
+					verts[vi++]=x1;
+					verts[vi++]=y0;
+					verts[vi++]=z0;
+					verts[vi++]=u1;
+					verts[vi++]=v1;
+					// TR
+					verts[vi++]=x1;
+					verts[vi++]=y1;
+					verts[vi++]=z0;
+					verts[vi++]=u1;
+					verts[vi++]=v0;
+					// TL
+					verts[vi++]=x0;
+					verts[vi++]=y1;
+					verts[vi++]=z0;
+					verts[vi++]=u0;
+					verts[vi++]=v0;
+					// BL
+					verts[vi++]=x0;
+					verts[vi++]=y0;
+					verts[vi++]=z0;
+					verts[vi++]=u0;
+					verts[vi++]=v1;
+					indices[ii++]=b;
+					indices[ii++]=(short)(b+1);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+3);
+					indices[ii++]=b;
+				}
+
+				// === face +X(direita) === so se não tem vizinho visivel a direita
+				if(px + 1 >= PIXELS || !visivel[px+1][py]) {
+					short b = (short)(vi / 5);
+					verts[vi++]=x1;
+					verts[vi++]=y0;
+					verts[vi++]=z1;
+					verts[vi++]=u1;
+					verts[vi++]=v1;
+					verts[vi++]=x1;
+					verts[vi++]=y1;
+					verts[vi++]=z1;
+					verts[vi++]=u1;
+					verts[vi++]=v0;
+					verts[vi++]=x1;
+					verts[vi++]=y1;
+					verts[vi++]=z0;
+					verts[vi++]=u1;
+					verts[vi++]=v0;
+					verts[vi++]=x1;
+					verts[vi++]=y0;
+					verts[vi++]=z0;
+					verts[vi++]=u1;
+					verts[vi++]=v1;
+					indices[ii++]=b;
+					indices[ii++]=(short)(b+1);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+3);
+					indices[ii++]=b;
+				}
+				// === face -X(esquerda) === so se não tem vizinho visivel a esquerda
+				if(px - 1 < 0 || !visivel[px-1][py]) {
+					short b = (short)(vi / 5);
+					verts[vi++]=x0;
+					verts[vi++]=y0;
+					verts[vi++]=z0;
+					verts[vi++]=u0;
+					verts[vi++]=v1;
+					verts[vi++]=x0;
+					verts[vi++]=y1;
+					verts[vi++]=z0;
+					verts[vi++]=u0;
+					verts[vi++]=v0;
+					verts[vi++]=x0;
+					verts[vi++]=y1;
+					verts[vi++]=z1;
+					verts[vi++]=u0;
+					verts[vi++]=v0;
+					verts[vi++]=x0;
+					verts[vi++]=y0;
+					verts[vi++]=z1;
+					verts[vi++]=u0;
+					verts[vi++]=v1;
+					
+					indices[ii++]=b;
+					indices[ii++]=(short)(b+1);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+3);
+					indices[ii++]=b;
+				}
+				// === face +Y(topo) === so se não tem vizinho visivel acima(py-1 pois py=0 é topo)
+				if(py - 1 < 0 || !visivel[px][py-1]) {
+					short b = (short)(vi / 5);
+					verts[vi++]=x0;
+					verts[vi++]=y1;
+					verts[vi++]=z0;
+					verts[vi++]=u0;
+					verts[vi++]=v0;
+					verts[vi++]=x1;
+					verts[vi++]=y1;
+					verts[vi++]=z0;
+					verts[vi++]=u1;
+					verts[vi++]=v0;
+					verts[vi++]=x1;
+					verts[vi++]=y1;
+					verts[vi++]=z1;
+					verts[vi++]=u1;
+					verts[vi++]=v0;
+					verts[vi++]=x0;
+					verts[vi++]=y1;
+					verts[vi++]=z1;
+					verts[vi++]=u0;
+					verts[vi++]=v0;
+					
+					indices[ii++]=b;
+					indices[ii++]=(short)(b+1);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+3);
+					indices[ii++]=b;
+				}
+				// === face -Y(base) === so se não tem vizinho visivel abaixo(py+1)
+				if(py + 1 >= PIXELS || !visivel[px][py+1]) {
+					short b = (short)(vi / 5);
+					verts[vi++]=x0;
+					verts[vi++]=y0;
+					verts[vi++]=z1;
+					verts[vi++]=u0;
+					verts[vi++]=v1;
+					verts[vi++]=x1;
+					verts[vi++]=y0;
+					verts[vi++]=z1;
+					verts[vi++]=u1;
+					verts[vi++]=v1;
+					verts[vi++]=x1;
+					verts[vi++]=y0;
+					verts[vi++]=z0;
+					verts[vi++]=u1;
+					verts[vi++]=v1;
+					verts[vi++]=x0;
+					verts[vi++]=y0;
+					verts[vi++]=z0;
+					verts[vi++]=u0;
+					verts[vi++]=v1;
+					
+					indices[ii++]=b;
+					indices[ii++]=(short)(b+1);
+					indices[ii++]=(short)(b+2);
+					indices[ii++]=(short)(b+2); 
+					indices[ii++]=(short)(b+3);
+					indices[ii++]=b;
+				}
+			}
+		}
+		// copia apenas a parte usada dos arrays
+		float[] vertsFinais = new float[vi];
+		short[] indicesFinais = new short[ii];
+		System.arraycopy(verts, 0, vertsFinais, 0, vi);
+		System.arraycopy(indices, 0, indicesFinais, 0, ii);
+
+		int totalVertices = vi / 5;
+		Mesh malha = new Mesh(true, totalVertices, ii,
+			new VertexAttribute(VertexAttributes.Usage.Position,             3, "a_position"),
+			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates,   2, "a_texCoord0")
 		);
-		mesh.setVertices(verts);
-		mesh.setIndices(indices);
+		malha.setVertices(vertsFinais);
+		malha.setIndices(indicesFinais);
 
 		Material mat = new Material(TextureAttribute.createDiffuse(tex.getTexture()));
 
 		ModelBuilder mb = new ModelBuilder();
 		mb.begin();
-		mb.part("item", mesh, GL20.GL_TRIANGLES, 0, totalIndices, mat);
+		mb.part("item", malha, GL20.GL_TRIANGLES, 0, ii, mat);
 		Model modelo = mb.end();
-		ModelInstance modeloItem = new ModelInstance(modelo);
-		
+
 		modelosItens.put(item, modelo);
-		return modeloItem;
+		return new ModelInstance(modelo);
 	}
-	
+
 	public static void liberar() {
 		for(SceneAsset m : modelosGltf.values()) {
 			m.scene.model.dispose();
 			m.dispose();
 		}
 		modelosGltf.clear();
-		for(Model m : modelosItens.values()) {
-			m.dispose();
-		}
+		for(Model m : modelosItens.values()) m.dispose();
 		modelosItens.clear();
 	}
 }
+

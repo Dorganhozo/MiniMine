@@ -260,7 +260,7 @@ public class FluxoAgua {
     }
 
     public static void marcarChunk(int cx, int cz) {
-        Chunk c = Mundo.chunks.get(Chave.calcularChave(cx, cz));
+        Chunk c = Mundo.obterChunk(cx, cz);
         if(c != null) {
             c.fluxoSujo = true;
             c.att = true;

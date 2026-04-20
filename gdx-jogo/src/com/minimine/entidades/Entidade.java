@@ -80,10 +80,10 @@ public class Entidade {
 			for(int y = minY; y <= maxY; y++) {
 				for(int z = minZ; z <= maxZ; z++) {
 
-					int id = Mundo.obterBlocoMundo(x, y, z);
+					final int id = Mundo.obterBlocoMundo(x, y, z);
 					if(id == 0) continue;
 
-					Bloco b = Bloco.numIds.get(id);
+					final Bloco b = Bloco.numIds.get(id);
 
 					blocoHitbox.set(
 						minVec.set(x, y, z),

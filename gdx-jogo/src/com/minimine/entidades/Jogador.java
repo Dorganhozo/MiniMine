@@ -154,9 +154,16 @@ public class Jogador extends Entidade {
 	}
 
 	@Override
+	public boolean tomarDano(int dano) {
+		if(modo == 2) return super.tomarDano(dano);
+		return false;
+	}
+	
+	@Override
 	public void att(float delta) {
 		if(modo == 0) voando = true;
 		if(tempoDuploPulo > 0f) tempoDuploPulo -= delta;
+		
 		super.att(delta);
 
 		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
@@ -264,11 +271,10 @@ public class Jogador extends Entidade {
 		mb.flush();
 		Gdx.gl.glClear(GL20.GL_DEPTH_BUFFER_BIT);
 
-		if(modeloItem == null) mb.render(instancia);
-		else {
-			// mesma base: view invertida, sem o offset do braço
-			modeloItem.transform.set(camera.view);
-			modeloItem.transform.inv();
+		mb.render(instancia);
+		if(modeloItem != null) {
+			modeloItem.transform.set(instancia.transform).mul(itemPos.globalTransform);
+			modeloItem.calculateTransforms();
 			mb.render(modeloItem);
 		}
 	}

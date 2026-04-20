@@ -129,6 +129,7 @@ public class Render {
         Gdx.gl.glCullFace(GL20.GL_BACK);
         Gdx.gl.glEnable(GL20.GL_BLEND);
         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+		Gdx.gl.glFrontFace(GL20.GL_CCW);
 
         shader = new ShaderProgram(vert, frag);
 		ShaderProgram.pedantic = false;
@@ -138,8 +139,8 @@ public class Render {
 
         // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-				Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
-				Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
+			Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
+			Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
 		}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas

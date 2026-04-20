@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import com.minimine.audio.Audio;
 import com.minimine.graficos.TipoRender;
-import com.badlogic.gdx.audio.Music;
 import com.minimine.inventario.ItemRegistro;
 import com.minimine.graficos.Texturas;
+import com.badlogic.gdx.audio.Sound;
 
 public class Bloco {
 	public static List<Bloco> blocos = new ArrayList<>();
@@ -126,7 +126,7 @@ public class Bloco {
 			String[] sonoros = sons.get(bloco);
 			for(int i = 0; i < sonoros.length; i++) {
 				if(Math.random() > 0.6) {
-					Music m = Audio.sons.get(sonoros[i]);
+					Sound m = Audio.sons.get(sonoros[i]);
 					m.play();
 					return;
 				}

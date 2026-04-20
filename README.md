@@ -162,6 +162,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Cache de 4 chunks pra acesso e definição global.
 * Cache de 1 chunk por entidade para luz.
 * Cache de modelos de itens procedurais.
+* Descarte de pixels sobrepostos na criação de modelos dos itens.
 
 ## Ruídos utilitários:
 * OpenSimplex2.java
