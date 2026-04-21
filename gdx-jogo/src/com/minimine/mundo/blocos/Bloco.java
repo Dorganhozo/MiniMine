@@ -16,11 +16,11 @@ public class Bloco {
 	public static HashMap<String, String[]> sons = new HashMap<>();
 	public static int AGUA;
 
-	public CharSequence nome;
-	public int tipo;
-	public String topo, lados, baixo;
-	public int luz;
-	public TipoRender render;
+	public final CharSequence nome;
+	public final int tipo;
+	public final String topo, lados, baixo;
+	public final int luz;
+	public final TipoRender render;
 	public boolean solido, culling, modeloX;
 	public static boolean ABERTO = false;
 	/*
@@ -104,21 +104,13 @@ public class Bloco {
 		BlocoEstrutura.iniciarEventos(texIds.get("bloco_estrutura"));
 	}
 
-	public String texturaId(int faceId) {
-        switch(faceId) {
-            case 0: return topo;
-            case 1: return baixo;
-            default: return lados;
-        }
-    }
-
+	public static void addSom(String bloco, String... sonoros) {
+		sons.put(bloco, sonoros);
+	}
+	
 	public static Bloco add(Bloco b) {
 		blocos.add(b);
 		return b;
-	}
-
-	public static void addSom(String bloco, String... sonoros) {
-		sons.put(bloco, sonoros);
 	}
 
 	public static void tocarSom(Object bloco) {
@@ -150,5 +142,12 @@ public class Bloco {
 		Bloco.texIds.clear();
 		Bloco.sons.clear();
 	}
+	
+	public final String texturaId(int faceId) {
+        switch(faceId) {
+            case 0: return topo;
+            case 1: return baixo;
+            default: return lados;
+        }
+    }
 }
-

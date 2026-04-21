@@ -33,6 +33,8 @@ import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Matrix4;
+import com.minimine.mundo.Chave;
+import com.minimine.entidades.ItemMundo;
 
 public class Jogador extends Entidade {
 	public int modo = 2;
@@ -63,7 +65,7 @@ public class Jogador extends Entidade {
 	public Quaternion rotPernaEsq = new Quaternion();
 
 	public ModelInstance modeloItem;
-	
+
 	public Jogador() {
 		super();
 		vida = 20;
@@ -92,8 +94,10 @@ public class Jogador extends Entidade {
 	@Override
 	public void morreu() {
 		posicao = new Vector3(0f, 0f, 0f);
-		posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
 		Mundo.limparChunks(0, 0);
+		final long chave = Chave.calcularChave(0, 0);
+		Mundo.chunks.put(chave, Mundo.chunksMod.get(chave));
+		posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
 		Mundo.carregado = false;
 		velocidade.set(0, 0, 0);
 		vida = vidaMax;
@@ -102,15 +106,15 @@ public class Jogador extends Entidade {
 
 	public void interagirBloco() {
 		final Ray raio = camera.getPickRay(
-			Gdx.graphics.getWidth() / 2f,
-			Gdx.graphics.getHeight() / 2f
+			Gdx.graphics.getWidth() >> 1,
+			Gdx.graphics.getHeight() >> 1
 		);
-		float olhoX = raio.origin.x;
-		float olhoY = raio.origin.y;
-		float olhoZ = raio.origin.z;
-		float dirX = raio.direction.x;
-		float dirY = raio.direction.y;
-		float dirZ = raio.direction.z;
+		final float olhoX = raio.origin.x;
+		final float olhoY = raio.origin.y;
+		final float olhoZ = raio.origin.z;
+		final float dirX = raio.direction.x;
+		final float dirY = raio.direction.y;
+		final float dirZ = raio.direction.z;
 
 		for(float t = 0; t < ALCANCE; t += 0.10f) {
 			final int x = Mat.floor(olhoX + dirX * t);
@@ -121,7 +125,13 @@ public class Jogador extends Entidade {
 
 			if(bloco != null) {
 				if(item.equals("ar") || bloco.render == TipoRender.LIQUIDO) {
-					if(modo == 2) inv.addItem(bloco.nome, 1);
+					if(modo == 2) {
+						final ItemMundo deixado = new ItemMundo(
+							bloco.nome, 1,
+							x + 0.5f, y + 0.5f, z + 0.5f
+						);
+						Mundo.entidades.add(deixado);
+					}
 					Mundo.defBlocoMundo(x, y, z, item);
 					Bloco.tocarSom(bloco.nome);
 					if(bloco.evento != null) bloco.evento.aoDestruir(x, y, z);
@@ -130,9 +140,9 @@ public class Jogador extends Entidade {
 						bloco.ui.abrir(x, y, z);
 						return;
 					}
-					int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
-					int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));
-					int zAnt = Mat.floor(olhoZ + dirZ * (t - 0.25f));
+					final int xAnt = Mat.floor(olhoX + dirX * (t - 0.25f));
+					final int yAnt = Mat.floor(olhoY + dirY * (t - 0.25f));
+					final int zAnt = Mat.floor(olhoZ + dirZ * (t - 0.25f));
 
 					if(Mundo.obterBlocoMundo(xAnt, yAnt, zAnt) == 0) {
 						blocoHitbox.set(minVec.set(xAnt, yAnt, zAnt), maxVec.set(xAnt + 1, yAnt + 1, zAnt + 1));
@@ -141,10 +151,10 @@ public class Jogador extends Entidade {
 
 						Mundo.defBlocoMundo(xAnt, yAnt, zAnt, inv.itens[inv.slotSelecionado].nome);
 						Bloco.tocarSom(item);
-						Bloco blocoColocado = Bloco.texIds.get(item);
-						if(blocoColocado != null && blocoColocado.evento != null)
+						final Bloco blocoColocado = Bloco.texIds.get(item);
+						if(blocoColocado != null && blocoColocado.evento != null) {
 							blocoColocado.evento.aoColocar(xAnt, yAnt, zAnt);
-
+						}
 						if(modo == 2) inv.rmItem(inv.slotSelecionado, 1);
 					}
 				}
@@ -158,15 +168,39 @@ public class Jogador extends Entidade {
 		if(modo == 2) return super.tomarDano(dano);
 		return false;
 	}
-	
+
 	@Override
 	public void att(float delta) {
 		if(modo == 0) voando = true;
 		if(tempoDuploPulo > 0f) tempoDuploPulo -= delta;
-		
+
 		super.att(delta);
 
-		Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
+		// coleta drops próximos
+		final java.util.Iterator<Entidade> deixados = Mundo.entidades.iterator();
+		while(deixados.hasNext()) {
+			final Entidade e = deixados.next();
+			if(!(e instanceof ItemMundo)) continue;
+			final ItemMundo deixado = (ItemMundo)e;
+
+			if(deixado.tempoVida <= 0f) {
+				deixados.remove();
+				continue;
+			}
+			final float dist = posicao.dst(deixado.posicao);
+
+			// magnetismo: puxa o item quando perto o suficiente
+			if(dist < ItemMundo.RAIO_ATRACAO) {
+				float vel = 8f * (1f - dist / ItemMundo.RAIO_ATRACAO);
+				deixado.posicao.lerp(posicao, vel * delta);
+			}
+			// coleta efetiva
+			if(dist < ItemMundo.RAIO_COLETA) {
+				inv.addItem(deixado.nome, deixado.quantidade);
+				deixados.remove();
+			}
+		}
+		final Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
 		if(itemInv != null && itemInv.nome != item) item = itemInv.nome;
 		else if(itemInv == null) item = "ar";
 
@@ -290,6 +324,7 @@ public class Jogador extends Entidade {
 
 		instancia.nodes.clear();
 		instancia.nodes.add(bracoDir);
+		instancia.nodes.add(itemPos);
 	}
 
 	public void salvarRotacoes() {
@@ -301,3 +336,4 @@ public class Jogador extends Entidade {
 		if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
 	}
 }
+

@@ -56,6 +56,7 @@ public class Jogo implements Screen {
     @Override
     public void dispose() {
 		mundo.carregado = false;
+		ArquivosUtil.svMundo(mundo, jogador);
 		relogio.cancel();
 		render.liberar();
 		Bloco.liberar();
@@ -63,6 +64,7 @@ public class Jogo implements Screen {
 	
 	@Override
 	public void resize(int v, int h) {
+		ArquivosUtil.svMundo(mundo, jogador);
 		render.ui.ajustar(v, h);
 		LuaAPI.ajustar(v, h);
 	}
@@ -72,6 +74,9 @@ public class Jogo implements Screen {
 		ArquivosUtil.svMundo(mundo, jogador);
 		dispose();
 	}
-	@Override public void pause() {}
+	@Override
+	public void pause() {
+		ArquivosUtil.svMundo(mundo, jogador);
+	}
 	@Override public void resume() {}
 }

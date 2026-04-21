@@ -302,7 +302,7 @@ public class UI implements InputProcessor {
 				public void aoSoltar() {}
 			});
         botoesDpad.put("menu_principal", new BotaoDpad(Texturas.atlas.get("receita"), 0) {
-				public void aoTocar()  { MenuPause.alternarMenu(); }
+				public void aoTocar() { MenuPause.alternarMenu(); }
 				public void aoSoltar() {}
 			});
     }
@@ -313,11 +313,11 @@ public class UI implements InputProcessor {
             defPosMira(v, h);
             return;
         }
-        float dp = Gdx.graphics.getDensity();
-        float tam = botoesTam * dp;
-        float gap = 4 * dp; // 4dp de espaço entre botões
-        float passo = tam + gap;
-        float marg = (botoesTam - 16) * dp; // 16dp de margem das bordas
+        final float dp = Gdx.graphics.getDensity();
+        final float tam = botoesTam * dp;
+        final float gap = 4 * dp; // 4dp de espaço entre botões
+        final float passo = tam + gap;
+        final float marg = (botoesTam - 16) * dp; // 16dp de margem das bordas
 
         // redimensiona todos os botões pro tamanho dp correto
         redimensionarBotoes(tam);
@@ -387,7 +387,7 @@ public class UI implements InputProcessor {
 
     public void defPosMira(int v, int h) {
         if(spriteMira == null) {
-            TextureRegion r = Texturas.atlas.get("mira");
+            final TextureRegion r = Texturas.atlas.get("mira");
             if(r != null) {
 				spriteMira = new Sprite(r);
 				spriteMira.setSize(40f, 40f);
@@ -465,8 +465,8 @@ public class UI implements InputProcessor {
         // hotbar
         for(int i = 0; i < inv.rectsHotbar.length; i++) {
             if(inv.rectsHotbar[i] == null) continue;
-            float rx = inv.rectsHotbar[i].x, ry = inv.rectsHotbar[i].y;
-            float rv = inv.rectsHotbar[i].width, rh = inv.rectsHotbar[i].height;
+            final float rx = inv.rectsHotbar[i].x, ry = inv.rectsHotbar[i].y;
+            final float rv = inv.rectsHotbar[i].width, rh = inv.rectsHotbar[i].height;
 
 			sb.draw(inv.texSlot, rx, ry, rv, rh);
             if(i == inv.slotSelecionado) {
@@ -485,8 +485,8 @@ public class UI implements InputProcessor {
         // inventario completo
         if(inv.aberto) {
             for(int i = 0; i < inv.rects.length; i++) {
-                float rx = inv.rects[i].x, ry = inv.rects[i].y;
-                float rv = inv.rects[i].width, rh = inv.rects[i].height;
+                final float rx = inv.rects[i].x, ry = inv.rects[i].y;
+                final float rv = inv.rects[i].width, rh = inv.rects[i].height;
 
 				sb.draw(inv.texSlot, rx, ry, rv, rh);
 
@@ -502,8 +502,8 @@ public class UI implements InputProcessor {
         }
         // item flutuante
         if(inv.itemFlutuante != null) {
-			float posX = inv.posFlutuante.x - inv.itemFlutuante.textura.getRegionWidth() / 2;
-			float posY = inv.posFlutuante.y - inv.itemFlutuante.textura.getRegionHeight() / 2;
+			final float posX = inv.posFlutuante.x - inv.itemFlutuante.textura.getRegionWidth() / 2;
+			final float posY = inv.posFlutuante.y - inv.itemFlutuante.textura.getRegionHeight() / 2;
 
 			sb.draw(inv.itemFlutuante.textura, posX, posY, inv.tamSlot - 10, inv.tamSlot - 10);
             if(inv.itemFlutuante.quantidade > 1) {
@@ -513,21 +513,22 @@ public class UI implements InputProcessor {
         }
         // botão de catalogo criativo(acima do ultimo slot do inventario)
         if(jg.modo == 1 && !paginaItens.aberta && inv.aberto) {
-            TextureRegion texAcao = Texturas.atlas.get("clique");
+            final TextureRegion texAcao = Texturas.atlas.get("clique");
             if(texAcao != null && inv.rects != null && inv.rects.length > 0) {
-                Rectangle ultimoSlot = inv.rects[inv.rects.length - 1];
+                final Rectangle ultimoSlot = inv.rects[inv.rects.length - 1];
                 sb.draw(texAcao,
-						ultimoSlot.x,
-						ultimoSlot.y + inv.tamSlot + 4,
-						inv.tamSlot, inv.tamSlot);
+					ultimoSlot.x,
+					ultimoSlot.y + inv.tamSlot + 4,
+					inv.tamSlot, inv.tamSlot
+				);
             }
         }
     }
 
     public void renderizarVida(SpriteBatch sb) {
-        TextureRegion coracaoCompleto = Texturas.atlas.get("coracao_completo");
-        TextureRegion coracaoMetade = Texturas.atlas.get("coracao_metade");
-        TextureRegion coracaoVazio = Texturas.atlas.get("coracao_vazio");
+        final TextureRegion coracaoCompleto = Texturas.atlas.get("coracao_completo");
+        final TextureRegion coracaoMetade = Texturas.atlas.get("coracao_metade");
+        final TextureRegion coracaoVazio = Texturas.atlas.get("coracao_vazio");
         if(coracaoCompleto == null || coracaoMetade == null || coracaoVazio == null) return;
 
         int totalCoracoes = jg.vidaMax >> 1; // 20 vida = 10 corações
@@ -537,12 +538,12 @@ public class UI implements InputProcessor {
         float hotbarY = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
             ? jg.inv.rectsHotbar[0].y + jg.inv.tamSlot + 4f
             : 30f;
-        float startX = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
+        float inicioX = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
             ? jg.inv.rectsHotbar[0].x
             : 10f;
 
         for(int i = 0; i < totalCoracoes; i++) {
-            float x = startX + i * (tamCoracao + espCoracao);
+            float x = inicioX + i * (tamCoracao + espCoracao);
             float y = hotbarY;
 
             int vidaEsseCoracao = jg.vida - i * 2;
@@ -609,8 +610,8 @@ public class UI implements InputProcessor {
 
     // camera
     public static void attCamera(Vector3 vetor, float yaw, float tom) {
-        float yawRad = yaw * MathUtils.degRad;
-        float tomRad = tom * MathUtils.degRad;
+        final float yawRad = yaw * MathUtils.degRad;
+        final float tomRad = tom * MathUtils.degRad;
         vetor.set(
             MathUtils.cos(tomRad) * MathUtils.sin(yawRad),
             MathUtils.sin(tomRad),

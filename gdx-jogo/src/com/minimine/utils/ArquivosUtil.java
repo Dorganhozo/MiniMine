@@ -311,15 +311,11 @@ public class ArquivosUtil {
 			chunk.meta = MemNativa.alocarZerado(metaTam);
 			for(int d = 0; d < metaTam; d++) MemNativa.gravarInt(chunk.meta, d, dis.readShort());
 
-            if(mundo.chunksMod == null) mundo.chunksMod = new ConcurrentHashMap<Long, Chunk>();
-            if(mundo.chunks == null) mundo.chunks = new ConcurrentHashMap<Long, Chunk>();
-
             mundo.chunksMod.put(chave, chunk);
 			mundo.chunks.put(chave, chunk);
 
             chunk.att = true;
 			chunk.dadosProntos = true;
-			ChunkLuz.calcularLuz(chunk);
 			mundo.estados.put(chave, 2);
         }
     }

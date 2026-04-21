@@ -39,7 +39,7 @@ import com.minimine.utils.MemNativa;
 public class Mundo {
     public static String nome = "novo mundo";
 
-    public static List<Entidade> entidades = new ArrayList<>();
+    public static final List<Entidade> entidades = new ArrayList<>();
     public static RegistroCriaturas registroCriaturas;
 
     public static float GRAVIDADE = -30f;
@@ -47,10 +47,13 @@ public class Mundo {
     public static final List<Chunk> praLiberar = new ArrayList<>();
     public static final List<Long> praRemover = new ArrayList<>();
 
-    public static Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
-    public static Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
-	
-	public static Chunk[] chunkCache = new Chunk[4];
+    public static final Map<Long, Chunk> chunks = new ConcurrentHashMap<>();
+    public static final Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
+
+	// Em Mundo.java
+	public static volatile Chunk[] chunkCache = {null, null, null, null};
+	public static final java.util.concurrent.atomic.AtomicInteger proximoCache = 
+    new java.util.concurrent.atomic.AtomicInteger(0);
     /*
      * estados:
      *   0 = vazia, sem dados
@@ -59,7 +62,7 @@ public class Mundo {
      *   2 = estruturas prontas
      *   3 = luz pronta
      *   4 = malha pronta
-    */
+	 */
     public static final Map<Long, Integer> estados = new ConcurrentHashMap<>();
     /*
      * filaEstrutura: estruturas que extrapolaram os limites de uma chunk durante a
@@ -70,8 +73,8 @@ public class Mundo {
     public static final Map<Long, int[]> filaEstrutura = new ConcurrentHashMap<>();
     // tamanho atual(entradas, não ints) de cada fila, separado do array pra crescimento sem realocar o mapa
     public static final Map<Long, int[]> filaTam = new ConcurrentHashMap<>();
-    private static final int FILA_CAMPOS = 5;
-    private static final int FILA_CAP_INICIAL = 32; // entradas
+    public static final int FILA_CAMPOS = 5;
+    public static final int FILA_CAP_INICIAL = 32; // entradas
 
     public static final int TAM_CHUNK = 16, Y_CHUNK = 256;
     public static final int CHUNK_AREA = TAM_CHUNK * TAM_CHUNK;
@@ -114,7 +117,9 @@ public class Mundo {
 
         if(!carregado && estados.size() >= 1) {
             Integer est = estados.get(Chave.calcularChave((int)jg.posicao.x >> 4, (int)jg.posicao.z >> 4));
-            if(est != null && est == 4) carregado = true;
+            if(est != null && est == 4) {
+				carregado = true;
+			}
         }
         if(carregado) {
             GerenciadorEntidades.att(delta, this, jg);
@@ -171,18 +176,18 @@ public class Mundo {
     }
 
     // === ACESSO ===
-    public static int obterBlocoMundo(int x, int y, int z) {
+    public static final int obterBlocoMundo(int x, int y, int z) {
         if(y < 0 || y >= Y_CHUNK) return 0;
-		int posX = x >> 4;
-		int posZ = z >> 4;
-		
-		Chunk chunk = obterChunk(posX, posZ);
+		final int posX = x >> 4;
+		final int posZ = z >> 4;
+
+		final Chunk chunk = obterChunk(posX, posZ);
         if(chunk == null) return Bloco.texIds.get("pedra").tipo;
         return ChunkUtil.obterBloco(x & 0xF, y, z & 0xF, chunk);
     }
 
     public static void defBlocoMundo(int x, int y, int z, CharSequence bloco) {
-		Bloco b = Bloco.texIds.get(bloco);
+		final Bloco b = Bloco.texIds.get(bloco);
 		defBlocoMundo(x, y, z, b != null ? b.tipo : 0);
 	}
 	public static void defBlocoMundo(int x, int y, int z, int bloco) {
@@ -193,17 +198,13 @@ public class Mundo {
         final long chave = Chave.calcularChave(chunkX, chunkZ);
 
 		final Chunk chunk = obterChunk(chunkX, chunkZ);
-		
-        if(chunk == null) {
-            Gdx.app.log("Mundo", "chunk null na posição X: " + chunkX + ", Z: " + chunkZ);
-            return;
-        }
-        int localX = x & 0xF;
-        int localZ = z & 0xF;
 
-        int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
+        final int localX = x & 0xF;
+        final int localZ = z & 0xF;
 
-        boolean eraEmissor = blocoAntigoId != 0 && Bloco.numIds.get(blocoAntigoId).luz > 0;
+        final int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
+
+        final boolean eraEmissor = blocoAntigoId != 0 && Bloco.numIds.get(blocoAntigoId).luz > 0;
 
         if(blocoAntigoId != 0 && bloco != 0) {
             Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
@@ -213,23 +214,53 @@ public class Mundo {
 
         if(eraEmissor) ChunkLuz.zerarLuz(chunk);
 
-        boolean novoEhAgua = bloco != 0 && bloco== Bloco.AGUA;
-        boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
-        if(novoEhAgua) {
-            ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
-            chunk.fluxoSujo = true;
-        } else if(antigoEraAgua ||
-                  FluxoAgua.eAgua(obterBlocoMundo(x + 1, y, z)) ||
-                  FluxoAgua.eAgua(obterBlocoMundo(x - 1, y, z)) ||
-                  FluxoAgua.eAgua(obterBlocoMundo(x, y, z + 1)) ||
-                  FluxoAgua.eAgua(obterBlocoMundo(x, y, z - 1)) ||
-                  FluxoAgua.eAgua(obterBlocoMundo(x, y + 1, z)) ||
-                  FluxoAgua.eAgua(obterBlocoMundo(x, y - 1, z))) {
-            FluxoAgua.recalcularFluxo(chunk);
-            FluxoAgua.marcarSujo(chunkX, chunkZ);
-        }
-        ChunkLuz.attLuzVizinhas(chunk);
+        boolean novoEhAgua = bloco != 0 && bloco == Bloco.AGUA;
+		boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
 
+		if(novoEhAgua) {
+			ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
+			chunk.fluxoSujo = true;
+		} else if(antigoEraAgua) {
+			// bloco que era agua foi removido: recalcula
+			FluxoAgua.recalcularFluxo(chunk);
+			FluxoAgua.marcarSujo(chunkX, chunkZ);
+		} else if(chunk.fluxoSujo) {
+			// so verifica vizinhos se ja sabe que tem agua por perto nesse chunk
+			if(FluxoAgua.eAgua(obterBlocoMundo(x + 1, y, z)) ||
+			   FluxoAgua.eAgua(obterBlocoMundo(x - 1, y, z)) ||
+			   FluxoAgua.eAgua(obterBlocoMundo(x, y, z + 1)) ||
+			   FluxoAgua.eAgua(obterBlocoMundo(x, y, z - 1)) ||
+			   FluxoAgua.eAgua(obterBlocoMundo(x, y + 1, z)) ||
+			   FluxoAgua.eAgua(obterBlocoMundo(x, y - 1, z))) {
+				FluxoAgua.recalcularFluxo(chunk);
+				FluxoAgua.marcarSujo(chunkX, chunkZ);
+			}
+		}
+        // marca luz suja de forma assincrona, o recalculo acontece no ciclo normal
+        // do limparChunks, evitando rodar 9x attLuzCompleta na thread GL
+        chunk.luzSuja = true;
+        chunk.att = true;
+        Chunk luzAdj;
+        luzAdj = obterChunk(chunkX + 1, chunkZ);
+		if(luzAdj != null) {
+			luzAdj.luzSuja = true;
+			luzAdj.att = true;
+		}
+        luzAdj = obterChunk(chunkX - 1, chunkZ);
+		if(luzAdj != null) {
+			luzAdj.luzSuja = true;
+			luzAdj.att = true;
+		}
+        luzAdj = obterChunk(chunkX, chunkZ + 1);
+		if(luzAdj != null) {
+			luzAdj.luzSuja = true;
+			luzAdj.att = true;
+		}
+        luzAdj = obterChunk(chunkX, chunkZ - 1);
+		if(luzAdj != null) {
+			luzAdj.luzSuja = true;
+			luzAdj.att = true;
+		}
         // marca vizinhas de borda pra reconstruir malha
         Chunk chunkAdj;
         if(localX == 0) {
@@ -310,24 +341,23 @@ public class Mundo {
         }
         return 80;
     }
-	
-	public static int proximo = 0;
 
-	public static Chunk obterChunk(int x, int z) {
-		if(chunkCache[0] != null && chunkCache[0].x == x && chunkCache[0].z == z)
-			return chunkCache[0];
-		if(chunkCache[1] != null && chunkCache[1].x == x && chunkCache[1].z == z)
-			return chunkCache[1];
-		if(chunkCache[2] != null && chunkCache[2].x == x && chunkCache[2].z == z)
-			return chunkCache[2];
-		if(chunkCache[3] != null && chunkCache[3].x == x && chunkCache[3].z == z)
-			return chunkCache[3];
+	public static final Chunk obterChunk(int x, int z) {
+		final Chunk[] cache = chunkCache; // bota no registrador ao inves de chamar static
+		if(cache[0] != null && cache[0].x == x && cache[0].z == z)
+			return cache[0];
+		if(cache[1] != null && cache[1].x == x && cache[1].z == z)
+			return cache[1];
+		if(cache[2] != null && cache[2].x == x && cache[2].z == z)
+			return cache[2];
+		if(cache[3] != null && cache[3].x == x && cache[3].z == z)
+			return cache[3];
 
-		Chunk chunk = chunks.get(Chave.calcularChave(x, z));
+		final Chunk chunk = chunks.get(Chave.calcularChave(x, z));
 		if(chunk == null) return null;
 
-		chunkCache[proximo] = chunk;
-		proximo = (proximo + 1) % 4;
+		final int slot = proximoCache.getAndIncrement() & 3; 
+		cache[slot] = chunk;
 
 		return chunk;
 	}
@@ -388,7 +418,7 @@ public class Mundo {
         final long chave = Chave.calcularChave(x, z);
 
         if(chunks.containsKey(chave)) {
-            int estado = estados.getOrDefault(chave, 0);
+            final int estado = estados.getOrDefault(chave, 0);
             if(estado == 1 && vizinhosComDados(x, z)) {
                 processarEstruturas(chave);
             } else if(estado == 2 && vizinhosComEstruturas(x, z)) {
@@ -399,7 +429,7 @@ public class Mundo {
             return;
         }
         // chunk modificada pelo jogador: recarrega com luz recalculada
-        Chunk modificado = chunksMod.get(chave);
+        final Chunk modificado = chunksMod.get(chave);
         if(modificado != null) {
             chunks.put(chave, modificado);
             ChunkLuz.calcularLuz(modificado);
@@ -407,7 +437,7 @@ public class Mundo {
             return;
         }
         // nova chunk: gera do zero
-        Chunk novo = new Chunk();
+        final Chunk novo = new Chunk();
         novo.x = x;
 		novo.z = z;
         novo.meta = MemNativa.alocarZerado(Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK);
@@ -468,7 +498,7 @@ public class Mundo {
      *   vizinha em estado 0 ou >= 2 -> enfileira em filaEstrutura[vizinha]
 
      * transitorio 11 evita disparo duplo da mesma chunk por duas threads
-   */
+	 */
     public static void processarEstruturas(final long chave) {
         final Chunk chunk = chunks.get(chave);
         if(chunk == null) return;
@@ -491,32 +521,32 @@ public class Mundo {
 						}
 						for(int z = 0; z < 16; z++) {
 							for(int x = 0; x < 16; x++) {
-								int idc = (z << 4) + x;
-								int topo = Mundo.Y_CHUNK - 1;
+								final int idc = (z << 4) + x;
+								int topo = Y_CHUNK - 1;
 								while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
 								ctx.topoMapa[idc] = topo;
 								float calor = ctx.calorMapa[idc];
-								float umidade = ctx.umidadeMapa[idc];
+								final float umidade = ctx.umidadeMapa[idc];
 								calor = Math.max(0f, Math.min(1f, calor - (float)((topo - MotorGeracao.NIVEL_MAR) * 0.004)));
 								ctx.biomaMapa[idc] = registroBiomas.selecionar(calor, umidade, topo);
 							}
 						}
 						// 1. aplica estruturas pendentes que outras chunks enfileiraram pra esta
-						int[] pendentes;
-						int[] tamArr;
+						final int[] pendentes;
+						final int[] tamArr;
 						synchronized(filaEstrutura) {
 							pendentes = filaEstrutura.remove(chave);
 							tamArr = filaTam.remove(chave);
 						}
 						if(pendentes != null && tamArr != null) {
-							int total = tamArr[0];
+							final int total = tamArr[0];
 							for(int i = 0; i < total; i++) {
-								int base = i * FILA_CAMPOS;
-								int lx = pendentes[base];
-								int ly = pendentes[base + 1];
-								int lz = pendentes[base + 2];
-								int id = pendentes[base + 3];
-								short meta = (short)pendentes[base + 4];
+								final int base = i * FILA_CAMPOS;
+								final int lx = pendentes[base];
+								final int ly = pendentes[base + 1];
+								final int lz = pendentes[base + 2];
+								final int id = pendentes[base + 3];
+								final short meta = (short)pendentes[base + 4];
 								if(ly >= 0 && ly < 256) {
 									ChunkUtil.defBloco(lx, ly, lz, id, chunk);
 									if(meta != 0) ChunkUtil.defMeta(lx, ly, lz, meta, chunk);
@@ -537,7 +567,7 @@ public class Mundo {
      * estado 2 -> 3: calcula luz
      * exige vizinhosComEstruturas para que a luz não vaze em buracos de estruturas
      * que ainda não chegaram nas vizinhas
-    */
+	 */
     public static void calcularLuz(final long chave) {
         final Chunk chunk = chunks.get(chave);
         if(chunk == null) return;
@@ -620,11 +650,11 @@ public class Mundo {
      * se a chunk alvo ainda não chegou ao estado 2: enfileira para aplicar em processarEstruturas
      * se a chunk alvo ja passou do estado 1(>= 2): aplica imediatamente e marca para
      *   recalcular luz e malha: o bloco chegou atrasado mas ainda pode ser corrigido
-    */
+	 */
 	public static ThreadLocal<int[]> filaBuffer = new ThreadLocal<int[]>() {
 		public int[] initialValue() { return new int[FILA_CAP_INICIAL * FILA_CAMPOS]; }
 	};
-	
+
     public static void enfileirarEstrutura(long chaveAlvo, EstruturaPendente pendente) {
         int estadoAlvo = estados.getOrDefault(chaveAlvo, 0);
         if(estadoAlvo >= 2) {
@@ -639,7 +669,7 @@ public class Mundo {
         }
         // chunk alvo ainda não processou estruturas: enfileira no buffer compacto
         synchronized(filaEstrutura) {
-            int[] tam = filaTam.get(chaveAlvo);
+            final int[] tam = filaTam.get(chaveAlvo);
             int[] buf = filaEstrutura.get(chaveAlvo);
             if(buf == null) {
                 buf = filaBuffer.get();
@@ -650,12 +680,12 @@ public class Mundo {
             int n = tam[0];
             if(n * FILA_CAMPOS >= buf.length) {
                 // cresce 1.5x
-                int[] novo = new int[buf.length + (buf.length >> 1)];
+                final int[] novo = new int[buf.length + (buf.length >> 1)];
                 System.arraycopy(buf, 0, novo, 0, buf.length);
                 buf = novo;
                 filaEstrutura.put(chaveAlvo, buf);
             }
-            int base = n * FILA_CAMPOS;
+            final int base = n * FILA_CAMPOS;
             buf[base] = pendente.lx;
             buf[base + 1] = pendente.ly;
             buf[base + 2] = pendente.lz;
@@ -664,14 +694,5 @@ public class Mundo {
             tam[0]++;
         }
     }
-
-    // === UTIL ===
-    public static String decodificarNome(String nome) {
-        try {
-            return URLDecoder.decode(nome, StandardCharsets.UTF_8.name());
-        } catch(UnsupportedEncodingException e) {
-            Gdx.app.error("[Mundo]", "erro ao decodificar nome: " + e);
-            return "Desconhecido";
-        }
-    }
 }
+

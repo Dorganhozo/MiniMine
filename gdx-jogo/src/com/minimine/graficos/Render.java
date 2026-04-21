@@ -330,7 +330,7 @@ public class Render {
 		// dist2(distancia ao quadrado)
 		if(!(Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z) < raioLimite)) return false;
 
-		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 255, 16);
+		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 256, 16);
 	}
 
     public void liberar() {
@@ -346,5 +346,3 @@ public class Render {
 		Animacoes2D.liberar();
     }
 }
-
-

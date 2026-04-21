@@ -28,7 +28,7 @@ public class ChunkUtil {
 	}
 
 	public static short obterMeta(int x, int y, int z, Chunk chunk) {
-		synchronized(chunk) { return (short) MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)); }
+		synchronized(chunk) { return (short)MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)); }
 	}
 
 	public static void defMeta(int x, int y, int z, short valor, Chunk chunk) {
@@ -98,7 +98,7 @@ public class ChunkUtil {
 	}
 
 	// chamado apenas dentro de synchronized(chunk)
-	private static void defBlocoInterno(int x, int y, int z, int bloco, Chunk chunk) {
+	public static void defBlocoInterno(int x, int y, int z, int bloco, Chunk chunk) {
 		final int total = x + (z << 4) + (y << 8);
 		// se ta em modo paleta, tenta usar/expandir paleta
 		if(chunk.usaPaleta) {
@@ -175,7 +175,7 @@ public class ChunkUtil {
 	public static int bitsPraMaxId(int maxId) {
 		// lerPacote/gravarPacote usam bit-shift assumindo que blocosPorInt é potencia de 2
 		// isso so é verdade quando bits e {1, 2, 4, 8} -> blocosPorInt e {32, 16, 8, 4}.
-		// valores como 3, 5, 6, 7 resultam em blocosPorInt ímpar e corrompem o indice
+		// valores como 3, 5, 6, 7 resultam em blocosPorInt impar e corrompem o indice
 		if(maxId <= 1)  return 1; // 32 blocos/int
 		else if(maxId <= 3)  return 2; // 16 blocos/int
 		else if(maxId <= 15) return 4; //  8 blocos/int

@@ -35,6 +35,8 @@ import com.micro.PainelRolavel;
 import com.micro.CaixaDialogo;
 import com.micro.PainelFatiado;
 import com.micro.GerenciadorUI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public class MundoMenu implements Screen, InputProcessor {
     public SpriteBatch pincel;
@@ -174,8 +176,12 @@ public class MundoMenu implements Screen, InputProcessor {
 
             for(int i = 0; i < nomesMundos.size(); i++) {
                 final String nomeArquivo = nomesMundos.get(i);
-                final String nomeMundo = Mundo.decodificarNome(nomeArquivo);
-
+				final String nomeMundo;
+                try {
+					nomeMundo = URLDecoder.decode(nomeArquivo, StandardCharsets.UTF_8.name());
+				} catch(Exception e) {
+					nomeMundo = null;
+				}
                 float y = 5 + (i * (alturaLinha + espacamento));
                 ItemLinha linha = new ItemLinha(5, y, 750, alturaLinha, pixelBranco);
 

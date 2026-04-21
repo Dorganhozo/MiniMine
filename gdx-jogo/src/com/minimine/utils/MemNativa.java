@@ -7,12 +7,12 @@ public final class MemNativa {
         carregarBiblioteca();
     }
 
-    private static void carregarBiblioteca() {
+    public static void carregarBiblioteca() {
         String os = System.getProperty("os.name").toLowerCase();
         String arq = System.getProperty("os.arch").toLowerCase();
 
         String nome;
-        if (os.contains("win")) {
+        if(os.contains("win")) {
             nome = "memnativa.dll";
         } else if (os.contains("mac")) {
             nome = "libmemnativa.dylib";
@@ -21,7 +21,7 @@ public final class MemNativa {
         }
         // caminho dentro do jar: /libs/x86_64/libmemnativa.so etc
         String pasta;
-        if (arq.contains("aarch64") || arq.contains("arm64")) {
+        if(arq.contains("aarch64") || arq.contains("arm64")) {
             pasta = "arm64-v8a";
         } else if (arq.contains("amd64") || arq.contains("x86_64")) {
             pasta = "x86_64";
@@ -31,7 +31,7 @@ public final class MemNativa {
         String recurso = "/libs/" + pasta + "/" + nome;
         try {
             InputStream en = MemNativa.class.getResourceAsStream(recurso);
-            if (en == null) {
+            if(en == null) {
                 // em caso de erro pro carregamento normal
                 System.loadLibrary("memnativa");
                 return;
@@ -41,11 +41,11 @@ public final class MemNativa {
             FileOutputStream saida = new FileOutputStream(temp);
             byte[] buf = new byte[4096];
             int n;
-            while ((n = en.read(buf)) != -1) saida.write(buf, 0, n);
+            while((n = en.read(buf)) != -1) saida.write(buf, 0, n);
             en.close();
             saida.close();
             System.load(temp.getAbsolutePath());
-        } catch (Exception e) {
+        } catch(Exception e) {
             throw new RuntimeException("Falha ao carregar memnativa: " + recurso, e);
         }
     }
