@@ -28,13 +28,12 @@ public class ChunkUtil {
 	}
 
 	public static short obterMeta(int x, int y, int z, Chunk chunk) {
-		synchronized(chunk) { return (short)MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)); }
+		synchronized(chunk) { return chunk.meta[x + (z << 4) + (y << 8)]; }
 	}
-
 	public static void defMeta(int x, int y, int z, short valor, Chunk chunk) {
-		synchronized(chunk) { MemNativa.gravarInt(chunk.meta, x + (z << 4) + (y << 8), valor); }
+		synchronized(chunk) { chunk.meta[x + (z << 4) + (y << 8)] = valor; }
 	}
-
+	
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x < 0 || x >= 16 || y < 0 || y >= 256 || z < 0 || z >= 16) {
 			return false;
@@ -88,12 +87,12 @@ public class ChunkUtil {
 	public static void defBlocoEMeta(int x, int y, int z, Chunk chunk, int nivelNovo, boolean jaEhAgua) {
 		synchronized(chunk) {
 			if(jaEhAgua) {
-				int nivelAtual = MemNativa.lerInt(chunk.meta, x + (z << 4) + (y << 8)) & 0xFF;
+				int nivelAtual = chunk.meta[x + (z << 4) + (y << 8)] & 0xFF;
 				if(nivelAtual != 0xFF && nivelNovo >= nivelAtual) return;
 			} else {
 				defBlocoInterno(x, y, z, com.minimine.mundo.blocos.Bloco.texIds.get("agua").tipo, chunk);
 			}
-			MemNativa.gravarInt(chunk.meta, x + (z << 4) + (y << 8), nivelNovo);
+			chunk.meta[x + (z << 4) + (y << 8)] = (short) nivelNovo;
 		}
 	}
 

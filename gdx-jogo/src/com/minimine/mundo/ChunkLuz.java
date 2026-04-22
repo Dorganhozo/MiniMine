@@ -34,12 +34,12 @@ public class ChunkLuz {
         for(int x = 0; x < 16; x++) {
             for(int z = 0; z < 16; z++) {
                 int luzSolarAtual = 15;
-                int posXZ = x + (z << 4);
+                final int posXZ = x + (z << 4);
 
                 for(int y = Y_MAX; y >= 0; y--) {
-                    int idc = posXZ + (y << 8);
+                    final int idc = posXZ + (y << 8);
 
-                    int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
+                    final int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
                     Bloco b = Bloco.numIds.get(blocoId);
 
                     if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
@@ -86,14 +86,19 @@ public class ChunkLuz {
                     int lsV = luzVizinha >> 4;
 
                     boolean mudou = false;
-                    if(lbV < lb - 1 && lb > 0) { lbV = lb - 1; mudou = true; }
-                    if(lsV < ls - 1 && ls > 0) { lsV = ls - 1; mudou = true; }
-
+                    if(lbV < lb - 1 && lb > 0) {
+						lbV = lb - 1;
+						mudou = true;
+					}
+                    if(lsV < ls - 1 && ls > 0) {
+						lsV = ls - 1;
+						mudou = true;
+					}
                     if(mudou) {
-                        luzTemp[idcVizinho] = (byte) ((lsV << 4) | lbV);
+                        luzTemp[idcVizinho] = (byte)((lsV << 4) | lbV);
 
-                        int blocoIdV = ChunkUtil.obterBloco(nx, ny, nz, chunk);
-                        Bloco bV = Bloco.numIds.get(blocoIdV);
+                        final int blocoIdV = ChunkUtil.obterBloco(nx, ny, nz, chunk);
+                        final Bloco bV = Bloco.numIds.get(blocoIdV);
 
                         if(bV == null || bV.render != TipoRender.OPACO) {
                             if(fimFila < filaLuz.length) {
@@ -136,8 +141,8 @@ public class ChunkLuz {
                 for(int y = Y_MAX; y >= 0; y--) {
                     int idc = posXZ + (y << 8);
 
-                    int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
-                    Bloco b = Bloco.numIds.get(blocoId);
+                    final int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
+                    final Bloco b = Bloco.numIds.get(blocoId);
 
                     if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
 
@@ -551,8 +556,8 @@ public class ChunkLuz {
             int z = (i >> 4) & 0xF;
             int y = i >> 8;
 
-            int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
-            Bloco b = Bloco.numIds.get(blocoId);
+            final int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
+            final Bloco b = Bloco.numIds.get(blocoId);
 
             if(b != null && b.luz > 0) {
                 chunk.luz[i] = (byte)((luzSolar << 4) | (b.luz & 0x0F));
@@ -563,7 +568,7 @@ public class ChunkLuz {
     }
 
     public static final Chunk obterChunk(final int cx, final int cz) {
-        return Mundo.chunks.get(Chave.calcularChave(cx, cz));
+        return Mundo.obterChunk(cx, cz);
     }
 }
 

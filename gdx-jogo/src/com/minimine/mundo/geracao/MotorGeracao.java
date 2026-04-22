@@ -82,13 +82,13 @@ public final class MotorGeracao {
         terreno.calcularChunk(chunkX, chunkZ, ctx);
         rios.calcularChunk(chunkX, 0, chunkZ, Mundo.Y_CHUNK, ctx);
 
-        calcular2D(semCalor,    espalharCalor,    octCalor,    perCalor,    2.0f, chunkX, chunkZ, ctx.calorMapa);
-        calcular2D(semUmidade,  espalharUmidade,  octUmidade,  perUmidade,  2.0f, chunkX, chunkZ, ctx.umidadeMapa);
+        calcular2D(semCalor, espalharCalor, octCalor, perCalor, 2.0f, chunkX, chunkZ, ctx.calorMapa);
+        calcular2D(semUmidade, espalharUmidade, octUmidade, perUmidade, 2.0f, chunkX, chunkZ, ctx.umidadeMapa);
         calcular2Dpreenchimento(chunkX, chunkZ, ctx.preenProfMapa);
 
         // normaliza calor e umidade para [0,1]
         for(int i = 0; i < 16 * 16; i++) {
-            ctx.calorMapa[i]   = Math.max(0f, Math.min(1f, ctx.calorMapa[i]   * 0.5f + 0.5f));
+            ctx.calorMapa[i] = Math.max(0f, Math.min(1f, ctx.calorMapa[i] * 0.5f + 0.5f));
             ctx.umidadeMapa[i] = Math.max(0f, Math.min(1f, ctx.umidadeMapa[i] * 0.5f + 0.5f));
         }
         // === FASE 2: gerar terreno ===
@@ -108,12 +108,12 @@ public final class MotorGeracao {
         // === FASE 4: gerar biomas ===
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
-                int idc2d = z * 16 + x;
+                int idc2d = (z << 4) + x;
 
                 int topoColuna = terreno.obterAltura(x, z, ctx);
                 while(topoColuna > 0 && ChunkUtil.obterBloco(x, topoColuna, z, chunk) == 0) topoColuna--;
 
-                float calor   = ctx.calorMapa[idc2d];
+                float calor = ctx.calorMapa[idc2d];
                 float umidade = ctx.umidadeMapa[idc2d];
                 calor = Math.max(0f, Math.min(1f, calor - (float)((topoColuna - NIVEL_MAR) * 0.004)));
 
@@ -121,8 +121,8 @@ public final class MotorGeracao {
                 ctx.biomaMapa[idc2d] = bioma;
 
                 final DadosBioma.Superficie s = bioma.superficie;
-                float preenchimentoVal  = Math.max(0f, ctx.preenProfMapa[idc2d]);
-                int profpreenchimento   = s.profTopo + s.profSubtopo + (int)preenchimentoVal;
+                float preenchimentoVal = Math.max(0f, ctx.preenProfMapa[idc2d]);
+                int profpreenchimento = s.profTopo + s.profSubtopo + (int)preenchimentoVal;
 
                 int profAtual = 0;
                 for(int y = topoColuna; y >= 1; y--) {
@@ -167,7 +167,7 @@ public final class MotorGeracao {
     private void colocarVegetacao(Chunk chunk, int chunkX, int chunkZ, ContextoGeracao ctx) {
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
-                int idc2d = z * 16 + x;
+                int idc2d = (z << 4) + x;
                 final DadosBioma bioma = ctx.biomaMapa[idc2d];
                 if(bioma == null) continue;
 
@@ -253,20 +253,20 @@ public final class MotorGeracao {
         for(int dcx = -1; dcx <= 1; dcx++) {
             for(int dcz = -1; dcz <= 1; dcz++) {
                 if(dcx == 0 && dcz == 0) continue;
-                int idc = (dcx + 1) * 3 + (dcz + 1);
-                long chave = Chave.calcularChave(chunk.x + dcx, chunk.z + dcz);
+                final int idc = (dcx + 1) * 3 + (dcz + 1);
+                final long chave = Chave.calcularChave(chunk.x + dcx, chunk.z + dcz);
                 vizinhoMod[idc] = Mundo.chunksMod.containsKey(chave);
                 if(!vizinhoMod[idc]) {
-                    final Chunk c  = Mundo.chunks.get(chave);
-                    int estado = Mundo.estados.getOrDefault(chave, 0);
+                    final Chunk c  = Mundo.obterChunk(chave);
+                    final int estado = Mundo.estados.getOrDefault(chave, 0);
                     if(c != null && estado == 1) {
                         // vizinha ainda na janela de dados: escreve direto
                         vizinhos[idc] = c;
-                        ehFila[idc]   = false;
+                        ehFila[idc] = false;
                     } else {
                         // vizinha não existe ou ja passou do estado 1: enfileira
                         vizinhos[idc] = c; // pode ser null, Mundo.enfileirarEstrutura usa so a chave
-                        ehFila[idc]   = true;
+                        ehFila[idc] = true;
                     }
                 }
             }
@@ -300,8 +300,10 @@ public final class MotorGeracao {
 
                 if(ehFila[idc]) {
                     // vizinha não está em estado 1: enfileira para aplicar depois
-                    long chaveAlvo = Chave.calcularChave(chunk.x + dcx, chunk.z + dcz);
-                    Mundo.enfileirarEstrutura(chaveAlvo, new EstruturaPendente(lx, by, lz, id, e.blocoMeta[i]));
+                    Mundo.enfileirarEstrutura(
+					Chave.calcularChave(chunk.x + dcx, chunk.z + dcz),
+					new EstruturaPendente(lx, by, lz, id, e.blocoMeta[i])
+					);
                 } else {
                     // vizinha em estado 1: escreve direto
                     final Chunk alvo = vizinhos[idc];

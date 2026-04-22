@@ -122,9 +122,9 @@ public class Entidade {
 
 		for(int atualX = minX; atualX <= maxX; atualX++) {
 			for(int atualZ = minZ; atualZ <= maxZ; atualZ++) {
-				int id = Mundo.obterBlocoMundo(atualX, yCheque, atualZ);
+				final int id = Mundo.obterBlocoMundo(atualX, yCheque, atualZ);
 				if(id != 0) {
-					Bloco b = Bloco.numIds.get(id);
+					final Bloco b = Bloco.numIds.get(id);
 					// se encontrar um bloco solido na camada de checagem, ha suporte
 					if(b != null && b.solido) return true;
 				}
@@ -147,9 +147,9 @@ public class Entidade {
 
 		for(int x = minX; x <= maxX; x++) {
 			for(int z = minZ; z <= maxZ; z++) {
-				int id = Mundo.obterBlocoMundo(x, y, z);
+				final int id = Mundo.obterBlocoMundo(x, y, z);
 				if(id != 0) {
-					Bloco b = Bloco.numIds.get(id);
+					final Bloco b = Bloco.numIds.get(id);
 					if(b != null && b.solido) {
 						return true;
 					}
@@ -218,9 +218,10 @@ public class Entidade {
 		final int _bz = Mat.floor(posicao.z);
 		final int posX = _bx >> 4;
 		final int posZ = _bz >> 4;
-
-		if(chunkCache == null || posX != chunkCache.x || posZ != chunkCache.z) {
-			chunkCache = Mundo.chunks.get(Chave.calcularChave(posX, posZ));
+		final long chave = Chave.calcularChave(posX, posZ);
+		
+		if(chunkCache == null || chave != chunkCache.chave) {
+			chunkCache = Mundo.obterChunk(chave);
 		}
 		if(chunkCache != null && _by >= 0 && _by < Mundo.Y_CHUNK) {
 			final int _lx = _bx & 0xF, _lz = _bz & 0xF;
@@ -248,10 +249,10 @@ public class Entidade {
 			}
 		} else if(noChao && rastreandoQueda) {
 			// acabou de pousar: calcula o dano
-			float blocosCaidos = alturaMaxQueda - posicao.y;
-			float blocosAlemDoSafe = blocosCaidos - BLOCOS_QUEDA_SEGURA;
-			if(blocosAlemDoSafe > 0f) {
-				int danoQueda = (int) blocosAlemDoSafe; // 1 de dano por bloco acima do limite
+			final float blocosCaidos = alturaMaxQueda - posicao.y;
+			final float blocosAlemSeguro = blocosCaidos - BLOCOS_QUEDA_SEGURA;
+			if(blocosAlemSeguro > 0f) {
+				int danoQueda = (int) blocosAlemSeguro; // 1 de dano por bloco acima do limite
 				if(danoQueda > 0) tomarDano(danoQueda);
 			}
 			rastreandoQueda = false;

@@ -240,7 +240,7 @@ public class ArquivosUtil {
             }
 			int metaTam = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
 			dos.writeInt(metaTam);
-			for(int i = 0; i < metaTam; i++) dos.writeShort((short) MemNativa.lerInt(chunk.meta, i));
+			for(int i = 0; i < metaTam; i++) dos.writeShort(chunk.meta[i]);
         }
         dos.flush();
     }
@@ -294,7 +294,7 @@ public class ArquivosUtil {
             long chave = dis.readLong();
 
             Chunk chunk = new Chunk();
-            chunk.meta = MemNativa.alocarZerado(Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK);
+            chunk.meta = new short[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
             ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
             chunk.x = Chave.x(chave);
             chunk.z = Chave.z(chave);
@@ -308,8 +308,8 @@ public class ArquivosUtil {
                 ChunkUtil.defBloco(x, y, z, id, chunk);
             }
 			int metaTam = dis.readInt();
-			chunk.meta = MemNativa.alocarZerado(metaTam);
-			for(int d = 0; d < metaTam; d++) MemNativa.gravarInt(chunk.meta, d, dis.readShort());
+			chunk.meta = new short[metaTam];
+			for(int d = 0; d < metaTam; d++) chunk.meta[d] = dis.readShort();
 
             mundo.chunksMod.put(chave, chunk);
 			mundo.chunks.put(chave, chunk);

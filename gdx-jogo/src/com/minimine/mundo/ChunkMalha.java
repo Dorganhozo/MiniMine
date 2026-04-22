@@ -16,10 +16,10 @@ public class ChunkMalha {
 
     public static void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
 		Chunk cXP, cXN, cZP, cZN;
-        cXP = Mundo.chunks.get(Chave.calcularChave(chunk.x + 1, chunk.z));
-        cXN = Mundo.chunks.get(Chave.calcularChave(chunk.x - 1, chunk.z));
-        cZP = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z + 1));
-        cZN = Mundo.chunks.get(Chave.calcularChave(chunk.x, chunk.z - 1));
+        cXP = Mundo.obterChunk(chunk.x + 1, chunk.z);
+        cXN = Mundo.obterChunk(chunk.x - 1, chunk.z);
+        cZP = Mundo.obterChunk(chunk.x, chunk.z + 1);
+        cZN = Mundo.obterChunk(chunk.x, chunk.z - 1);
         // descarte usa dadosProntos, garante que os blocos existem para decisão de face
         if(cXP != null && !cXP.dadosProntos) cXP = null;
         if(cXN != null && !cXN.dadosProntos) cXN = null;
@@ -27,10 +27,10 @@ public class ChunkMalha {
         if(cZN != null && !cZN.dadosProntos) cZN = null;
         // luz usa estado >= 3 garante que calcularLuz ja rodou na vizinha
         // se nao tiver luz pronta, usa padrão 0 e refaz quando estiver pronta
-        Chunk lXP = (cXP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x + 1, chunk.z), 0) >= 3) ? cXP : null;
-        Chunk lXN = (cXN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x - 1, chunk.z), 0) >= 3) ? cXN : null;
-        Chunk lZP = (cZP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z + 1), 0) >= 3) ? cZP : null;
-        Chunk lZN = (cZN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z - 1), 0) >= 3) ? cZN : null;
+        final Chunk lXP = (cXP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x + 1, chunk.z), 0) >= 3) ? cXP : null;
+        final Chunk lXN = (cXN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x - 1, chunk.z), 0) >= 3) ? cXN : null;
+        final Chunk lZP = (cZP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z + 1), 0) >= 3) ? cZP : null;
+        final Chunk lZN = (cZN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z - 1), 0) >= 3) ? cZN : null;
 
         final int[] mascara = MASCARA_CACHE.get();
 
@@ -43,21 +43,21 @@ public class ChunkMalha {
                 int n = 0;
                 for(int z = 0; z < 16; z++) {
                     for(int x = 0; x < 16; x++) {
-                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        final int id = ChunkUtil.obterBloco(x, y, z, chunk);
                         int val = 0;
                         if(id != 0) {
-                            Bloco b = Bloco.numIds.get(id);
+                            final Bloco b = Bloco.numIds.get(id);
                             if(b != null && !b.modeloX) {
-                                int ny = cima ? y + 1 : y - 1;
+                                final int ny = cima ? y + 1 : y - 1;
                                 int vizId = 0;
                                 if(ny >= 0 && ny < Mundo.Y_CHUNK) {
                                     vizId = ChunkUtil.obterBloco(x, ny, z, chunk);
                                 } else {
                                     vizId = 0;
                                 }
-                                Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                                final Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
                                 if(deveRenderFace(b, bViz)) {
-                                    byte luz = ChunkUtil.obterLuzCompleta(x, (ny < 0 || ny >= Mundo.Y_CHUNK) ? y : ny, z, chunk);
+                                    final byte luz = ChunkUtil.obterLuzCompleta(x, (ny < 0 || ny >= Mundo.Y_CHUNK) ? y : ny, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -74,27 +74,31 @@ public class ChunkMalha {
                 int n = 0;
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
                     for(int z = 0; z < 16; z++) {
-                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        final int id = ChunkUtil.obterBloco(x, y, z, chunk);
                         int val = 0;
                         if(id != 0) {
-                            Bloco b = Bloco.numIds.get(id);
+                            final Bloco b = Bloco.numIds.get(id);
                             if(b != null && !b.modeloX) {
-                                int nx = leste ? x + 1 : x - 1;
+                                final int nx = leste ? x + 1 : x - 1;
                                 int vizId = 0;
                                 Chunk tC = chunk;
                                 int tx = nx;
 
-                                if(nx >= 16) { tC = cXP; tx = 0; }
-                                else if(nx < 0) { tC = cXN; tx = 15; }
-
+                                if(nx >= 16) {
+									tC = cXP;
+									tx = 0;
+								} else if(nx < 0) {
+									tC = cXN;
+									tx = 15;
+								}
                                 if(tC != null) vizId = ChunkUtil.obterBloco(tx, y, z, tC);
 
-                                Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                                final Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
                                 // se chunk vizinho de borda não existe, não renderiza a face agora:
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nx < 0 || nx >= 16))) {
-                                    Chunk lC = (nx >= 16) ? lXP : (nx < 0) ? lXN : chunk;
-                                    byte luz = lC != null ? ChunkUtil.obterLuzCompleta(tx, y, z, lC) : 0;
+                                    final Chunk lC = (nx >= 16) ? lXP : (nx < 0) ? lXN : chunk;
+                                    final byte luz = lC != null ? ChunkUtil.obterLuzCompleta(tx, y, z, lC) : 0;
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -111,27 +115,31 @@ public class ChunkMalha {
                 int n = 0;
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
                     for(int x = 0; x < 16; x++) {
-                        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                        final int id = ChunkUtil.obterBloco(x, y, z, chunk);
                         int val = 0;
                         if(id != 0) {
-                            Bloco b = Bloco.numIds.get(id);
+                            final Bloco b = Bloco.numIds.get(id);
                             if(b != null && !b.modeloX) {
-                                int nz = sul ? z + 1 : z - 1;
+                                final int nz = sul ? z + 1 : z - 1;
                                 int vizId = 0;
                                 Chunk tC = chunk;
                                 int tz = nz;
 
-                                if(nz >= 16) { tC = cZP; tz = 0; }
-                                else if(nz < 0) { tC = cZN; tz = 15; }
-
+                                if(nz >= 16) {
+									tC = cZP;
+									tz = 0;
+								} else if(nz < 0) {
+									tC = cZN;
+									tz = 15;
+								}
                                 if(tC != null) vizId = ChunkUtil.obterBloco(x, y, tz, tC);
 
-                                Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
+                                final Bloco bViz = (vizId == 0) ? null : Bloco.numIds.get(vizId);
                                 // se chunk vizinho de borda não existe, não renderiza a face agora:
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nz < 0 || nz >= 16))) {
-                                    Chunk lC = (nz >= 16) ? lZP : (nz < 0) ? lZN : chunk;
-                                    byte luz = lC != null ? ChunkUtil.obterLuzCompleta(x, y, tz, lC) : 0;
+                                    final Chunk lC = (nz >= 16) ? lZP : (nz < 0) ? lZN : chunk;
+                                    final byte luz = lC != null ? ChunkUtil.obterLuzCompleta(x, y, tz, lC) : 0;
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -147,16 +155,16 @@ public class ChunkMalha {
         for(int y = 0; y < Mundo.Y_CHUNK; y++) {
             for(int z = 0; z < 16; z++) {
                 for(int x = 0; x < 16; x++) {
-                    int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                    final int id = ChunkUtil.obterBloco(x, y, z, chunk);
                     if(id == 0) continue;
-                    Bloco b = Bloco.numIds.get(id);
+                    final Bloco b = Bloco.numIds.get(id);
                     if(b == null || !b.modeloX) continue;
 
                     // pega a luz de cima pro X
-                    int ly = Math.min(y + 1, Mundo.Y_CHUNK - 1);
-                    byte luz = ChunkUtil.obterLuzCompleta(x, ly, z, chunk);
-                    float lb = (luz & 0x0F) / 15f;
-                    float ls = ((luz >> 4) & 0x0F) / 15f;
+                    final int ly = Math.min(y + 1, Mundo.Y_CHUNK - 1);
+                    final byte luz = ChunkUtil.obterLuzCompleta(x, ly, z, chunk);
+                    final float lb = (luz & 0x0F) / 15f;
+                    final float ls = ((luz >> 4) & 0x0F) / 15f;
 
                     BlocoModelo.addModeloX(b.topo, x, y, z, lb, ls, verts, idcTransp);
                 }
@@ -169,7 +177,7 @@ public class ChunkMalha {
         int n = 0;
         for(int j = 0; j < altura; j++) {
             for(int i = 0; i < largura; ) {
-                int val = mascara[n];
+                final int val = mascara[n];
                 if(val != 0) {
                     int v = 1;
                     while(i + v < largura && mascara[n + v] == val) {
@@ -191,27 +199,36 @@ public class ChunkMalha {
                             mascara[n + k + l * largura] = 0;
                         }
                     }
-                    int id = val >> 8;
-                    int luzTotal = val & 0xFF;
-                    float lb = (luzTotal & 0x0F) / 15f;
-                    float ls = ((luzTotal >> 4) & 0x0F) / 15f;
+                    final int id = val >> 8;
+                    final int luzTotal = val & 0xFF;
+                    final float lb = (luzTotal & 0x0F) / 15f;
+                    final float ls = ((luzTotal >> 4) & 0x0F) / 15f;
 
-                    Bloco b = Bloco.numIds.get(id);
+                    final Bloco b = Bloco.numIds.get(id);
                     float x = 0, y = 0, z = 0;
                     float fv = 0, fh = 0;
 
                     switch(faceId) {
                         case 0: case 1:
-                            x = i; z = j; y = profundidade;
-                            fv = v; fh = h;
+                            x = i;
+							z = j;
+							y = profundidade;
+                            fv = v;
+							fh = h;
 							break;
                         case 2: case 3:
-                            z = i; y = j; x = profundidade;
-                            fv = v; fh = h;
+                            z = i;
+							y = j;
+							x = profundidade;
+                            fv = v;
+							fh = h;
 							break;
                         case 4: case 5:
-                            x = i; y = j; z = profundidade;
-                            fv = v; fh = h;
+                            x = i;
+							y = j;
+							z = profundidade;
+                            fv = v;
+							fh = h;
 							break;
                     }
                     ShortArrayUtil lista = (b.render != TipoRender.OPACO) ? idcTransp : idcSolidos;
@@ -234,5 +251,3 @@ public class ChunkMalha {
         return true;
     }
 }
-
-

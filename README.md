@@ -159,8 +159,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Junção de quase todas as texturas do jogo em atlas.
 * Carregamento e descarregamento de músicas dinamico.
 * Alocação de memória nativa real com biblioteca.so própria.
-* Cache de 4 chunks pra acesso e definição global.
-* Cache de 1 chunk por entidade para luz.
+* Cache de 9 chunks pra acesso e definição global.
 * Cache de modelos de itens procedurais.
 * Descarte de pixels sobrepostos na criação de modelos dos itens.
 

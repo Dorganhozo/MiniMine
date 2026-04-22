@@ -53,7 +53,6 @@ public class ShaderBranco implements Shader {
 		prog.begin();
 		prog.setUniformMatrix("u_projVisao", cam.combined);
 		ctx.setDepthTest(GL20.GL_LEQUAL);
-		ctx.setDepthMask(true);
 	}
 
 	@Override public void render(Renderable r) {
