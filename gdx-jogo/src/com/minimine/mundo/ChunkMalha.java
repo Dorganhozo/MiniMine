@@ -231,7 +231,7 @@ public class ChunkMalha {
 							fh = h;
 							break;
                     }
-                    ShortArrayUtil lista = (b.render != TipoRender.OPACO) ? idcTransp : idcSolidos;
+                    final ShortArrayUtil lista = (b.render == TipoRender.OPACO || b.render == TipoRender.RECORTE) ? idcSolidos : idcTransp;
                     BlocoModelo.addFace(faceId, b.texturaId(faceId), x, y, z, fv, fh, lb, ls, verts, lista);
 
                     i += v;

@@ -10,7 +10,7 @@ public final class Chunk {
     public volatile int vboId = 0; // VBO de vertices na GPU
     public volatile int iboId = 0; // IBO de indices na GPU
 	public volatile int iboTranspId = 0;
-    public volatile boolean gpuPronta = false; // true quando vboId/iboId são válidos
+    public volatile boolean gpuPronta = false; // true quando vboId/iboId são validos
     public volatile int x, z, maxIds = 8;
 	public volatile long chave;
     public volatile int paletaTam = 0;    // quantas entradas existem

@@ -207,10 +207,6 @@ public class Render {
 			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
-			if(ui.debug) {
-				ui.gpu.enable();
-				ui.gpu.reset();
-			}
 			if(mundo.ciclo) diaNoite.att(ui.jg.camera, delta);
 
 			mundo.att(delta, ui.jg);
@@ -243,7 +239,8 @@ public class Render {
 
 			// 1. solidos:
 			for(final Chunk chunk : mundo.chunks.values()) {
-				if(frustrum(chunk, ui.jg) && chunk.gpuPronta && chunk.contaSolida > 0) {
+				final boolean renderizar = frustrum(chunk, ui.jg) && chunk.gpuPronta;
+				if(renderizar && chunk.contaSolida > 0) {
 					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
 					renderChunk(chunk, chunk.iboId, 0, chunk.contaSolida);
 				}
@@ -253,7 +250,8 @@ public class Render {
 			Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 
 			for(final Chunk chunk : mundo.chunks.values()) {
-				if(frustrum(chunk, ui.jg) && chunk.gpuPronta && chunk.contaTransp > 0) {
+				final boolean renderizar = frustrum(chunk, ui.jg) && chunk.gpuPronta;
+				if(renderizar && chunk.contaTransp > 0) {
 					shader.setUniformf("u_chunkPos", chunk.x << 4, 0, chunk.z << 4);
 					renderChunk(chunk, chunk.iboTranspId, 0, chunk.contaTransp);
 				}
@@ -301,13 +299,13 @@ public class Render {
 				debugCaixas.setColor(1.0f, 0.5f, 0.0f, 1f); // laranja
 				for(int[] bl : BlocoEstrutura.bcaixas) {
 					// bl = { x global, y global, z global } do bloco_estrutura
-					int bx = bl[0], by = bl[1], bz = bl[2];
-					float larg = BlocoEstrutura.obterLarg(bx, by, bz);
-					float alt  = BlocoEstrutura.obterAlt(bx, by, bz);
-					float prof = BlocoEstrutura.obterProf(bx, by, bz);
-					int cx = BlocoEstrutura.obterCX(bx, by, bz);
-					int cy = BlocoEstrutura.obterCY(bx, by, bz);
-					int cz = BlocoEstrutura.obterCZ(bx, by, bz);
+					final int bx = bl[0], by = bl[1], bz = bl[2];
+					final float larg = BlocoEstrutura.obterLarg(bx, by, bz);
+					final float alt  = BlocoEstrutura.obterAlt(bx, by, bz);
+					final float prof = BlocoEstrutura.obterProf(bx, by, bz);
+					final int cx = BlocoEstrutura.obterCX(bx, by, bz);
+					final int cy = BlocoEstrutura.obterCY(bx, by, bz);
+					final int cz = BlocoEstrutura.obterCZ(bx, by, bz);
 					// z é a face traseira, profundidade negativo vai pra frente
 					debugCaixas.box(bx + cx, by + cy, bz + cz, larg, alt, -prof);
 				}
@@ -318,19 +316,14 @@ public class Render {
 		ui.att(delta, mundo);
     }
 
-	public final static boolean frustrum(Chunk chunk, Jogador jogador) {
-		final float globalX = chunk.x << 4;
-		final float globalZ = chunk.z << 4;
+	public static final boolean frustrum(Chunk chunk, Jogador jogador) {
+		final float cx = (chunk.x << 4) + 8f;
+		final float cz = (chunk.z << 4) + 8f;
 
-		// o raio precisa sendo convertido pra "ao quadrado" pra comparação funcionar
-		// (RAIO * 16) * (RAIO * 16)
-		final float raioEmPixels = Mundo.RAIO_CHUNKS << 4;
-		final float raioLimite = raioEmPixels * raioEmPixels;
+		final float raioBlocos = (Mundo.RAIO_CHUNKS << 4) + 16f;
+		if(Vector2.dst2(cx, cz, jogador.posicao.x, jogador.posicao.z) >= raioBlocos * raioBlocos) return false;
 
-		// dist2(distancia ao quadrado)
-		if(!(Vector2.dst2(globalX, globalZ, jogador.posicao.x, jogador.posicao.z) < raioLimite)) return false;
-
-		return jogador.camera.frustum.boundsInFrustum(globalX, 0, globalZ, 16, 256, 16);
+		return jogador.camera.frustum.boundsInFrustum(cx, 128f, cz, 16f, 256f, 16f);
 	}
 
     public void liberar() {

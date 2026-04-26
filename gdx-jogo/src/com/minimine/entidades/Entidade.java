@@ -92,7 +92,7 @@ public class Entidade {
 					if(b.render == TipoRender.LIQUIDO) {
 						naAgua = true;
 						continue;
-					} else if(b.render == TipoRender.RECORTE) {
+					} else if(!b.colisao) {
 						continue;
 					} else {
 						if(hitbox.intersects(blocoHitbox)) return true;

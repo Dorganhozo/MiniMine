@@ -229,7 +229,6 @@ public class Config implements Screen, InputProcessor {
             new Acao() {
                 public void exec() {
                     UI.debug = !UI.debug;
-					if(!UI.debug) UI.gpu.disable();
                     itemDebug.rotuloValor.texto = UI.debug ? "Ligado" : "Desligado";
                 }
             }

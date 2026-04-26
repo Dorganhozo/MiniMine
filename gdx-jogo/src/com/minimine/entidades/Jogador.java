@@ -52,17 +52,17 @@ public class Jogador extends Entidade {
 	public float tempoDuploPulo = 0f;
 	public static final float JANELA_DUPLO_PULO = 0.3f;
 
-	public Quaternion rotTemp = new Quaternion();
-	public Vector3 eulerTemp = new Vector3();
+	public final Quaternion rotTemp = new Quaternion();
+	public final Vector3 eulerTemp = new Vector3();
 
 	public Node cabeca, tronco, bracoDir, bracoEsq, pernaDir, pernaEsq, itemPos;
 
-	public Quaternion rotCabeca = new Quaternion();
-	public Quaternion rotTronco = new Quaternion();
-	public Quaternion rotBracoDir = new Quaternion();
-	public Quaternion rotBracoEsq = new Quaternion();
-	public Quaternion rotPernaDir = new Quaternion();
-	public Quaternion rotPernaEsq = new Quaternion();
+	public final Quaternion rotCabeca = new Quaternion();
+	public final Quaternion rotTronco = new Quaternion();
+	public final Quaternion rotBracoDir = new Quaternion();
+	public final Quaternion rotBracoEsq = new Quaternion();
+	public final Quaternion rotPernaDir = new Quaternion();
+	public final Quaternion rotPernaEsq = new Quaternion();
 
 	public ModelInstance modeloItem;
 
@@ -176,7 +176,7 @@ public class Jogador extends Entidade {
 
 		super.att(delta);
 
-		// coleta drops próximos
+		// coleta deixados proximos
 		final java.util.Iterator<Entidade> deixados = Mundo.entidades.iterator();
 		while(deixados.hasNext()) {
 			final Entidade e = deixados.next();
@@ -191,7 +191,7 @@ public class Jogador extends Entidade {
 
 			// magnetismo: puxa o item quando perto o suficiente
 			if(dist < ItemMundo.RAIO_ATRACAO) {
-				float vel = 8f * (1f - dist / ItemMundo.RAIO_ATRACAO);
+				final float vel = 8f * (1f - dist / ItemMundo.RAIO_ATRACAO);
 				deixado.posicao.lerp(posicao, vel * delta);
 			}
 			// coleta efetiva

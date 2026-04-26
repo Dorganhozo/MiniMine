@@ -27,7 +27,6 @@ import com.minimine.mundo.blocos.Bloco;
 import com.minimine.inventario.Inventario;
 import com.minimine.entidades.Jogador;
 import com.minimine.utils.DiaNoiteUtil;
-import com.minimine.utils.Receitas;
 import com.minimine.mundo.blocos.InterfaceBloco;
 import com.minimine.inventario.PaginaItens;
 
@@ -41,6 +40,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.minimine.cenas.Jogo;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.minimine.inventario.ItemRegistro;
 
 public class UI implements InputProcessor {
     // camera 3D e renderização
@@ -120,6 +120,8 @@ public class UI implements InputProcessor {
         Gdx.input.setInputProcessor(this);
         Gdx.input.setCursorCatched(true);
 		gpu = new GLProfiler(Gdx.graphics);
+		if(debug) gpu.enable();
+		else gpu.disable();
     }
 
     // === criação de componentes Micro ===
@@ -297,10 +299,6 @@ public class UI implements InputProcessor {
 				}
 				public void aoSoltar() {}
 			});
-        botoesDpad.put("receita", new BotaoDpad(Texturas.atlas.get("receita"), jg.inv.tamSlot) {
-				public void aoTocar() { Receitas.fabricar(jg.inv); }
-				public void aoSoltar() {}
-			});
         botoesDpad.put("menu_principal", new BotaoDpad(Texturas.atlas.get("receita"), 0) {
 				public void aoTocar() { MenuPause.alternarMenu(); }
 				public void aoSoltar() {}
@@ -324,8 +322,8 @@ public class UI implements InputProcessor {
 
         // === DPad de movimento canto inferior esquerdo ===
         // ancora: borda esquerda + margem, borda inferior + margem
-        float dX = marg;
-        float dY = marg;
+        final float dX = marg;
+        final float dY = marg;
 
         defPosDpad("diagEsquerda", dX, dY + passo * 2);
         defPosDpad("frente", dX + passo, dY + passo * 2);
@@ -335,8 +333,8 @@ public class UI implements InputProcessor {
         defPosDpad("tras", dX + passo, dY);
 
         // === DPad de ações canto inferior direito ===
-        float aX = v - marg - passo * 2 - tam;
-        float aY = marg;
+        final float aX = v - marg - passo * 2 - tam;
+        final float aY = marg;
 
         defPosDpad("cima", aX + passo, aY + passo * 2);
         defPosDpad("ataque", aX, aY + passo);
@@ -344,10 +342,9 @@ public class UI implements InputProcessor {
         defPosDpad("baixo", aX + passo, aY);
 
         // === inv e receita colados a hotbar ===
-        int hotbarX = v / 2 - (jg.inv.hotbarSlots * jg.inv.tamSlot) / 2;
+        final int hotbarX = v / 2 - (jg.inv.hotbarSlots * jg.inv.tamSlot) / 2;
         defPosDpad("inv", hotbarX + jg.inv.hotbarSlots * jg.inv.tamSlot, jg.inv.hotbarY);
-        defPosDpad("receita", hotbarX - jg.inv.tamSlot, jg.inv.hotbarY);
-
+        
         // === menu pause canto superior direito ===
         defPosDpad("menu_principal", v - tam - marg, h - tam - marg);
 
@@ -362,24 +359,18 @@ public class UI implements InputProcessor {
             b.hitbox.height = tam;
         }
         // inv e receita usam tamSlot: não redimensiona
-        BotaoDpad bInv = botoesDpad.get("inv");
-        BotaoDpad bReceita = botoesDpad.get("receita");
-        float ts = jg.inv.tamSlot;
-		
+        final BotaoDpad bInv = botoesDpad.get("inv");
+        final float ts = jg.inv.tamSlot;
+
         if(bInv != null) {
 			bInv.sprite.setSize(ts, ts);
 			bInv.hitbox.width = ts;
 			bInv.hitbox.height = ts;
 		}
-        if(bReceita != null) {
-			bReceita.sprite.setSize(ts, ts);
-			bReceita.hitbox.width = ts;
-			bReceita.hitbox.height = ts;
-		}
     }
 
     public void defPosDpad(String nome, float x, float y) {
-        BotaoDpad b = botoesDpad.get(nome);
+        final BotaoDpad b = botoesDpad.get(nome);
         if(b == null) return;
         b.sprite.setPosition(x, y);
         b.hitbox.setPosition(x, y);
@@ -395,13 +386,13 @@ public class UI implements InputProcessor {
         }
         if(spriteMira != null) {
             spriteMira.setPosition(v / 2f - spriteMira.getWidth() / 2f,
-			h / 2f - spriteMira.getHeight() / 2f);
+								   h / 2f - spriteMira.getHeight() / 2f);
             spriteMira.setAlpha(0.9f);
         }
     }
 
     public static Rotulo addRotulo(String nome, String texto, float x, float y) {
-        Rotulo r = new Rotulo(texto, fonte, 1f);
+        final Rotulo r = new Rotulo(texto, fonte, 1f);
         r.x = x;
         r.y = y;
         rotulos.put(nome, r);
@@ -478,7 +469,7 @@ public class UI implements InputProcessor {
 				sb.draw(inv.itens[i].textura, rx + 5, ry + 5, inv.tamSlot - 10, inv.tamSlot - 10);
                 if(inv.itens[i].quantidade > 1) {
                     fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
-					rx + inv.tamSlot - 15, ry + 15);
+							   rx + inv.tamSlot - 15, ry + 15);
                 }
             }
         }
@@ -495,8 +486,36 @@ public class UI implements InputProcessor {
 
                     if(inv.itens[i].quantidade > 1) {
                         fonte.draw(sb, String.valueOf(inv.itens[i].quantidade),
-						rx + inv.tamSlot - 15, ry + 15);
+								   rx + inv.tamSlot - 15, ry + 15);
                     }
+                }
+            }
+        }
+        // grade de receita(so quando inventário aberto)
+        if(inv.aberto && inv.rectsGrade != null) {
+            for(int i = 0; i < 9; i++) {
+                if(inv.rectsGrade[i] == null) continue;
+                final float rx = inv.rectsGrade[i].x, ry = inv.rectsGrade[i].y;
+                final float rv = inv.rectsGrade[i].width, rh = inv.rectsGrade[i].height;
+                sb.draw(inv.texSlot, rx, ry, rv, rh);
+                final CharSequence nome = inv.gradeReceita[i];
+                if(nome != null && nome.length() > 0) {
+                    final ItemRegistro.Item reg = ItemRegistro.obter(nome);
+                    if(reg != null) {
+                        final TextureRegion tex = Texturas.atlas.obter(reg.textura);
+                        if(tex != null) sb.draw(tex, rx + 4, ry + 4, rv - 8, rh - 8);
+                    }
+                }
+            }
+            // slot de resultado
+            if(inv.rectResultado != null) {
+                final float rx = inv.rectResultado.x, ry = inv.rectResultado.y;
+                final float rv = inv.rectResultado.width, rh = inv.rectResultado.height;
+                sb.draw(inv.texSlot, rx, ry, rv, rh);
+                if(inv.resultadoReceita != null) {
+                    sb.draw(inv.resultadoReceita.textura, rx + 4, ry + 4, rv - 8, rh - 8);
+                    if(inv.resultadoReceita.quantidade > 1)
+                        fonte.draw(sb, String.valueOf(inv.resultadoReceita.quantidade), rx + 4, ry + 14);
                 }
             }
         }
@@ -508,7 +527,7 @@ public class UI implements InputProcessor {
 			sb.draw(inv.itemFlutuante.textura, posX, posY, inv.tamSlot - 10, inv.tamSlot - 10);
             if(inv.itemFlutuante.quantidade > 1) {
                 fonte.draw(sb, String.valueOf(inv.itemFlutuante.quantidade),
-				posX + inv.tamSlot - 15, posY + 15);
+						   posX + inv.tamSlot - 15, posY + 15);
             }
         }
         // botão de catalogo criativo(acima do ultimo slot do inventario)
@@ -517,10 +536,10 @@ public class UI implements InputProcessor {
             if(texAcao != null && inv.rects != null && inv.rects.length > 0) {
                 final Rectangle ultimoSlot = inv.rects[inv.rects.length - 1];
                 sb.draw(texAcao,
-					ultimoSlot.x,
-					ultimoSlot.y + inv.tamSlot + 4,
-					inv.tamSlot, inv.tamSlot
-				);
+						ultimoSlot.x,
+						ultimoSlot.y + inv.tamSlot + 4,
+						inv.tamSlot, inv.tamSlot
+					);
             }
         }
     }
@@ -531,24 +550,24 @@ public class UI implements InputProcessor {
         final TextureRegion coracaoVazio = Texturas.atlas.get("coracao_vazio");
         if(coracaoCompleto == null || coracaoMetade == null || coracaoVazio == null) return;
 
-        int totalCoracoes = jg.vidaMax >> 1; // 20 vida = 10 corações
-        float tamCoracao  = 30f;
-        float espCoracao  = 2f;
+        final int totalCoracoes = jg.vidaMax >> 1; // 20 vida = 10 corações
+        final float tamCoracao  = 30f;
+        final float espCoracao  = 2f;
 
         float hotbarY = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
             ? jg.inv.rectsHotbar[0].y + jg.inv.tamSlot + 4f
             : 30f;
-        float inicioX = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
+        final float inicioX = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
             ? jg.inv.rectsHotbar[0].x
             : 10f;
 
         for(int i = 0; i < totalCoracoes; i++) {
-            float x = inicioX + i * (tamCoracao + espCoracao);
-            float y = hotbarY;
+            final float x = inicioX + i * (tamCoracao + espCoracao);
+            final float y = hotbarY;
 
-            int vidaEsseCoracao = jg.vida - i * 2;
+            final int vidaEsseCoracao = jg.vida - i * 2;
 
-            TextureRegion tex;
+            final TextureRegion tex;
             if(vidaEsseCoracao >= 2) tex = coracaoCompleto;
             else if(vidaEsseCoracao == 1) tex = coracaoMetade;
             else tex = coracaoVazio;
@@ -557,19 +576,19 @@ public class UI implements InputProcessor {
         }
     }
 
-    public void renderDebug(Mundo mundo) {
-        float livre = rt.freeMemory()  >> 20;
-        float total = rt.totalMemory() >> 20;
-        float nativaLivre = debugador.obterHeapLivre() >> 20;
-        float nativaTotal = debugador.obterHeapTotal() >> 20;
+    public void renderDebug(final Mundo mundo) {
+        final float livre = rt.freeMemory() >> 20;
+        final float total = rt.totalMemory() >> 20;
+        final float nativaLivre = debugador.obterHeapLivre() >> 20;
+        final float nativaTotal = debugador.obterHeapTotal() >> 20;
         fps = Gdx.graphics.getFramesPerSecond();
 
-        String[] logsArr = Logs.logs.split("\n");
-        StringBuilder sb2 = new StringBuilder();
-        int inicio = Math.max(0, logsArr.length - 15);
-        for(int i = inicio; i < logsArr.length; i++) sb2.append(logsArr[i]).append("\n");
+        final String[] logsArr = Logs.logs.split("\n");
+		Logs.logs = "";
+        final int inicio = Math.max(0, logsArr.length - 15);
+        for(int i = inicio; i < logsArr.length; i++) Logs.logs += logsArr[i] + '\n';
 
-        float yawNorm = ((jg.yaw % 360) + 360) % 360;
+        final float yawNorm = ((jg.yaw % 360) + 360) % 360;
         String direcao;
         if(yawNorm >= 337.5f || yawNorm < 22.5f)   direcao = "Norte";
         else if(yawNorm < 67.5f) direcao = "Nordeste";
@@ -604,8 +623,9 @@ public class UI implements InputProcessor {
 					   gpu.getVertexCount().total,
 					   Thread.activeCount(), livre, total, total - livre,
 					   nativaLivre, nativaTotal, nativaTotal - nativaLivre,
-					   sb2.toString()),
+					   Logs.logs),
 				   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
+		gpu.reset();
     }
 
     // camera
@@ -715,7 +735,7 @@ public class UI implements InputProcessor {
     @Override
     public boolean touchUp(int telaX, int telaY, int p, int b) {
         if(b == Input.Buttons.RIGHT) jg.acao = false;
-        int y = Gdx.graphics.getHeight() - telaY;
+        final int y = Gdx.graphics.getHeight() - telaY;
 
         gerenciador.processarToque(telaX, y, false);
 
@@ -723,10 +743,13 @@ public class UI implements InputProcessor {
             MenuPause.processarToque(telaX, y, false);
             return true;
         }
-        String nomeBotao = toquesDpad.remove(p);
+        final String nomeBotao = toquesDpad.remove(p);
         if(nomeBotao != null) {
-            BotaoDpad bd = botoesDpad.get(nomeBotao);
-            if(bd != null) { bd.aoSoltar(); bd.sprite.setAlpha(0.9f); }
+            final BotaoDpad bd = botoesDpad.get(nomeBotao);
+            if(bd != null) {
+				bd.aoSoltar();
+				bd.sprite.setAlpha(0.9f);
+			}
         }
         if(p == pontoDir) pontoDir = -1;
         return true;
@@ -735,31 +758,31 @@ public class UI implements InputProcessor {
     @Override
     public boolean touchDragged(int telaX, int telaY, int p) {
         if(modoTexto) return true;
-        int y = Gdx.graphics.getHeight() - telaY;
+        final int y = Gdx.graphics.getHeight() - telaY;
 
-        jg.inv.aoArrastar(telaX, y, p);
+        jg.inv.aoArrastar(telaX, y);
 
         if(MenuPause.menuAberto) {
             MenuPause.processarArraste(telaX, y);
             return true;
         }
         if(p == pontoDir && !jg.inv.aberto) {
-            float dx = telaX - ultimaDir.x;
-            float dy = y - ultimaDir.y;
+            final float dx = telaX - ultimaDir.x;
+            final float dy = y - ultimaDir.y;
             jg.yaw -= dx * sensi;
             jg.tom += dy * sensi;
             jg.tom = MathUtils.clamp(jg.tom, -89f, 89f);
             ultimaDir.set(telaX, y);
         }
         // transição entre botões do dpad ao arrastar
-        String nomeAtual = toquesDpad.get(p);
+        final String nomeAtual = toquesDpad.get(p);
         boolean sobreBotao = false;
         for(Map.Entry<String, BotaoDpad> e : botoesDpad.entrySet()) {
             if(e.getValue().hitbox.contains(telaX, y)) {
                 sobreBotao = true;
                 if(!e.getKey().equals(nomeAtual)) {
                     if(nomeAtual != null) {
-                        BotaoDpad antigo = botoesDpad.get(nomeAtual);
+                        final BotaoDpad antigo = botoesDpad.get(nomeAtual);
                         if(antigo != null) {
 							antigo.aoSoltar();
 							antigo.sprite.setAlpha(0.9f);
@@ -773,7 +796,7 @@ public class UI implements InputProcessor {
             }
         }
         if(!sobreBotao && nomeAtual != null) {
-            BotaoDpad antigo = botoesDpad.get(nomeAtual);
+            final BotaoDpad antigo = botoesDpad.get(nomeAtual);
             if(antigo != null) { antigo.aoSoltar(); antigo.sprite.setAlpha(0.9f); }
             toquesDpad.put(p, null);
         }
@@ -840,7 +863,6 @@ public class UI implements InputProcessor {
 			}
             MenuPause.alternarMenu();
         }
-        if(p == Input.Keys.R) Receitas.fabricar(jg.inv);
         return true;
     }
 
@@ -866,8 +888,8 @@ public class UI implements InputProcessor {
     @Override
     public boolean mouseMoved(int x, int y1) {
         if(modoTexto || MenuPause.menuAberto) return true;
-        int y = Gdx.graphics.getHeight() - y1;
-        jg.inv.aoArrastar(x, y, -1);
+        final int y = Gdx.graphics.getHeight() - y1;
+        jg.inv.aoArrastar(x, y);
         if(!jg.inv.aberto) {
             jg.yaw -= Gdx.input.getDeltaX() * sensi;
             jg.tom -= Gdx.input.getDeltaY() * sensi;
@@ -886,13 +908,13 @@ public class UI implements InputProcessor {
 
     public abstract class BotaoDpad {
         public final Sprite sprite;
-        public final com.badlogic.gdx.math.Rectangle hitbox;
+        public final Rectangle hitbox;
 
         public BotaoDpad(TextureRegion textura, float tam) {
             sprite = new Sprite(textura);
             sprite.setSize(tam, tam);
             sprite.setAlpha(0.9f);
-            hitbox = new com.badlogic.gdx.math.Rectangle(0, 0, tam, tam);
+            hitbox = new Rectangle(0, 0, tam, tam);
         }
 
         // sobrecarga pra Texture direta(botoes do dpad guardados em texs, não atlas)
@@ -900,10 +922,11 @@ public class UI implements InputProcessor {
             sprite = new Sprite(textura);
             sprite.setSize(tam, tam);
             sprite.setAlpha(0.9f);
-            hitbox = new com.badlogic.gdx.math.Rectangle(0, 0, tam, tam);
+            hitbox = new Rectangle(0, 0, tam, tam);
         }
         public abstract void aoTocar();
         public abstract void aoSoltar();
         public void desenhar(SpriteBatch sb) { sprite.draw(sb); }
     }
 }
+

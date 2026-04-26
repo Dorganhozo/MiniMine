@@ -35,6 +35,7 @@ import com.minimine.mundo.geracao.RegistroBiomas;
 import com.minimine.mundo.geracao.ContextoGeracao;
 import com.minimine.mundo.geracao.EstruturaPendente;
 import com.minimine.utils.MemNativa;
+import com.minimine.inventario.ReceitaRegistro;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -107,6 +108,8 @@ public class Mundo {
 
         registroBiomas = new RegistroBiomas();
         registroBiomas.carregarBiomas(Gdx.files.internal("biomas/"));
+		
+		ReceitaRegistro.iniciar();
 
         motor = new MotorGeracao(semente, registroBiomas);
 

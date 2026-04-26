@@ -52,6 +52,7 @@ refeito com LibGDX.
 * Menu de itens com barra de pesquisa.
 * Cavernas em tuneis.
 * Dano de queda.
+* Itens flutuantes.
 
 ## Modos de jogo:
 * 0: espectador. Não sofre gravidade ou colisão com blocos. Seus recursos não acabam
@@ -86,16 +87,11 @@ refeito com LibGDX.
 * Bloco nulo.
 * Tulipa luminosa.
 
-## Receitas:
-ao clicar no botão de receitas, você pode obter um novo bloco apartir dessa receita.
-
-selecione o bloco em questão como item atual, e clique no botão de receita.
-
-essas são as receitas atuais e seus resultados:
-
-* tronco = tabuas_madeira
-* areia = vidro
-* folha = tocha
+## Itens:
+* Palito.
+* Espada de madeira.
+* Picareta de madeira.
+* Machado de madeira.
 
 ## Geração feita:
 
@@ -162,6 +158,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 * Cache de 9 chunks pra acesso e definição global.
 * Cache de modelos de itens procedurais.
 * Descarte de pixels sobrepostos na criação de modelos dos itens.
+* Recorte de pixels por shader.
 
 ## Ruídos utilitários:
 * OpenSimplex2.java
@@ -175,7 +172,7 @@ em log mesmo porque eu to com preguiça de ficar listando.
 FPS de 40 a 60 padrão testado com até 121 chunks ativas (raio de 5).
 
 ## uso de mémoria testada:
-61 MBs do heap java & 47 MBs do heap nativo. (121 chunks ativas)
+76 MBs do heap java & 16 MBs do heap nativo. (121 chunks ativas)
 
 ## Adicionais:
 caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMine/debug/logs.txt*, onde logs são acumulados.

@@ -21,7 +21,7 @@ public class Bloco {
 	public final String topo, lados, baixo;
 	public final int luz;
 	public final TipoRender render;
-	public boolean solido, culling, modeloX;
+	public boolean solido, culling, modeloX, colisao = true;
 	public static boolean ABERTO = false;
 	/*
 	 * interface de UI associada a este bloco
@@ -62,7 +62,7 @@ public class Bloco {
         Bloco.add(new Bloco("agua", "agua", TipoRender.LIQUIDO, false, false)).solido = false;
         Bloco.add(new Bloco("areia", "areia"));
         Bloco.add(new Bloco("tronco", "tronco_topo", "tronco_lado"));
-        Bloco.add(new Bloco("folha", "folha", TipoRender.RECORTE, true, false));
+        Bloco.add(new Bloco("folha", "folha", TipoRender.RECORTE));
         Bloco.add(new Bloco("tabua_madeira", "tabua_madeira"));
         Bloco.add(new Bloco("cacto", "cacto_topo", "cacto_lado"));
         Bloco.add(new Bloco("vidro", "vidro", TipoRender.TRANSLUCIDO, true, false));
@@ -74,13 +74,13 @@ public class Bloco {
 		Bloco.add(new Bloco("coral_rosa", "coral_rosa"));
 		Bloco.add(new Bloco("coral_azul", "coral_azul"));
 		Bloco.add(new Bloco("coral_amarelo", "coral_amarelo"));
-		Bloco.add(new Bloco("capim", "capim", TipoRender.RECORTE, false, false, 0, true));
-		Bloco.add(new Bloco("tulipa", "tulipa", TipoRender.RECORTE, false, false, 0, true));
-		Bloco.add(new Bloco("tulipa_luminosa", "tulipa", TipoRender.RECORTE, false, false, 5, true));
-		Bloco.add(new Bloco("iris_azul", "iris_azul", TipoRender.RECORTE, false, false, 1, true));
+		Bloco.add(new Bloco("capim", "capim", TipoRender.RECORTE, false, false, 0, true)).colisao = false;
+		Bloco.add(new Bloco("tulipa", "tulipa", TipoRender.RECORTE, false, false, 0, true)).colisao = false;
+		Bloco.add(new Bloco("tulipa_luminosa", "tulipa", TipoRender.RECORTE, false, false, 5, true)).colisao = false;
+		Bloco.add(new Bloco("iris_azul", "iris_azul", TipoRender.RECORTE, false, false, 1, true)).colisao = false;
 		Bloco.add(new Bloco("arenito", "arenito"));
 		Bloco.add(new Bloco("pilar_arenito", "pilar_arenito_topo", "pilar_arenito_lado"));
-		Bloco.add(new Bloco("bloco_nulo", "nulo", TipoRender.AR, false, false));
+		Bloco.add(new Bloco("bloco_nulo", "nulo", TipoRender.AR, false, false)).colisao = false;
 		Bloco.add(new Bloco("bloco_estrutura", "bloco_estrutura"));
 
 		Bloco.addSom("grama", "grama_1", "terra_1", "terra_2", "terra_3");
