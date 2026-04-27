@@ -38,7 +38,7 @@ public class ItemMundo extends Entidade {
         // item nasce no ar, fisica vai resolver o pouso
         this.noChao = false;
 
-        // impulso leve so horizontal + saltinho pequeno
+        // impulso leve so horizontal + salto pequeno
         float angulo = MathUtils.random(0f, MathUtils.PI2);
         this.velocidade.set(
             MathUtils.cos(angulo) * IMPULSO_HORIZONTAL,
@@ -50,6 +50,7 @@ public class ItemMundo extends Entidade {
 
     @Override
     public void att(float delta) {
+		super.att(delta);
         tempoVida -= delta;
 
         // === movimento horizontal com atrito ===
@@ -90,28 +91,8 @@ public class ItemMundo extends Entidade {
         anguloRotacao = (anguloRotacao + VELO_ROTACAO * delta) % 360f;
         if(noChao) tempoFlutuacao += delta;
 
-        // === luz ===
-        final int bx = (int)posicao.x;
-        final int by = (int)(posicao.y);
-        final int bz = (int)posicao.z;
-        final int posX = bx >> 4;
-        final int posZ = bz >> 4;
-        if(chunkCache == null || posX != chunkCache.x || posZ != chunkCache.z) {
-            chunkCache = Mundo.obterChunk(posX, posZ);
-        }
-        if(chunkCache != null && by >= 0 && by < Mundo.Y_CHUNK) {
-            final int lx = bx & 0xF, lz = bz & 0xF;
-            final int idc = lx + (lz << 4) + (by << 8);
-            final int luzTotal = chunkCache.luz[idc] & 0xFF;
-            dadosLuz[0] = luzTotal >> 4;
-            dadosLuz[1] = luzTotal & 0x0F;
-        }
-
         if(modelo != null) {
-            float bobPos = noChao
-                ? MathUtils.sin(tempoFlutuacao * FREQUENCIA_BOB) * AMPLITUDE_BOB
-                : 0f;
-            modelo.transform.setToTranslation(posicao.x, posicao.y + bobPos, posicao.z);
+            modelo.transform.setToTranslation(posicao.x, posicao.y, posicao.z);
             modelo.transform.rotate(Vector3.Y, anguloRotacao);
             modelo.transform.scale(1.5f, 1.5f, 1.5f);
             modelo.calculateTransforms();

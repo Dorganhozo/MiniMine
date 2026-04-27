@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.minimine.inventario.ItemRegistro;
+import com.minimine.inventario.Item;
 
 public class Modelos {
 	public static final HashMap<String, SceneAsset> modelosGltf = new HashMap<>();
@@ -34,7 +35,7 @@ public class Modelos {
 
 	public static Model obterModelo(String caminho, boolean interno) {
 		if(modelosGltf.containsKey(caminho)) return modelosGltf.get(caminho).scene.model;
-		SceneAsset ativoCena = new GLTFLoader().load(interno ? Gdx.files.internal(caminho) : Gdx.files.absolute(caminho));
+		final SceneAsset ativoCena = new GLTFLoader().load(interno ? Gdx.files.internal(caminho) : Gdx.files.absolute(caminho));
 		modelosGltf.put(caminho, ativoCena);
 		return modelosGltf.get(caminho).scene.model;
 	}
@@ -54,25 +55,25 @@ public class Modelos {
 
 		if(item.equals("ar")) return null;
 
-		ItemRegistro.Item reg = ItemRegistro.obter(item);
+		Item reg = ItemRegistro.obter(item);
 		if(reg == null) return null;
 
-		TextureRegion tex = Texturas.atlas.get(reg.textura);
+		final TextureRegion tex = reg.textura;
 		if(tex == null) return null;
 
 		// le os pixels da textura
-		Texture textura = tex.getTexture();
+		final Texture textura = tex.getTexture();
 		if(!textura.getTextureData().isPrepared()) textura.getTextureData().prepare();
-		Pixmap pixmap = textura.getTextureData().consumePixmap();
+		final Pixmap pixmap = textura.getTextureData().consumePixmap();
 
 		// coordenadas do tile no pixmap(em pixels inteiros)
-		int tileX = (int)(tex.getU() * pixmap.getWidth());
-		int tileY = (int)(tex.getV() * pixmap.getHeight());
-		int tileW = (int)((tex.getU2() - tex.getU()) * pixmap.getWidth());
-		int tileH = (int)((tex.getV2() - tex.getV()) * pixmap.getHeight());
+		final int tileX = (int)(tex.getU() * pixmap.getWidth());
+		final int tileY = (int)(tex.getV() * pixmap.getHeight());
+		final int tileW = (int)((tex.getU2() - tex.getU()) * pixmap.getWidth());
+		final int tileH = (int)((tex.getV2() - tex.getV()) * pixmap.getHeight());
 
 		// le a grade de alfa: verdadeiro = pixel visivel
-		boolean[][] visivel = new boolean[PIXELS][PIXELS];
+		final boolean[][] visivel = new boolean[PIXELS][PIXELS];
 		for(int py = 0; py < PIXELS; py++) {
 			for(int px = 0; px < PIXELS; px++) {
 				int imgX = tileX + px * tileW / PIXELS;
@@ -84,18 +85,18 @@ public class Modelos {
 		pixmap.dispose();
 
 		// UV de cada pixel no atlas
-		float uMin = tex.getU();
-		float vMin = tex.getV();
-		float uPasso = (tex.getU2() - uMin) / PIXELS;
-		float vPasso = (tex.getV2() - vMin) / PIXELS;
+		final float uMin = tex.getU();
+		final float vMin = tex.getV();
+		final float uPasso = (tex.getU2() - uMin) / PIXELS;
+		final float vPasso = (tex.getV2() - vMin) / PIXELS;
 
 		// origem da malha para centralizar em(0,0,0)
-		float origem = -TAM_ITEM * 0.5f;
+		final float origem = -TAM_ITEM * 0.5f;
 
 		// pré-aloca generosamente: no pior caso PIXELS*PIXELS*6 faces
-		int maxQuads = PIXELS * PIXELS * 6;
-		float[] verts = new float[maxQuads * 4 * 5]; // 4 verts * 5 floats
-		short[] indices = new short[maxQuads * 6];
+		final int maxQuads = PIXELS * PIXELS * 6;
+		final float[] verts = new float[maxQuads * 4 * 5]; // 4 verts * 5 floats
+		final short[] indices = new short[maxQuads * 6];
 		int vi = 0, ii = 0;
 
 		for(int py = 0; py < PIXELS; py++) {
@@ -325,19 +326,19 @@ public class Modelos {
 		System.arraycopy(indices, 0, indicesFinais, 0, ii);
 
 		int totalVertices = vi / 5;
-		Mesh malha = new Mesh(true, totalVertices, ii,
+		final Mesh malha = new Mesh(true, totalVertices, ii,
 			new VertexAttribute(VertexAttributes.Usage.Position,             3, "a_position"),
 			new VertexAttribute(VertexAttributes.Usage.TextureCoordinates,   2, "a_texCoord0")
 		);
 		malha.setVertices(vertsFinais);
 		malha.setIndices(indicesFinais);
 
-		Material mat = new Material(TextureAttribute.createDiffuse(tex.getTexture()));
+		final Material mat = new Material(TextureAttribute.createDiffuse(tex.getTexture()));
 
-		ModelBuilder mb = new ModelBuilder();
+		final ModelBuilder mb = new ModelBuilder();
 		mb.begin();
 		mb.part("item", malha, GL20.GL_TRIANGLES, 0, ii, mat);
-		Model modelo = mb.end();
+		final Model modelo = mb.end();
 
 		modelosItens.put(item, modelo);
 		return new ModelInstance(modelo);

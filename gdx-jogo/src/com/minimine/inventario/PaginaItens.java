@@ -38,7 +38,7 @@ public class PaginaItens {
     public int totalPaginas = 1;
 
     // lista filtrada de blocos(remontada sempre que filtro ou blocos mudam)
-    public final List<ItemRegistro.Item> filtrados = new ArrayList<>();
+    public final List<Item> filtrados = new ArrayList<>();
 
     // rects dos 30 slots visíveis
     public final Rectangle[] rects = new Rectangle[POR_PAGINA];
@@ -70,7 +70,7 @@ public class PaginaItens {
     public void aoAjustar(int telaV, int telaH) {
         origemX = telaV / 2 - LARGURA_GRADE / 2;
         // campo de pesquisa em cima, grade no meio, navegação em baixo
-        int topoY = telaH / 2 + ALTURA_PAINEL / 2;
+        final int topoY = telaH / 2 + ALTURA_PAINEL / 2;
 
         // campo de pesquisa
         rectCampo.set(origemX, topoY - 44, LARGURA_GRADE, 40);
@@ -115,8 +115,8 @@ public class PaginaItens {
     // reconstroi a lista filtrada e recalcula totalPaginas
     public void reconstruirFiltro() {
         filtrados.clear();
-        String q = filtro.toLowerCase().trim();
-        for(ItemRegistro.Item b : ItemRegistro.todos()) {
+        final String q = filtro.toLowerCase().trim();
+        for(Item b : ItemRegistro.todos()) {
             if(b == null) continue;
             if(q.isEmpty() || ("" + b.nome).toLowerCase().contains(q)) {
                 filtrados.add(b);
@@ -161,12 +161,12 @@ public class PaginaItens {
             return true;
         }
         // slots
-        int base = pagina * POR_PAGINA;
+        final int base = pagina * POR_PAGINA;
         for(int i = 0; i < POR_PAGINA; i++) {
             if(rects[i].contains(telaX, telaY)) {
-                int idc = base + i;
+                final int idc = base + i;
                 if(idc < filtrados.size()) {
-                    ItemRegistro.Item b = filtrados.get(idc);
+                    Item b = filtrados.get(idc);
                     jogador.inv.addItem(b.nome, 64);
                 }
                 return true;
@@ -178,26 +178,24 @@ public class PaginaItens {
     public void renderizar(SpriteBatch sb, BitmapFont fonte) {
         if(!aberta) return;
 
-        int base = pagina * POR_PAGINA;
+        final int base = pagina * POR_PAGINA;
 
         // fundo semitransparente dos slots
         for(int i = 0; i < POR_PAGINA; i++) {
-            int idc = base + i;
+            final int idc = base + i;
             sb.draw(Texturas.base, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
             if(idc < filtrados.size()) {
-                ItemRegistro.Item b = filtrados.get(idc);
-                TextureRegion tex = Texturas.atlas.obter(b.textura);
-                if(tex != null) {
-                    sb.draw(tex,
-							rects[i].x + 4, rects[i].y + 4,
-							TAM_SLOT - 8,   TAM_SLOT - 8
-					);
-                }
+                final Item b = filtrados.get(idc);
+				
+				sb.draw(b.textura,
+					rects[i].x + 4, rects[i].y + 4,
+					TAM_SLOT - 8,   TAM_SLOT - 8
+				);
             }
         }
         // campo de pesquisa: fundo + texto
         sb.draw(Texturas.base, rectCampo.x, rectCampo.y, rectCampo.width, rectCampo.height);
-        String textoExibido = filtro.isEmpty() && !digitando ? "Pesquisar..." : filtro + (digitando ? "|" : "");
+        final String textoExibido = filtro.isEmpty() && !digitando ? "Pesquisar..." : filtro + (digitando ? "|" : "");
         fonte.draw(sb, textoExibido, rectCampo.x + 8, rectCampo.y + rectCampo.height - 10);
 
         // botões de navegação: fundo + label
@@ -208,7 +206,7 @@ public class PaginaItens {
         fonte.draw(sb, ">", rectProximo.x + 22, rectProximo.y + rectProximo.height - 8);
 
         // indicador de pagina centralizado
-        String indicador = (pagina + 1) + "/" + totalPaginas;
+        final String indicador = (pagina + 1) + "/" + totalPaginas;
         fonte.draw(sb, indicador,
 				   rectAnterior.x + LARGURA_GRADE / 2f - 10,
 				   rectAnterior.y + rectAnterior.height - 8);

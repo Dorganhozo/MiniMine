@@ -59,20 +59,20 @@ public class Entidade {
 	public Chunk chunkCache = null;
 	
 	public void attHitbox() {
-		float x = posicao.x;
-		float y = posicao.y;
-		float z = posicao.z;
+		final float x = posicao.x;
+		final float y = posicao.y;
+		final float z = posicao.z;
 
 		hitbox.set(minVec.set(x - largura / 2, y, z - profundidade / 2), maxVec.set(x + largura / 2, y + altura, z + profundidade / 2));
 	}
 
 	public boolean colideMundo() {
-		int minX = Mat.floor(hitbox.min.x);
-		int maxX = Mat.floor(hitbox.max.x);
-		int minY = Mat.floor(hitbox.min.y);
-		int maxY = Mat.floor(hitbox.max.y);
-		int minZ = Mat.floor(hitbox.min.z);
-		int maxZ = Mat.floor(hitbox.max.z);
+		final int minX = Mat.floor(hitbox.min.x);
+		final int maxX = Mat.floor(hitbox.max.x);
+		final int minY = Mat.floor(hitbox.min.y);
+		final int maxY = Mat.floor(hitbox.max.y);
+		final int minZ = Mat.floor(hitbox.min.z);
+		final int maxZ = Mat.floor(hitbox.max.z);
 
 		naAgua = false;
 
@@ -106,19 +106,19 @@ public class Entidade {
 	// para verificar se tem chão embaixo dos pés da entidade
 	public boolean temSuporte(float x, float z) {
 		// 1. configura uma hitbox temporaria na nova posição(x, posicao.y, z)
-		float yBase = posicao.y;
+		final float yBase = posicao.y;
 		// usa blocoBox temporariamente pra a verificação, configurando na nova posição
 		blocoHitbox.set(
 			minVec.set(x - largura / 2, yBase, z - profundidade / 2), 
 			maxVec.set(x + largura / 2, yBase + altura, z + profundidade / 2)
 		);
 		// 2. define a area de busca: um pouco abaixo da base da hitbox
-		int minX = Mat.floor(blocoHitbox.min.x);
-		int maxX = Mat.floor(blocoHitbox.max.x);
+		final int minX = Mat.floor(blocoHitbox.min.x);
+		final int maxX = Mat.floor(blocoHitbox.max.x);
 		// checa o bloco imediatamente abaixo da base(yBase - 0.1f)
-		int yCheque = Mat.floor(yBase - 0.1f); 
-		int minZ = Mat.floor(blocoHitbox.min.z);
-		int maxZ = Mat.floor(blocoHitbox.max.z);
+		final int yCheque = Mat.floor(yBase - 0.1f); 
+		final int minZ = Mat.floor(blocoHitbox.min.z);
+		final int maxZ = Mat.floor(blocoHitbox.max.z);
 
 		for(int atualX = minX; atualX <= maxX; atualX++) {
 			for(int atualZ = minZ; atualZ <= maxZ; atualZ++) {
@@ -126,7 +126,7 @@ public class Entidade {
 				if(id != 0) {
 					final Bloco b = Bloco.numIds.get(id);
 					// se encontrar um bloco solido na camada de checagem, ha suporte
-					if(b != null && b.solido) return true;
+					if(b != null && b.colisao) return true;
 				}
 			}
 		}
@@ -136,14 +136,14 @@ public class Entidade {
 
 	public boolean ehChao() {
 		// verifica se ha blocos solidos logo abaixo dos pes do jogador
-		float epsilon = 0.05f; // margem pra evitar flutuação
-		float yCheque = posicao.y - epsilon;
+		final float epsilon = 0.05f; // margem pra evitar flutuação
+		final float yCheque = posicao.y - epsilon;
 
-		int minX = Mat.floor(posicao.x - largura / 2);
-		int maxX = Mat.floor(posicao.x + largura / 2);
-		int y = Mat.floor(yCheque);
-		int minZ = Mat.floor(posicao.z - profundidade / 2);
-		int maxZ = Mat.floor(posicao.z + profundidade / 2);
+		final int minX = Mat.floor(posicao.x - largura / 2);
+		final int maxX = Mat.floor(posicao.x + largura / 2);
+		final int y = Mat.floor(yCheque);
+		final int minZ = Mat.floor(posicao.z - profundidade / 2);
+		final int maxZ = Mat.floor(posicao.z + profundidade / 2);
 
 		for(int x = minX; x <= maxX; x++) {
 			for(int z = minZ; z <= maxZ; z++) {
@@ -175,9 +175,9 @@ public class Entidade {
 		if(voando) velocidade.y = 0;
 
 		// escolhe aceleração e atrito dependendo de onde está
-		boolean noControle = noChao || voando || naAgua;
-		float acel  = noControle ? aceleracaoChao : aceleracaoAr;
-		float atrito = noControle ? atritoChao : atritoAr;
+		final boolean noControle = noChao || voando || naAgua;
+		final float acel  = noControle ? aceleracaoChao : aceleracaoAr;
+		final float atrito = noControle ? atritoChao : atritoAr;
 
 		// direção da entidade
 		float desejadoX = 0, desejadoZ = 0;
@@ -187,10 +187,10 @@ public class Entidade {
 		if(direita) { desejadoX -= direitaV.x; desejadoZ -= direitaV.z; }
 
 		// normaliza pra evitar diagonal mais rapida
-		float tam = (float)Math.sqrt(desejadoX * desejadoX + desejadoZ * desejadoZ);
+		final float tam = (float)Math.sqrt(desejadoX * desejadoX + desejadoZ * desejadoZ);
 		if(tam > 1f) { desejadoX /= tam; desejadoZ /= tam; }
 
-		float veloAlvo = (agachado && noChao) ? velo * 0.5f : velo;
+		final float veloAlvo = (agachado && noChao) ? velo * 0.5f : velo;
 		desejadoX *= veloAlvo;
 		desejadoZ *= veloAlvo;
 
@@ -216,12 +216,11 @@ public class Entidade {
 		final int _bx = Mat.floor(posicao.x);
 		final int _by = Mat.floor(posicao.y + altura * 0.9f);
 		final int _bz = Mat.floor(posicao.z);
-		final int posX = _bx >> 4;
-		final int posZ = _bz >> 4;
-		final long chave = Chave.calcularChave(posX, posZ);
+		
+		final long chave = Chave.calcularChave(_bx >> 4, _bz >> 4);
 		
 		if(chunkCache == null || chave != chunkCache.chave) {
-			chunkCache = Mundo.obterChunk(chave);
+			chunkCache = Mundo.chunks.get(chave);
 		}
 		if(chunkCache != null && _by >= 0 && _by < Mundo.Y_CHUNK) {
 			final int _lx = _bx & 0xF, _lz = _bz & 0xF;
@@ -252,7 +251,7 @@ public class Entidade {
 			final float blocosCaidos = alturaMaxQueda - posicao.y;
 			final float blocosAlemSeguro = blocosCaidos - BLOCOS_QUEDA_SEGURA;
 			if(blocosAlemSeguro > 0f) {
-				int danoQueda = (int) blocosAlemSeguro; // 1 de dano por bloco acima do limite
+				final int danoQueda = (int) blocosAlemSeguro; // 1 de dano por bloco acima do limite
 				if(danoQueda > 0) tomarDano(danoQueda);
 			}
 			rastreandoQueda = false;

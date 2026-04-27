@@ -26,9 +26,9 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 
 public class Render {
-    public UI ui;
     public Mundo mundo;
 	public DiaNoiteUtil diaNoite;
+	public static UI ui;
 	public static boolean pause = false;
     public static ShaderProgram shader;
     public static ShapeRenderer debugCaixas;
@@ -266,7 +266,10 @@ public class Render {
 			// renderiza os modelos 3D
 			mb.begin(ui.jg.camera);
 
-			for(Entidade e : mundo.entidades) e.render(mb);
+			for(Entidade e : mundo.entidades) {
+				if(e != ui.jg) e.render(mb);
+			}
+			mb.render(gp);
 			if(ui.gui) ui.jg.render(mb);
 
 			mb.end();

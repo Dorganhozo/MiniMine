@@ -41,6 +41,7 @@ import com.badlogic.gdx.graphics.profiling.GLProfiler;
 import com.minimine.cenas.Jogo;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.minimine.inventario.ItemRegistro;
+import com.minimine.inventario.Item;
 
 public class UI implements InputProcessor {
     // camera 3D e renderização
@@ -52,6 +53,8 @@ public class UI implements InputProcessor {
     public static float aprox = 0.01f;
     public static float distancia = 400f;
     public static int pov = 90;
+	
+	public static int telaV, telaH;
 
     // botões do DPad mobile
     public static final HashMap<String, BotaoDpad> botoesDpad = new HashMap<>();
@@ -192,7 +195,7 @@ public class UI implements InputProcessor {
 
     // abre um dialogo de aviso com padrão ao fechar
     public static void abrirDialogo(String titulo, final CaixaDialogo.Fechar fechar) {
-        CaixaDialogo alerta = new CaixaDialogo(visualBase, fonte, 3f, new ShapeRenderer());
+        final CaixaDialogo alerta = new CaixaDialogo(visualBase, fonte, 3f, new ShapeRenderer());
         alerta.largura = 400;
         alerta.altura = 160;
         alerta.x = Gdx.graphics.getWidth() / 2f - alerta.largura / 2f;
@@ -216,19 +219,19 @@ public class UI implements InputProcessor {
 
         botoesDpad.put("direita", new BotaoDpad(Texturas.atlas.get("botao_d"),  0) {
 				public void aoTocar(){jg.direita = true;}
-				public void aoSoltar(){ jg.direita = false;}
+				public void aoSoltar(){jg.direita = false;}
 			});
         botoesDpad.put("esquerda", new BotaoDpad(Texturas.atlas.get("botao_e"), 0) {
-				public void aoTocar(){ jg.esquerda = true;}
+				public void aoTocar(){jg.esquerda = true;}
 				public void aoSoltar(){jg.esquerda = false;}
 			});
         botoesDpad.put("frente", new BotaoDpad(Texturas.atlas.get("botao_f"), 0) {
-				public void aoTocar(){ jg.frente = true;}
-				public void aoSoltar(){ jg.frente = false;}
+				public void aoTocar(){jg.frente = true;}
+				public void aoSoltar(){jg.frente = false;}
 			});
         botoesDpad.put("tras", new BotaoDpad(Texturas.atlas.get("botao_t"), 0) {
 				public void aoTocar(){jg.tras = true;}
-				public void aoSoltar(){ jg.tras = false;}
+				public void aoSoltar(){jg.tras = false;}
 			});
         botoesDpad.put("cima", new BotaoDpad(Texturas.atlas.get("botao_f"), 0) {
 				public void aoTocar() {
@@ -243,11 +246,11 @@ public class UI implements InputProcessor {
 						}
 					}
 				}
-				public void aoSoltar(){ jg.cima = false;}
+				public void aoSoltar(){jg.cima = false;}
 			});
         botoesDpad.put("diagDireita", new BotaoDpad(Texturas.atlas.get("botao_ld"), 0) {
-				public void aoTocar(){ jg.frente = jg.direita = true;}
-				public void aoSoltar(){ jg.frente = jg.direita = false;}
+				public void aoTocar(){jg.frente = jg.direita = true;}
+				public void aoSoltar(){jg.frente = jg.direita = false;}
 			});
         botoesDpad.put("diagEsquerda", new BotaoDpad(Texturas.atlas.get("botao_le"), 0) { public void aoTocar(){ jg.frente = jg.esquerda = true;  } public void aoSoltar(){ jg.frente = jg.esquerda = false; } });
 
@@ -255,11 +258,11 @@ public class UI implements InputProcessor {
 				public void aoTocar() {
 					jg.baixo = true;
 					if(jg.agachado) {
-						jg.velo *= 2;
+						jg.velo *= 2f;
 						jg.altura *= 1.2f;
 						jg.agachado = false;
 					} else {
-						jg.velo /= 2; 
+						jg.velo /= 2f; 
 						jg.altura /= 1.2f;
 						jg.agachado = true;
 					}
@@ -267,11 +270,11 @@ public class UI implements InputProcessor {
 				public void aoSoltar() {
 					jg.baixo = false;
 					if(jg.agachado) {
-						jg.velo *= 2;
+						jg.velo *= 2f;
 						jg.altura *= 1.2f;
 						jg.agachado = false;
 					} else {
-						jg.velo /= 2; 
+						jg.velo /= 2f; 
 						jg.altura /= 1.2f;
 						jg.agachado = true;
 					}
@@ -292,9 +295,8 @@ public class UI implements InputProcessor {
 			});
         botoesDpad.put("inv", new BotaoDpad(Texturas.atlas.get("clique"), jg.inv.tamSlot) {
 				public void aoTocar() {
-					if(jg.modo == 1 && jg.inv.aberto) {
-						jg.inv.alternar();
-					} else if(paginaItens.aberta) paginaItens.fechar();
+					if(jg.modo == 1 && jg.inv.aberto) jg.inv.alternar();
+					else if(paginaItens.aberta) paginaItens.fechar();
 					else jg.inv.alternar();
 				}
 				public void aoSoltar() {}
@@ -342,7 +344,7 @@ public class UI implements InputProcessor {
         defPosDpad("baixo", aX + passo, aY);
 
         // === inv e receita colados a hotbar ===
-        final int hotbarX = v / 2 - (jg.inv.hotbarSlots * jg.inv.tamSlot) / 2;
+        final int hotbarX = (v >> 1) - ((jg.inv.hotbarSlots * jg.inv.tamSlot) >> 1);
         defPosDpad("inv", hotbarX + jg.inv.hotbarSlots * jg.inv.tamSlot, jg.inv.hotbarY);
         
         // === menu pause canto superior direito ===
@@ -498,13 +500,10 @@ public class UI implements InputProcessor {
                 final float rx = inv.rectsGrade[i].x, ry = inv.rectsGrade[i].y;
                 final float rv = inv.rectsGrade[i].width, rh = inv.rectsGrade[i].height;
                 sb.draw(inv.texSlot, rx, ry, rv, rh);
-                final CharSequence nome = inv.gradeReceita[i];
-                if(nome != null && nome.length() > 0) {
-                    final ItemRegistro.Item reg = ItemRegistro.obter(nome);
-                    if(reg != null) {
-                        final TextureRegion tex = Texturas.atlas.obter(reg.textura);
-                        if(tex != null) sb.draw(tex, rx + 4, ry + 4, rv - 8, rh - 8);
-                    }
+				if(inv.gradeReceita[i] == null) continue;
+                final Item item = inv.gradeReceita[i];
+                if(item != null && item.nome.length() > 0) {
+                    sb.draw(item.textura, rx + 4, ry + 4, rv - 8, rh - 8);
                 }
             }
             // slot de resultado
@@ -554,7 +553,7 @@ public class UI implements InputProcessor {
         final float tamCoracao  = 30f;
         final float espCoracao  = 2f;
 
-        float hotbarY = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
+        final float hotbarY = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
             ? jg.inv.rectsHotbar[0].y + jg.inv.tamSlot + 4f
             : 30f;
         final float inicioX = (jg.inv.rectsHotbar != null && jg.inv.rectsHotbar.length > 0 && jg.inv.rectsHotbar[0] != null)
@@ -589,7 +588,7 @@ public class UI implements InputProcessor {
         for(int i = inicio; i < logsArr.length; i++) Logs.logs += logsArr[i] + '\n';
 
         final float yawNorm = ((jg.yaw % 360) + 360) % 360;
-        String direcao;
+        final String direcao;
         if(yawNorm >= 337.5f || yawNorm < 22.5f)   direcao = "Norte";
         else if(yawNorm < 67.5f) direcao = "Nordeste";
         else if(yawNorm < 112.5f) direcao = "Leste";
@@ -612,19 +611,21 @@ public class UI implements InputProcessor {
 					   jg.direita, jg.esquerda, jg.frente, jg.tras, jg.cima, jg.baixo, jg.acao,
 					   mundo.nome, jg.bioma, mundo.RAIO_CHUNKS, mundo.chunks.size(),
 					   mundo.chunksMod.size(), mundo.semente, Jogo.render.diaNoite.tempo, Jogo.render.diaNoite.tempo_velo),
-				   50, Gdx.graphics.getHeight() - 100);
+				   50, telaH - 100);
         fonte.draw(sb, String.format(
-					   "FPS: %d\nGPU:\nDesenhos: %d\nVértices: %.0f\n" +
+					   "FPS: %d\nGPU:\nDesenhos: %d\nVértices: %.0f\nTrocas de Shader: %d\nLinks de textura: %d\n" +
 					   "Threads ativas: %d\nMemória livre: %.1f MB\nMemória total: %.1f MB\n" +
 					   "Memória usada: %.1f MB\nMemória nativa livre: %.1f MB\nMemória nativa total: %.1f MB\n" +
 					   "Memória nativa usada: %.1f MB\n\nLogs:\n%s",
 					   fps,
 					   gpu.getDrawCalls(),
 					   gpu.getVertexCount().total,
+					   gpu.getShaderSwitches(),
+					   gpu.getTextureBindings(),
 					   Thread.activeCount(), livre, total, total - livre,
 					   nativaLivre, nativaTotal, nativaTotal - nativaLivre,
 					   Logs.logs),
-				   Gdx.graphics.getWidth() - 300, Gdx.graphics.getHeight() - 100);
+				   telaV - 300, telaH - 100);
 		gpu.reset();
     }
 
@@ -640,6 +641,8 @@ public class UI implements InputProcessor {
     }
 
     public void ajustar(int v, int h) {
+		telaV = v;
+		telaH = h;
         Gdx.gl.glViewport(0, 0, v, h);
         camera.viewportWidth  = v;
         camera.viewportHeight = h;
@@ -661,7 +664,7 @@ public class UI implements InputProcessor {
 
     @Override
     public boolean touchDown(int telaX, int telaY, int p, int b) {
-        int y = Gdx.graphics.getHeight() - telaY;
+        int y = telaH - telaY;
 
         // interfaces de blocos tem prioridade sobre tudo exceto o gerenciador
         if(gerenciador.processarToque(telaX, y, true)) return true;
@@ -735,7 +738,7 @@ public class UI implements InputProcessor {
     @Override
     public boolean touchUp(int telaX, int telaY, int p, int b) {
         if(b == Input.Buttons.RIGHT) jg.acao = false;
-        final int y = Gdx.graphics.getHeight() - telaY;
+        final int y = telaH - telaY;
 
         gerenciador.processarToque(telaX, y, false);
 
@@ -758,7 +761,7 @@ public class UI implements InputProcessor {
     @Override
     public boolean touchDragged(int telaX, int telaY, int p) {
         if(modoTexto) return true;
-        final int y = Gdx.graphics.getHeight() - telaY;
+        final int y = telaH - telaY;
 
         jg.inv.aoArrastar(telaX, y);
 
@@ -888,7 +891,7 @@ public class UI implements InputProcessor {
     @Override
     public boolean mouseMoved(int x, int y1) {
         if(modoTexto || MenuPause.menuAberto) return true;
-        final int y = Gdx.graphics.getHeight() - y1;
+        final int y = telaH - y1;
         jg.inv.aoArrastar(x, y);
         if(!jg.inv.aberto) {
             jg.yaw -= Gdx.input.getDeltaX() * sensi;

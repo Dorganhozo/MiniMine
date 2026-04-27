@@ -47,6 +47,7 @@ import com.minimine.mundo.ChunkLuz;
 import com.minimine.utils.MemNativa;
 import com.badlogic.gdx.files.FileHandle;
 import com.minimine.inventario.ItemRegistro;
+import com.minimine.inventario.Item;
 
 public class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
@@ -343,7 +344,7 @@ public class ArquivosUtil {
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {
 		int total = dis.readInt();
 		if(jogador.inv == null || total == 0) jogador.inv = new Inventario(jogador);
-		if(jogador.inv.itens == null || (jogador.inv.itens.length != total && total != 0)) jogador.inv.itens = new Inventario.Item[total];
+		if(jogador.inv.itens == null || (jogador.inv.itens.length != total && total != 0)) jogador.inv.itens = new Item[total];
 
 		for(int i = 0; i < total; i++) {
 			boolean temItem = false;
@@ -355,23 +356,18 @@ public class ArquivosUtil {
 				continue;
 			}
 			if(temItem) {
-				String nome = dis.readUTF();
-				int quantidade = dis.readInt();
+				final String nome = dis.readUTF();
+				final int quantidade = dis.readInt();
 
-				TextureRegion textura = null;
+				final TextureRegion textura;
 
-				for(ItemRegistro.Item b : ItemRegistro.todos()) {
-					if(b == null) continue;
-					if(b.nome.equals(nome)) {
-						textura = Texturas.atlas.obter(b.textura);
-						break;
-					}
-				}
-				if(textura == null) {
+				final Item b = ItemRegistro.obter(nome);
+				if(b != null) textura = b.textura;		
+				else {
 					Gdx.app.log("[Inventario]", "textura não encontrada para: " + nome);
 					textura = Texturas.atlas.obter("terra");
 				}
-				jogador.inv.itens[i] = new Inventario.Item(nome, textura, quantidade);
+				jogador.inv.itens[i] = new Item(nome, textura, quantidade);
 			} else {
 				jogador.inv.itens[i] = null;
 			}

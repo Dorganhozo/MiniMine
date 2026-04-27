@@ -19,10 +19,10 @@ public class GerenciadorEntidades {
 
 	public static void att(float delta, Mundo mundo, Jogador jg) {
 		// remove entidades se saiu da area visivel
-		Iterator<Entidade> it = mundo.entidades.iterator();
+		final Iterator<Entidade> it = mundo.entidades.iterator();
 		while(it.hasNext()) {
-			Entidade e = it.next();
-			long chaveE = Chave.calcularChave((int)e.posicao.x >> 4, (int)e.posicao.z >> 4);
+			final Entidade e = it.next();
+			final long chaveE = Chave.calcularChave((int)e.posicao.x >> 4, (int)e.posicao.z >> 4);
 			if(!mundo.chunks.containsKey(chaveE)) {
 				e.liberar();
 				it.remove();
@@ -40,11 +40,11 @@ public class GerenciadorEntidades {
 
 			if(e.naAgua) {
 				// empuxo quase cancela a gravidade; foca fica levemente suspensa
-				float empuxo = -mundo.GRAVIDADE * 0.92f; // ~27.6, quase neutraliza os -30
+				final float empuxo = -mundo.GRAVIDADE * 0.92f; // ~27.6, quase neutraliza os -30
 				e.velocidade.y += (mundo.GRAVIDADE + empuxo) * delta;
 				// amortece velocidade vertical na água pra dar sensação de resistencia do fluido
 				e.velocidade.y *= (float)Math.pow(0.85, 1);
-			} else {
+			} else if(!e.voando) {
 				e.velocidade.y += mundo.GRAVIDADE * delta;
 			}
 			if(e.velocidade.y < e.VELO_MAX_QUEDA) e.velocidade.y = e.VELO_MAX_QUEDA;
@@ -53,7 +53,7 @@ public class GerenciadorEntidades {
 
 	public static void tentarNascerEntidade(Jogador jogador, Mundo mundo) {
 		// pega um chunk carregado aleatório(estado 2 = malha pronta)
-		List<Long> disponiveis = new ArrayList<>();
+		final List<Long> disponiveis = new ArrayList<>();
 		for(Map.Entry<Long, Integer> e : mundo.estados.entrySet()) {
 			if(e.getValue() == 2) disponiveis.add(e.getKey());
 		}
@@ -61,31 +61,31 @@ public class GerenciadorEntidades {
 
 		// embaralha tentando até 5 chunks candidatos
 		for(int t = 0; t < 5; t++) {
-			long chave = disponiveis.get(aleatorio.nextInt(disponiveis.size()));
-			int cx = Chave.x(chave);
-			int cz = Chave.z(chave);
+			final long chave = disponiveis.get(aleatorio.nextInt(disponiveis.size()));
+			final int cx = Chave.x(chave);
+			final int cz = Chave.z(chave);
 
 			// posição aleatória dentro da chunk
-			int mx = cx * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
-			int mz = cz * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
+			final int mx = cx * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
+			final int mz = cz * mundo.TAM_CHUNK + aleatorio.nextInt(mundo.TAM_CHUNK);
 
 			// distancia minima do jogador
-			float dx = mx - jogador.posicao.x;
-			float dz = mz - jogador.posicao.z;
+			final float dx = mx - jogador.posicao.x;
+			final float dz = mz - jogador.posicao.z;
 			if(dx * dx + dz * dz < DIST_MIN_NASCER * DIST_MIN_NASCER) continue;
 
-			int wy = mundo.obterAlturaChao(mx, mz);
-			if(wy <= 1) continue;
+			final int vy = mundo.obterAlturaChao(mx, mz);
+			if(vy <= 1) continue;
 
-			String bioma = Mundo.motor.obterBioma(mx, mz);
+			final String bioma = Mundo.motor.obterBioma(mx, mz);
 
-			List<DadosCriatura> candidatos = Mundo.registroCriaturas.paraOBioma(bioma);
+			final List<DadosCriatura> candidatos = Mundo.registroCriaturas.paraOBioma(bioma);
 			if(candidatos.isEmpty()) return;
 
-			DadosCriatura escolhido = sortearPorRaridade(candidatos);
+			final DadosCriatura escolhido = sortearPorRaridade(candidatos);
 			if(escolhido == null) return;
 
-			mundo.entidades.add(new Criatura(escolhido, mx, wy, mz));
+			mundo.entidades.add(new Criatura(escolhido, mx, vy, mz));
 			return;
 		}
 	}

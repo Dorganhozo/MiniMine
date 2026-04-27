@@ -24,7 +24,6 @@ import com.minimine.graficos.Modelos;
 import com.minimine.mundo.blocos.InterfaceBloco;
 import com.minimine.inventario.Inventario;
 import com.badlogic.gdx.math.MathUtils;
-import com.minimine.inventario.ItemRegistro;
 import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
 import com.badlogic.gdx.graphics.Mesh;
@@ -35,6 +34,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Matrix4;
 import com.minimine.mundo.Chave;
 import com.minimine.entidades.ItemMundo;
+import com.minimine.inventario.Item;
 
 public class Jogador extends Entidade {
 	public int modo = 2;
@@ -200,7 +200,7 @@ public class Jogador extends Entidade {
 				deixados.remove();
 			}
 		}
-		final Inventario.Item itemInv = inv.itens[inv.slotSelecionado];
+		final Item itemInv = inv.itens[inv.slotSelecionado];
 		if(itemInv != null && itemInv.nome != item) item = itemInv.nome;
 		else if(itemInv == null) item = "ar";
 
@@ -294,8 +294,8 @@ public class Jogador extends Entidade {
 			camera.update();
 			return;
 		}
-		float balancoX = MathUtils.sin(tempoAnimacao * 0.5f) * 0.05f;
-		float balancoY = Math.abs(MathUtils.cos(tempoAnimacao)) * 0.05f;
+		final float balancoX = MathUtils.sin(tempoAnimacao * 0.5f) * 0.05f;
+		final float balancoY = Math.abs(MathUtils.cos(tempoAnimacao)) * 0.05f;
 
 		instancia.transform.translate(0.5f + balancoX, -2.15f + balancoY, -1f);
 		instancia.transform.rotate(Vector3.Y, 15);

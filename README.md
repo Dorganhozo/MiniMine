@@ -227,7 +227,6 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * **E**: abre o inventario.
 * **T**: abre o chat.
 * **F1**: abre o modo de debug.
-* **R**: fabrica algo com base no item selecionado.
 * **ESC**: abre o menu de pausa durante o jogo.
 
 ## paleta de cores:
@@ -250,23 +249,24 @@ caso o jogo crashe ou você não tenha visão completa dos logs, visite *MiniMin
 * VDLN7
 
 **Pixel arte**:
+* Rheytor
 * Shiniga-OP
 * Marin
-* Rheytor
 
 **Modelagem 3D**:
 * Shiniga-OP
 * Green
 
-**Teste da API de mods e documentação ou ambiente de execução**:
-* VDLN7
+**Teste com ambiente de execução**:
+* Shiniga-OP
 * Green
+* VDLN7
 * Dorganhozo
 * Marin
 
 **Canais:**
 - [Shiniga-OP](https://youtube.com/@shiniga-op?si=A78wk-sm3EJvgavE)
-- [VDLN7](https://youtube.com/@violetbrasilofc?si=Ip8AkZdPnDDdFjGm)
+- [VDLN7](https://youtube.com/@vdln7?si=1JVBOUmaSPGcsJVU)
 - [Green](https://youtube.com/@greenlevelcreatordev?si=q1HhyS115FbbPhOI)
 - [Dorganhozo](https://youtube.com/@dorganzo?si=phKKbJ4P5C87TMJ0)
 - [Rheytor](https://youtube.com/@rheynnanvictorpereirasanto8808?si=DnNsy7RUy3nv8qLy)

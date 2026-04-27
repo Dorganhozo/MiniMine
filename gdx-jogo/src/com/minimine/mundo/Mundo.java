@@ -203,7 +203,7 @@ public class Mundo {
 
         final boolean eraEmissor = blocoAntigoId != 0 && Bloco.numIds.get(blocoAntigoId).luz > 0;
 
-        if(blocoAntigoId != 0 && bloco != 0) {
+        if(blocoAntigoId != 0) {
             Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
         }
         ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
