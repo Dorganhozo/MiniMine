@@ -71,7 +71,7 @@ public class Config implements Screen, InputProcessor {
         toqueAuxiliar = new Vector3();
         escalaPixel = 4.0f;
 
-        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        final Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(1, 1, 1, 1);
         pixmap.fill();
         pixelBranco = new Texture(pixmap);
@@ -273,7 +273,19 @@ public class Config implements Screen, InputProcessor {
             }
         );
         painelOpcoes.add(itemGraficos);
-
+		
+		// GUI:
+        painelOpcoes.add(ItemConfig.alternar(
+			5, posItem(7, alturaItem, espacamento), larguraItem, alturaItem,
+			"Interface de jogo:", UI.gui ? "Ligado" : "Desligado",
+			fonteTexto, escalaItem, pixelBranco, visualBotao,
+			new Acao() {
+				public void exec() {
+						UI.gui = !UI.gui;
+						itemGraficos.rotuloValor.texto = UI.gui ? "Ligado" : "Desligado";
+					}
+			}
+		));
         painelPrincipal.add(painelOpcoes);
 
         Acao acaoVoltar = new Acao() {

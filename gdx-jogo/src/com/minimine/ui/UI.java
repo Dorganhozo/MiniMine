@@ -84,7 +84,7 @@ public class UI implements InputProcessor {
     public static Debugador debugador;
 
     public boolean chatAberto = false;
-    public String  ultimaMensagem = "";
+    public String ultimaMensagem = "";
     public List<String> msgs = new ArrayList<>();
 
     public PaginaItens paginaItens = new PaginaItens();
@@ -92,7 +92,7 @@ public class UI implements InputProcessor {
     public static Runtime rt = Runtime.getRuntime();
 	public static GLProfiler gpu;
 
-    public boolean gui = true;
+    public static boolean gui = true;
 
     public UI(Jogador jogador) {
         camera = new PerspectiveCamera(pov, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());

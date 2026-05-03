@@ -13,61 +13,55 @@ public class ChunkUtil {
 	}
 
 	public static byte obterLuzCompleta(int x, int y, int z, Chunk chunk) {
-		final int idc = x + (z << 4) + (y << 8);
-		synchronized(chunk) { return chunk.luz[idc]; }
+		return chunk.luz[x + (z << 4) + (y << 8)];
 	}
 
 	public static byte obterLuzBloco(int x, int y, int z, Chunk chunk) {
-		final int idc = x + (z << 4) + (y << 8);
-		synchronized(chunk) { return (byte)(chunk.luz[idc] & 15); }
+		return (byte)(chunk.luz[x + (z << 4) + (y << 8)] & 15);
 	}
 
 	public static void defLuzBloco(int x, int y, int z, byte valor, Chunk chunk) {
 		final int idc = x + (z << 4) + (y << 8);
-		synchronized(chunk) { chunk.luz[idc] = (byte)((chunk.luz[idc] & 0xF0) | (valor & 15)); }
+		chunk.luz[idc] = (byte)((chunk.luz[idc] & 0xF0) | (valor & 15));
 	}
 
 	public static short obterMeta(int x, int y, int z, Chunk chunk) {
-		synchronized(chunk) { return chunk.meta[x + (z << 4) + (y << 8)]; }
+		return chunk.meta[x + (z << 4) + (y << 8)];
 	}
 	public static void defMeta(int x, int y, int z, short valor, Chunk chunk) {
-		synchronized(chunk) { chunk.meta[x + (z << 4) + (y << 8)] = valor; }
+		chunk.meta[x + (z << 4) + (y << 8)] = valor;
 	}
 	
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x < 0 || x >= 16 || y < 0 || y >= 256 || z < 0 || z >= 16) {
 			return false;
 		}
-		synchronized(chunk) {
-			int bloco;
-			if(chunk.usaPaleta) {
-				bloco = chunk.paleta[
-					lerPacote(x + (z << 4) + (y << 8),
-							  chunk.paletaBits, chunk.blocos,
-							  chunk.blocosPorInt, LOG2(chunk.blocosPorInt))
-					];
-			} else {
-				bloco = lerPacote(x + (z << 4) + (y << 8),
-								  chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt,
-								  LOG2(chunk.blocosPorInt));
-			}
-			return bloco != 0;
+		final int bloco;
+		if(chunk.usaPaleta) {
+			bloco = chunk.paleta[
+				lerPacote(x + (z << 4) + (y << 8),
+						  chunk.paletaBits, chunk.blocos,
+						  chunk.blocosPorInt, LOG2(chunk.blocosPorInt))
+				];
+		} else {
+			bloco = lerPacote(x + (z << 4) + (y << 8),
+							  chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt,
+							  LOG2(chunk.blocosPorInt));
 		}
+		return bloco != 0;
 	}
 
 	public static int obterBloco(int x, int y, int z, Chunk chunk) {
-		synchronized(chunk) {
-			int total = x + (z << 4) + (y << 8);
+		final int total = x + (z << 4) + (y << 8);
 
-			if(chunk.blocos == null) return 0;
+		if(chunk.blocos == null) return 0;
 
-			if(chunk.usaPaleta) {
-				int idc = lerPacote(total, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
-				if(idc < 0 || idc >= chunk.paletaTam) return 0;
-				return chunk.paleta[idc];
-			} else {
-				return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
-			}
+		if(chunk.usaPaleta) {
+			int idc = lerPacote(total, chunk.paletaBits, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
+			if(idc < 0 || idc >= chunk.paletaTam) return 0;
+			return chunk.paleta[idc];
+		} else {
+			return lerPacote(total, chunk.bitsPorBloco, chunk.blocos, chunk.blocosPorInt, LOG2(chunk.blocosPorInt));
 		}
 	}
 
@@ -76,24 +70,20 @@ public class ChunkUtil {
 	}
 
 	public static void defBloco(int x, int y, int z, int bloco, Chunk chunk) {
-		synchronized(chunk) {
-			defBlocoInterno(x, y, z, bloco, chunk);
-		}
+		defBlocoInterno(x, y, z, bloco, chunk);
 	}
 
 	// escreve bloco e meta atomicamente no mesmo synchronized
 	// usado por FluxoAgua.propagarVizinho para evitar race condition entre
 	// defBloco e defMeta que permitia attFluxo ler água com meta=NIVEL_AUSENTE
 	public static void defBlocoEMeta(int x, int y, int z, Chunk chunk, int nivelNovo, boolean jaEhAgua) {
-		synchronized(chunk) {
-			if(jaEhAgua) {
-				int nivelAtual = chunk.meta[x + (z << 4) + (y << 8)] & 0xFF;
-				if(nivelAtual != 0xFF && nivelNovo >= nivelAtual) return;
-			} else {
-				defBlocoInterno(x, y, z, com.minimine.mundo.blocos.Bloco.texIds.get("agua").tipo, chunk);
-			}
-			chunk.meta[x + (z << 4) + (y << 8)] = (short) nivelNovo;
+		if(jaEhAgua) {
+			int nivelAtual = chunk.meta[x + (z << 4) + (y << 8)] & 0xFF;
+			if(nivelAtual != 0xFF && nivelNovo >= nivelAtual) return;
+		} else {
+			defBlocoInterno(x, y, z, com.minimine.mundo.blocos.Bloco.texIds.get("agua").tipo, chunk);
 		}
+		chunk.meta[x + (z << 4) + (y << 8)] = (short) nivelNovo;
 	}
 
 	// chamado apenas dentro de synchronized(chunk)
@@ -214,8 +204,8 @@ public class ChunkUtil {
 		chunk.blocosPorInt = 32 / chunk.paletaBits;
 
 		final int totalBlocos = 1 << 16;
-		int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
-		int[] novos = new int[tamNovo];
+		final int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+		final int[] novos = new int[tamNovo];
 
 		final int log2Antigo = LOG2(blocosPorIntAntigo);
 		final int log2Novo = LOG2(chunk.blocosPorInt);
@@ -241,17 +231,17 @@ public class ChunkUtil {
 		int bitsParaReal = bitsPraMaxId(maxVal);
 		if(bitsParaReal < 1) bitsParaReal = 1;
 
-		int bitsAntigo = chunk.paletaBits;
-		int blocosPorIntAntigo = chunk.blocosPorInt;
-		int[] antigos = chunk.blocos;
+		final int bitsAntigo = chunk.paletaBits;
+		final int blocosPorIntAntigo = chunk.blocosPorInt;
+		final int[] antigos = chunk.blocos;
 
 		chunk.usaPaleta = false;
 		chunk.bitsPorBloco = bitsParaReal;
 		chunk.blocosPorInt = 32 / chunk.bitsPorBloco;
 		chunk.maxIds = (1 << chunk.bitsPorBloco) - 1;
 
-		int totalBlocos = 1 << 16;
-		int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+		final int totalBlocos = 1 << 16;
+		final int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
 		int[] novos = new int[tamNovo];
 
 		final int log2Antigo = LOG2(blocosPorIntAntigo);
@@ -261,8 +251,8 @@ public class ChunkUtil {
 			// lerPacote/gravarPacote usam bit-shift internamente(blocosPorInt é sempre potencia de 2)
 			// evita divisão inteira em loop de 65280 iterações
 			for(int i = 0; i < totalBlocos; i++) {
-				int idcPal = lerPacote(i, bitsAntigo, antigos, blocosPorIntAntigo, log2Antigo);
-				int real = (idcPal >= 0 && idcPal < chunk.paletaTam) ? chunk.paleta[idcPal] : 0;
+				final int idcPal = lerPacote(i, bitsAntigo, antigos, blocosPorIntAntigo, log2Antigo);
+				final int real = (idcPal >= 0 && idcPal < chunk.paletaTam) ? chunk.paleta[idcPal] : 0;
 				gravarPacote(i, real, chunk.bitsPorBloco, novos, chunk.blocosPorInt, log2Novo);
 			}
 		}
@@ -287,12 +277,12 @@ public class ChunkUtil {
 			}
 			convertPaletaDireto(chunk, 0);
 			if(chunk.bitsPorBloco < bitsPorBloco) {
-				int bitsAntigo = chunk.bitsPorBloco;
-				int blocosPorIntAntigo = chunk.blocosPorInt;
+				final int bitsAntigo = chunk.bitsPorBloco;
+				final int blocosPorIntAntigo = chunk.blocosPorInt;
 
 				if(bitsAntigo == bitsPorBloco) return; // evita o loop
 
-				int[] antigos = chunk.blocos;
+				final int[] antigos = chunk.blocos;
 
 				chunk.bitsPorBloco = bitsPorBloco;
 				chunk.blocosPorInt = 32 / chunk.bitsPorBloco;
@@ -309,7 +299,7 @@ public class ChunkUtil {
 					// lerPacote/gravarPacote usam bit-shift internamente(blocosPorInt é sempre potencia de 2)
 					// evita divisão inteira em loop de 65280 iterações
 					for(int i = 0; i < totalBlocos; i++) {
-						int idAntigo = lerPacote(i, bitsAntigo, antigos, blocosPorIntAntigo, log2Antigo);
+						final int idAntigo = lerPacote(i, bitsAntigo, antigos, blocosPorIntAntigo, log2Antigo);
 						gravarPacote(i, idAntigo, chunk.bitsPorBloco, novos, chunk.blocosPorInt, log2Novo);
 					}
 				}
@@ -320,17 +310,17 @@ public class ChunkUtil {
 		// comportamento antigo(modo direto)
 		if(bitsPorBloco < 1) bitsPorBloco = 1;
 
-		int bitsAntigo = chunk.bitsPorBloco;
-		int blocosPorIntAntigo = chunk.blocosPorInt;
-		int[] antigos = chunk.blocos;
+		final int bitsAntigo = chunk.bitsPorBloco;
+		final int blocosPorIntAntigo = chunk.blocosPorInt;
+		final int[] antigos = chunk.blocos;
 
 		chunk.maxIds = (1 << bitsPorBloco) - 1;
 		chunk.bitsPorBloco = bitsPorBloco;
 		chunk.blocosPorInt = 32 / chunk.bitsPorBloco;
 
 		final int totalBlocos = 1 << 16;
-		int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
-		int[] novos = new int[tamNovo];
+		final int tamNovo = (totalBlocos + chunk.blocosPorInt - 1) / chunk.blocosPorInt;
+		final int[] novos = new int[tamNovo];
 
 		final int log2Antigo = LOG2(blocosPorIntAntigo);
 		final int log2Novo = LOG2(chunk.blocosPorInt);
@@ -339,7 +329,7 @@ public class ChunkUtil {
 			// lerPacote/gravarPacote usam bit-shift internamente(blocosPorInt é sempre potencia de 2)
 			// evita divisão inteira em loop de 65280 iterações
 			for(int i = 0; i < totalBlocos; i++) {
-				int idAntigo = lerPacote(i, bitsAntigo, antigos, blocosPorIntAntigo, log2Antigo);
+				final int idAntigo = lerPacote(i, bitsAntigo, antigos, blocosPorIntAntigo, log2Antigo);
 				gravarPacote(i, idAntigo, chunk.bitsPorBloco, novos, chunk.blocosPorInt, log2Novo);
 			}
 		}

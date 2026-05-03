@@ -125,9 +125,9 @@ public class GraficosTeste extends Renderizador {
 
         // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-							Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
-							Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
-						}, 2.5f);  // 2.5 quadros por segundo
+			Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
+			Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
+		}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas
         gp = new GerenciadorParticulas(ui.jg);
@@ -190,7 +190,28 @@ public class GraficosTeste extends Renderizador {
 					renderChunk(chunk, chunk.iboId, 0, chunk.contaSolida, shader);
 				}
 			}
-			// 2. transparentes:
+			// 2. entidades, antes da agua para nao serem bloqueadas pelo buffer de profundidade dela
+			shader.end();
+			gp.att(delta);
+			mb.begin(ui.jg.camera);
+			for(Entidade e : mundo.entidades) {
+				if(e != ui.jg) e.render(mb);
+			}
+			mb.render(gp);
+			mb.end();
+			// restaura estado GL apos o mb
+			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
+			Gdx.gl.glDepthMask(true);
+			shader.begin();
+			shader.setUniformMatrix("u_projPos", ui.jg.camera.combined);
+			shader.setUniformf("u_luzCeu", diaNoite.luz);
+			shader.setUniformf("u_corCeu", diaNoite.corCeuR, diaNoite.corCeuG, diaNoite.corCeuB);
+			shader.setUniform4fv("u_atlasRects", BlocoModelo.dadosAtlas, 0, 256 * 4);
+			Texturas.blocos.bind(0);
+			shader.setUniformi("u_textura", 0);
+
+			// 3. transparentes:
 			Gdx.gl.glEnable(GL20.GL_BLEND);
 			Gdx.gl.glDisable(GL20.GL_CULL_FACE);
 
@@ -206,19 +227,12 @@ public class GraficosTeste extends Renderizador {
 
 			if(mundo.nuvens) NuvensUtil.att(delta, ui.jg.camera);
 
-			gp.att(delta);
-
-			// renderiza os modelos 3D
-			mb.begin(ui.jg.camera);
-
-			for(Entidade e : mundo.entidades) {
-				if(e != ui.jg) e.render(mb);
+			// 4. jogador(primeira pessoa)
+			if(ui.gui) {
+				mb.begin(ui.jg.camera);
+				ui.jg.render(mb);
+				mb.end();
 			}
-			mb.render(gp);
-			if(ui.gui) ui.jg.render(mb);
-
-			mb.end();
-
 			// renderiza o debug:
 			if(ui.debug) {
 				debugCaixas.setColor(1, 0, 0, 1); // vermelho pro jogador
