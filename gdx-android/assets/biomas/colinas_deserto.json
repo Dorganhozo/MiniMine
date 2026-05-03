@@ -1,12 +1,12 @@
 {
   "nome": "colinas_deserto",
-  "peso": 1.0,
+  "peso": 4.0,
   "alt_min": 75,
   "alt_max": 255,
 
   "clima": {
-    "calor": 0.85,
-    "umidade": 0.15
+    "calor": 0.75,
+    "umidade": 0.25
   },
   "superficie": {
     "topo": "areia",

@@ -16,7 +16,7 @@ import com.minimine.mundo.blocos.Bloco;
 public class Criatura extends Entidade {
     public final DadosCriatura dados;
 
-    // variáveis internas do JSON(sede, fome, etc)
+    // variaveis internas do JSON(sede, fome, etc)
     public final Map<String, Float> variaveis = new LinkedHashMap<>();
     public final Map<String, float[]> faixasVariaveis = new LinkedHashMap<>(); // {min, max}
 
@@ -36,7 +36,17 @@ public class Criatura extends Entidade {
     public String animAtual = "";
 
     public Vector3 direcaoSuave = new Vector3();
-	
+
+    // vaga aleatoriamente quando sem destino
+    public float cronometroVadiar = 0f;
+    public Vector3 direcaoVadiar = new Vector3();
+
+    // detecção de preso em parede
+    public float cronometroPreso = 0f;
+    public float ultimoPosX = 0f;
+    public float ultimoPosZ = 0f;
+    public static final float TEMPO_PRESO = 1.2f;
+
     public Criatura(DadosCriatura dados, float x, float y, float z) {
         super();
         this.dados = dados;
@@ -49,13 +59,13 @@ public class Criatura extends Entidade {
         this.pulo = dados.pulo;
         this.posicao.set(x, y, z);
 
-        // inicializa variáveis com valor e faixa do JSON
+        // inicializa variaveis com valor e faixa do JSON
         for(Map.Entry<String, float[]> e : dados.variaveis.entrySet()) {
             float[] faixa = e.getValue(); // {valorInicial, min, max}
             variaveis.put(e.getKey(), faixa[0]);
             faixasVariaveis.put(e.getKey(), new float[]{faixa[1], faixa[2]});
         }
-        ia = new IA();
+        ia = new IA(dados.variaveis.size());
 
         try {
             instancia = new ModelInstance(Modelos.obterModelo(dados.modelo));
@@ -72,6 +82,39 @@ public class Criatura extends Entidade {
 
         // 2. move em direção ao destino se tiver um
         if(temDestino && destino != null) moverParaDestino();
+
+        // vaga quando sem destino, escolhe direção aleatoria periodicamente
+        if(!temDestino || destino == null) {
+            cronometroVadiar -= delta;
+            if(cronometroVadiar <= 0f) {
+                float angulo = MathUtils.random(MathUtils.PI2);
+                direcaoVadiar.set(MathUtils.cos(angulo), 0f, MathUtils.sin(angulo));
+                cronometroVadiar = MathUtils.random(2f, 6f);
+            }
+            frenteV.x = direcaoVadiar.x;
+            frenteV.z = direcaoVadiar.z;
+            if(frenteV.len2() > 0.001f) frenteV.nor();
+            direitaV.x =  frenteV.z;
+            direitaV.z = -frenteV.x;
+            frente = true;
+        }
+        // detecção de preso: tentando andar mas posição não muda → pula e muda direção
+        if(frente && noChao && !naAgua) {
+            float movX = Math.abs(posicao.x - ultimoPosX);
+            float movZ = Math.abs(posicao.z - ultimoPosZ);
+            if(movX < 0.01f && movZ < 0.01f) {
+                cronometroPreso += delta;
+                if(cronometroPreso >= TEMPO_PRESO) {
+                    cima = true;
+                    cronometroPreso = 0f;
+                    if(!temDestino) cronometroVadiar = 0f; // força nova direção
+                }
+            } else {
+                cronometroPreso = 0f;
+            }
+        }
+        ultimoPosX = posicao.x;
+        ultimoPosZ = posicao.z;
 
         // 3. tick de decisão da IA
         cronometroIA -= delta;
@@ -96,16 +139,18 @@ public class Criatura extends Entidade {
     }
 
     public float[] montarObservacao() {
-        float[] obs = new float[IA.ENTRADAS];
-        obs[0] = naAgua ? 1f : 0f;
-        obs[1] = 0f;
-        obs[2] = 0f;
-        obs[3] = 0f;
-        obs[4] = noChao ? 1f : 0f;
-        obs[5] = MathUtils.clamp(velocidade.y / 10f, -1f, 1f);
-        if(temDestino && destino != null) {
-            obs[1] = MathUtils.clamp((destino.x - posicao.x) / 20f, -1f, 1f);
-            obs[2] = MathUtils.clamp((destino.z - posicao.z) / 20f, -1f, 1f);
+        float[] obs = new float[ia.ENTRADAS];
+        // entradas fixas
+        obs[0] = naAgua  ? 1f : 0f;
+        obs[1] = noChao  ? 1f : 0f;
+        obs[2] = MathUtils.clamp(velocidade.y / 10f, -1f, 1f);
+        // uma entrada por variável do JSON, normalizada entre 0 e 1 usando min/max
+        int i = 3;
+        for(Map.Entry<String, Float> e : variaveis.entrySet()) {
+            float[] faixa = faixasVariaveis.get(e.getKey());
+            float min = faixa[0], max = faixa[1];
+            float span = max - min;
+            obs[i++] = span > 0f ? MathUtils.clamp((e.getValue() - min) / span, 0f, 1f) : 0f;
         }
         return obs;
     }
@@ -215,4 +260,3 @@ public class Criatura extends Entidade {
         mb.render(instancia);
     }
 }
-

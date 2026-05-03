@@ -22,15 +22,15 @@ import com.badlogic.gdx.math.MathUtils;
  *   [3] mergulhar(< -0.5 = submergir, so na agua)
  */
 public class IA {
-    public static final int ENTRADAS = 6;
-    public static final int OCULTAS = 8;
-    public static final int SAIDAS = 4;
+    public int ENTRADAS = 6;
+    public int OCULTAS = 8;
+    public int SAIDAS = 4;
 
     // pesos
     public float[][] pesosEntrada; // [6][8]
     public float[][] pesosOculta; // [8][4]
-    public float[]   viesOculta; // [8]
-    public float[]   viesSaida; // [4]
+    public float[] viesOculta; // [8]
+    public float[] viesSaida; // [4]
 
     // memória da ultima passagem(necessaria pra retropropagação leve)
     public float[] ultimasEntradas;
@@ -46,7 +46,10 @@ public class IA {
     public float recompensaMedia  = 0f;
     public static final float SUAVIZACAO = 0.05f; // EMA
 
-    public IA() {
+    public IA(int numVariaveis) {
+		this.ENTRADAS = 3 + numVariaveis;
+        this.OCULTAS  = 8 + numVariaveis / 2;
+		
         pesosEntrada = new float[ENTRADAS][OCULTAS];
         pesosOculta = new float[OCULTAS][SAIDAS];
         viesOculta = new float[OCULTAS];

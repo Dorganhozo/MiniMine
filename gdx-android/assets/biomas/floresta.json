@@ -28,6 +28,6 @@
   "estruturas": [
       { "nome": "natural/arvore_1", "chance": 0.01, "blocoBaixo": "grama" },
       { "nome": "natural/arvore_2", "chance": 0.01, "blocoBaixo": "grama" },
-      { "nome": "natural/arvore_3", "chance": 0.004, "blocoBaixo": "grama" }
+      { "nome": "natural/arvore_3", "chance": 0.0035, "blocoBaixo": "grama" }
   ]
 }
