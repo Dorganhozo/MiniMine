@@ -180,13 +180,13 @@ public class MundoMenu implements Screen, InputProcessor {
                 try {
 					nomeMundo = URLDecoder.decode(nomeArquivo, StandardCharsets.UTF_8.name());
 				} catch(Exception e) {
-					nomeMundo = null;
-				}
+                    throw new RuntimeException("[ERRO]: nome de mundo invalido "+e);
+                }
                 float y = 5 + (i * (alturaLinha + espacamento));
                 ItemLinha linha = new ItemLinha(5, y, 750, alturaLinha, pixelBranco);
 
                 // rotulo do nome do mundo, alinhado verticalmente no centro
-                Rotulo rotuloNome = new Rotulo(nomeMundo, fonteTexto, escalaPixel * 0.75f);
+                final Rotulo rotuloNome = new Rotulo(nomeMundo, fonteTexto, escalaPixel * 0.75f);
                 rotuloNome.x = 10;
                 rotuloNome.y = margemV;
                 rotuloNome.largura = larguraNome - 10;
