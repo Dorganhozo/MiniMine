@@ -1,4 +1,4 @@
-package com.minimine.graficos;
+package com.minimine.graficos.shaders;
 
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;

@@ -1,4 +1,4 @@
-package com.minimine.graficos;
+package com.minimine.graficos.teste;
 
 import com.minimine.ui.UI;
 import com.minimine.entidades.Jogador;
@@ -25,11 +25,15 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.minimine.graficos.shaders.ShaderBranco;
+import com.minimine.graficos.Renderizador;
+import com.minimine.graficos.Animacoes2D;
+import com.minimine.graficos.Texturas;
+import com.minimine.graficos.GerenciadorParticulas;
 
-public class Render extends Renderizador {
+public class GraficosTeste extends Renderizador {
     public static ShaderProgram shader;
     public static ShapeRenderer debugCaixas;
-    
+
     public static String vert = 
     "attribute float a_pos;\n" +
     "attribute vec2 a_texCoord;\n" +
@@ -105,10 +109,10 @@ public class Render extends Renderizador {
     "   gl_FragColor = vec4(mix(texCor.rgb * iluminacaoFinal, corNevoa, fator), texCor.a);\n" +
     "}";
 
-    public Render(Jogador jogador, Mundo mundo) {
+    public GraficosTeste(Jogador jogador, Mundo mundo) {
         super(jogador, mundo);
 	}
-	
+
 	@Override
 	public void iniciar() {
         super.iniciar();
@@ -121,9 +125,9 @@ public class Render extends Renderizador {
 
         // animação da água
         Animacoes2D.add("agua", new TextureRegion[]{
-			Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
-			Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
-		}, 2.5f);  // 2.5 quadros por segundo
+							Texturas.atlas.get("agua_a1"), Texturas.atlas.get("agua_a2"),
+							Texturas.atlas.get("agua_a3"), Texturas.atlas.get("agua_a4")
+						}, 2.5f);  // 2.5 quadros por segundo
 
         // carrega as particulas
         gp = new GerenciadorParticulas(ui.jg);
@@ -139,7 +143,7 @@ public class Render extends Renderizador {
 			});
 		mundo.iniciar();
     }
-	
+
 	@Override
     public void att(float delta) {
 		if(!pause) {
@@ -269,7 +273,7 @@ public class Render extends Renderizador {
 
 		return jogador.camera.frustum.boundsInFrustum(cx, 128f, cz, 16f, 256f, 16f);
 	}
-	
+
 	@Override
     public void liberar() {
 		super.liberar();

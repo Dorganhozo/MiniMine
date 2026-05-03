@@ -49,7 +49,7 @@ public class Config implements Screen, InputProcessor {
     // referencias aos itens para atualizar valores no render
     public ItemConfig itemRaio, itemSensi,
 	itemMusicas, itemDistancia, itemPOV,
-	itemDebug, itemBotoesTam;
+	itemDebug, itemBotoesTam, itemGraficos;
 
     @Override
     public void show() {
@@ -235,6 +235,7 @@ public class Config implements Screen, InputProcessor {
         );
         painelOpcoes.add(itemDebug);
 		
+		// botões:
 		itemBotoesTam = ItemConfig.numerico(
             5, posItem(4, alturaItem, espacamento), larguraItem, alturaItem,
             "Tamanho dos Botões:", String.valueOf(UI.botoesTam),
@@ -257,6 +258,21 @@ public class Config implements Screen, InputProcessor {
             }
         );
         painelOpcoes.add(itemBotoesTam);
+		
+		// graficos:
+		itemGraficos = ItemConfig.alternar(
+            5, posItem(6, alturaItem, espacamento), larguraItem, alturaItem,
+            "Graficos teste:", Jogo.graficosTeste ? "Ligado" : "Desligado",
+            fonteTexto, escalaItem, pixelBranco, visualBotao,
+            new Acao() {
+                public void exec() {
+					if(Gdx.graphics.isGL30Available()) throw new RuntimeException("SEU DISPOSITIVO NÃO SUPORTA OPENGL 3.0");
+                    Jogo.graficosTeste = !Jogo.graficosTeste;
+                    itemGraficos.rotuloValor.texto = Jogo.graficosTeste ? "Ligado" : "Desligado";
+                }
+            }
+        );
+        painelOpcoes.add(itemGraficos);
 
         painelPrincipal.add(painelOpcoes);
 
@@ -269,13 +285,14 @@ public class Config implements Screen, InputProcessor {
                 prefs.putBoolean("musicas", Jogo.musicas);
 				prefs.putBoolean("debug", UI.debug);
 				prefs.putInteger("botoesTam", UI.botoesTam);
+				prefs.putBoolean("graficosTeste", Jogo.graficosTeste);
                 prefs.flush();
                 Inicio.defTela(Cenas.menu);
             }
         };
+		
         Botao botaoVoltar = new Botao("VOLTAR", visualBotao, fonteTexto, 0, 0, 200, 60, escalaPixel, acaoVoltar);
         painelPrincipal.addAncorado(botaoVoltar, Ancora.INFERIOR_CENTRO, 0, 0);
-
         gerenciadorUI.add(painelPrincipal);
     }
 

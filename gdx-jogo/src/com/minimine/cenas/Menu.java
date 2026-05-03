@@ -32,6 +32,7 @@ import com.micro.CaixaDialogo;
 import com.micro.PainelFatiado;
 import com.micro.GerenciadorUI;
 import com.minimine.audio.Musicas;
+import com.minimine.graficos.Render;
 
 public class Menu implements Screen, InputProcessor {
     public SpriteBatch pincel;
@@ -91,6 +92,7 @@ public class Menu implements Screen, InputProcessor {
         Jogo.musicas = prefs.getBoolean("musicas", Jogo.musicas);
 		UI.debug = prefs.getBoolean("debug", UI.debug);
 		UI.botoesTam = prefs.getInteger("botoesTam", UI.botoesTam);
+		Jogo.graficosTeste = prefs.getBoolean("graficosTeste", Jogo.graficosTeste);
         Gdx.input.setCursorCatched(false);
 
         if(atualizar) {

@@ -13,13 +13,15 @@ import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.geracao.MotorGeracao;
 import com.badlogic.gdx.Gdx;
 import com.minimine.mundo.geracao.RegistroBiomas;
+import com.minimine.graficos.Renderizador;
+import com.minimine.graficos.teste.GraficosTeste;
 
 public class Jogo implements Screen {
 	public static Mundo mundo;
 	public static Jogador jogador;
 	public static int modo = 2;
-	public static Render render;
-	public static boolean musicas = true;
+	public static Renderizador render;
+	public static boolean musicas = true, graficosTeste = false;
 	public static java.util.Timer relogio;
 	
     @Override
@@ -33,7 +35,8 @@ public class Jogo implements Screen {
 		
 		Bloco.iniciar();
 		
-		render = new Render(jogador, mundo);
+		if(graficosTeste) render = new GraficosTeste(jogador, mundo);
+		else render = new Render(jogador, mundo);
 		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		render.iniciar();
 		

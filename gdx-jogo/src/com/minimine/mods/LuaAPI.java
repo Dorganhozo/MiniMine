@@ -19,7 +19,6 @@ import com.minimine.Logs;
 import com.minimine.audio.Audio;
 import com.minimine.Cenas;
 import com.minimine.mundo.blocos.Bloco;
-import com.minimine.graficos.Render;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.minimine.graficos.Modelos;
 import com.badlogic.gdx.graphics.Texture;
@@ -29,6 +28,7 @@ import com.minimine.ui.InterUtil;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.minimine.entidades.Jogador;
 import com.minimine.mundo.geracao.MotorGeracao;
+import com.minimine.graficos.Renderizador;
 
 public class LuaAPI {
 	public static Globals globais;
@@ -37,7 +37,7 @@ public class LuaAPI {
 	public static float delta;
 	public static String pacote;
 	public static boolean existeAtt = false;
-	public static Render render;
+	public static Renderizador render;
 	
 	public static void iniciar() {
 		pacote = Inicio.externo+"/MiniMine/mods/";

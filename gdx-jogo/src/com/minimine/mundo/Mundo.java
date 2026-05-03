@@ -36,6 +36,7 @@ import com.minimine.mundo.geracao.ContextoGeracao;
 import com.minimine.mundo.geracao.EstruturaPendente;
 import com.minimine.utils.MemNativa;
 import com.minimine.inventario.ReceitaRegistro;
+import com.minimine.utils.TarefasUtil;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -52,7 +53,7 @@ public class Mundo {
     public static final Map<Long, Chunk> chunksMod = new ConcurrentHashMap<>();
 
 	// Em Mundo.java
-	public static volatile Chunk[] chunkCache = {
+	public static final Chunk[] chunkCache = {
 		null, null, null,
 		null, null, null,
 		null, null, null
@@ -73,7 +74,7 @@ public class Mundo {
      * filaEstrutura: estruturas que extrapolaram os limites de uma chunk durante a
      * geração e precisam ser aplicadas quando a chunk alvo atingir estado 1
      * chave = chunk alvo, valor = lista de blocos pendentes para escrever nela
-     */
+    */
     // fila compacta: 5 ints por entrada (lx, ly, lz, id, meta), sem objetos EstruturaPendente
     public static final Map<Long, int[]> filaEstrutura = new ConcurrentHashMap<>();
     // tamanho atual(entradas, não ints) de cada fila, separado do array pra crescimento sem realocar o mapa
@@ -87,8 +88,6 @@ public class Mundo {
     public static int RAIO_CHUNKS = 5;
 
     public static boolean carregado = false, ciclo = true, nuvens = true;
-
-    public static ExecutorService exec;
 
     public static MotorGeracao motor;
     public static RegistroBiomas registroBiomas;
@@ -113,13 +112,11 @@ public class Mundo {
 
         motor = new MotorGeracao(semente, registroBiomas);
 
-        if(exec == null || exec.isShutdown()) exec = Executors.newFixedThreadPool(8);
+        TarefasUtil.iniciar();
     }
 
     // chamado em render
     public void att(float delta, Jogador jg) {
-        if(exec.isShutdown()) return;
-
         attChunks((int)jg.posicao.x, (int)jg.posicao.z);
 
         if(!carregado && estados.size() >= 1) {
@@ -167,7 +164,7 @@ public class Mundo {
         filaEstrutura.clear();
         filaTam.clear();
         entidades.clear();
-        exec.shutdown();
+        TarefasUtil.liberar();
         if(com.minimine.ui.UI.debug) Gdx.app.log("ArrayReuso", ArrayReuso.estatisticas());
         ArrayReuso.limparPools();
     }
@@ -343,27 +340,13 @@ public class Mundo {
 	
 	public static final Chunk obterChunk(final long chave) {
 		final Chunk[] cache = chunkCache; // bota no registrador ao inves de chamar static
-		if(cache[0] != null && cache[0].chave == chave)
-			return cache[0];
-		if(cache[1] != null && cache[1].chave == chave)
-			return cache[1];
-		if(cache[2] != null && cache[2].chave == chave)
-			return cache[2];
-		if(cache[3] != null && cache[3].chave == chave)
-			return cache[3];
-		if(cache[4] != null && cache[4].chave == chave)
-			return cache[4];
-		if(cache[5] != null && cache[5].chave == chave)
-			return cache[5];
-		if(cache[6] != null && cache[6].chave == chave)
-			return cache[6];
-		if(cache[7] != null && cache[7].chave == chave)
-			return cache[7];
-		if(cache[8] != null && cache[8].chave == chave)
-			return cache[8];
-
+		
+		for(int i = 0; i < 9; i++) {
+			if(cache[i] != null && cache[i].chave == chave) {
+				return cache[i];
+			}
+		}
 		final Chunk chunk = chunks.get(chave);
-		if(chunk == null) return null;
 
 		final int slot = proximoCache.getAndIncrement() & 8; 
 		cache[slot] = chunk;
@@ -487,7 +470,7 @@ public class Mundo {
     public static void gerarDados(final long chave) {
         final Chunk chunk = obterChunk(chave);
 
-        exec.submit(new Runnable() {
+        TarefasUtil.addGeração(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -514,7 +497,7 @@ public class Mundo {
         if(chunk == null) return;
         if(!estados.replace(chave, 1, 11)) return; // 11 = transitorio
 
-        exec.submit(new Runnable() {
+        TarefasUtil.addGeração(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -583,7 +566,7 @@ public class Mundo {
         if(chunk == null) return;
         if(!estados.replace(chave, 2, 12)) return; // 12 = transitorio
 
-        exec.submit(new Runnable() {
+        TarefasUtil.addGeração(new Runnable() {
 				@Override
 				public void run() {
 					try {
@@ -601,12 +584,12 @@ public class Mundo {
         if(chunk == null) return;
         chunk.fazendo = true;
 
-        exec.submit(new Runnable() {
+        TarefasUtil.addMalha(new Runnable() {
 				@Override
 				public void run() {
 					final FloatArrayUtil vertsGeral = ArrayReuso.obterFloatArray();
 					final ShortArrayUtil idcSolidos = ArrayReuso.obterShortArray();
-					final ShortArrayUtil idcTransp  = ArrayReuso.obterShortArray();
+					final ShortArrayUtil idcTransp = ArrayReuso.obterShortArray();
 
 					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
 
@@ -660,11 +643,7 @@ public class Mundo {
      * se a chunk alvo ainda não chegou ao estado 2: enfileira para aplicar em processarEstruturas
      * se a chunk alvo ja passou do estado 1(>= 2): aplica imediatamente e marca para
      *   recalcular luz e malha: o bloco chegou atrasado mas ainda pode ser corrigido
-	 */
-	public static ThreadLocal<int[]> filaBuffer = new ThreadLocal<int[]>() {
-		public int[] initialValue() { return new int[FILA_CAP_INICIAL * FILA_CAMPOS]; }
-	};
-
+	*/
     public static void enfileirarEstrutura(long chaveAlvo, EstruturaPendente pendente) {
         final int estadoAlvo = estados.getOrDefault(chaveAlvo, 0);
         if(estadoAlvo >= 2) {
@@ -679,18 +658,16 @@ public class Mundo {
         }
         // chunk alvo ainda não processou estruturas: enfileira no buffer compacto
         synchronized(filaEstrutura) {
-            final int[] tam = filaTam.get(chaveAlvo);
-            int[] buf = filaEstrutura.get(chaveAlvo);
-            if(buf == null) {
-                buf = filaBuffer.get();
-				tam[0] = 0;
-                filaEstrutura.put(chaveAlvo, buf);
-                filaTam.put(chaveAlvo, tam);
-            }
-            int n = tam[0];
+			filaEstrutura.putIfAbsent(chaveAlvo, new int[FILA_CAP_INICIAL * FILA_CAMPOS]);
+			filaTam.putIfAbsent(chaveAlvo, new int[]{0});
+			int[] buf = filaEstrutura.get(chaveAlvo);
+			final int[] tam = filaTam.get(chaveAlvo);
+			
+            final int n = tam[0];
             if(n * FILA_CAMPOS >= buf.length) {
                 // cresce 1.5x
-                final int[] novo = new int[buf.length + (buf.length >> 1)];
+                final int novasEntradas = (buf.length / FILA_CAMPOS) + (buf.length / FILA_CAMPOS >> 1);
+				final int[] novo = new int[novasEntradas * FILA_CAMPOS];
                 System.arraycopy(buf, 0, novo, 0, buf.length);
                 buf = novo;
                 filaEstrutura.put(chaveAlvo, buf);

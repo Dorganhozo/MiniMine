@@ -1,12 +1,12 @@
 {
   "nome": "deserto",
-  "peso": 1.0,
+  "peso": 4.0,
   "alt_min": 63,
   "alt_max": 74,
 
   "clima": {
-    "calor": 0.85,
-    "umidade": 0.15
+      "calor": 0.75,
+      "umidade": 0.25
   },
   "superficie": {
     "topo": "areia",

@@ -61,8 +61,8 @@ public class Inventario {
     }
 
     public void aoAjustar(int v, int h) {
-        invX = v / 2 - (slotsH * tamSlot) / 2;
-        invY = h / 2 - (slotsV * tamSlot) / 2;
+        invX = (v >> 1) - ((slotsH * tamSlot) >> 1);
+        invY = (h >> 1) - ((slotsV * tamSlot) >> 1);
 
         rects = new Rectangle[quantSlots];
         int i = 0;
@@ -96,36 +96,51 @@ public class Inventario {
         final int resY = gradeY + tamReceita;
         rectResultado = new Rectangle(resX, resY, tamReceita, tamReceita);
     }
-
     public void aoSoltar(int telaX, int telaY, int p) {
-        if(p != ponteiroArrastando || itemSendoArrastado == null) return;
+		if(modoDivisao) {
+			modoDivisao = false;
+			qtdSlotsDivisao = 0;
+			if(itemFlutuante != null && itemFlutuante.quantidade <= 0) {
+				itemFlutuante = null;
+				slotOrigemFlutuante = -1;
+				itemFlutuanteVeioDaGrade = false;
+				slotGradeOrigem = -1;
+			}
+			return;
+		}
+		if(p != ponteiroArrastando || itemSendoArrastado == null) return;
 
-        int slotDestino = -1;
-        for(int i = 0; i < rectsHotbar.length; i++) {
-            if(rectsHotbar[i].contains(telaX, telaY)) {
-                slotDestino = i;
-                break;
-            }
-        }
-        if(slotDestino == -1 && aberto) {
-            for(int i = 0; i < rects.length; i++) {
-                if(rects[i].contains(telaX, telaY)) {
-                    slotDestino = i;
-                    break;
-                }
-            }
-        }
-        if(slotDestino != -1) {
-            final Item itemNoDestino = itens[slotDestino];
-            itens[slotDestino] = itemSendoArrastado;
-            itens[slotOrigem] = itemNoDestino;
-        } else {
-            itens[slotOrigem] = itemSendoArrastado;
-        }
-        itemSendoArrastado = null;
-        slotOrigem = -1;
-        ponteiroArrastando = -1;
-    }
+		int slotDestino = -1;
+		for(int i = 0; i < rectsHotbar.length; i++) {
+			if(rectsHotbar[i].contains(telaX, telaY)) {
+				slotDestino = i;
+				break;
+			}
+		}
+		if(slotDestino == -1 && aberto) {
+			for(int i = 0; i < rects.length; i++) {
+				if(rects[i].contains(telaX, telaY)) {
+					slotDestino = i;
+					break;
+				}
+			}
+		}
+		if(slotDestino != -1) {
+			final Item itemNoDestino = itens[slotDestino];
+			if(itemNoDestino != null && itemNoDestino.nome.equals(itemSendoArrastado.nome)) {
+				itemNoDestino.quantidade += itemSendoArrastado.quantidade;
+				itens[slotOrigem] = null;
+			} else {
+				itens[slotDestino] = itemSendoArrastado;
+				itens[slotOrigem] = itemNoDestino;
+			}
+		} else {
+			itens[slotOrigem] = itemSendoArrastado;
+		}
+		itemSendoArrastado = null;
+		slotOrigem = -1;
+		ponteiroArrastando = -1;
+	}
 
     public void selecionarSlot(int slot, Jogador jogador) {
         slotSelecionado = slot;
@@ -274,77 +289,74 @@ public class Inventario {
                 qtdSlotsDivisao = 0;
             }
         } else if(modoDivisao) {
-            // ja ta em modo divisão: confirma ao tocar(soltar o dedo e tocar de novo encerra)
-            modoDivisao = false;
-            qtdSlotsDivisao = 0;
-            if(itemFlutuante.quantidade > 0) {
-                final Item destino = itens[slotClicado];
-                if(destino == null) itens[slotClicado] = itemFlutuante;
-                else if(destino.nome.equals(itemFlutuante.nome)) destino.quantidade += itemFlutuante.quantidade;
-            }
-            itemFlutuante = null;
-            slotOrigemFlutuante = -1;
-            return;
-        } else {
-            // item flutuante existe, usuario tocou de novo: ativa modo divisão
-            modoDivisao = true;
-            quantidadeOriginalDivisao = itemFlutuante.quantidade;
-            qtdSlotsDivisao = 0;
-            // não faz mais nada, o arrastar vai distribuir
-            return;
-        }
+			modoDivisao = false;
+			qtdSlotsDivisao = 0;
+			if(itemFlutuante.quantidade > 0) {
+				final Item destino = itens[slotClicado];
+				if(destino == null) itens[slotClicado] = itemFlutuante;
+				else if(destino.nome.equals(itemFlutuante.nome)) destino.quantidade += itemFlutuante.quantidade;
+			}
+			itemFlutuante = null;
+			slotOrigemFlutuante = -1;
+			itemFlutuanteVeioDaGrade = false;
+			slotGradeOrigem = -1;
+			return;
+		} else {
+			final Item destino = itens[slotClicado];
+			if(destino != null && destino.nome.equals(itemFlutuante.nome)) {
+				// agrupa
+				destino.quantidade += itemFlutuante.quantidade;
+				itemFlutuante = null;
+				slotOrigemFlutuante = -1;
+				return;
+			}
+			// so ativa divisão se não agrupou
+			modoDivisao = true;
+			quantidadeOriginalDivisao = itemFlutuante.quantidade;
+			qtdSlotsDivisao = 0;
+		}
     }
 
     public final void aoArrastar(final int telaX, final int telaY) {
-        if(itemFlutuante == null) return;
-        posFlutuante.set(telaX, telaY);
+		if(itemFlutuante == null) return;
+		posFlutuante.set(telaX, telaY);
 
-        if(!modoDivisao) return; // so distribui se estiver em modo divisão
+		if(!modoDivisao) return;
 
-        // descobre qual slot ta sendo tocado agora
-        int slotAtual = -1;
-        for(int i = 0; i < rectsHotbar.length; i++) {
-            if(rectsHotbar[i].contains(telaX, telaY)) {
-				slotAtual = i;
-				break;
+		int slotAtual = -1;
+		for(int i = 0; i < rectsHotbar.length; i++) {
+			if(rectsHotbar[i].contains(telaX, telaY)) { slotAtual = i; break; }
+		}
+		if(slotAtual == -1 && aberto) {
+			for(int i = 0; i < rects.length; i++) {
+				if(rects[i].contains(telaX, telaY)) { slotAtual = i; break; }
 			}
-        }
-        if(slotAtual == -1 && aberto) {
-            for(int i = 0; i < rects.length; i++) {
-                if(rects[i].contains(telaX, telaY)) {
-					slotAtual = i;
-					break;
-				}
-            }
-        }
-        if(slotAtual == -1) return;
+		}
+		if(slotAtual == -1) return;
 
-        // ignora slot de origem e slots ja visitados
-        if(slotAtual == slotOrigemFlutuante) return;
-        for(int i = 0; i < qtdSlotsDivisao; i++) {
-            if(slotsDivisao[i] == slotAtual) return;
-        }
-        // so aceita slot vazio ou com mesmo tipo
-        final Item itemNoSlot = itens[slotAtual];
-        if(itemNoSlot != null && !itemNoSlot.nome.equals(itemFlutuante.nome)) return;
+		if(slotAtual == slotOrigemFlutuante) return;
+		for(int i = 0; i < qtdSlotsDivisao; i++) {
+			if(slotsDivisao[i] == slotAtual) return;
+		}
+		final Item itemNoSlot = itens[slotAtual];
+		if(itemNoSlot != null && !itemNoSlot.nome.equals(itemFlutuante.nome)) return;
 
-        slotsDivisao[qtdSlotsDivisao++] = slotAtual;
+		slotsDivisao[qtdSlotsDivisao++] = slotAtual;
 
-        final int porcao = quantidadeOriginalDivisao / qtdSlotsDivisao;
-        if(porcao < 1) {
-            qtdSlotsDivisao--;
-            return;
-        }
-        for(int i = 0; i < qtdSlotsDivisao; i++) {
-            final int s = slotsDivisao[i];
-            if(itens[s] == null) {
-                itens[s] = new Item(itemFlutuante.nome, itemFlutuante.textura, porcao);
-            } else {
-                itens[s].quantidade = porcao;
-            }
-        }
-        itemFlutuante.quantidade = quantidadeOriginalDivisao - porcao * qtdSlotsDivisao;
-    }
+		final int porcao = quantidadeOriginalDivisao / qtdSlotsDivisao;
+		if(porcao < 1) {
+			qtdSlotsDivisao--;
+			return;
+		}
+		for(int i = 0; i < qtdSlotsDivisao; i++) {
+			final int s = slotsDivisao[i];
+			if(itens[s] == null)
+				itens[s] = new Item(itemFlutuante.nome, itemFlutuante.textura, porcao);
+			else
+				itens[s].quantidade = porcao;
+		}
+		itemFlutuante.quantidade = quantidadeOriginalDivisao - porcao * qtdSlotsDivisao;
+	}
 
     public void alternar() {
         if(aberto) {
