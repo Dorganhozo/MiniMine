@@ -46,6 +46,7 @@ public class Jogo implements Screen {
 			render = new Render(jogador, mundo);
 		}
 		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
+		
 		render.iniciar();
 		
 		relogio.schedule(

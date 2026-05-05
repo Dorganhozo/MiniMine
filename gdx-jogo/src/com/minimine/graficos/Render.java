@@ -158,6 +158,9 @@ public class Render extends Renderizador {
 					if(yTeste > 1) {
 						ui.jg.posicao.y = yTeste;
 						ui.jg.nasceu = true;
+						long chave = com.minimine.mundo.Chave.calcularChave(0, 0);
+						Chunk chunk = mundo.obterChunk(chave);
+						mundo.chunksMod.put(chave, chunk);
 						Gdx.app.log("[Jogo]", "jogador nasceu a "+yTeste+" blocos de altura");
 					} else Gdx.app.log("[Jogo]", "não nasceu, altura recebida: "+yTeste);
 				}

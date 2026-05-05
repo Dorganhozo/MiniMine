@@ -96,7 +96,8 @@ public class Jogador extends Entidade {
 		posicao = new Vector3(0f, 0f, 0f);
 		Mundo.limparChunks(0, 0);
 		final long chave = Chave.calcularChave(0, 0);
-		Mundo.chunks.put(chave, Mundo.chunksMod.get(chave));
+		final com.minimine.mundo.chunks.Chunk mod = Mundo.chunksMod.get(chave);
+		if(mod != null) Mundo.chunks.put(chave, mod);
 		posicao.y = Mundo.obterAlturaChao((int)posicao.x, (int)posicao.z);
 		Mundo.carregado = false;
 		velocidade.set(0, 0, 0);
