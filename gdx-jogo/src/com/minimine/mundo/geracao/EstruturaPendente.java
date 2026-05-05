@@ -1,7 +1,7 @@
 package com.minimine.mundo.geracao;
 
-import com.minimine.mundo.Chunk;
-import com.minimine.mundo.ChunkUtil;
+import com.minimine.mundo.chunks.Chunk;
+import com.minimine.mundo.chunks.ChunkProcesso;
 /*
  * um unico bloco de estrutura que extrapolou os limites da chunk de origem
  * e precisa ser escrito na chunk alvo quando ela atingir estado 1
@@ -24,8 +24,8 @@ public final class EstruturaPendente {
 
     public void aplicar(final Chunk alvo) {
         if(ly < 0 || ly >= 256) return;
-        ChunkUtil.defBloco(lx, ly, lz, id, alvo);
-        if(meta != 0) ChunkUtil.defMeta(lx, ly, lz, meta, alvo);
+        ChunkProcesso.util.defBloco(lx, ly, lz, id, alvo);
+        if(meta != 0) ChunkProcesso.util.defMeta(lx, ly, lz, meta, alvo);
     }
 }
 

@@ -1,4 +1,4 @@
-package com.minimine.mundo;
+package com.minimine.mundo.chunks;
 
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.utils.MemNativa;
@@ -31,7 +31,7 @@ public class ChunkUtil {
 	public static void defMeta(int x, int y, int z, short valor, Chunk chunk) {
 		chunk.meta[x + (z << 4) + (y << 8)] = valor;
 	}
-	
+
 	public static boolean ehSolido(int x, int y, int z, Chunk chunk) {
 		if(x < 0 || x >= 16 || y < 0 || y >= 256 || z < 0 || z >= 16) {
 			return false;

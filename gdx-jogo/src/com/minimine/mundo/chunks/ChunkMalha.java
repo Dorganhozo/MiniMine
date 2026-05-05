@@ -1,20 +1,22 @@
-package com.minimine.mundo;
+package com.minimine.mundo.chunks;
 
 import com.minimine.utils.arrays.FloatArrayUtil;
 import com.minimine.utils.arrays.ShortArrayUtil;
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.blocos.BlocoModelo;
 import com.minimine.graficos.TipoRender;
+import com.minimine.mundo.Mundo;
 
-public class ChunkMalha {
+public class ChunkMalha implements GeradorMalha {
     // tamanho maximo de mascara necessaria(eixo X/Z: 16 * Y_CHUNK)
     // reutiliza array de mascara por thread
     public static final ThreadLocal<int[]> MASCARA_CACHE = new ThreadLocal<int[]>() {
         @Override protected int[] initialValue() { return new int[16 * 256]; }
     };
 	public static final boolean[] mascara2 = {true, false};
-
-    public static void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+	
+	@Override
+    public void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
 		Chunk cXP, cXN, cZP, cZN;
         cXP = Mundo.obterChunk(chunk.x + 1, chunk.z);
         cXN = Mundo.obterChunk(chunk.x - 1, chunk.z);
@@ -27,10 +29,6 @@ public class ChunkMalha {
         if(cZN != null && !cZN.dadosProntos) cZN = null;
         // luz usa estado >= 3 garante que calcularLuz ja rodou na vizinha
         // se nao tiver luz pronta, usa padrão 0 e refaz quando estiver pronta
-        final Chunk lXP = (cXP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x + 1, chunk.z), 0) >= 3) ? cXP : null;
-        final Chunk lXN = (cXN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x - 1, chunk.z), 0) >= 3) ? cXN : null;
-        final Chunk lZP = (cZP != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z + 1), 0) >= 3) ? cZP : null;
-        final Chunk lZN = (cZN != null && Mundo.estados.getOrDefault(Chave.calcularChave(chunk.x, chunk.z - 1), 0) >= 3) ? cZN : null;
 
         final int[] mascara = MASCARA_CACHE.get();
 
@@ -97,8 +95,7 @@ public class ChunkMalha {
                                 // se chunk vizinho de borda não existe, não renderiza a face agora:
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nx < 0 || nx >= 16))) {
-                                    final Chunk lC = (nx >= 16) ? lXP : (nx < 0) ? lXN : chunk;
-                                    final byte luz = lC != null ? ChunkUtil.obterLuzCompleta(tx, y, z, lC) : 0;
+                                    final byte luz = ChunkUtil.obterLuzCompleta(x, y, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -138,8 +135,7 @@ public class ChunkMalha {
                                 // se chunk vizinho de borda não existe, não renderiza a face agora:
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nz < 0 || nz >= 16))) {
-                                    final Chunk lC = (nz >= 16) ? lZP : (nz < 0) ? lZN : chunk;
-                                    final byte luz = lC != null ? ChunkUtil.obterLuzCompleta(x, y, tz, lC) : 0;
+                                    final byte luz = ChunkUtil.obterLuzCompleta(x, y, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -173,7 +169,7 @@ public class ChunkMalha {
     }
 
     public static void malhaPlana(int[] mascara, int largura, int altura,
-	int profundidade, int faceId, Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+								  int profundidade, int faceId, Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
         int n = 0;
         for(int j = 0; j < altura; j++) {
             for(int i = 0; i < largura; ) {

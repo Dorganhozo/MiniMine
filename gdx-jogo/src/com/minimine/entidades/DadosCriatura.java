@@ -5,11 +5,10 @@ import com.badlogic.gdx.Gdx;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
-
 /*
  * dados imutaveis de um tipo de criatura, compilados de JSON
  * sem logica de comportamento, so estrutura de dados
- */
+*/
 public final class DadosCriatura {
     public final String nome;
     public final float raridade;

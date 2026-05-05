@@ -7,7 +7,7 @@ import com.minimine.utils.Mat;
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.graficos.TipoRender;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.minimine.mundo.Chunk;
+import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.Chave;
 
 public class Entidade {

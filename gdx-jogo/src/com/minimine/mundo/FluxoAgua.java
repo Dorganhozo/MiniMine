@@ -2,6 +2,8 @@ package com.minimine.mundo;
 
 import com.minimine.mundo.blocos.Bloco;
 import java.util.Arrays;
+import com.minimine.mundo.chunks.Chunk;
+import com.minimine.mundo.chunks.ChunkProcesso;
 /*
  * sistema de fluxo de água baseado em BFS por nivel
  
@@ -44,9 +46,9 @@ public class FluxoAgua {
         for(int x = 0; x < 16; x++) {
             for(int z = 0; z < 16; z++) {
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-                    int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                    final int id = ChunkProcesso.util.obterBloco(x, y, z, chunk);
                     if(eAgua(id)) {
-                        int nivel = ChunkUtil.obterMeta(x, y, z, chunk) & 0xFF;
+                        int nivel = ChunkProcesso.util.obterMeta(x, y, z, chunk) & 0xFF;
                         if(nivel == NIVEL_FONTE) {
                             int idc = x + (z << 4) + (y << 8);
                             metaTemp[idc] = (byte)NIVEL_FONTE;
@@ -85,9 +87,9 @@ public class FluxoAgua {
         for(int x = 0; x < 16; x++) {
             for(int z = 0; z < 16; z++) {
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-                    int id = ChunkUtil.obterBloco(x, y, z, chunk);
+                    int id = ChunkProcesso.util.obterBloco(x, y, z, chunk);
                     if(eAgua(id)) {
-                        int nivel = ChunkUtil.obterMeta(x, y, z, chunk) & 0xFF;
+                        int nivel = ChunkProcesso.util.obterMeta(x, y, z, chunk) & 0xFF;
                         if(nivel == NIVEL_FONTE) {
                             int idc = x + (z << 4) + (y << 8);
                             metaTemp[idc] = (byte)NIVEL_FONTE;
@@ -205,21 +207,21 @@ public class FluxoAgua {
             int x = i & 0xF;
             int z = (i >> 4) & 0xF;
             int y = i >> 8;
-            int idAtual = ChunkUtil.obterBloco(x, y, z, chunk);
+            int idAtual = ChunkProcesso.util.obterBloco(x, y, z, chunk);
             if(nivel != NIVEL_AUSENTE) {
                 if(idAtual == 0) {
-                    ChunkUtil.defBloco(x, y, z, Bloco.AGUA, chunk);
+                    ChunkProcesso.util.defBloco(x, y, z, Bloco.AGUA, chunk);
                     mudou = true;
                 }
-                int metaAtual = ChunkUtil.obterMeta(x, y, z, chunk) & 0xFF;
+                int metaAtual = ChunkProcesso.util.obterMeta(x, y, z, chunk) & 0xFF;
                 if(metaAtual != nivel) {
-                    ChunkUtil.defMeta(x, y, z, (short)nivel, chunk);
+                    ChunkProcesso.util.defMeta(x, y, z, (short)nivel, chunk);
                     mudou = true;
                 }
             } else {
                 if(eAgua(idAtual)) {
-                    ChunkUtil.defBloco(x, y, z, 0, chunk);
-                    ChunkUtil.defMeta(x, y, z, (short)NIVEL_AUSENTE, chunk);
+                    ChunkProcesso.util.defBloco(x, y, z, 0, chunk);
+                    ChunkProcesso.util.defMeta(x, y, z, (short)NIVEL_AUSENTE, chunk);
                     mudou = true;
                 }
             }
@@ -237,7 +239,7 @@ public class FluxoAgua {
     }
 
     public static boolean podeEntrar(int x, int y, int z, Chunk chunk, byte[] metaTemp) {
-        int id = ChunkUtil.obterBloco(x, y, z, chunk);
+        int id = ChunkProcesso.util.obterBloco(x, y, z, chunk);
         if(id == 0) return true;
         if(eAgua(id)) {
             int idc = x + (z << 4) + (y << 8);

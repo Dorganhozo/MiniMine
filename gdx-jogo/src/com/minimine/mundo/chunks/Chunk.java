@@ -1,4 +1,6 @@
-package com.minimine.mundo;
+package com.minimine.mundo.chunks;
+
+import com.minimine.mundo.Mundo;
 
 public final class Chunk {
     public volatile int bitsPorBloco = 4; // 1..8(modo direto)

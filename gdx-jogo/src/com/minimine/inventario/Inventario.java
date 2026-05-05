@@ -6,7 +6,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 import com.minimine.graficos.Texturas;
 import com.badlogic.gdx.math.Vector2;
-import com.minimine.mundo.ChunkUtil;
 import com.minimine.mundo.blocos.Bloco;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;

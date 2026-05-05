@@ -1,12 +1,12 @@
 package com.minimine.mundo.geracao;
 
-import com.minimine.mundo.Chunk;
-import com.minimine.mundo.ChunkUtil;
+import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.Chave;
 import com.minimine.mundo.Mundo;
 import com.minimine.mundo.FluxoAgua;
 import com.minimine.utils.ruidos.OpenSimplex2;
 import com.minimine.mundo.blocos.Bloco;
+import com.minimine.mundo.chunks.ChunkProcesso;
 /*
  * orquestrador de geração de chunk
  * thread-segura: toda a geração opera sobre ContextoGeracao local por thread
@@ -97,7 +97,7 @@ public final class MotorGeracao {
                 int superficieY = terreno.obterAltura(x, z, ctx);
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
                     if(y <= superficieY && !rios.eCanal(x, y, z, y, superficieY, ctx)) {
-                        ChunkUtil.defBloco(x, y, z, PEDRA, chunk);
+                        ChunkProcesso.util.defBloco(x, y, z, PEDRA, chunk);
                     }
                 }
             }
@@ -111,7 +111,7 @@ public final class MotorGeracao {
                 int idc2d = (z << 4) + x;
 
                 int topoColuna = terreno.obterAltura(x, z, ctx);
-                while(topoColuna > 0 && ChunkUtil.obterBloco(x, topoColuna, z, chunk) == 0) topoColuna--;
+                while(topoColuna > 0 && ChunkProcesso.util.obterBloco(x, topoColuna, z, chunk) == 0) topoColuna--;
 
                 float calor = ctx.calorMapa[idc2d];
                 float umidade = ctx.umidadeMapa[idc2d];
@@ -126,16 +126,16 @@ public final class MotorGeracao {
 
                 int profAtual = 0;
                 for(int y = topoColuna; y >= 1; y--) {
-                    if(ChunkUtil.obterBloco(x, y, z, chunk) == 0) {
+                    if(ChunkProcesso.util.obterBloco(x, y, z, chunk) == 0) {
                         if(profAtual > 0) break;
                         continue;
                     }
                     if(profAtual < s.profTopo) {
-                        ChunkUtil.defBloco(x, y, z, s.topo, chunk);
+                        ChunkProcesso.util.defBloco(x, y, z, s.topo, chunk);
                     } else if(profAtual < profpreenchimento) {
-                        ChunkUtil.defBloco(x, y, z, s.subtopo, chunk);
+                        ChunkProcesso.util.defBloco(x, y, z, s.subtopo, chunk);
                     } else {
-                        ChunkUtil.defBloco(x, y, z, s.interior, chunk);
+                        ChunkProcesso.util.defBloco(x, y, z, s.interior, chunk);
                         break;
                     }
                     profAtual++;
@@ -146,9 +146,9 @@ public final class MotorGeracao {
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
                 for(int y = NIVEL_MAR; y >= 0; y--) {
-                    if(ChunkUtil.obterBloco(x, y, z, chunk) == 0) {
-                        ChunkUtil.defBloco(x, y, z, AGUA, chunk);
-                        ChunkUtil.defMeta(x, y, z, (short)FluxoAgua.NIVEL_FONTE, chunk);
+                    if(ChunkProcesso.util.obterBloco(x, y, z, chunk) == 0) {
+                        ChunkProcesso.util.defBloco(x, y, z, AGUA, chunk);
+                        ChunkProcesso.util.defMeta(x, y, z, (short)FluxoAgua.NIVEL_FONTE, chunk);
                     }
                 }
             }
@@ -173,7 +173,7 @@ public final class MotorGeracao {
 
                 // calcula e guarda topo para reuso em colocarEstruturas
                 int topo = Mundo.Y_CHUNK - 1;
-                while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
+                while(topo > 0 && ChunkProcesso.util.obterBloco(x, topo, z, chunk) == 0) topo--;
                 ctx.topoMapa[idc2d] = topo;
 
                 if(topo <= NIVEL_MAR) continue;
@@ -187,7 +187,7 @@ public final class MotorGeracao {
                     semCol = lcg(semCol);
                     float r = (semCol >>> 1) / (float)(Long.MAX_VALUE);
                     if(r < veg[i].chance) {
-                        ChunkUtil.defBloco(x, yDec, z, veg[i].id, chunk);
+                        ChunkProcesso.util.defBloco(x, yDec, z, veg[i].id, chunk);
                         break; // so uma vegetação por coluna
                     }
                 }
@@ -222,8 +222,8 @@ public final class MotorGeracao {
                     semCol = lcg(semCol);
                     float r = (semCol >>> 1) / (float)(Long.MAX_VALUE);
                     if(r < estr[i].chance) {
-                        if(estr[i].blocoBaixo >= 0 && ChunkUtil.obterBloco(x, topo, z, chunk) != estr[i].blocoBaixo) break;
-                        if(ChunkUtil.obterBloco(x, yDec, z, chunk) != 0) break;
+                        if(estr[i].blocoBaixo >= 0 && ChunkProcesso.util.obterBloco(x, topo, z, chunk) != estr[i].blocoBaixo) break;
+                        if(ChunkProcesso.util.obterBloco(x, yDec, z, chunk) != 0) break;
                         colocarEstrutura(estr[i], x, topo, z, chunk);
                         break;
                     }
@@ -282,8 +282,8 @@ public final class MotorGeracao {
 
             if(bx >= 0 && bx <= 15 && bz >= 0 && bz <= 15) {
                 // bloco dentro da própria chunk: escreve direto sempre
-                ChunkUtil.defBloco(bx, by, bz, id, chunk);
-                if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(bx, by, bz, e.blocoMeta[i], chunk);
+                ChunkProcesso.util.defBloco(bx, by, bz, id, chunk);
+                if(e.blocoMeta[i] != 0) ChunkProcesso.util.defMeta(bx, by, bz, e.blocoMeta[i], chunk);
             } else {
                 int dcx = bx < 0 ? -1 : (bx > 15 ? 1 : 0);
                 int dcz = bz < 0 ? -1 : (bz > 15 ? 1 : 0);
@@ -308,8 +308,8 @@ public final class MotorGeracao {
                     // vizinha em estado 1: escreve direto
                     final Chunk alvo = vizinhos[idc];
                     if(alvo == null) continue;
-                    ChunkUtil.defBloco(lx, by, lz, id, alvo);
-                    if(e.blocoMeta[i] != 0) ChunkUtil.defMeta(lx, by, lz, e.blocoMeta[i], alvo);
+                    ChunkProcesso.util.defBloco(lx, by, lz, id, alvo);
+                    if(e.blocoMeta[i] != 0) ChunkProcesso.util.defMeta(lx, by, lz, e.blocoMeta[i], alvo);
                 }
             }
         }

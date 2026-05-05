@@ -8,7 +8,7 @@ import com.minimine.mundo.blocos.BlocoModelo;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.minimine.utils.DiaNoiteUtil;
-import com.minimine.mundo.Chunk;
+import com.minimine.mundo.chunks.Chunk;
 import com.minimine.utils.NuvensUtil;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.graphics.Texture;

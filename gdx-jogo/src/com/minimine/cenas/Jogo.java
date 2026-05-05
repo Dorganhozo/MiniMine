@@ -15,6 +15,9 @@ import com.badlogic.gdx.Gdx;
 import com.minimine.mundo.geracao.RegistroBiomas;
 import com.minimine.graficos.Renderizador;
 import com.minimine.graficos.teste.GraficosTeste;
+import com.minimine.mundo.chunks.ChunkProcesso;
+import com.minimine.mundo.chunks.ChunkLuz;
+import com.minimine.mundo.chunks.ChunkMalha;
 
 public class Jogo implements Screen {
 	public static Mundo mundo;
@@ -35,8 +38,13 @@ public class Jogo implements Screen {
 		
 		Bloco.iniciar();
 		
-		if(graficosTeste) render = new GraficosTeste(jogador, mundo);
-		else render = new Render(jogador, mundo);
+		if(graficosTeste) {
+			render = new GraficosTeste(jogador, mundo);
+		} else {
+			ChunkProcesso.luz = new ChunkLuz();
+			ChunkProcesso.malha = new ChunkMalha();
+			render = new Render(jogador, mundo);
+		}
 		if(ArquivosUtil.existe(Inicio.externo+"/MiniMine/mundos/"+mundo.nome+".mini")) ArquivosUtil.crMundo(mundo, jogador);
 		render.iniciar();
 		

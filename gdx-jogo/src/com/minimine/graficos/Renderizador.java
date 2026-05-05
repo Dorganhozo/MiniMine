@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.minimine.entidades.Jogador;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.minimine.mundo.Chunk;
+import com.minimine.mundo.chunks.Chunk;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public class Renderizador {

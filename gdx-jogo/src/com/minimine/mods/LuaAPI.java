@@ -11,7 +11,7 @@ import org.luaj.vm2.LuaFunction;
 import java.io.File;
 import java.io.IOException;
 import com.minimine.utils.ArquivosUtil;
-import com.minimine.mundo.ChunkUtil;
+import com.minimine.mundo.chunks.ChunkUtil;
 import com.minimine.graficos.Texturas;
 import com.minimine.utils.NuvensUtil;
 import com.minimine.utils.DiaNoiteUtil;

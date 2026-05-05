@@ -33,8 +33,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import com.minimine.mundo.Chave;
 import java.util.concurrent.ConcurrentHashMap;
-import com.minimine.mundo.Chunk;
-import com.minimine.mundo.ChunkUtil;
+import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.blocos.Bloco;
 import com.badlogic.gdx.graphics.Mesh;
 import com.minimine.graficos.Texturas;
@@ -43,11 +42,11 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.minimine.mundo.blocos.BlocoEstrutura;
-import com.minimine.mundo.ChunkLuz;
 import com.minimine.utils.MemNativa;
 import com.badlogic.gdx.files.FileHandle;
 import com.minimine.inventario.ItemRegistro;
 import com.minimine.inventario.Item;
+import com.minimine.mundo.chunks.ChunkProcesso;
 
 public class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
@@ -218,7 +217,7 @@ public class ArquivosUtil {
             for(int x = 0; x < cx; x++) {
                 for(int y = 0; y < cy; y++) {
                     for(int z = 0; z < cz; z++) {
-                        int b = ChunkUtil.obterBloco(x, y, z, chunk);
+                        int b = ChunkProcesso.util.obterBloco(x, y, z, chunk);
                         if(b != 0) totalNaoAr++;
                     }
                 }
@@ -228,7 +227,7 @@ public class ArquivosUtil {
             for(int x = 0; x < cx; x++) {
                 for(int y = 0; y < cy; y++) {
                     for(int z = 0; z < cz; z++) {
-                        int b = ChunkUtil.obterBloco(x, y, z, chunk);
+                        int b = ChunkProcesso.util.obterBloco(x, y, z, chunk);
                         if(b != 0) {
 							CharSequence bloco = Bloco.numIds.get(b).nome;
                             dos.writeInt(x);
@@ -296,7 +295,7 @@ public class ArquivosUtil {
 
             Chunk chunk = new Chunk();
             chunk.meta = new short[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
-            ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(chunk.maxIds), chunk);
+            ChunkProcesso.util.compactar(ChunkProcesso.util.bitsPraMaxId(chunk.maxIds), chunk);
             chunk.x = Chave.x(chave);
             chunk.z = Chave.z(chave);
 
@@ -306,7 +305,7 @@ public class ArquivosUtil {
                 int y = dis.readInt();
                 int z = dis.readInt();
                 CharSequence id = dis.readUTF();
-                ChunkUtil.defBloco(x, y, z, id, chunk);
+                ChunkProcesso.util.defBloco(x, y, z, id, chunk);
             }
 			int metaTam = dis.readInt();
 			chunk.meta = new short[metaTam];

@@ -37,6 +37,9 @@ import com.minimine.mundo.geracao.EstruturaPendente;
 import com.minimine.utils.MemNativa;
 import com.minimine.inventario.ReceitaRegistro;
 import com.minimine.utils.TarefasUtil;
+import com.minimine.mundo.chunks.Chunk;
+import com.minimine.mundo.chunks.ChunkMalha;
+import com.minimine.mundo.chunks.ChunkProcesso;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -177,7 +180,7 @@ public class Mundo {
 
 		final Chunk chunk = obterChunk(posX, posZ);
         if(chunk == null) return Bloco.texIds.get("pedra").tipo;
-        return ChunkUtil.obterBloco(x & 0xF, y, z & 0xF, chunk);
+        return ChunkProcesso.util.obterBloco(x & 0xF, y, z & 0xF, chunk);
     }
 
     public static void defBlocoMundo(int x, int y, int z, CharSequence bloco) {
@@ -196,23 +199,23 @@ public class Mundo {
         final int localX = x & 0xF;
         final int localZ = z & 0xF;
 
-        final int blocoAntigoId = ChunkUtil.obterBloco(localX, y, localZ, chunk);
+        final int blocoAntigoId = ChunkProcesso.util.obterBloco(localX, y, localZ, chunk);
 
         final boolean eraEmissor = blocoAntigoId != 0 && Bloco.numIds.get(blocoAntigoId).luz > 0;
 
         if(blocoAntigoId != 0) {
             Render.gp.criar(x, y, z, Texturas.atlas.get(Bloco.numIds.get(blocoAntigoId).lados));
         }
-        ChunkUtil.defBloco(localX, y, localZ, bloco, chunk);
-        ChunkUtil.defMeta(localX, y, localZ, (short)0, chunk);
+        ChunkProcesso.util.defBloco(localX, y, localZ, bloco, chunk);
+        ChunkProcesso.util.defMeta(localX, y, localZ, (short)0, chunk);
 
-        if(eraEmissor) ChunkLuz.zerarLuz(chunk);
+        if(eraEmissor) ChunkProcesso.luz.recalcularLuz(chunk);
 
         final boolean novoEhAgua = bloco != 0 && bloco == Bloco.AGUA;
 		final boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
 
 		if(novoEhAgua) {
-			ChunkUtil.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
+			ChunkProcesso.util.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
 			chunk.fluxoSujo = true;
 		} else if(antigoEraAgua) {
 			// bloco que era agua foi removido: recalcula
@@ -298,7 +301,7 @@ public class Mundo {
         if(y < 0 || y >= Y_CHUNK) return 0;
         final Chunk chunk = obterChunk(x >> 4, z >> 4);
         if(chunk == null) return 0;
-        return ChunkUtil.obterMeta(x & 0xF, y, z & 0xF, chunk);
+        return ChunkProcesso.util.obterMeta(x & 0xF, y, z & 0xF, chunk);
     }
 
     public static void defMetaMundo(int x, int y, int z, short valor) {
@@ -309,7 +312,7 @@ public class Mundo {
         if(chunk == null) return;
         int localX = x & 0xF;
         int localZ = z & 0xF;
-        ChunkUtil.defMeta(localX, y, localZ, valor, chunk);
+        ChunkProcesso.util.defMeta(localX, y, localZ, valor, chunk);
         chunk.att = true;
 		Chunk adj = null;
         if(localX == 0) {
@@ -387,8 +390,8 @@ public class Mundo {
                 if(chunk != null && chunk.gpuPronta) praLiberar.add(chunk);
                 praRemover.add(chave);
             } else if(chunk.att && !chunk.fazendo && estado >= 3) {
-                // so atualiza malha se estruturas e luz jaforam feitas
-                if(chunk.luzSuja) ChunkLuz.attLuz(chunk);
+                // so atualiza malha se estruturas e luz ja foram feitas
+				ChunkProcesso.luz.attLuz(chunk);
                 if(vizinhosProntos(chunk.x, chunk.z)) gerarMalha(chave);
             } else if(estado == 1 && vizinhosComDados(chunk.x, chunk.z)) {
                 processarEstruturas(chave);
@@ -424,7 +427,7 @@ public class Mundo {
         final Chunk modificado = chunksMod.get(chave);
         if(modificado != null) {
             chunks.put(chave, modificado);
-            ChunkLuz.calcularLuz(modificado);
+            ChunkProcesso.luz.calcularLuz(modificado);
             estados.put(chave, 3); // dados + estruturas + luz prontos
             return;
         }
@@ -434,7 +437,7 @@ public class Mundo {
 		novo.z = z;
 		novo.chave = Chave.calcularChave(x, z);
         novo.meta = new short[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
-        ChunkUtil.compactar(ChunkUtil.bitsPraMaxId(novo.maxIds), novo);
+        ChunkProcesso.util.compactar(ChunkProcesso.util.bitsPraMaxId(novo.maxIds), novo);
         chunks.put(chave, novo);
         estados.put(chave, 0);
         gerarDados(chave);
@@ -516,7 +519,7 @@ public class Mundo {
 							for(int x = 0; x < 16; x++) {
 								final int idc = (z << 4) + x;
 								int topo = Y_CHUNK - 1;
-								while(topo > 0 && ChunkUtil.obterBloco(x, topo, z, chunk) == 0) topo--;
+								while(topo > 0 && ChunkProcesso.util.obterBloco(x, topo, z, chunk) == 0) topo--;
 								ctx.topoMapa[idc] = topo;
 								float calor = ctx.calorMapa[idc];
 								final float umidade = ctx.umidadeMapa[idc];
@@ -541,8 +544,8 @@ public class Mundo {
 								final int id = pendentes[base + 3];
 								final short meta = (short)pendentes[base + 4];
 								if(ly >= 0 && ly < 256) {
-									ChunkUtil.defBloco(lx, ly, lz, id, chunk);
-									if(meta != 0) ChunkUtil.defMeta(lx, ly, lz, meta, chunk);
+									ChunkProcesso.util.defBloco(lx, ly, lz, id, chunk);
+									if(meta != 0) ChunkProcesso.util.defMeta(lx, ly, lz, meta, chunk);
 								}
 							}
 						}
@@ -570,7 +573,7 @@ public class Mundo {
 				@Override
 				public void run() {
 					try {
-						ChunkLuz.calcularLuz(chunk);
+						ChunkProcesso.luz.calcularLuz(chunk);
 						estados.put(chave, 3);
 					} catch(final Exception e) {
 						throw new RuntimeException("[Mundo] erro ao calcular luz: " + e);
@@ -591,7 +594,7 @@ public class Mundo {
 					final ShortArrayUtil idcSolidos = ArrayReuso.obterShortArray();
 					final ShortArrayUtil idcTransp = ArrayReuso.obterShortArray();
 
-					ChunkMalha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
+					ChunkProcesso.malha.attMalha(chunk, vertsGeral, idcSolidos, idcTransp);
 
 					Gdx.app.postRunnable(new Runnable() {
 							@Override

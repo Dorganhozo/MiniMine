@@ -5,7 +5,6 @@ import com.minimine.utils.arrays.ShortArrayUtil;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ObjectIntMap;
-import com.minimine.mundo.ChunkLuz;
 import com.minimine.graficos.Texturas;
 
 public class BlocoModelo {

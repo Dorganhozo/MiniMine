@@ -263,6 +263,7 @@ public class MundoMenu implements Screen, InputProcessor {
         dialogoCriar = new CaixaDialogo(visualJanela, fonteTexto, escalaPixel, pincelFormas);
         dialogoCriar.largura = 500;
         dialogoCriar.altura = 380;
+		dialogoCriar.painelBotoes.largura = 500;
 
         campoNome = new CampoTexto(visualBotao, fonteTexto, 50, 240, 400, 50, escalaPixel);
         campoNome.padrao = "Nome do Mundo";

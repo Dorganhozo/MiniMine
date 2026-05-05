@@ -12,8 +12,8 @@ import com.micro.Ancora;
 import com.minimine.utils.ArquivosUtil;
 import com.minimine.mundo.Mundo;
 import com.minimine.mundo.Chave;
-import com.minimine.mundo.ChunkUtil;
-import com.minimine.mundo.Chunk;
+import com.minimine.mundo.chunks.ChunkUtil;
+import com.minimine.mundo.chunks.Chunk;
 import java.util.ArrayList;
 import java.util.List;
 /*

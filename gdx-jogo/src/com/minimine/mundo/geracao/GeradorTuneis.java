@@ -1,9 +1,9 @@
 package com.minimine.mundo.geracao;
 
-import com.minimine.mundo.Chunk;
-import com.minimine.mundo.ChunkUtil;
+import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.Mundo;
 import com.minimine.mundo.Chave;
+import com.minimine.mundo.chunks.ChunkProcesso;
 
 public final class GeradorTuneis {
     public static final int VERMES_POR_CHUNK = 6;
@@ -70,35 +70,35 @@ public final class GeradorTuneis {
 
             if(oy < MIN_Y) break;
 
-            float raio2 = raio * raio;
-            int x0 = (int)(ox - raio) - 1;
-            int x1 = (int)(ox + raio) + 1;
-            int y0 = (int)(oy - raio) - 1;
-            int y1 = (int)(oy + raio) + 1;
-            int z0 = (int)(oz - raio) - 1;
-            int z1 = (int)(oz + raio) + 1;
+            final float raio2 = raio * raio;
+            final int x0 = (int)(ox - raio) - 1;
+            final int x1 = (int)(ox + raio) + 1;
+            final int y0 = (int)(oy - raio) - 1;
+            final int y1 = (int)(oy + raio) + 1;
+            final int z0 = (int)(oz - raio) - 1;
+            final int z1 = (int)(oz + raio) + 1;
 
             for(int by = y0; by <= y1; by++) {
                 if(by < MIN_Y || by >= Mundo.Y_CHUNK) continue;
-                float ddy = by - oy; float ddy2 = ddy * ddy;
+                final float ddy = by - oy; float ddy2 = ddy * ddy;
 
                 for(int bz = z0; bz <= z1; bz++) {
-                    float ddz = bz - oz; float ddz2 = ddz * ddz;
+                    final float ddz = bz - oz; float ddz2 = ddz * ddz;
                     if(ddy2 + ddz2 > raio2) continue; // rejeita cedo
 
                     for(int bx = x0; bx <= x1; bx++) {
-                        float ddx = bx - ox;
+                        final float ddx = bx - ox;
                         if(ddx*ddx + ddy2 + ddz2 > raio2) continue;
 
-                        int cx = bx >> 4;
-                        int cz = bz >> 4;
-                        int lx = bx - (cx << 4);
-                        int lz = bz - (cz << 4);
+                        final int cx = bx >> 4;
+                        final int cz = bz >> 4;
+                        final int lx = bx - (cx << 4);
+                        final int lz = bz - (cz << 4);
 
                         // só escava dentro da própria chunk
                         // escrever em vizinhas causa race condition com outras threads gerando malha
                         if(cx != chunkCX || cz != chunkCZ) continue;
-                        ChunkUtil.defBloco(lx, by, lz, 0, chunkOrigem);
+                        ChunkProcesso.util.defBloco(lx, by, lz, 0, chunkOrigem);
                     }
                 }
             }
