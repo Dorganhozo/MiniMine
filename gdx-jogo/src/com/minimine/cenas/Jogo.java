@@ -57,6 +57,8 @@ public class Jogo implements Screen {
 				}
 			}, 0, 1000);
 		LuaAPI.iniciar();
+		
+		render.ui.jg.modo = 0;
 	}
 
     @Override

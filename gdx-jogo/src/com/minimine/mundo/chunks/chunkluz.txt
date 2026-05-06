@@ -13,6 +13,7 @@ public class ChunkLuz implements GeradorLuz {
 
     public static final int TOTAL_BLOCOS = 16 * Mundo.Y_CHUNK * 16;
 
+    // reuso de arrays por thread, sem alocação e sem GC por chunk
     public static final ThreadLocal<byte[]> LUZ_TEMP_REUSO = new ThreadLocal<byte[]>() {
         @Override protected byte[] initialValue() { return new byte[TOTAL_BLOCOS]; }
     };
@@ -36,14 +37,14 @@ public class ChunkLuz implements GeradorLuz {
     public void recalcularLuz(Chunk chunk) {
         zerarLuzBlocoChunk(chunk);
 
-        final Chunk chunkNorte = Mundo.obterChunk(chunk.x, chunk.z - 1);
-        final Chunk chunkSul = Mundo.obterChunk(chunk.x, chunk.z + 1);
-        final Chunk chunkLeste = Mundo.obterChunk(chunk.x + 1, chunk.z);
-        final Chunk chunkOeste = Mundo.obterChunk(chunk.x - 1, chunk.z);
-        final Chunk chunkNE = Mundo.obterChunk(chunk.x + 1, chunk.z - 1);
-        final Chunk chunkNO = Mundo.obterChunk(chunk.x - 1, chunk.z - 1);
-        final Chunk chunkSE = Mundo.obterChunk(chunk.x + 1, chunk.z + 1);
-        final Chunk chunkSO = Mundo.obterChunk(chunk.x - 1, chunk.z + 1);
+        final Chunk chunkNorte = obterChunk(chunk.x, chunk.z - 1);
+        final Chunk chunkSul = obterChunk(chunk.x, chunk.z + 1);
+        final Chunk chunkLeste = obterChunk(chunk.x + 1, chunk.z);
+        final Chunk chunkOeste = obterChunk(chunk.x - 1, chunk.z);
+        final Chunk chunkNE = obterChunk(chunk.x + 1, chunk.z - 1);
+        final Chunk chunkNO = obterChunk(chunk.x - 1, chunk.z - 1);
+        final Chunk chunkSE = obterChunk(chunk.x + 1, chunk.z + 1);
+        final Chunk chunkSO = obterChunk(chunk.x - 1, chunk.z + 1);
 
         final Chunk[] vizinhas = {
 			chunkNorte, chunkSul, chunkLeste, chunkOeste,
@@ -62,6 +63,7 @@ public class ChunkLuz implements GeradorLuz {
         }
     }
 
+    // processo principal
     public static void execProcesso(Chunk chunk, boolean soVizinhasProntas) {
         chunk.luzFazendo = true;
 
@@ -71,6 +73,7 @@ public class ChunkLuz implements GeradorLuz {
         int inicioFila = 0;
         int fimFila = 0;
 
+        // 1. inicia luz solar e fontes de luz de bloco
         for(int x = 0; x < 16; x++) {
             for(int z = 0; z < 16; z++) {
                 int luzSolarAtual = 15;
@@ -83,79 +86,32 @@ public class ChunkLuz implements GeradorLuz {
 
                     if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
 
-                    luzTemp[idc] = (byte)(luzSolarAtual << 4);
+                    luzTemp[idc] = (byte) (luzSolarAtual << 4);
 
                     if(luzSolarAtual > 0) filaLuz[fimFila++] = idc;
-
+                    
                     if(b != null && b.luz > 0) {
-                        luzTemp[idc] |= (byte)(b.luz & 0x0F);
-
+                        luzTemp[idc] |= (byte) (b.luz & 0x0F);
+						
                         if(luzSolarAtual <= 0) filaLuz[fimFila++] = idc;
                     }
                 }
             }
         }
+        // 2. importa luz das chunks vizinhas
         fimFila = importarLuzVizinhas(chunk, luzTemp, filaLuz, fimFila, soVizinhasProntas);
+
+        // 3. propagação BFS dentro da chunk
         fimFila = propagarBFS(chunk, luzTemp, filaLuz, inicioFila, fimFila);
 
-        // detecta mudança de borda e propaga sujo para vizinhas
-        boolean mudouNorte = false, mudouSul = false, mudouLeste = false, mudouOeste = false;
-        for(int a = 0; a < 16; a++) {
-            for(int y = 0; y < Mundo.Y_CHUNK; y++) {
-                if(!mudouNorte) {
-                    final int idc = a + (0 << 4) + (y << 8);
-                    if((luzTemp[idc] & 0xFF) != (chunk.luz[idc] & 0xFF)) mudouNorte = true;
-                }
-                if(!mudouSul) {
-                    final int idc = a + (15 << 4) + (y << 8);
-                    if((luzTemp[idc] & 0xFF) != (chunk.luz[idc] & 0xFF)) mudouSul = true;
-                }
-                if(!mudouLeste) {
-                    final int idc = 15 + (a << 4) + (y << 8);
-                    if((luzTemp[idc] & 0xFF) != (chunk.luz[idc] & 0xFF)) mudouLeste = true;
-                }
-                if(!mudouOeste) {
-                    final int idc = 0 + (a << 4) + (y << 8);
-                    if((luzTemp[idc] & 0xFF) != (chunk.luz[idc] & 0xFF)) mudouOeste = true;
-                }
-                if(mudouNorte && mudouSul && mudouLeste && mudouOeste) break;
-            }
-            if(mudouNorte && mudouSul && mudouLeste && mudouOeste) break;
-        }
+        // 4. copia resultado pro array definitivo da chunk
         System.arraycopy(luzTemp, 0, chunk.luz, 0, TOTAL_BLOCOS);
 
-        if(mudouNorte) {
-            final Chunk v = Mundo.obterChunk(chunk.x, chunk.z - 1);
-            if(v != null && !v.luzFazendo) {
-				v.luzSuja = true;
-				v.att = true;
-			}
-        }
-        if(mudouSul) {
-            final Chunk v = Mundo.obterChunk(chunk.x, chunk.z + 1);
-            if(v != null && !v.luzFazendo) {
-				v.luzSuja = true;
-				v.att = true;
-			}
-        }
-        if(mudouLeste) {
-            final Chunk v = Mundo.obterChunk(chunk.x + 1, chunk.z);
-            if(v != null && !v.luzFazendo) {
-				v.luzSuja = true;
-				v.att = true;
-			}
-        }
-        if(mudouOeste) {
-            final Chunk v = Mundo.obterChunk(chunk.x - 1, chunk.z);
-            if(v != null && !v.luzFazendo) {
-				v.luzSuja = true;
-				v.att = true;
-			}
-        }
         chunk.luzSuja = false;
         chunk.luzFazendo = false;
     }
-
+	
+    // BFS de propagação de luz
     public static int propagarBFS(Chunk chunk, byte[] luzTemp, int[] filaLuz,
 	int inicioFila, int fimFila) {
         while (inicioFila < fimFila) {
@@ -203,13 +159,21 @@ public class ChunkLuz implements GeradorLuz {
         }
         return fimFila;
     }
-
+    /*
+     * importa a luz das 4 chunks vizinhas cardinais para as bordas desta chunk
+     * true -> so importa se a vizinha ja tem dadosProntos e não ta calculando(calcularLuz)
+     * false -> importa mesmo que a vizinha ainda não esteja 100% pronta(attLuz)
+    */
     public static int importarLuzVizinhas(Chunk chunk, byte[] luzTemp, int[] filaLuz,
 	int fimFila, boolean apenasVizinhasProntas) {
-        final Chunk norte = filtrarVizinha(Mundo.obterChunk(chunk.x, chunk.z - 1), apenasVizinhasProntas);
-        final Chunk sul = filtrarVizinha(Mundo.obterChunk(chunk.x, chunk.z + 1), apenasVizinhasProntas);
-        final Chunk leste = filtrarVizinha(Mundo.obterChunk(chunk.x + 1, chunk.z), apenasVizinhasProntas);
-        final Chunk oeste = filtrarVizinha(Mundo.obterChunk(chunk.x - 1, chunk.z), apenasVizinhasProntas);
+        // norte: z-1, borda z=15 da vizinha -> z=0 da nossa
+        final Chunk norte = filtrarVizinha(obterChunk(chunk.x, chunk.z - 1), apenasVizinhasProntas);
+        // sul: z+1, borda z=0 da vizinha -> z=15 da nossa
+        final Chunk sul = filtrarVizinha(obterChunk(chunk.x, chunk.z + 1), apenasVizinhasProntas);
+        // leste: x+1, borda x=0 da vizinha -> x=15 da nossa
+        final Chunk leste = filtrarVizinha(obterChunk(chunk.x + 1, chunk.z), apenasVizinhasProntas);
+        // oeste: x-1, borda x=15 da vizinha -> x=0  da nossa
+        final Chunk oeste = filtrarVizinha(obterChunk(chunk.x - 1, chunk.z), apenasVizinhasProntas);
 
         if(norte != null) fimFila = importarBorda(chunk, norte, luzTemp, filaLuz, fimFila, true, 15, 0);
         if(sul != null) fimFila = importarBorda(chunk, sul, luzTemp, filaLuz, fimFila, true, 0, 15);
@@ -217,8 +181,11 @@ public class ChunkLuz implements GeradorLuz {
         if(oeste != null) fimFila = importarBorda(chunk, oeste, luzTemp, filaLuz, fimFila, false, 15, 0);
         return fimFila;
     }
-
-    public static final Chunk filtrarVizinha(final Chunk vizinha, boolean apenasVizinhasProntas) {
+    /*
+     * retorna a chunk vizinha se ela for valida para importação, ou null caso contrario
+     * quando apenasVizinhasProntas=true, exige dadosProntos e que não esteja calculando luz
+    */
+    public static Chunk filtrarVizinha(Chunk vizinha, boolean apenasVizinhasProntas) {
 		if(vizinha == null) return null;
 		if(vizinha.luzFazendo) return null;
 		if(apenasVizinhasProntas && !vizinha.dadosProntos) return null;
@@ -229,16 +196,18 @@ public class ChunkLuz implements GeradorLuz {
 	int fimFila, boolean iteraX, int bordaViz, int bordaNossa) {
         for(int a = 0; a < 16; a++) {
             for(int y = 0; y < Mundo.Y_CHUNK; y++) {
+                // calcula indices dependendo de qual eixo é o "livre"(a) e qual é fixo
                 final int idcViz = iteraX
-					? a + (bordaViz << 4) + (y << 8)
-					: bordaViz + (a << 4) + (y << 8);
+					? a + (bordaViz << 4) + (y << 8) // norte/sul: a=x, fixo=z
+					: bordaViz + (a << 4) + (y << 8); // leste/oeste: a=z, fixo=x
 
                 final int luzVizinha = vizinha.luz[idcViz] & 0xFF;
                 final int lbV = luzVizinha & 0x0F;
                 final int lsV = luzVizinha >> 4;
 
-                if(lbV <= 1 && lsV <= 1) continue;
+                if(lbV <= 1 && lsV <= 1) continue; // não vai propagar nada util
 
+                // verifica se o bloco de entrada(na borda) é transparente
                 final int bxNossa = iteraX ? a : bordaNossa;
                 final int bzNossa = iteraX ? bordaNossa : a;
                 final Bloco b = Bloco.numIds.get(ChunkUtil.obterBloco(bxNossa, y, bzNossa, chunk));
@@ -252,12 +221,12 @@ public class ChunkLuz implements GeradorLuz {
                 final int lsNova = lsV - 1;
 
                 final int luzAtual = luzTemp[idcNossa] & 0xFF;
-                final int lbAtual = luzAtual & 0x0F;
-                final int lsAtual = luzAtual >> 4;
+                final int lbAtual  = luzAtual & 0x0F;
+                final int lsAtual  = luzAtual >> 4;
 
                 if(lbNova > lbAtual || lsNova > lsAtual) {
                     luzTemp[idcNossa] = (byte) ((Math.max(lsNova, lsAtual) << 4)
-						| Math.max(lbNova, lbAtual));
+						|  Math.max(lbNova, lbAtual));
                     if(fimFila < filaLuz.length) {
                         filaLuz[fimFila++] = idcNossa;
                     }
@@ -267,6 +236,7 @@ public class ChunkLuz implements GeradorLuz {
         return fimFila;
     }
 
+    // utils
     public static void zerarLuzBlocoChunk(Chunk chunk) {
         for(int i = 0; i < TOTAL_BLOCOS; i++) {
             final int luzAtual = chunk.luz[i] & 0xFF;
@@ -278,9 +248,15 @@ public class ChunkLuz implements GeradorLuz {
 
             final Bloco b = Bloco.numIds.get(ChunkUtil.obterBloco(x, y, z, chunk));
 
+            // mantem a luz solar; reinicia a luz de bloco para o valor intrinseco do bloco(ou 0)
             chunk.luz[i] = (b != null && b.luz > 0)
-				? (byte)((luzSolar << 4) | (b.luz & 0x0F))
-				: (byte)(luzSolar << 4);
+				? (byte) ((luzSolar << 4) | (b.luz & 0x0F))
+				: (byte) (luzSolar << 4);
         }
     }
+
+    public static Chunk obterChunk(final int cx, final int cz) {
+        return Mundo.obterChunk(cx, cz);
+    }
 }
+
