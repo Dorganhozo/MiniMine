@@ -14,7 +14,7 @@ public class ChunkMalha implements GeradorMalha {
         @Override protected int[] initialValue() { return new int[16 * 256]; }
     };
 	public static final boolean[] mascara2 = {true, false};
-	
+
 	@Override
     public void attMalha(Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
 		Chunk cXP, cXN, cZP, cZN;
@@ -29,7 +29,6 @@ public class ChunkMalha implements GeradorMalha {
         if(cZN != null && !cZN.dadosProntos) cZN = null;
         // luz usa estado >= 3 garante que calcularLuz ja rodou na vizinha
         // se nao tiver luz pronta, usa padrão 0 e refaz quando estiver pronta
-
         final int[] mascara = MASCARA_CACHE.get();
 
         // === gera malha de renderização(O Guloso) ===
@@ -95,7 +94,9 @@ public class ChunkMalha implements GeradorMalha {
                                 // se chunk vizinho de borda não existe, não renderiza a face agora:
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nx < 0 || nx >= 16))) {
-                                    final byte luz = ChunkUtil.obterLuzCompleta(x, y, z, chunk);
+                                    final byte luz = (tC != null)
+                                        ? ChunkUtil.obterLuzCompleta(tx, y, z, tC)
+                                        : ChunkUtil.obterLuzCompleta(x, y, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -135,7 +136,9 @@ public class ChunkMalha implements GeradorMalha {
                                 // se chunk vizinho de borda não existe, não renderiza a face agora:
                                 // quando ele carregar, marcará este chunk com att=true e a malha será refeita
                                 if(deveRenderFace(b, bViz) && !(tC == null && (nz < 0 || nz >= 16))) {
-                                    final byte luz = ChunkUtil.obterLuzCompleta(x, y, z, chunk);
+                                    final byte luz = (tC != null)
+                                        ? ChunkUtil.obterLuzCompleta(x, y, tz, tC)
+                                        : ChunkUtil.obterLuzCompleta(x, y, z, chunk);
                                     val = (id << 8) | (luz & 0xFF);
                                 }
                             }
@@ -169,7 +172,7 @@ public class ChunkMalha implements GeradorMalha {
     }
 
     public static void malhaPlana(int[] mascara, int largura, int altura,
-								  int profundidade, int faceId, Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
+	int profundidade, int faceId, Chunk chunk, FloatArrayUtil verts, ShortArrayUtil idcSolidos, ShortArrayUtil idcTransp) {
         int n = 0;
         for(int j = 0; j < altura; j++) {
             for(int i = 0; i < largura; ) {

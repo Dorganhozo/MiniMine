@@ -81,16 +81,19 @@ public class ChunkLuz implements GeradorLuz {
                     final int blocoId = ChunkUtil.obterBloco(x, y, z, chunk);
                     final Bloco b = Bloco.numIds.get(blocoId);
 
-                    if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
-
+                    // aplica a luz solar atual no bloco antes de verificar se ele é opaco,
+                    // assim o próprio bloco sólido recebe a luz que vem de cima,
+                    // e apenas os blocos abaixo dele ficam sem luz solar
                     luzTemp[idc] = (byte)(luzSolarAtual << 4);
 
                     if(luzSolarAtual > 0) filaLuz[fimFila++] = idc;
 
+                    // bloco opaco interrompe a descida da luz solar para os proximos
+                    if(b != null && b.render == TipoRender.OPACO) luzSolarAtual = 0;
+
                     if(b != null && b.luz > 0) {
                         luzTemp[idc] |= (byte)(b.luz & 0x0F);
-
-                        if(luzSolarAtual <= 0) filaLuz[fimFila++] = idc;
+                        filaLuz[fimFila++] = idc;
                     }
                 }
             }
@@ -284,3 +287,5 @@ public class ChunkLuz implements GeradorLuz {
         }
     }
 }
+
+

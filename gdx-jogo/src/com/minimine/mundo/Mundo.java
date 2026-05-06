@@ -77,7 +77,7 @@ public class Mundo {
      * filaEstrutura: estruturas que extrapolaram os limites de uma chunk durante a
      * geração e precisam ser aplicadas quando a chunk alvo atingir estado 1
      * chave = chunk alvo, valor = lista de blocos pendentes para escrever nela
-    */
+	 */
     // fila compacta: 5 ints por entrada (lx, ly, lz, id, meta), sem objetos EstruturaPendente
     public static final Map<Long, int[]> filaEstrutura = new ConcurrentHashMap<>();
     // tamanho atual(entradas, não ints) de cada fila, separado do array pra crescimento sem realocar o mapa
@@ -110,7 +110,7 @@ public class Mundo {
 
         registroBiomas = new RegistroBiomas();
         registroBiomas.carregarBiomas(Gdx.files.internal("biomas/"));
-		
+
 		ReceitaRegistro.iniciar();
 
         motor = new MotorGeracao(semente, registroBiomas);
@@ -209,7 +209,9 @@ public class Mundo {
         ChunkProcesso.util.defBloco(localX, y, localZ, bloco, chunk);
         ChunkProcesso.util.defMeta(localX, y, localZ, (short)0, chunk);
 
-        if(eraEmissor) ChunkProcesso.luz.recalcularLuz(chunk);
+        final boolean novoEhEmissor = bloco != 0 && Bloco.numIds.get(bloco) != null && Bloco.numIds.get(bloco).luz > 0;
+
+        if(eraEmissor || novoEhEmissor) ChunkProcesso.luz.recalcularLuz(chunk);
 
         final boolean novoEhAgua = bloco != 0 && bloco == Bloco.AGUA;
 		final boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
@@ -339,11 +341,10 @@ public class Mundo {
         }
         return 80;
     }
-	
-	
+
 	public static final Chunk obterChunk(final long chave) {
 		final Chunk[] cache = chunkCache; // bota no registrador ao inves de chamar static
-		
+
 		for(int i = 0; i < 9; i++) {
 			if(cache[i] != null && cache[i].chave == chave) {
 				return cache[i];
@@ -373,41 +374,65 @@ public class Mundo {
             }
         }
     }
-
+	/*
+	NOTA:
+	NÃO MEXA NISSO, BFS É MULTIFRAME, SE VOCÊ MEXER NISSO
+	PRA FAZER EM 1 LOOP SO VOCÊ VAI QUEBRAR TUDO E MATAR 
+	TODO MUNDO E FICAR UM MÊS ACHANDO QUE ERA ChunkLuz.java
+	*/
     public static void limparChunks(int chunkX, int chunkZ) {
-        praLiberar.clear();
-        praRemover.clear();
+		praLiberar.clear();
+		praRemover.clear();
 
-        for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
-            final long chave = e.getKey();
-            final int distX = Mat.abs(Chave.x(chave) - chunkX);
-            final int distZ = Mat.abs(Chave.z(chave) - chunkZ);
-            final Chunk chunk = e.getValue();
-            final int estado = estados.getOrDefault(chave, 0);
+		for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
+			final long chave = e.getKey();
+			final int distX = Mat.abs(Chave.x(chave) - chunkX);
+			final int distZ = Mat.abs(Chave.z(chave) - chunkZ);
+			final Chunk chunk = e.getValue();
+			final int estado = estados.getOrDefault(chave, 0);
 
-            if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
-                if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
-                if(chunk != null && chunk.gpuPronta) praLiberar.add(chunk);
-                praRemover.add(chave);
-            } else if(chunk.att && !chunk.fazendo && estado >= 3) {
-                // so atualiza malha se estruturas e luz ja foram feitas
-				ChunkProcesso.luz.attLuz(chunk);
-                if(vizinhosProntos(chunk.x, chunk.z)) gerarMalha(chave);
-            } else if(estado == 1 && vizinhosComDados(chunk.x, chunk.z)) {
-                processarEstruturas(chave);
-            } else if(estado == 2 && vizinhosComEstruturas(chunk.x, chunk.z)) {
-                calcularLuz(chave);
-            }
-        }
-        if(!praLiberar.isEmpty() || !praRemover.isEmpty()) {
-            for(Chunk c : praLiberar) liberarGpu(c);
-            for(long chave : praRemover) {
-                chunks.remove(chave);
-                filaEstrutura.remove(chave);
-                filaTam.remove(chave);
-            }
-        }
-    }
+			if(distX > RAIO_CHUNKS || distZ > RAIO_CHUNKS) {
+				if(!chunksMod.containsKey(chave)) praLiberar.add(chunk);
+				if(chunk != null && chunk.gpuPronta) praLiberar.add(chunk);
+				praRemover.add(chave);
+			} else if(estado == 1 && vizinhosComDados(chunk.x, chunk.z)) {
+				processarEstruturas(chave);
+			} else if(estado == 2 && vizinhosComEstruturas(chunk.x, chunk.z)) {
+				calcularLuz(chave);
+			}
+		}
+		// propaga luz em passes até estabilizar(max 16 = alcance maximo de luz)
+		for(int passe = 0; passe < 16; passe++) {
+			boolean algumaSuja = false;
+			for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
+				final long chave = e.getKey();
+				final Chunk chunk = e.getValue();
+				final int estado = estados.getOrDefault(chave, 0);
+				if(chunk.att && !chunk.fazendo && estado >= 3) {
+					ChunkProcesso.luz.attLuz(chunk);
+					algumaSuja = true;
+				}
+			}
+			if(!algumaSuja) break;
+		}
+		// gera malha so depois que a luz estabilizou
+		for(Map.Entry<Long, Chunk> e : chunks.entrySet()) {
+			final long chave = e.getKey();
+			final Chunk chunk = e.getValue();
+			final int estado = estados.getOrDefault(chave, 0);
+			if(chunk.att && !chunk.fazendo && estado >= 3) {
+				if(vizinhosProntos(chunk.x, chunk.z)) gerarMalha(chave);
+			}
+		}
+		if(!praLiberar.isEmpty() || !praRemover.isEmpty()) {
+			for(Chunk c : praLiberar) liberarGpu(c);
+			for(long chave : praRemover) {
+				chunks.remove(chave);
+				filaEstrutura.remove(chave);
+				filaTam.remove(chave);
+			}
+		}
+	}
 
     public void tentarGerarChunk(int x, int z) {
         final long chave = Chave.calcularChave(x, z);
@@ -646,7 +671,7 @@ public class Mundo {
      * se a chunk alvo ainda não chegou ao estado 2: enfileira para aplicar em processarEstruturas
      * se a chunk alvo ja passou do estado 1(>= 2): aplica imediatamente e marca para
      *   recalcular luz e malha: o bloco chegou atrasado mas ainda pode ser corrigido
-	*/
+	 */
     public static void enfileirarEstrutura(long chaveAlvo, EstruturaPendente pendente) {
         final int estadoAlvo = estados.getOrDefault(chaveAlvo, 0);
         if(estadoAlvo >= 2) {
@@ -665,7 +690,7 @@ public class Mundo {
 			filaTam.putIfAbsent(chaveAlvo, new int[]{0});
 			int[] buf = filaEstrutura.get(chaveAlvo);
 			final int[] tam = filaTam.get(chaveAlvo);
-			
+
             final int n = tam[0];
             if(n * FILA_CAMPOS >= buf.length) {
                 // cresce 1.5x
@@ -685,4 +710,5 @@ public class Mundo {
         }
     }
 }
+
 
