@@ -71,9 +71,10 @@ jar {
         attributes 'Main-Class': 'com.minimine.Iniciador'
     }
     from {
-        configurations.runtimeClasspath.collect { 
-            it.exists() && !it.path.contains("gdx-jogo/build") ? (it.isDirectory() ? it : zipTree(it)) : null 
+        configurations.runtimeClasspath.collect {
+            it.exists() && !it.path.contains("gdx-jogo/build") ? (it.isDirectory() ? it : zipTree(it)) : null
         }.findAll { it != null }
     }
     from project(':gdx-jogo').sourceSets.main.output
+    from fileTree('../gdx-android/assets')
 }

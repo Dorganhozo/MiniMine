@@ -46,7 +46,7 @@ public class Musicas {
 	}
 
 	public static void liberar() {
-		tocando.dispose();
+		if(tocando != null) tocando.dispose();
 		tocando = null;
 		nomes.clear();
 	}
