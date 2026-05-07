@@ -35,6 +35,9 @@ import com.badlogic.gdx.math.Matrix4;
 import com.minimine.mundo.Chave;
 import com.minimine.entidades.ItemMundo;
 import com.minimine.inventario.Item;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.DataInputStream;
 
 public class Jogador extends Entidade {
 	public int modo = 2;
@@ -334,7 +337,25 @@ public class Jogador extends Entidade {
 		if(bracoDir != null) rotBracoDir.set(bracoDir.rotation);
 		if(bracoEsq != null) rotBracoEsq.set(bracoEsq.rotation);
 		if(pernaDir != null) rotPernaDir.set(pernaDir.rotation);
-		if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
+	if(pernaEsq != null) rotPernaEsq.set(pernaEsq.rotation);
 	}
+
+	@Override
+	public void salvar(DataOutputStream dos) throws IOException {
+		super.salvar(dos);
+		dos.writeInt(modo);
+		dos.writeUTF(""+item);
+        dos.writeInt(ALCANCE);
+		dos.writeInt(inv != null ? inv.slotSelecionado : 0);
+	}
+
+	public void carregar(DataInputStream dis) throws IOException {
+		super.carregar(dis);
+        modo = dis.readInt();
+        item = dis.readUTF();
+        ALCANCE = dis.readInt();
+        if(inv == null) inv = new Inventario(this);
+        inv.slotSelecionado = dis.readInt();
+    }
 }
 

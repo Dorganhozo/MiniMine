@@ -9,6 +9,9 @@ import com.minimine.graficos.TipoRender;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.Chave;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.DataInputStream;
 
 public class Entidade {
 	public int vida;
@@ -274,4 +277,31 @@ public class Entidade {
 
 	public void render(ModelBatch mb) {}
 	public void liberar() {}
+	
+	public void salvar(DataOutputStream dos) throws IOException {
+        dos.writeFloat(posicao.x);
+        dos.writeFloat(posicao.y);
+        dos.writeFloat(posicao.z);
+        dos.writeFloat(yaw);
+        dos.writeFloat(tom);
+		dos.writeFloat(velo);
+		dos.writeBoolean(agachado);
+		dos.writeBoolean(nasceu);
+        dos.flush();
+    }
+	
+	public void carregar(DataInputStream dis) throws IOException {
+        posicao = new Vector3(dis.readFloat(), dis.readFloat(), dis.readFloat());
+        yaw = dis.readFloat();
+        tom = dis.readFloat();
+		velo = dis.readFloat();
+		agachado = dis.readBoolean();
+		nasceu = dis.readBoolean();
+
+		if(agachado) {
+			velo *= 2;
+			altura *= 1.2f;
+			agachado = false;
+		}
+    }
 }

@@ -3,7 +3,6 @@ package com.minimine.mundo.geracao;
 import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.Chave;
 import com.minimine.mundo.Mundo;
-import com.minimine.mundo.FluxoAgua;
 import com.minimine.utils.ruidos.OpenSimplex2;
 import com.minimine.mundo.blocos.Bloco;
 import com.minimine.mundo.chunks.ChunkProcesso;
@@ -19,11 +18,11 @@ import com.minimine.mundo.chunks.ChunkProcesso;
  * processo de estados:
  *   0 -> 1  gerarChunk: terreno + biomas + agua + vegetacao(so escrita local)
  *   1 -> 2  colocarEstruturas: estruturas proprias + aplica pendentes recebidas
- *  vizinha estado 1  -> escreve direto
+ *  vizinha estado 1 -> escreve direto
  *  vizinha outro est -> enfileira em Mundo.filaEstrutura
  *   2 -> 3  calcularLuz:  propagação de luz
  *   3 -> 4  gerarMalha: malha de renderização
- */
+*/
 public final class MotorGeracao {
     public static final int NIVEL_MAR = 62;
 
@@ -93,7 +92,7 @@ public final class MotorGeracao {
         // === FASE 2: gerar terreno ===
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
-                int superficieY = terreno.obterAltura(x, z, ctx);
+                final int superficieY = terreno.obterAltura(x, z, ctx);
                 for(int y = 0; y < Mundo.Y_CHUNK; y++) {
                     if(y <= superficieY && !rios.eCanal(x, y, z, y, superficieY, ctx)) {
                         ChunkProcesso.util.defBloco(x, y, z, PEDRA, chunk);
@@ -107,7 +106,7 @@ public final class MotorGeracao {
         // === FASE 4: gerar biomas ===
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
-                int idc2d = (z << 4) + x;
+                final int idc2d = (z << 4) + x;
 
                 int topoColuna = terreno.obterAltura(x, z, ctx);
                 while(topoColuna > 0 && ChunkProcesso.util.obterBloco(x, topoColuna, z, chunk) == 0) topoColuna--;
@@ -147,14 +146,13 @@ public final class MotorGeracao {
                 for(int y = NIVEL_MAR; y >= 0; y--) {
                     if(ChunkProcesso.util.obterBloco(x, y, z, chunk) == 0) {
                         ChunkProcesso.util.defBloco(x, y, z, AGUA, chunk);
-                        ChunkProcesso.util.defMeta(x, y, z, (short)FluxoAgua.NIVEL_FONTE, chunk);
+                        ChunkProcesso.util.defMeta(x, y, z, (short)7, chunk);
                     }
                 }
             }
         }
         // === FASE 6: vegetação(1 bloco, so escrita local, seguro aqui) ===
         colocarVegetacao(chunk, chunkX, chunkZ, ctx);
-
         chunk.dadosProntos = true;
     }
     /*
@@ -162,7 +160,7 @@ public final class MotorGeracao {
      * chamado ao fim de gerarChunk(estado 0->1)
      * precalcula topoMapa para reuso em colocarEstruturas
     */
-    private void colocarVegetacao(Chunk chunk, int chunkX, int chunkZ, ContextoGeracao ctx) {
+    public void colocarVegetacao(Chunk chunk, int chunkX, int chunkZ, ContextoGeracao ctx) {
         for(int z = 0; z < 16; z++) {
             for(int x = 0; x < 16; x++) {
                 int idc2d = (z << 4) + x;
@@ -314,7 +312,7 @@ public final class MotorGeracao {
     }
 
     // gerador congruente linear
-    public static final long lcg(long s) {
+    public static final long lcg(final long s) {
         return s * 6364136223846793005L + 1442695040888963407L;
     }
 

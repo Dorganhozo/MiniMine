@@ -6,18 +6,19 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import com.minimine.utils.ArquivosUtil;
 
 public final class RegistroBiomas {
     public final Map<String, DadosBioma> biomas = new LinkedHashMap<String, DadosBioma>();
     public DadosBioma padrao;
 
     public void carregarBiomas(FileHandle pasta) {
-        FileHandle[] arquivos = pasta.list(".json");
+        final FileHandle[] arquivos = ArquivosUtil.listarAssets(pasta);
         if(arquivos == null || arquivos.length == 0)
             throw new RuntimeException("nenhum bioma encontrado em: " + pasta.path());
         for(FileHandle a : arquivos) {
-            String chave = a.nameWithoutExtension();
-            DadosBioma bioma = DadosBioma.compilar(chave, a.readString("UTF-8"));
+            final String chave = a.nameWithoutExtension();
+            final DadosBioma bioma = DadosBioma.compilar(chave, a.readString("UTF-8"));
             biomas.put(chave, bioma);
             if(padrao == null) padrao = bioma;
         }
@@ -28,9 +29,9 @@ public final class RegistroBiomas {
         float menorDist = Float.MAX_VALUE;
         for(DadosBioma b : biomas.values()) {
             if(altura < b.altMin || altura > b.altMax) continue;
-            float dc = calor - b.clima.calor;
-            float du = umidade - b.clima.umidade;
-            float dist = (dc * dc + du * du) / b.peso;
+            final float dc = calor - b.clima.calor;
+            final float du = umidade - b.clima.umidade;
+            final float dist = (dc * dc + du * du) / b.peso;
             if(dist < menorDist) {
                 menorDist = dist;
                 melhor = b;
@@ -40,7 +41,7 @@ public final class RegistroBiomas {
     }
 
     public DadosBioma obter(String chave) {
-        DadosBioma b = biomas.get(chave);
+        final DadosBioma b = biomas.get(chave);
         if(b == null) throw new RuntimeException("bioma desconhecido: " + chave);
         return b;
     }

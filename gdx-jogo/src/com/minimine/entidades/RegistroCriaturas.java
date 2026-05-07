@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import com.minimine.utils.ArquivosUtil;
 /*
  * carrega todos os .json de uma pasta e organiza por chave e bioma
  * usado por GerenciadorEntidades para nascer
@@ -14,15 +15,15 @@ public final class RegistroCriaturas {
     public final Map<String, DadosCriatura> criaturas = new LinkedHashMap<>();
 
     public void carregar(FileHandle pasta) {
-        final FileHandle[] arquivos = pasta.list(".json");
-        if(arquivos == null || arquivos.length == 0) {
-            throw new RuntimeException("nenhum mob encontrado em: " + pasta.path());
+		final FileHandle[] arquivos = ArquivosUtil.listarAssets(pasta);
+		if(arquivos == null || arquivos.length == 0) {
+			throw new RuntimeException("nenhum mob encontrado em: " + pasta.path());
 		}
-        for(FileHandle a : arquivos) {
-            final DadosCriatura dados = DadosCriatura.compilar(a.readString("UTF-8"));
-            criaturas.put(dados.nome, dados);
-        }
-    }
+		for(FileHandle a : arquivos) {
+			final DadosCriatura dados = DadosCriatura.compilar(a.readString("UTF-8"));
+			criaturas.put(dados.nome, dados);
+		}
+	}
 
     // todos os mobs que spawnam no bioma dado
     public List<DadosCriatura> paraOBioma(String bioma) {

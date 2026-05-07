@@ -47,8 +47,11 @@ import com.badlogic.gdx.files.FileHandle;
 import com.minimine.inventario.ItemRegistro;
 import com.minimine.inventario.Item;
 import com.minimine.mundo.chunks.ChunkProcesso;
+import java.net.URI;
+import java.util.zip.ZipFile;
+import java.util.Enumeration;
 
-public class ArquivosUtil {
+public final class ArquivosUtil {
     public static final int[] VERSAO = { 0, 0, 1 };
 	public static final String versao = "v" + VERSAO[0] + "." + VERSAO[1] + "." + VERSAO[2];
 	public static boolean debug = true;
@@ -78,12 +81,12 @@ public class ArquivosUtil {
                 zos.closeEntry();
                 // mundo.bin(escreve diretamente no zip usando o mesmo DataOutputStream)
                 zos.putNextEntry(new ZipEntry("mundo.bin"));
-                gravarMundo(dos, mundo);
+                mundo.salvar(dos);
                 dos.flush();
                 zos.closeEntry();
                 // jogador.bin
                 zos.putNextEntry(new ZipEntry("jogador.bin"));
-                gravarJogador(dos, jogador);
+                jogador.salvar(dos);
                 dos.flush();
                 zos.closeEntry();
                 // inventario.bin
@@ -161,10 +164,10 @@ public class ArquivosUtil {
 						}
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] versao.txt: " + v);
                     } else if("mundo.bin".equals(nome)) {
-                        lerMundo(dis, mundo);
+                        mundo.carregar(dis);
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] mundo.bin lido");
                     } else if("jogador.bin".equals(nome)) {
-                        lerJogador(dis, jogador);
+                        jogador.carregar(dis);
                         if(debug) Gdx.app.log("ArquivosUtil", "[DEBUG] jogador.bin lido");
                     } else if("inventario.bin".equals(nome)) {
                         lerInventario(dis, jogador);
@@ -201,64 +204,6 @@ public class ArquivosUtil {
         }
         if(sucesso && debug) Gdx.app.log("ArquivosUtil", "[AVISO] mundo carregado");
     }
-	// gravadores e leitores de binarios:
-    public static void gravarMundo(DataOutputStream dos, Mundo mundo) throws IOException {
-        dos.writeLong(mundo.semente);
-        // quantos chunks salvos
-        dos.writeInt(mundo.chunksMod.size());
-        for(Map.Entry<Long, Chunk> e : mundo.chunksMod.entrySet()) {
-            long chave = e.getKey();
-            Chunk chunk = e.getValue();
-            int cx = Mundo.TAM_CHUNK;
-            int cy = Mundo.Y_CHUNK;
-            int cz = Mundo.TAM_CHUNK;
-            dos.writeLong(chave);
-            int totalNaoAr = 0;
-            for(int x = 0; x < cx; x++) {
-                for(int y = 0; y < cy; y++) {
-                    for(int z = 0; z < cz; z++) {
-                        int b = ChunkProcesso.util.obterBloco(x, y, z, chunk);
-                        if(b != 0) totalNaoAr++;
-                    }
-                }
-            }
-            dos.writeInt(totalNaoAr);
-
-            for(int x = 0; x < cx; x++) {
-                for(int y = 0; y < cy; y++) {
-                    for(int z = 0; z < cz; z++) {
-                        int b = ChunkProcesso.util.obterBloco(x, y, z, chunk);
-                        if(b != 0) {
-							CharSequence bloco = Bloco.numIds.get(b).nome;
-                            dos.writeInt(x);
-                            dos.writeInt(y);
-                            dos.writeInt(z);
-                            dos.writeUTF(""+bloco);
-                        }
-                    }
-                }
-            }
-			int metaTam = Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK;
-			dos.writeInt(metaTam);
-			for(int i = 0; i < metaTam; i++) dos.writeShort(chunk.meta[i]);
-        }
-        dos.flush();
-    }
-    public static void gravarJogador(DataOutputStream dos, Jogador jogador) throws IOException {
-        dos.writeInt(jogador.modo);
-        dos.writeFloat(jogador.posicao.x);
-        dos.writeFloat(jogador.posicao.y);
-        dos.writeFloat(jogador.posicao.z);
-        dos.writeFloat(jogador.yaw);
-        dos.writeFloat(jogador.tom);
-        dos.writeUTF(""+jogador.item);
-        dos.writeInt(jogador.ALCANCE);
-        dos.writeInt(jogador.inv != null ? jogador.inv.slotSelecionado : 0);
-		dos.writeFloat(jogador.velo);
-		dos.writeBoolean(jogador.agachado);
-		dos.writeBoolean(jogador.nasceu);
-        dos.flush();
-    }
 
     public static void gravarInventario(DataOutputStream dos, Jogador jogador) throws IOException {
 		if(jogador.inv == null || jogador.inv.itens == null) {
@@ -283,61 +228,6 @@ public class ArquivosUtil {
         dos.writeFloat(Jogo.render.diaNoite.tempo);
         dos.writeFloat(Jogo.render.diaNoite.tempo_velo);
         dos.flush();
-    }
-
-	// leitores
-    public static void lerMundo(DataInputStream dis, Mundo mundo) throws IOException {
-        mundo.semente = dis.readLong();
-        int totalChunks = dis.readInt();
-
-        for(int i = 0; i < totalChunks; i++) {
-            long chave = dis.readLong();
-
-            Chunk chunk = new Chunk();
-            chunk.meta = new short[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
-            ChunkProcesso.util.compactar(ChunkProcesso.util.bitsPraMaxId(chunk.maxIds), chunk);
-            chunk.x = Chave.x(chave);
-            chunk.z = Chave.z(chave);
-
-            int totalNaoAr = dis.readInt();
-            for(int k = 0; k < totalNaoAr; k++) {
-                int x = dis.readInt();
-                int y = dis.readInt();
-                int z = dis.readInt();
-                CharSequence id = dis.readUTF();
-                ChunkProcesso.util.defBloco(x, y, z, id, chunk);
-            }
-			int metaTam = dis.readInt();
-			chunk.meta = new short[metaTam];
-			for(int d = 0; d < metaTam; d++) chunk.meta[d] = dis.readShort();
-
-            mundo.chunksMod.put(chave, chunk);
-			mundo.chunks.put(chave, chunk);
-
-            chunk.att = true;
-			chunk.dadosProntos = true;
-			mundo.estados.put(chave, 2);
-        }
-    }
-
-    public static void lerJogador(DataInputStream dis, Jogador jogador) throws IOException {
-        jogador.modo = dis.readInt();
-        jogador.posicao = new Vector3(dis.readFloat(), dis.readFloat(), dis.readFloat());
-        jogador.yaw = dis.readFloat();
-        jogador.tom = dis.readFloat();
-        jogador.item = dis.readUTF();
-        jogador.ALCANCE = dis.readInt();
-        if(jogador.inv == null) jogador.inv = new Inventario(jogador);
-        jogador.inv.slotSelecionado = dis.readInt();
-		jogador.velo = dis.readFloat();
-		jogador.agachado = dis.readBoolean();
-		jogador.nasceu = dis.readBoolean();
-		
-		if(jogador.agachado) {
-			jogador.velo *= 2;
-			jogador.altura *= 1.2f;
-			jogador.agachado = false;
-		}
     }
 
     public static void lerInventario(DataInputStream dis, Jogador jogador) throws IOException {
@@ -472,12 +362,11 @@ public class ArquivosUtil {
         }
         if(debug) Gdx.app.log("ArquivosUtil", "[AVISO] estrutura salva: " + destino.getAbsolutePath());
     }
-
     // crEstrutura: carrega um .minies e retorna os dados
     /*
      * retorna um DadosEstrutura com todos os blocos e metadados,
      * ou null se o arquivo não existir ou estiver corrompido
-	 */
+	*/
 	public static DadosEstrutura crEstrutura(String nome) {
 		return crEstrutura(nome, true);
 	}
@@ -600,26 +489,19 @@ public class ArquivosUtil {
 
 	public static String ler(String caminho) {    
         caminho = caminho.replace("/", File.separator);
-		StringBuilder sb = new StringBuilder();    
+		final StringBuilder sb = new StringBuilder();    
 		FileReader fr = null;    
 
 		try {    
 			fr = new FileReader(new File(caminho));    
 
-			char[] buff = new char[1024];    
+			final char[] buff = new char[1024];    
 			int tamanho = 0;    
 
-			while((tamanho = fr.read(buff)) > 0) sb.append(new String(buff, 0, tamanho));    
+			while((tamanho = fr.read(buff)) > 0) sb.append(new String(buff, 0, tamanho));
+			fr.close();
 		} catch(Exception e) {    
 			e.printStackTrace();    
-		} finally {    
-			if(fr != null) {    
-				try {    
-					fr.close();    
-				} catch(Exception e) {    
-					Gdx.app.log("ArquivosUtil", "[ERRO]: lendo "+e.getMessage()+" \""+caminho+"\"");
-				}    
-			}    
 		}    
 		return sb.toString();    
 	}    
@@ -627,32 +509,27 @@ public class ArquivosUtil {
 	public static void escrever(String caminho, String texto) {
         caminho = caminho.replace("/", File.separator);
 		criar(caminho);    
-		FileWriter escritor = null;    
+		 
 		try {    
-			escritor = new FileWriter(new File(caminho), false);    
+			final FileWriter escritor = new FileWriter(new File(caminho), false);    
 			escritor.write(texto);    
-			escritor.flush();    
+			escritor.flush();
+			escritor.close();
 		} catch(Exception e) {    
-			e.printStackTrace();    
-		} finally {    
-			try {    
-				if(escritor != null) escritor.close();    
-			} catch(Exception e) {    
-				Gdx.app.log("ArquivosUtil", "[ERRO]: escrevendo "+e.getMessage()+" caminho \""+caminho+"\"");    
-			}    
+			e.printStackTrace();
 		}    
 	}    
 
 	public static void delete(String caminho) {    
         caminho = caminho.replace("/", File.separator);
-		File arquivo = new File(caminho);    
+		final File arquivo = new File(caminho);    
 
 		if(!arquivo.exists()) return;    
 		if(arquivo.isFile()) {    
 			arquivo.delete();    
 			return;    
 		}    
-		File[] arquivos = arquivo.listFiles();    
+		final File[] arquivos = arquivo.listFiles();    
 
 		if(arquivos != null) {    
 			for(File subArquivo : arquivos) {    
@@ -667,8 +544,8 @@ public class ArquivosUtil {
 
 	public static List<String> listar(String caminho) {
         caminho = caminho.replace("/", File.separator);
-		List<String> lista = new ArrayList<>();
-		File dir = new File(caminho);    
+		final List<String> lista = new ArrayList<>();
+		final File dir = new File(caminho);    
 		if(!dir.exists() || dir.isFile()) return null;
 
 		File[] listaArquivos = dir.listFiles();    
@@ -684,10 +561,10 @@ public class ArquivosUtil {
 
 	public static void listarAbs(String caminho, List<String> lista) {    
         caminho = caminho.replace("/", File.separator);
-		File dir = new File(caminho);    
+		final File dir = new File(caminho);    
 		if(!dir.exists() || dir.isFile()) return;    
 
-		File[] listaArquivos = dir.listFiles();    
+		final File[] listaArquivos = dir.listFiles();    
 		if(listaArquivos==null || listaArquivos.length <= 0) return;    
 
 		if(lista==null) return;    
@@ -699,16 +576,45 @@ public class ArquivosUtil {
 
 	public static boolean existe(String caminho) {   
         caminho = caminho.replace("/", File.separator); 
-		File arquivo = new File(caminho);    
+		final File arquivo = new File(caminho);    
 		return arquivo.exists();    
 	}    
 
 	public static void criarDir(String caminho) {    
         caminho = caminho.replace("/", File.separator);
 		if(!existe(caminho)) {    
-			File arquivo = new File(caminho);    
+			final File arquivo = new File(caminho);    
 			arquivo.mkdirs();    
 		}    
+	}
+	
+	public static FileHandle[] listarAssets(FileHandle pasta) {
+		FileHandle[] resultado = pasta.list(".json");
+		if(resultado != null && resultado.length > 0) return resultado;
+
+		try {
+			URI uri = ArquivosUtil.class.getProtectionDomain()
+				.getCodeSource()
+				.getLocation()
+				.toURI();
+			final List<FileHandle> encontrados = new ArrayList<>();
+			final String prefixo = pasta.path().replaceAll("^/+", "") + "/";
+
+			final ZipFile jar = new ZipFile(new File(uri));
+			final Enumeration<? extends ZipEntry> entradas = jar.entries();
+			while(entradas.hasMoreElements()) {
+				final ZipEntry e = entradas.nextElement();
+				final String nome = e.getName();
+				if(nome.startsWith(prefixo) && nome.endsWith(".json")) {
+					encontrados.add(Gdx.files.internal(nome));
+				}
+			}
+			jar.close();
+
+			return encontrados.toArray(new FileHandle[0]);
+		} catch (Exception e) {
+			throw new RuntimeException("falha ao varrer JAR em: " + pasta.path(), e);
+		}
 	}
 }
 

@@ -39,6 +39,8 @@ public class Jogo implements Screen {
 		Bloco.iniciar();
 		
 		if(graficosTeste) {
+			ChunkProcesso.luz = new ChunkLuz();
+			ChunkProcesso.malha = new ChunkMalha();
 			render = new GraficosTeste(jogador, mundo);
 		} else {
 			ChunkProcesso.luz = new ChunkLuz();
@@ -57,8 +59,6 @@ public class Jogo implements Screen {
 				}
 			}, 0, 1000);
 		LuaAPI.iniciar();
-		
-		render.ui.jg.modo = 0;
 	}
 
     @Override

@@ -1,14 +1,8 @@
-package com.minimine.mundo;
+package com.minimine.entidades;
 
-import java.util.Random;
-import java.util.List;
-import java.util.ArrayList;
-import com.minimine.entidades.Jogador;
-import java.util.Map;
-import com.minimine.entidades.Entidade;
-import java.util.Iterator;
-import com.minimine.entidades.DadosCriatura;
-import com.minimine.entidades.Criatura;
+import com.minimine.entidades.*;
+import com.minimine.mundo.*;
+import java.util.*;
 
 public class GerenciadorEntidades {
 	public static final Random aleatorio = new Random();

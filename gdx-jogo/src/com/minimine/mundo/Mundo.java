@@ -40,6 +40,10 @@ import com.minimine.utils.TarefasUtil;
 import com.minimine.mundo.chunks.Chunk;
 import com.minimine.mundo.chunks.ChunkMalha;
 import com.minimine.mundo.chunks.ChunkProcesso;
+import com.minimine.entidades.GerenciadorEntidades;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.DataInputStream;
 
 public class Mundo {
     public static String nome = "novo mundo";
@@ -95,9 +99,6 @@ public class Mundo {
     public static MotorGeracao motor;
     public static RegistroBiomas registroBiomas;
 
-    public static float contaFluxo = 0f;
-    public static final float INTERVALO_FLUXO = 0.5f;
-
     // buffer nativo reutilizavel pra glGenBuffers, alocado uma vez, usado na thread GL
     public static final java.nio.IntBuffer GL_BUFFER =
 	java.nio.ByteBuffer.allocateDirect(12).order(java.nio.ByteOrder.nativeOrder()).asIntBuffer();
@@ -130,16 +131,6 @@ public class Mundo {
         }
         if(carregado) {
             GerenciadorEntidades.att(delta, this, jg);
-
-            contaFluxo += delta;
-            if(contaFluxo >= INTERVALO_FLUXO) {
-                contaFluxo -= INTERVALO_FLUXO;
-                for(Chunk chunk : chunks.values()) {
-                    if(chunk.fluxoSujo && chunk.dadosProntos) {
-                        FluxoAgua.attFluxo(chunk);
-                    }
-                }
-            }
         }
     }
 
@@ -213,55 +204,32 @@ public class Mundo {
 
         if(eraEmissor || novoEhEmissor) ChunkProcesso.luz.recalcularLuz(chunk);
 
-        final boolean novoEhAgua = bloco != 0 && bloco == Bloco.AGUA;
-		final boolean antigoEraAgua = FluxoAgua.eAgua(blocoAntigoId);
-
-		if(novoEhAgua) {
-			ChunkProcesso.util.defMeta(localX, y, localZ, (short)FluxoAgua.NIVEL_FONTE, chunk);
-			chunk.fluxoSujo = true;
-		} else if(antigoEraAgua) {
-			// bloco que era agua foi removido: recalcula
-			FluxoAgua.recalcularFluxo(chunk);
-			FluxoAgua.marcarSujo(chunkX, chunkZ);
-		} else if(chunk.fluxoSujo) {
-			// so verifica vizinhos se ja sabe que tem agua por perto nesse chunk
-			if(FluxoAgua.eAgua(obterBlocoMundo(x + 1, y, z)) ||
-			   FluxoAgua.eAgua(obterBlocoMundo(x - 1, y, z)) ||
-			   FluxoAgua.eAgua(obterBlocoMundo(x, y, z + 1)) ||
-			   FluxoAgua.eAgua(obterBlocoMundo(x, y, z - 1)) ||
-			   FluxoAgua.eAgua(obterBlocoMundo(x, y + 1, z)) ||
-			   FluxoAgua.eAgua(obterBlocoMundo(x, y - 1, z))) {
-				FluxoAgua.recalcularFluxo(chunk);
-				FluxoAgua.marcarSujo(chunkX, chunkZ);
-			}
-		}
         // marca luz suja de forma assincrona, o recalculo acontece no ciclo normal
         // do limparChunks, evitando rodar 9x attLuzCompleta na thread GL
         chunk.luzSuja = true;
         chunk.att = true;
-        Chunk luzAdj;
-        luzAdj = obterChunk(chunkX + 1, chunkZ);
-		if(luzAdj != null) {
-			luzAdj.luzSuja = true;
-			luzAdj.att = true;
-		}
-        luzAdj = obterChunk(chunkX - 1, chunkZ);
-		if(luzAdj != null) {
-			luzAdj.luzSuja = true;
-			luzAdj.att = true;
-		}
-        luzAdj = obterChunk(chunkX, chunkZ + 1);
-		if(luzAdj != null) {
-			luzAdj.luzSuja = true;
-			luzAdj.att = true;
-		}
-        luzAdj = obterChunk(chunkX, chunkZ - 1);
-		if(luzAdj != null) {
-			luzAdj.luzSuja = true;
-			luzAdj.att = true;
-		}
         // marca vizinhas de borda pra reconstruir malha
         Chunk chunkAdj;
+        chunkAdj = obterChunk(chunkX + 1, chunkZ);
+		if(chunkAdj != null) {
+			chunkAdj.luzSuja = true;
+			chunkAdj.att = true;
+		}
+        chunkAdj = obterChunk(chunkX - 1, chunkZ);
+		if(chunkAdj != null) {
+			chunkAdj.luzSuja = true;
+			chunkAdj.att = true;
+		}
+        chunkAdj = obterChunk(chunkX, chunkZ + 1);
+		if(chunkAdj != null) {
+			chunkAdj.luzSuja = true;
+			chunkAdj.att = true;
+		}
+        chunkAdj = obterChunk(chunkX, chunkZ - 1);
+		if(chunkAdj != null) {
+			chunkAdj.luzSuja = true;
+			chunkAdj.att = true;
+		}
         if(localX == 0) {
             chunkAdj = obterChunk(chunkX - 1, chunkZ);
             if(chunkAdj != null) chunkAdj.att = true;
@@ -709,6 +677,81 @@ public class Mundo {
             tam[0]++;
         }
     }
+	
+	public static void salvar(DataOutputStream dos) throws IOException {
+        dos.writeLong(semente);
+        // quantos chunks salvos
+        dos.writeInt(chunksMod.size());
+        for(Map.Entry<Long, Chunk> e : chunksMod.entrySet()) {
+            long chave = e.getKey();
+            Chunk chunk = e.getValue();
+            int cx = Mundo.TAM_CHUNK;
+            int cy = Mundo.Y_CHUNK;
+            int cz = Mundo.TAM_CHUNK;
+            dos.writeLong(chave);
+            int totalNaoAr = 0;
+            for(int x = 0; x < cx; x++) {
+                for(int y = 0; y < cy; y++) {
+                    for(int z = 0; z < cz; z++) {
+                        int b = ChunkProcesso.util.obterBloco(x, y, z, chunk);
+                        if(b != 0) totalNaoAr++;
+                    }
+                }
+            }
+            dos.writeInt(totalNaoAr);
+
+            for(int x = 0; x < cx; x++) {
+                for(int y = 0; y < cy; y++) {
+                    for(int z = 0; z < cz; z++) {
+                        int b = ChunkProcesso.util.obterBloco(x, y, z, chunk);
+                        if(b != 0) {
+							CharSequence bloco = Bloco.numIds.get(b).nome;
+                            dos.writeInt(x);
+                            dos.writeInt(y);
+                            dos.writeInt(z);
+                            dos.writeUTF(""+bloco);
+                        }
+                    }
+                }
+            }
+			int metaTam = TAM_CHUNK * Mundo.Y_CHUNK * TAM_CHUNK;
+			dos.writeInt(metaTam);
+			for(int i = 0; i < metaTam; i++) dos.writeShort(chunk.meta[i]);
+        }
+        dos.flush();
+    }
+	
+	public static void carregar(DataInputStream dis) throws IOException {
+        semente = dis.readLong();
+        int totalChunks = dis.readInt();
+
+        for(int i = 0; i < totalChunks; i++) {
+            long chave = dis.readLong();
+
+            Chunk chunk = new Chunk();
+            chunk.meta = new short[Mundo.TAM_CHUNK * Mundo.Y_CHUNK * Mundo.TAM_CHUNK];
+            ChunkProcesso.util.compactar(ChunkProcesso.util.bitsPraMaxId(chunk.maxIds), chunk);
+            chunk.x = Chave.x(chave);
+            chunk.z = Chave.z(chave);
+
+            int totalNaoAr = dis.readInt();
+            for(int k = 0; k < totalNaoAr; k++) {
+                int x = dis.readInt();
+                int y = dis.readInt();
+                int z = dis.readInt();
+                CharSequence id = dis.readUTF();
+                ChunkProcesso.util.defBloco(x, y, z, id, chunk);
+            }
+			int metaTam = dis.readInt();
+			chunk.meta = new short[metaTam];
+			for(int d = 0; d < metaTam; d++) chunk.meta[d] = dis.readShort();
+
+            chunksMod.put(chave, chunk);
+			chunks.put(chave, chunk);
+
+            chunk.att = true;
+			chunk.dadosProntos = true;
+			estados.put(chave, 2);
+        }
+    }
 }
-
-

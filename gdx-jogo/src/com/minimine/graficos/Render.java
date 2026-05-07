@@ -25,6 +25,7 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.minimine.graficos.shaders.ShaderBranco;
+import com.minimine.utils.Mat;
 
 public class Render extends Renderizador {
     public static ShaderProgram shader;
@@ -198,8 +199,21 @@ public class Render extends Renderizador {
 			}
 			mb.render(gp);
 			mb.end();
+			
 			// restaura estado GL apos o mb
 			Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+			
+			if(ui.debug) {
+				debugCaixas.setProjectionMatrix(ui.jg.camera.combined);
+				debugCaixas.begin(ShapeRenderer.ShapeType.Line);
+				debugCaixas.setColor(1, 1, 0, 1);
+				final int cxJg = Mat.floor(ui.jg.posicao.x / 16f);
+				final int czJg = Mat.floor(ui.jg.posicao.z / 16f);
+				final float ox = cxJg * 16f;
+				final float oz = czJg * 16f;
+				debugCaixas.box(ox, 0f, oz + 16f, 16f, 256f, 16f);
+				debugCaixas.end();
+			}
 			Gdx.gl.glEnable(GL20.GL_CULL_FACE);
 			Gdx.gl.glDepthMask(true);
 			shader.begin();
